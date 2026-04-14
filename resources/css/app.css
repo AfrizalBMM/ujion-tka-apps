@@ -1,0 +1,229 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap');
+
+@config '../../tailwind.config.js';
+
+@import 'tailwindcss';
+
+@import 'katex/dist/katex.min.css';
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+    --font-heading: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ================= BASE TYPO & SMOOTHING ================= */
+@layer base {
+    body {
+        font-family: 'Inter', system-ui, sans-serif;
+        @apply bg-background text-textPrimary antialiased scroll-smooth;
+        @apply dark:bg-slate-950 dark:text-slate-100;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'Poppins', sans-serif;
+        @apply tracking-tight font-bold;
+    }
+
+    /* Custom Scrollbar agar lebih estetik */
+    ::-webkit-scrollbar {
+        @apply w-1.5;
+    }
+    ::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        @apply bg-muted/30 rounded-full hover:bg-muted/50 transition-colors;
+    }
+}
+
+/* ================= COMPONENTS PERFECTION ================= */
+@layer components {
+    /* Buttons - Ditambahkan efek active & ring */
+    .btn-base {
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+    }
+
+    .btn-primary {
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+        @apply bg-gradient-primary text-white shadow-glow hover:shadow-hover hover:brightness-110;
+    }
+
+    .btn-secondary {
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+        @apply bg-white text-textPrimary border border-border hover:bg-gray-50 hover:border-primary/30 hover:shadow-sm;
+        @apply dark:bg-slate-900/60 dark:text-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:border-slate-700;
+    }
+
+    .btn-danger {
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+        @apply bg-danger text-white shadow-sm hover:bg-red-600 hover:shadow-hover;
+    }
+
+    .btn-success {
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+        @apply bg-success text-white shadow-sm hover:bg-green-600 hover:shadow-hover;
+    }
+
+    /* Glassmorphism Card */
+    .card {
+        @apply bg-white/80 backdrop-blur-md rounded-card shadow-card border border-border p-6 transition-all duration-300 hover:shadow-hover hover:border-primary/20;
+        @apply dark:bg-slate-900/60 dark:border-slate-800;
+    }
+
+    /* Form Styling - Flowbite friendly */
+    .input-group {
+        @apply relative flex flex-col gap-1.5 w-full;
+    }
+
+    .input {
+        @apply w-full border border-border rounded-input px-4 py-3 text-sm transition-all duration-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none placeholder:text-muted;
+        @apply dark:bg-slate-900/40 dark:border-slate-800 dark:text-slate-100 dark:focus:bg-slate-900 dark:placeholder:text-slate-400;
+    }
+
+    /* Table Styling */
+    .table-container {
+        @apply w-full overflow-hidden rounded-card border border-border bg-white shadow-sm;
+        @apply dark:bg-slate-900/60 dark:border-slate-800;
+    }
+
+    .table-ujion {
+        @apply w-full text-sm text-left;
+    }
+
+    .table-ujion thead {
+        @apply bg-gray-50/50 border-b border-border text-xs uppercase text-textSecondary font-bold;
+        @apply dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300;
+    }
+
+    .table-ujion th {
+        @apply px-6 py-4;
+    }
+
+    .table-ujion td {
+        @apply px-6 py-4 border-b border-border/50 align-middle;
+        @apply dark:border-slate-800;
+    }
+
+    .table-ujion tr:last-child td {
+        @apply border-b-0;
+    }
+
+    /* Badges - Lebih "Pill" style */
+    .badge {
+        @apply px-3 py-1 text-[11px] font-bold rounded-full border uppercase tracking-wider inline-flex items-center gap-1.5;
+    }
+    .badge-success {
+        @apply px-3 py-1 text-[11px] font-bold rounded-full border uppercase tracking-wider inline-flex items-center gap-1.5;
+        @apply bg-success/10 text-success border-success/20;
+        @apply dark:bg-success/20 dark:border-success/30;
+    }
+    .badge-warning {
+        @apply px-3 py-1 text-[11px] font-bold rounded-full border uppercase tracking-wider inline-flex items-center gap-1.5;
+        @apply bg-warning/10 text-warning border-warning/20;
+        @apply dark:bg-warning/20 dark:border-warning/30;
+    }
+    .badge-danger {
+        @apply px-3 py-1 text-[11px] font-bold rounded-full border uppercase tracking-wider inline-flex items-center gap-1.5;
+        @apply bg-danger/10 text-danger border-danger/20;
+        @apply dark:bg-danger/20 dark:border-danger/30;
+    }
+    .badge-info {
+        @apply px-3 py-1 text-[11px] font-bold rounded-full border uppercase tracking-wider inline-flex items-center gap-1.5;
+        @apply bg-primary/10 text-primary border-primary/20;
+        @apply dark:bg-primary/15 dark:border-primary/30;
+    }
+
+    /* Sidebar - Lebih modern */
+    .sidebar-container {
+        @apply w-64 h-screen fixed left-0 top-0 bg-white border-r border-border flex flex-col z-40 transition-transform;
+        @apply dark:bg-slate-950 dark:border-slate-800;
+    }
+
+    .sidebar-link {
+        @apply flex items-center gap-3.5 px-4 py-3 mx-2 rounded-btn text-sm font-medium text-textSecondary hover:bg-primary/5 hover:text-primary transition-all duration-200;
+        @apply dark:text-slate-300 dark:hover:bg-slate-900/60;
+    }
+
+    .sidebar-link svg {
+        @apply text-muted transition-colors duration-200;
+        @apply dark:text-slate-400;
+    }
+
+    .sidebar-link:hover svg {
+        @apply text-primary;
+    }
+
+    .sidebar-link.active {
+        @apply bg-primary text-white shadow-glow hover:text-white;
+        @apply dark:bg-primary;
+    }
+
+    .sidebar-link.active svg {
+        @apply text-white;
+    }
+
+    /* Stats Card - Untuk Dashboard Guru/Admin */
+    .stat-card {
+        @apply bg-white/80 backdrop-blur-md rounded-card shadow-card border border-border p-6 transition-all duration-300 hover:shadow-hover hover:border-primary/20;
+        @apply flex items-center gap-4 overflow-hidden relative;
+    }
+
+    .stat-icon {
+        @apply w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg;
+    }
+
+    /* Alerts */
+    .alert {
+        @apply rounded-card border p-4;
+        @apply bg-white/80 border-border;
+        @apply dark:bg-slate-900/60 dark:border-slate-800;
+    }
+
+    .alert-success {
+        @apply bg-success/10 text-success border-success/20;
+        @apply dark:bg-success/20 dark:border-success/30;
+    }
+
+    .alert-warning {
+        @apply bg-warning/10 text-warning border-warning/20;
+        @apply dark:bg-warning/20 dark:border-warning/30;
+    }
+
+    .alert-danger {
+        @apply bg-danger/10 text-danger border-danger/20;
+        @apply dark:bg-danger/20 dark:border-danger/30;
+    }
+
+    .alert-info {
+        @apply bg-primary/10 text-primary border-primary/20;
+        @apply dark:bg-primary/15 dark:border-primary/30;
+    }
+}
+
+/* ================= CUSTOM UTILITIES ================= */
+@layer utilities {
+    .text-gradient {
+        @apply bg-gradient-primary bg-clip-text text-transparent;
+    }
+
+    .blur-dot {
+        @apply absolute w-32 h-32 bg-primary/10 rounded-full blur-3xl -z-10;
+    }
+}
+
+/* Flowbite Modal Overrides */
+.modal-overlay {
+    @apply !bg-gray-900/50 !backdrop-blur-sm;
+}
