@@ -1,8 +1,8 @@
 @extends('layouts.guest')
 
 @section('content')
-<div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-    <div class="w-full max-w-lg p-8 space-y-6 bg-white rounded shadow">
+<div class="flex flex-col items-center justify-center">
+    <div class="w-full max-w-lg space-y-6 rounded-2xl border border-white/70 bg-white/90 p-5 shadow-card sm:p-6">
         <h2 class="text-2xl font-bold text-center mb-4">Petunjuk Ujian</h2>
         <div class="mb-6 text-gray-700">
             <ul class="list-disc pl-6 space-y-2">

@@ -1,8 +1,8 @@
 @extends('layouts.guest')
 
 @section('content')
-<div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded shadow">
+<div class="flex flex-col items-center justify-center">
+    <div class="w-full max-w-md space-y-6 rounded-2xl border border-white/70 bg-white/90 p-5 shadow-card sm:p-6">
         <h2 class="text-2xl font-bold text-center">Lengkapi Identitas</h2>
         <form method="POST" action="{{ route('siswa.mulai') }}">
             @csrf

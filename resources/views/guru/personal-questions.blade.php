@@ -6,7 +6,7 @@
     <div class="card p-4 mb-4">
         <form method="POST" action="{{ route('guru.personal-questions.store') }}" enctype="multipart/form-data">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <div>
                     <label class="text-xs font-bold">Jenjang</label>
                     <input name="jenjang" class="input w-full" required>
@@ -41,7 +41,7 @@
                 </div>
                 <div>
                     <label class="text-xs font-bold">Gambar (opsional)</label>
-                    <input type="file" name="image" accept="image/*">
+                    <input type="file" name="image" accept="image/*" class="input w-full">
                 </div>
                 <div>
                     <label class="text-xs font-bold">Status</label>
@@ -51,12 +51,13 @@
                     </select>
                 </div>
             </div>
-            <button class="btn-primary mt-3" type="submit">Tambah Soal</button>
+            <button class="btn-primary mt-3 w-full sm:w-auto" type="submit">Tambah Soal</button>
         </form>
     </div>
     <div class="card p-4">
-        <a href="{{ route('guru.personal-questions.builder') }}" class="btn-primary mb-4">Builder Soal Fullscreen</a>
-        <table class="table-ujion w-full">
+        <a href="{{ route('guru.personal-questions.builder') }}" class="btn-primary mb-4 w-full sm:w-auto">Builder Soal Fullscreen</a>
+        <div class="table-container">
+        <table class="table-ujion w-full min-w-[620px]">
             <thead>
                 <tr>
                     <th>Jenjang</th>
@@ -74,12 +75,13 @@
                     <td>{{ $question->tipe }}</td>
                     <td>{{ $question->status }}</td>
                     <td>
-                        <form method="POST" action="{{ route('guru.personal-questions.destroy', $question) }}">@csrf<button class="btn-danger btn-xs">Hapus</button></form>
+                        <form method="POST" action="{{ route('guru.personal-questions.destroy', $question) }}">@csrf<button class="btn-danger">Hapus</button></form>
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

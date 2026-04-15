@@ -1,10 +1,11 @@
 @extends('layouts.superadmin')
 @section('title', 'Analisis Ujian')
 @section('content')
-<div class="max-w-3xl mx-auto mt-8 space-y-8">
+<div class="max-w-4xl space-y-8">
     <div class="card p-6">
         <h2 class="font-bold text-xl mb-4">Ranking Peserta</h2>
-        <table class="table-ujion w-full">
+        <div class="table-container">
+        <table class="table-ujion w-full min-w-[420px]">
             <thead>
                 <tr>
                     <th>Peringkat</th>
@@ -22,10 +23,12 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
     <div class="card p-6">
         <h2 class="font-bold text-xl mb-4">Distribusi Nilai</h2>
-        <table class="table-ujion w-full">
+        <div class="table-container">
+        <table class="table-ujion w-full min-w-[420px]">
             <thead>
                 <tr>
                     <th>Rentang Nilai</th>
@@ -41,10 +44,11 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
-    <div class="flex justify-end">
-        <a href="#" class="btn-primary">Export ke Excel</a>
-        <a href="#" class="btn-secondary ml-2">Export ke PDF</a>
+    <div class="flex flex-col justify-end gap-2 sm:flex-row">
+        <a href="#" class="btn-primary w-full sm:w-auto">Export ke Excel</a>
+        <a href="#" class="btn-secondary w-full sm:w-auto">Export ke PDF</a>
     </div>
 </div>
 @endsection

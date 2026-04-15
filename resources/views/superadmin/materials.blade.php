@@ -9,10 +9,10 @@
         <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola hierarki kurikulum, subelemen, unit, dan sub unit materi global.</p>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-6">
+    <div class="grid gap-6 lg:grid-cols-3">
         <!-- FORM ADD -->
         <div class="lg:col-span-1">
-            <div class="card sticky top-6">
+            <div class="card lg:sticky lg:top-6">
                 <div class="font-bold text-lg mb-4">Tambah Materi Baru</div>
                 <form class="space-y-4" method="POST" action="{{ route('superadmin.materials.store') }}">
                     @csrf
@@ -51,7 +51,7 @@
                 <div class="grid grid-cols-1 gap-3">
                     @if(count($materials) > 0)
                     @foreach ($materials as $m)
-                        <div class="flex items-start justify-between gap-4 p-4 rounded-card border border-border bg-white dark:bg-slate-900 dark:border-slate-800 hover:shadow-sm transition-shadow">
+                        <div class="flex flex-col gap-4 rounded-card border border-border bg-white p-4 transition-shadow hover:shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-start sm:justify-between">
                             <div>
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="badge-info text-[10px]">{{ $m->curriculum }}</span>

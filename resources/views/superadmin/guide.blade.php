@@ -1,7 +1,7 @@
 @extends('layouts.superadmin')
 @section('title', 'Panduan Superadmin')
 @section('content')
-<div class="max-w-3xl mx-auto space-y-8">
+<div class="max-w-3xl space-y-8">
     <h1 class="text-2xl font-bold mb-4">Panduan Penggunaan Superadmin</h1>
     <div class="card p-6 space-y-4">
         <h2 class="font-semibold">Menu & Fitur</h2>

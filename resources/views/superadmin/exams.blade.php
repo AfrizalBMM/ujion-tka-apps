@@ -6,7 +6,7 @@
     <div class="card p-4 mb-4">
         <form method="POST" action="{{ route('superadmin.exams.store') }}">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <div>
                     <label class="text-xs font-bold">Judul</label>
                     <input name="judul" class="input w-full" required>
@@ -31,11 +31,12 @@
                     </select>
                 </div>
             </div>
-            <button class="btn-primary mt-3" type="submit">Buat Ujian</button>
+            <button class="btn-primary mt-3 w-full sm:w-auto" type="submit">Buat Ujian</button>
         </form>
     </div>
     <div class="card p-4">
-        <table class="table-ujion w-full">
+        <div class="table-container">
+        <table class="table-ujion w-full min-w-[860px]">
             <thead>
                 <tr>
                     <th>Judul</th>
@@ -53,9 +54,12 @@
                     <td>{{ $exam->judul }}</td>
                     <td>{{ $exam->tanggal_terbit->format('d M Y H:i') }}</td>
                     <td>{{ $exam->max_peserta }}</td>
-                    <td>{{ $exam->token }}
-                        <button onclick="navigator.clipboard.writeText('{{ $exam->token }}')" class="btn-secondary btn-xs ml-2">Copy</button>
-                        <a href="{{ route('superadmin.exams.show', $exam) }}" class="btn-primary btn-xs ml-2">Detail</a>
+                    <td>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span>{{ $exam->token }}</span>
+                            <button onclick="navigator.clipboard.writeText('{{ $exam->token }}')" class="btn-secondary">Copy</button>
+                            <a href="{{ route('superadmin.exams.show', $exam) }}" class="btn-primary">Detail</a>
+                        </div>
                     </td>
                     <td>{{ $exam->status }}</td>
                     <td>
@@ -65,14 +69,17 @@
                             <span class="badge-danger">Nonaktif</span>
                         @endif
                     </td>
-                    <td class="flex gap-2">
-                        <form method="POST" action="{{ route('superadmin.exams.toggle', $exam) }}">@csrf<button class="btn-secondary btn-xs">Toggle</button></form>
-                        <form method="POST" action="{{ route('superadmin.exams.destroy', $exam) }}">@csrf<button class="btn-danger btn-xs">Hapus</button></form>
+                    <td>
+                        <div class="flex flex-wrap gap-2">
+                            <form method="POST" action="{{ route('superadmin.exams.toggle', $exam) }}">@csrf<button class="btn-secondary">Toggle</button></form>
+                            <form method="POST" action="{{ route('superadmin.exams.destroy', $exam) }}">@csrf<button class="btn-danger">Hapus</button></form>
+                        </div>
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

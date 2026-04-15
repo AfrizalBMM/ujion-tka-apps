@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="table-container">
-            <table class="table-ujion">
+            <table class="table-ujion min-w-[860px]">
                 <thead>
                     <tr>
                         <th>Waktu</th>

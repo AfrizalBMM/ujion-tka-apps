@@ -1,10 +1,11 @@
 @extends('layouts.guru')
 @section('title', 'Profil Guru')
 @section('content')
-<div class="max-w-xl mx-auto space-y-6">
+<div class="max-w-3xl space-y-6">
     <h1 class="text-2xl font-bold">Profil & Pengaturan</h1>
     <form method="POST" action="{{ route('guru.profile.update') }}" enctype="multipart/form-data" class="card p-6 space-y-4">
         @csrf
+        <div class="grid gap-4 md:grid-cols-2">
         <div>
             <label class="text-xs font-bold">Nama Lengkap</label>
             <input name="name" class="input w-full" value="{{ $user->name }}" required>
@@ -12,6 +13,7 @@
         <div>
             <label class="text-xs font-bold">Email</label>
             <input name="email" class="input w-full" value="{{ $user->email }}" required>
+        </div>
         </div>
         <div>
             <label class="text-xs font-bold">Avatar</label>

@@ -11,7 +11,7 @@
 
     <div class="card">
         <div class="table-container">
-            <table class="table-ujion">
+            <table class="table-ujion min-w-[760px]">
                 <thead>
                     <tr>
                         <th>Nama Lengkap</th>
@@ -49,7 +49,7 @@
                                 @endif
                             </td>
                             <td class="text-right">
-                                <div class="flex justify-end gap-2">
+                                <div class="flex flex-wrap justify-end gap-2">
                                     @if($teacher->account_status !== \App\Models\User::STATUS_ACTIVE)
                                     <form method="POST" action="{{ route('superadmin.teachers.activate', $teacher) }}">
                                         @csrf

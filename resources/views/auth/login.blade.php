@@ -3,9 +3,9 @@
 @section('title', 'Masuk Guru - Ujion TKA')
 
 @section('content')
-<div class="card bg-white/80 backdrop-blur border border-white/20 p-8 shadow-2xl animate-fade-in-up">
-    <div class="mb-8 text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-primary shadow-glow mb-4">
+<div class="card animate-fade-in-up border-white/20 bg-white/80 p-6 shadow-2xl backdrop-blur md:p-7">
+    <div class="mb-6 text-center">
+        <div class="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-primary shadow-glow">
             <i class="fa-solid fa-chalkboard-user text-white text-2xl"></i>
         </div>
         <h1 class="text-2xl font-bold text-slate-800">Masuk Guru / Operator</h1>
@@ -13,7 +13,7 @@
     </div>
 
     @if ($errors->any())
-        <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex gap-3 text-red-600 text-sm">
+        <div class="mb-5 flex gap-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
             <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
             <div>
                 <ul class="list-disc pl-4 space-y-1">
@@ -25,14 +25,14 @@
         </div>
     @endif
 
-    <form action="{{ route('login') }}" method="POST" class="space-y-5">
+    <form action="{{ route('login') }}" method="POST" class="space-y-4">
         @csrf
         <div>
             <label class="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label>
             <div class="relative">
                 <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input type="text" name="name" 
-                    class="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" 
+                    class="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20" 
                     placeholder="Masukkan nama sesuai registrasi"
                     value="{{ old('name') }}" required autofocus>
             </div>
@@ -43,7 +43,7 @@
             <div class="relative">
                 <i class="fa-solid fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input type="text" name="access_token" 
-                    class="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all uppercase" 
+                    class="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 uppercase outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20" 
                     placeholder="Contoh: AB12CD34EF"
                     required>
             </div>
@@ -60,7 +60,7 @@
         </button>
     </form>
 
-    <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+    <div class="mt-6 border-t border-slate-100 pt-5 text-center">
         <p class="text-slate-500 text-sm">
             Belum punya akun atau token? 
             <a href="{{ route('register.guru.form') }}" class="text-primary font-bold hover:underline">Daftar Sekarang</a>

@@ -9,14 +9,14 @@
         <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola kumpulan soal yang dapat diakses oleh seluruh guru di platform Ujion.</p>
     </div>
 
-    <div class="grid lg:grid-cols-12 gap-6">
+    <div class="grid gap-6 lg:grid-cols-12">
         <!-- FORM ADD -->
         <div class="lg:col-span-4">
-            <div class="card sticky top-6">
+            <div class="card lg:sticky lg:top-6">
                 <div class="font-bold text-lg mb-4">Input Soal Baru</div>
                 <form class="space-y-4" method="POST" action="{{ route('superadmin.global-questions.store') }}">
                     @csrf
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                             <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenis Soal</label>
                             <select class="input mt-1" name="question_type" required>
@@ -46,7 +46,7 @@
                         <p class="text-[10px] text-muted italic mt-1">Hanya untuk pilihan ganda.</p>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                             <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Kunci Jawaban</label>
                             <input class="input mt-1" name="answer_key" placeholder="Shalat">
@@ -81,8 +81,8 @@
                         <p class="text-xs text-blue-100">Gunakan CSV untuk upload dalam jumlah besar.</p>
                     </div>
                 </div>
-                <div class="mt-4 flex flex-wrap gap-3">
-                    <form class="flex items-center gap-2 flex-1 min-w-[200px]" method="POST" action="{{ route('superadmin.global-questions.import') }}" enctype="multipart/form-data">
+                <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                    <form class="flex min-w-[200px] flex-1 flex-col gap-2 sm:flex-row sm:items-center" method="POST" action="{{ route('superadmin.global-questions.import') }}" enctype="multipart/form-data">
                         @csrf
                         <input class="input bg-white/10 border-white/20 text-white placeholder-blue-200" type="file" name="file" accept=".csv" required>
                         <button class="btn-primary bg-white text-blue-700 hover:bg-blue-50 border-none" type="submit">Import</button>
@@ -94,11 +94,11 @@
             </div>
 
             <div class="card min-h-[400px]">
-                <div class="flex items-center justify-between mb-6">
+                <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div class="font-bold text-lg">Daftar Soal Global ({{ count($globalQuestions) }})</div>
                     <div class="flex gap-2">
                         <!-- Search/Filter Placeholder -->
-                        <input type="text" placeholder="Cari soal..." class="input py-1 text-sm w-48">
+                        <input type="text" placeholder="Cari soal..." class="input w-full py-1 text-sm sm:w-48">
                     </div>
                 </div>
                 
@@ -106,9 +106,9 @@
                     @if(count($globalQuestions) > 0)
                     @foreach ($globalQuestions as $q)
                         <div class="p-4 rounded-card border border-border bg-white dark:bg-slate-900 dark:border-slate-800 hover:border-blue-300 transition-all">
-                            <div class="flex items-start justify-between gap-4">
+                            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                 <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
+                                    <div class="mb-2 flex flex-wrap items-center gap-3">
                                         <span class="badge-info text-[10px] uppercase font-bold tracking-wider">{{ str_replace('_', ' ', $q->question_type) }}</span>
                                         @if($q->material)
                                             <span class="text-[10px] text-muted flex items-center gap-1">
@@ -125,7 +125,7 @@
                                         {{ $q->question_text }}
                                     </div>
                                     @if($q->options)
-                                        <div class="mt-3 grid grid-cols-2 gap-2">
+                                        <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                                             @foreach($q->options as $idx => $opt)
                                                 <div class="text-xs p-2 bg-slate-50 dark:bg-slate-800 rounded border border-slate-100 dark:border-slate-700 {{ $q->answer_key == $opt ? 'ring-1 ring-blue-500 font-bold' : '' }}">
                                                     {{ $opt }}
@@ -139,7 +139,7 @@
                                         </div>
                                     @endif
                                 </div>
-                                <div class="flex flex-col gap-2">
+                                <div class="flex flex-row gap-2 lg:flex-col">
                                     <form method="POST" action="{{ route('superadmin.global-questions.destroy', $q) }}">
                                         @csrf
                                         <button class="btn-danger p-2" type="submit" data-confirm="Hapus soal ini dari bank soal?" title="Hapus">

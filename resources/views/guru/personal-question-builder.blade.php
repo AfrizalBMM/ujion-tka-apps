@@ -1,13 +1,13 @@
 @extends('layouts.guru')
 @section('title', 'Builder Soal Pribadi')
 @section('content')
-<div id="builder-app" class="fixed inset-0 bg-gray-900/90 z-50 flex flex-col">
-    <div class="flex items-center justify-between p-4 bg-white shadow">
-        <h2 class="font-bold text-xl">Builder Soal Pribadi</h2>
-        <a href="{{ route('guru.personal-questions') }}" class="btn-secondary">Keluar</a>
+<div id="builder-app" class="fixed inset-0 z-50 flex flex-col bg-gray-900/90">
+    <div class="flex flex-col gap-3 bg-white p-4 shadow sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="font-bold text-lg sm:text-xl">Builder Soal Pribadi</h2>
+        <a href="{{ route('guru.personal-questions') }}" class="btn-secondary w-full sm:w-auto">Keluar</a>
     </div>
-    <div class="flex-1 flex overflow-hidden">
-        <div class="w-1/4 bg-white p-4 overflow-y-auto border-r">
+    <div class="flex flex-1 flex-col overflow-hidden lg:flex-row">
+        <div class="max-h-[240px] bg-white p-4 overflow-y-auto border-b lg:max-h-none lg:w-1/4 lg:border-r lg:border-b-0">
             <div class="mb-4 font-bold">Daftar Soal</div>
             <ul>
                 <li v-for="(q, idx) in questions" :key="idx" :class="{'font-bold text-blue-600': idx === current}">
@@ -16,14 +16,14 @@
             </ul>
             <button class="btn-primary mt-4 w-full" @click="add">+ Tambah Soal</button>
         </div>
-        <div class="flex-1 p-8 overflow-y-auto">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             <form @submit.prevent="save">
                 <div v-if="questions.length">
-                    <div class="mb-2 flex items-center justify-between">
+                    <div class="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <span class="font-bold">Soal @{{ current+1 }} dari @{{ questions.length }}</span>
-                        <div>
-                            <button type="button" class="btn-secondary mr-2" @click="prev" :disabled="current===0">Prev</button>
-                            <button type="button" class="btn-secondary" @click="next" :disabled="current===questions.length-1">Next</button>
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            <button type="button" class="btn-secondary w-full sm:w-auto" @click="prev" :disabled="current===0">Prev</button>
+                            <button type="button" class="btn-secondary w-full sm:w-auto" @click="next" :disabled="current===questions.length-1">Next</button>
                         </div>
                     </div>
                     <div class="mb-4">
@@ -40,11 +40,11 @@
                     </div>
                     <div class="mb-4" v-if="['PG','Checklist'].includes(questions[current].tipe)">
                         <label class="text-xs font-bold">Opsi Jawaban</label>
-                        <div v-for="(opsi, i) in questions[current].opsi" :key="i" class="flex gap-2 mb-1">
+                        <div v-for="(opsi, i) in questions[current].opsi" :key="i" class="mb-1 flex flex-col gap-2 sm:flex-row">
                             <input v-model="questions[current].opsi[i]" class="input flex-1">
-                            <button type="button" class="btn-danger btn-xs" @click="removeOpsi(i)">Hapus</button>
+                            <button type="button" class="btn-danger w-full sm:w-auto" @click="removeOpsi(i)">Hapus</button>
                         </div>
-                        <button type="button" class="btn-secondary btn-xs mt-1" @click="addOpsi">+ Opsi</button>
+                        <button type="button" class="btn-secondary mt-1 w-full sm:w-auto" @click="addOpsi">+ Opsi</button>
                     </div>
                     <div class="mb-4">
                         <label class="text-xs font-bold">Jawaban Benar</label>
@@ -80,9 +80,9 @@
                             <div v-html="previewSoal(questions[current])"></div>
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button type="button" class="btn-danger" @click="remove(current)" v-if="questions.length>1">Hapus Soal Ini</button>
-                        <button type="submit" class="btn-primary">Simpan Semua Soal</button>
+                    <div class="flex flex-col gap-2 sm:flex-row">
+                        <button type="button" class="btn-danger w-full sm:w-auto" @click="remove(current)" v-if="questions.length>1">Hapus Soal Ini</button>
+                        <button type="submit" class="btn-primary w-full sm:w-auto">Simpan Semua Soal</button>
                     </div>
                 </div>
                 <div v-else>

@@ -3,17 +3,18 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Daftar Ujian</h1>
-    <form method="POST" action="{{ route('guru.exams.join') }}" class="card p-4 mb-4 flex gap-3 items-end">
+    <form method="POST" action="{{ route('guru.exams.join') }}" class="card mb-4 flex flex-col gap-3 sm:flex-row sm:items-end">
         @csrf
         <div class="flex-1">
             <label class="text-xs font-bold">Token Ujian</label>
             <input name="token" class="input w-full" required>
         </div>
-        <button class="btn-primary" type="submit">Join Ujian</button>
+        <button class="btn-primary w-full sm:w-auto" type="submit">Join Ujian</button>
     </form>
     <div class="card p-4 mb-4">
         <h2 class="font-semibold mb-2">Ujian Tersedia</h2>
-        <table class="table-ujion w-full">
+        <div class="table-container">
+        <table class="table-ujion w-full min-w-[520px]">
             <thead>
                 <tr>
                     <th>Judul</th>
@@ -31,10 +32,12 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
     <div class="card p-4 mb-4">
         <h2 class="font-semibold mb-2">Histori Ujian</h2>
-        <table class="table-ujion w-full">
+        <div class="table-container">
+        <table class="table-ujion w-full min-w-[620px]">
             <thead>
                 <tr>
                     <th>Judul</th>
@@ -49,13 +52,14 @@
                     <td>{{ $h['judul'] }}</td>
                     <td>{{ $h['skor'] }}</td>
                     <td>{{ $h['status'] }}</td>
-                    <td><a href="#" class="btn-secondary btn-xs">Lihat Hasil</a></td>
+                    <td><a href="#" class="btn-secondary">Lihat Hasil</a></td>
                 </tr>
                 @empty
                 <tr><td colspan="4" class="text-gray-400">Belum ada histori ujian.</td></tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

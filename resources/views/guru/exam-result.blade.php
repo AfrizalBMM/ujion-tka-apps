@@ -1,7 +1,7 @@
 @extends('layouts.guru')
 @section('title', 'Hasil Ujian')
 @section('content')
-<div class="max-w-2xl mx-auto space-y-6">
+<div class="max-w-3xl space-y-6">
     <h1 class="text-2xl font-bold mb-4">Hasil Ujian: {{ $exam->judul }}</h1>
     <div class="card p-4 mb-4">
         <div class="font-bold">Skor Anda:</div>

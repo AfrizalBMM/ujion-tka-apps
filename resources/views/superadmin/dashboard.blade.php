@@ -4,92 +4,119 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- TOP HEADER -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold">Analytics Hub</h1>
-            <p class="mt-1 text-textSecondary dark:text-slate-400">Selamat datang kembali, admin. Berikut adalah ringkasan performa platform hari ini.</p>
-        </div>
-        <div class="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-xl shadow-sm border border-border">
-            <span class="text-xs font-bold text-muted px-2 border-r">AUTO REFRESH</span>
-            <span class="text-xs font-mono text-blue-600 px-2" id="live-timer">120s</span>
-        </div>
-    </div>
-
-    <!-- STATS CARDS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="card border-l-4 border-l-blue-500 hover:translate-y-[-4px] transition-transform">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-xs font-bold text-textSecondary dark:text-slate-400 uppercase tracking-wider">Guru Aktif</div>
-                    <div class="mt-2 text-3xl font-bold">{{ $activeTeachersCount }}</div>
+    <section class="page-hero">
+        <span class="page-kicker">Analytics Hub</span>
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <h1 class="page-title">Pusat kendali platform Ujion dalam tampilan admin yang lebih rapi dan terstruktur.</h1>
+                <p class="page-description">Ringkasan performa guru, ujian, dan transaksi disusun ulang supaya cepat dipindai tanpa membuat area kerja terasa padat atau saling bertabrakan.</p>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div class="hero-chip">
+                    <i class="fa-solid fa-bolt"></i>
+                    Monitoring realtime lebih cepat
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                <div class="hero-chip">
+                    <i class="fa-solid fa-chart-column"></i>
+                    Panel analitik lebih fokus
+                </div>
+            </div>
+        </div>
+        <div class="page-actions">
+            <div class="hero-chip">
+                <span class="text-white/70">AUTO REFRESH</span>
+                <span class="font-mono font-semibold text-white" id="live-timer">120s</span>
+            </div>
+            <a href="{{ route('superadmin.audit-logs.index') }}" class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
+                <i class="fa-solid fa-shield-halved"></i>
+                Audit Logs
+            </a>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="metric-card">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <div class="metric-label">Guru Aktif</div>
+                    <div class="metric-value">{{ $activeTeachersCount }}</div>
+                </div>
+                <div class="metric-icon text-blue-600">
                     <i class="fa-solid fa-chalkboard-user text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 text-[10px] text-muted flex items-center gap-1">
-                <i class="fa-solid fa-arrow-trend-up text-green-500"></i>
-                <span>+2% dari minggu lalu</span>
+            <div class="metric-meta">
+                <span class="inline-flex items-center gap-1">
+                    <i class="fa-solid fa-arrow-trend-up text-green-500"></i>
+                    +2% dari minggu lalu
+                </span>
+                <span class="badge-info">Stabil</span>
             </div>
         </div>
 
-        <div class="card border-l-4 border-l-indigo-500 hover:translate-y-[-4px] transition-transform">
-            <div class="flex items-center justify-between">
+        <div class="metric-card">
+            <div class="flex items-start justify-between gap-4">
                 <div>
-                    <div class="text-xs font-bold text-textSecondary dark:text-slate-400 uppercase tracking-wider">Ujian Berlangsung</div>
-                    <div class="mt-2 text-3xl font-bold">{{ $ongoingExamsCount }}</div>
+                    <div class="metric-label">Ujian Berlangsung</div>
+                    <div class="metric-value">{{ $ongoingExamsCount }}</div>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
+                <div class="metric-icon text-indigo-600">
                     <i class="fa-solid fa-play-circle text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 text-[10px] text-muted">Real-time active sessions</div>
+            <div class="metric-meta">
+                <span>Real-time active sessions</span>
+                <span class="badge-info">Live</span>
+            </div>
         </div>
 
-        <div class="card border-l-4 border-l-green-500 hover:translate-y-[-4px] transition-transform">
-            <div class="flex items-center justify-between">
+        <div class="metric-card">
+            <div class="flex items-start justify-between gap-4">
                 <div>
-                    <div class="text-xs font-bold text-textSecondary dark:text-slate-400 uppercase tracking-wider">Total Pendapatan</div>
-                    <div class="mt-2 text-2xl font-bold">Rp {{ number_format((int)$totalRevenue, 0, ',', '.') }}</div>
+                    <div class="metric-label">Total Pendapatan</div>
+                    <div class="metric-value text-2xl">Rp {{ number_format((int) $totalRevenue, 0, ',', '.') }}</div>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-600">
+                <div class="metric-icon text-green-600">
                     <i class="fa-solid fa-wallet text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 text-[10px] text-muted">Bulan ini (Gross Revenue)</div>
+            <div class="metric-meta">
+                <span>Bulan ini (Gross Revenue)</span>
+                <span class="font-semibold text-green-600">Finance</span>
+            </div>
         </div>
 
-        <div class="card border-l-4 border-l-purple-500 hover:translate-y-[-4px] transition-transform">
-            <div class="flex items-center justify-between">
+        <div class="metric-card">
+            <div class="flex items-start justify-between gap-4">
                 <div>
-                    <div class="text-xs font-bold text-textSecondary dark:text-slate-400 uppercase tracking-wider">Guru Terbaik</div>
-                    <div class="mt-2 text-lg font-bold truncate max-w-[150px]">{{ $topTeacherName ?: '-' }}</div>
+                    <div class="metric-label">Guru Terbaik</div>
+                    <div class="mt-3 max-w-[160px] truncate text-lg font-bold text-slate-900 dark:text-white">{{ $topTeacherName ?: '-' }}</div>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-600">
+                <div class="metric-icon text-purple-600">
                     <i class="fa-solid fa-trophy text-xl"></i>
                 </div>
             </div>
-            <div class="mt-4 text-[10px] text-muted">Berdasarkan kontribusi soal</div>
+            <div class="metric-meta">
+                <span>Berdasarkan kontribusi soal</span>
+                <span class="font-semibold text-purple-600">Top Rank</span>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <!-- MAIN CHARTS & ACTIVITY -->
-    <div class="grid lg:grid-cols-3 gap-6">
-        <!-- ACTIVITY CHART -->
-        <div class="lg:col-span-2 card">
-            <div class="flex items-center justify-between mb-6">
+    <section class="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)]">
+        <div class="card">
+            <div class="section-heading mb-6">
                 <div>
-                    <h3 class="font-bold text-lg">Aktivitas Sistem</h3>
-                    <p class="text-xs text-muted">Jumlah aksi yang tercatat dalam 14 hari terakhir.</p>
+                    <h3 class="section-title">Aktivitas Sistem</h3>
+                    <p class="section-description">Jumlah aksi yang tercatat dalam 14 hari terakhir.</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <button class="btn-secondary px-3 py-1 text-xs">PDF Report</button>
                     <button class="btn-secondary px-3 py-1 text-xs">CSV</button>
                 </div>
             </div>
-            <div class="h-[300px]">
-                <canvas 
+            <div class="h-[320px]">
+                <canvas
                     id="superadmin-activity-chart"
                     data-labels='@json($dailyActivity["labels"] ?? [])'
                     data-values='@json($dailyActivity["values"] ?? [])'
@@ -97,52 +124,59 @@
             </div>
         </div>
 
-        <!-- RECENT AUDIT LOGS -->
-        <div class="lg:col-span-1 card">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="font-bold text-lg">Aksi Terbaru</h3>
-                <a href="{{ route('superadmin.audit-logs.index') }}" class="text-xs text-primary font-bold hover:underline">Lihat Semua</a>
+        <div class="card">
+            <div class="section-heading mb-6">
+                <div>
+                    <h3 class="section-title">Aksi Terbaru</h3>
+                    <p class="section-description">Log singkat untuk memantau kejadian penting.</p>
+                </div>
+                <a href="{{ route('superadmin.audit-logs.index') }}" class="text-xs font-bold text-primary hover:underline">Lihat Semua</a>
             </div>
-            <div class="space-y-4">
+            <div class="space-y-3">
                 @forelse($latestAuditLogs as $log)
-                <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                    <div class="w-8 h-8 rounded-full bg-white dark:bg-slate-700 flex flex-shrink-0 items-center justify-center shadow-sm">
-                        <i class="fa-solid fa-user-gear text-xs text-slate-400"></i>
+                    <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-3 dark:border-slate-800 dark:bg-slate-800/45">
+                        <div class="flex items-start gap-3">
+                            <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-slate-700">
+                                <i class="fa-solid fa-user-gear text-xs text-slate-400"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="truncate text-xs font-bold text-slate-800 dark:text-white">{{ $log->method }} {{ $log->path }}</div>
+                                <div class="mt-1 text-[10px] text-textSecondary dark:text-slate-400">{{ $log->created_at->diffForHumans() }} · IP: {{ $log->ip_address }}</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="min-w-0 flex-1">
-                        <div class="text-xs font-bold truncate">{{ $log->method }} {{ $log->path }}</div>
-                        <div class="text-[10px] text-muted mt-0.5">{{ $log->created_at->diffForHumans() }} Â· IP: {{ $log->ip_address }}</div>
-                    </div>
-                </div>
                 @empty
-                <div class="text-center py-10 opacity-50">
-                    <i class="fa-solid fa-ghost text-3xl mb-2 block"></i>
-                    <span class="text-xs italic">Belum ada aktivitas.</span>
-                </div>
+                    <div class="empty-state opacity-70">
+                        <i class="fa-solid fa-ghost mb-2 block text-3xl"></i>
+                        <span class="text-xs italic">Belum ada aktivitas.</span>
+                    </div>
                 @endforelse
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- QUICK LINKS -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <a href="{{ route('superadmin.teachers.index') }}" class="card p-4 flex flex-col items-center text-center hover:bg-blue-50 dark:hover:bg-blue-900/20 group transition-all">
-            <i class="fa-solid fa-users text-2xl mb-2 text-slate-400 group-hover:text-blue-500"></i>
-            <span class="text-xs font-bold">Kelola Guru</span>
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <a href="{{ route('superadmin.teachers.index') }}" class="quick-action">
+            <div class="quick-action-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="quick-action-title">Kelola Guru</div>
+            <div class="quick-action-copy">Aktivasi akun, suspend akses, dan pantau status guru dari satu panel kerja.</div>
         </a>
-        <a href="{{ route('superadmin.finance.index') }}" class="card p-4 flex flex-col items-center text-center hover:bg-indigo-50 dark:hover:bg-indigo-900/20 group transition-all">
-            <i class="fa-solid fa-credit-card text-2xl mb-2 text-slate-400 group-hover:text-indigo-500"></i>
-            <span class="text-xs font-bold">Pengaturan Harga</span>
+        <a href="{{ route('superadmin.finance.index') }}" class="quick-action">
+            <div class="quick-action-icon"><i class="fa-solid fa-credit-card"></i></div>
+            <div class="quick-action-title">Pengaturan Harga</div>
+            <div class="quick-action-copy">Atur paket, promo, dan QR pembayaran tanpa membuat dashboard terasa berat.</div>
         </a>
-        <a href="{{ route('superadmin.questions.index') }}" class="card p-4 flex flex-col items-center text-center hover:bg-green-50 dark:hover:bg-green-900/20 group transition-all">
-            <i class="fa-solid fa-database text-2xl mb-2 text-slate-400 group-hover:text-green-500"></i>
-            <span class="text-xs font-bold">Bank Soal</span>
+        <a href="{{ route('superadmin.questions.index') }}" class="quick-action">
+            <div class="quick-action-icon"><i class="fa-solid fa-database"></i></div>
+            <div class="quick-action-title">Bank Soal</div>
+            <div class="quick-action-copy">Kelola koleksi soal pusat yang dipakai lintas guru dan lintas ujian.</div>
         </a>
-        <a href="{{ route('superadmin.chat.index') }}" class="card p-4 flex flex-col items-center text-center hover:bg-purple-50 dark:hover:bg-purple-900/20 group transition-all">
-            <i class="fa-solid fa-comments text-2xl mb-2 text-slate-400 group-hover:text-purple-500"></i>
-            <span class="text-xs font-bold">Bantuan Chat</span>
+        <a href="{{ route('superadmin.chat.index') }}" class="quick-action">
+            <div class="quick-action-icon"><i class="fa-solid fa-comments"></i></div>
+            <div class="quick-action-title">Bantuan Chat</div>
+            <div class="quick-action-copy">Tinjau percakapan masuk dan respon cepat kebutuhan operator atau guru.</div>
         </a>
-    </div>
+    </section>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -152,7 +186,7 @@
         if (ctx) {
             const labels = JSON.parse(ctx.getAttribute('data-labels') || '[]');
             const values = JSON.parse(ctx.getAttribute('data-values') || '[]');
-            
+
             new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -160,23 +194,32 @@
                     datasets: [{
                         label: 'Aktivitas',
                         data: values,
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderColor: '#4F6EF7',
+                        backgroundColor: 'rgba(79, 110, 247, 0.12)',
                         fill: true,
                         tension: 0.4,
-                        borderWidth: 2,
+                        borderWidth: 3,
                         pointRadius: 4,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#4f46e5'
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#4F6EF7'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false }
+                    },
                     scales: {
-                        y: { beginAtZero: true, grid: { borderDash: [5, 5] }, ticks: { stepSize: 1 } },
-                        x: { grid: { display: false } }
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(148, 163, 184, 0.16)', borderDash: [5, 5] },
+                            ticks: { stepSize: 1 }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
                     }
                 }
             });

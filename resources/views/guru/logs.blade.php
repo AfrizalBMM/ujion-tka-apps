@@ -1,10 +1,11 @@
 @extends('layouts.guru')
 @section('title', 'Log Aktivitas')
 @section('content')
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="max-w-3xl space-y-6">
     <h1 class="text-2xl font-bold mb-4">Log Aktivitas Pribadi</h1>
     <div class="card p-4">
-        <table class="table-ujion w-full">
+        <div class="table-container">
+        <table class="table-ujion w-full min-w-[720px]">
             <thead>
                 <tr>
                     <th>Waktu</th>
@@ -24,6 +25,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

@@ -15,40 +15,106 @@
         window.onload = updateClock;
     </script>
 </head>
-<body class="min-h-screen bg-slate-50 text-gray-900 flex flex-col">
-    <header class="w-full bg-white shadow py-3 px-6 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-blue-400 shadow-glow"></div>
-            <span class="font-bold text-lg">Ujion Superadmin</span>
-        </div>
-        <div class="flex items-center gap-6">
-            <span id="live-clock" class="font-mono text-blue-600"></span>
-            <button class="text-gray-500 hover:text-blue-600" title="Perbesar Font" onclick="document.body.style.fontSize='1.1em'">
-                <i class="fa-solid fa-magnifying-glass-plus"></i>
-            </button>
-            <button class="text-gray-500 hover:text-blue-600" title="Perkecil Font" onclick="document.body.style.fontSize='0.95em'">
-                <i class="fa-solid fa-magnifying-glass-minus"></i>
-            </button>
-            <button class="text-gray-500 hover:text-blue-600" title="Light/Dark Mode" onclick="document.body.classList.toggle('dark')">
-                <i class="fa-solid fa-moon"></i>
-            </button>
-            <div class="relative group">
-                <button class="flex items-center gap-2 focus:outline-none">
-                    <img src="https://ui-avatars.com/api/?name=Superadmin" alt="avatar" class="w-8 h-8 rounded-full border">
-                    <span class="text-sm font-semibold">Superadmin</span>
-                    <span class="text-xs text-gray-400">(Admin)</span>
-                    <i class="fa-solid fa-chevron-down ml-1"></i>
+<body class="app-shell flex flex-col">
+    <header class="app-topbar">
+        <div class="app-topbar-panel">
+            <div class="app-brand">
+                <div class="app-brand-mark">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="app-brand-copy">
+                    <div class="app-brand-subtitle">Control Center</div>
+                    <div class="app-brand-title">Ujion Superadmin</div>
+                </div>
+            </div>
+
+            <div class="app-topbar-actions">
+                <div class="app-topbar-meta">
+                    <span class="font-semibold uppercase tracking-[0.24em] text-[11px]">Realtime</span>
+                    <span id="live-clock" class="app-clock"></span>
+                </div>
+                <button class="icon-button" title="Perbesar Font" onclick="document.body.style.fontSize='1.05em'">
+                    <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </button>
-                <div class="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg hidden group-hover:block z-50">
-                    <a href="#pengaturan" class="block px-4 py-2 hover:bg-gray-100">Pengaturan</a>
-                    <a href="#logout" class="block px-4 py-2 hover:bg-gray-100">Keluar</a>
+                <button class="icon-button" title="Perkecil Font" onclick="document.body.style.fontSize='0.97em'">
+                    <i class="fa-solid fa-magnifying-glass-minus"></i>
+                </button>
+                <button class="icon-button" title="Ganti Tema" data-theme-toggle>
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                <div class="app-user-menu">
+                    <button class="app-user-trigger">
+                        <img src="https://ui-avatars.com/api/?name=Superadmin&background=4F6EF7&color=fff" alt="avatar" class="app-user-avatar">
+                        <div class="app-user-copy">
+                            <div class="app-user-name">Superadmin</div>
+                            <div class="app-user-role">Administrator</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+                    </button>
+                    <div class="app-dropdown">
+                        <a href="{{ route('superadmin.guide') }}" class="app-dropdown-link">
+                            <i class="fa-solid fa-circle-info w-4"></i>
+                            Panduan
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="app-dropdown-link w-full text-left">
+                                <i class="fa-solid fa-right-from-bracket w-4"></i>
+                                Keluar
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </header>
-    <div class="flex flex-1 w-full relative">
-        <aside class="sidebar-container hidden md:flex">
-            <nav class="flex flex-col gap-2 w-full">
+
+    <nav class="mobile-nav">
+        <div class="mobile-nav-track">
+            <a href="{{ route('superadmin.dashboard') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
+                <i class="fa-solid fa-gauge-high"></i>
+                Dashboard
+            </a>
+            <a href="{{ route('superadmin.finance.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-credit-card"></i>
+                Keuangan
+            </a>
+            <a href="{{ route('superadmin.chat.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-comments"></i>
+                Chat
+            </a>
+            <a href="{{ route('superadmin.teachers.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.teachers.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-chalkboard-user"></i>
+                Guru
+            </a>
+            <a href="{{ route('superadmin.materials.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-book"></i>
+                Materi
+            </a>
+            <a href="{{ route('superadmin.global-questions.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.global-questions.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-database"></i>
+                Soal
+            </a>
+            <a href="{{ route('superadmin.exams.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-file-lines"></i>
+                Ujian
+            </a>
+            <a href="{{ route('superadmin.audit-logs.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.audit-logs.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-shield-halved"></i>
+                Audit
+            </a>
+        </div>
+    </nav>
+
+    <div class="app-body">
+        <aside class="sidebar-container">
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-title">Mission Control</div>
+                <div class="sidebar-brand-copy">Monitor guru, ujian, transaksi, dan audit dalam satu panel yang lebih fokus.</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-title">Utama</div>
                 <a href="{{ route('superadmin.dashboard') }}" class="sidebar-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-gauge-high w-5"></i> Dashboard
                 </a>
@@ -58,6 +124,8 @@
                 <a href="{{ route('superadmin.chat.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-comments w-5"></i> Live Chat
                 </a>
+
+                <div class="sidebar-section-title">Akademik</div>
                 <a href="{{ route('superadmin.teachers.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.teachers.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-chalkboard-user w-5"></i> Daftar Guru
                 </a>
@@ -70,7 +138,8 @@
                 <a href="{{ route('superadmin.exams.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-file-lines w-5"></i> Manajemen Ujian
                 </a>
-                <div class="my-4 border-t border-slate-100 dark:border-slate-800 mx-4"></div>
+
+                <div class="sidebar-section-title">Sistem</div>
                 <a href="{{ route('superadmin.audit-logs.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.audit-logs.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-shield-halved w-5"></i> Log Aktivitas
                 </a>
@@ -78,14 +147,27 @@
                     <i class="fa-solid fa-circle-info w-5"></i> Panduan
                 </a>
             </nav>
+
+            <div class="sidebar-footer">
+                <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary dark:text-slate-400">Uptime Tim</div>
+                <div class="mt-2 text-sm font-semibold text-slate-900 dark:text-white">Panel siap dipakai sepanjang hari</div>
+                <p class="mt-1 text-xs leading-5 text-textSecondary dark:text-slate-400">Gunakan dashboard untuk memantau performa guru, transaksi, dan aktivitas sistem secara cepat.</p>
+            </div>
         </aside>
-        <main class="flex-1 p-6 md:ml-64">
-            @include('components.ui.flash')
-            @yield('content')
+
+        <main class="page-shell">
+            <div class="page-stack">
+                <div class="page-content">
+                    <div class="page-content-inner">
+                        @include('components.ui.flash')
+                        @yield('content')
+                    </div>
+                </div>
+                <footer class="page-footer">
+                    2026 Ujion TKA by Reditech
+                </footer>
+            </div>
         </main>
     </div>
-    <footer class="w-full bg-white border-t py-4 text-center text-gray-400 text-xs mt-8">
-        2026 Ujion TKA by Reditech
-    </footer>
 </body>
 </html>

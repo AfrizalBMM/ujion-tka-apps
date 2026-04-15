@@ -9,10 +9,10 @@
         <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola QR pembayaran dan promo harga paket.</p>
     </div>
 
-    <div class="grid lg:grid-cols-2 gap-6">
+    <div class="grid gap-6 lg:grid-cols-2">
         <!-- QR SECTION -->
         <div class="card">
-            <div class="flex items-start justify-between gap-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <div class="font-bold text-lg">QR Pembayaran</div>
                     <div class="mt-1 text-sm text-textSecondary dark:text-slate-300">Upload QRIS/Bank dan aktifkan/nonaktifkan.</div>
@@ -44,7 +44,7 @@
                 @if(count($paymentQrs) > 0)
                 @foreach ($paymentQrs as $qr)
                     <div class="p-4 rounded-card border border-border bg-white dark:bg-slate-900 dark:border-slate-800">
-                        <div class="flex items-start justify-between gap-4">
+                        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div class="flex items-start gap-4">
                                 <img class="w-16 h-16 rounded-xl object-cover border border-border dark:border-slate-800" src="{{ \Illuminate\Support\Facades\Storage::url($qr->image_path) }}" alt="{{ $qr->label }}">
                                 <div>
@@ -60,7 +60,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <form method="POST" action="{{ route('superadmin.payment-qrs.toggle', $qr) }}">
                                     @csrf
                                     <button class="btn-secondary p-2" type="submit" title="Toggle Status"><i class="fa-solid fa-power-off"></i></button>
@@ -145,7 +145,7 @@
                 @if(count($pricingPlans) > 0)
                 @foreach ($pricingPlans as $plan)
                     <div class="p-4 rounded-card border border-border bg-white dark:bg-slate-900 dark:border-slate-800">
-                        <div class="flex items-start justify-between gap-4">
+                        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div>
                                 <div class="font-bold text-lg text-primary">{{ $plan->name }}</div>
                                 <div class="mt-1 text-sm font-bold">Rp {{ number_format((int)$plan->price, 0, ',', '.') }} <span class="text-muted dark:text-slate-400 font-normal">{{ $plan->period }}</span></div>
@@ -166,7 +166,7 @@
                                 @endif
                             </div>
 
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <form method="POST" action="{{ route('superadmin.pricing-plans.toggle-active', $plan) }}">
                                     @csrf
                                     <button class="btn-secondary p-2" type="submit" title="Toggle Aktif"><i class="fa-solid fa-eye"></i></button>

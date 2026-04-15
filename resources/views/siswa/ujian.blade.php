@@ -1,10 +1,10 @@
 @extends('layouts.guest')
 
 @section('content')
-<div id="ujian-app" class="min-h-screen bg-gray-100 flex flex-col">
-    <div class="flex-1 flex flex-col md:flex-row">
+<div id="ujian-app" class="flex min-h-screen flex-col">
+    <div class="flex flex-1 flex-col md:flex-row">
         <!-- Soal Section -->
-        <div class="flex-1 p-6 flex flex-col justify-center">
+        <div class="flex flex-1 flex-col justify-center p-4 sm:p-6">
             <div class="mb-4">
                 <span class="text-sm text-gray-500">Soal <span id="soal-index">1</span> dari <span id="soal-total">10</span></span>
             </div>
@@ -15,21 +15,21 @@
                     <!-- Opsi jawaban akan di-render di sini -->
                 </div>
             </div>
-            <div class="flex justify-between mt-6">
-                <button id="btn-sebelumnya" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Sebelumnya</button>
-                <button id="btn-ragu" class="px-4 py-2 bg-yellow-400 text-white rounded hover:bg-yellow-500">Ragu-ragu</button>
-                <button id="btn-selanjutnya" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Selanjutnya</button>
+            <div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <button id="btn-sebelumnya" class="rounded bg-gray-300 px-4 py-2 hover:bg-gray-400">Sebelumnya</button>
+                <button id="btn-ragu" class="rounded bg-yellow-400 px-4 py-2 text-white hover:bg-yellow-500">Ragu-ragu</button>
+                <button id="btn-selanjutnya" class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Selanjutnya</button>
             </div>
         </div>
         <!-- Sidebar Section -->
-        <div class="w-full md:w-72 bg-white border-l p-4 flex flex-col">
+        <div class="flex w-full flex-col border-t bg-white p-4 md:w-72 md:border-l md:border-t-0">
             <div class="mb-4 text-center">
                 <span class="text-xs text-gray-500 uppercase font-bold">Sisa Waktu</span>
                 <div id="timer-display" class="text-2xl font-bold text-red-600 tracking-wider">--:--:--</div>
             </div>
             <div class="flex items-center justify-between mb-4">
                 <span class="font-semibold">Kontrol Teks</span>
-                <div>
+                <div class="flex gap-2">
                     <button id="btn-text-sm" class="px-2 py-1 text-xs bg-gray-200 rounded">A-</button>
                     <button id="btn-text-lg" class="px-2 py-1 text-xs bg-gray-200 rounded">A+</button>
                 </div>
@@ -51,12 +51,12 @@
             <div class="mb-4 flex flex-wrap gap-2" id="soal-list">
                 <!-- List nomor soal -->
             </div>
-            <button id="btn-selesai" class="w-full py-2 mt-auto bg-red-600 text-white rounded hover:bg-red-700">Selesaikan</button>
+            <button id="btn-selesai" class="mt-4 w-full rounded bg-red-600 py-2 text-white hover:bg-red-700 md:mt-auto">Selesaikan</button>
         </div>
     </div>
     <!-- Modal konfirmasi selesai -->
     <div id="modal-konfirmasi" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-6 rounded shadow max-w-sm w-full">
+        <div class="w-full max-w-sm rounded shadow bg-white p-6 mx-4">
             <h3 class="text-lg font-bold mb-4">Konfirmasi Selesai Ujian</h3>
             <p class="mb-4">Apakah Anda yakin ingin menyelesaikan ujian?</p>
             <div class="flex justify-end gap-2">

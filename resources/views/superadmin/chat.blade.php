@@ -3,7 +3,7 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Live Chat Guru/Operator</h1>
-    <div class="grid md:grid-cols-3 gap-6">
+    <div class="grid gap-6 md:grid-cols-3">
         <div class="md:col-span-1">
             <div class="card p-4">
                 <form method="POST" action="{{ route('superadmin.chat.store') }}" enctype="multipart/form-data">
@@ -28,10 +28,10 @@
             </div>
         </div>
         <div class="md:col-span-2">
-            <div class="card p-4 h-96 overflow-y-auto">
+            <div class="card h-[420px] overflow-y-auto p-4 sm:h-96">
                 @foreach($chats as $chat)
                     <div class="mb-4 flex {{ $chat->from_user_id == auth()->id() ? 'justify-end' : 'justify-start' }}">
-                        <div class="max-w-xs">
+                        <div class="max-w-[85%] sm:max-w-xs">
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-xs">{{ $chat->fromUser->name }}</span>
                                 @if($chat->is_read)

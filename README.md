@@ -12,7 +12,7 @@ Ujion TKA adalah sistem manajemen ujian (LMS) modern yang dirancang untuk memfas
 
 Sistem ini dibangun menggunakan fondasi teknologi terbaru:
 
-- **Framework**: [Laravel 11.x](https://laravel.com)
+- **Framework**: [Laravel 12.x](https://laravel.com)
 - **Frontend Tools**: [Vite](https://vitejs.dev/) & [Tailwind CSS 4.0](https://tailwindcss.com)
 - **Icons & UI**: FontAwesome 6 (Pro-grade setup) & Google Fonts (Inter)
 - **Database**: MySQL/MariaDB
@@ -116,6 +116,9 @@ resources/
 - [x] Implementasi Tailwind 4.0 Design System.
 - [x] Integrasi Audit Logs untuk monitoring aktivitas sensitif.
 - [x] Perbaikan pemuatan aset CSS menggunakan direktif `@vite`.
+- [x] Set timezone & locale default: `config/app.php` (timezone `Asia/Jakarta`, locale `id`, faker `id_ID`).
+- [x] Tambah route API: `routes/api.php` dan didaftarkan di `bootstrap/app.php` (`withRouting(api: ...)`).
+- [x] Siapkan struktur folder tambahan: `app/Services` dan `app/Http/Requests` (tracked via `.gitkeep`).
 
 ---
 &copy; 2026 Ujion TKA Project. Built with ❤️ for Education.
