@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@
         window.onload = updateClock;
     </script>
 </head>
+
 <body class="app-shell flex flex-col">
     <header class="app-topbar">
         <div class="app-topbar-panel">
@@ -44,7 +46,8 @@
                 </button>
                 <div class="app-user-menu">
                     <button class="app-user-trigger">
-                        <img src="https://ui-avatars.com/api/?name=Superadmin&background=4F6EF7&color=fff" alt="avatar" class="app-user-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Superadmin&background=4F6EF7&color=fff" alt="avatar"
+                            class="app-user-avatar">
                         <div class="app-user-copy">
                             <div class="app-user-name">Superadmin</div>
                             <div class="app-user-role">Administrator</div>
@@ -71,35 +74,48 @@
 
     <nav class="mobile-nav">
         <div class="mobile-nav-track">
-            <a href="{{ route('superadmin.dashboard') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
+            <a href="{{ route('superadmin.dashboard') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
                 <i class="fa-solid fa-gauge-high"></i>
                 Dashboard
             </a>
-            <a href="{{ route('superadmin.finance.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
+            <a href="{{ route('superadmin.finance.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-credit-card"></i>
                 Keuangan
             </a>
-            <a href="{{ route('superadmin.chat.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
+            <a href="{{ route('superadmin.chat.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-comments"></i>
                 Chat
             </a>
-            <a href="{{ route('superadmin.teachers.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.teachers.index') ? 'active' : '' }}">
+            <a href="{{ route('superadmin.teachers.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.teachers.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-chalkboard-user"></i>
                 Guru
             </a>
-            <a href="{{ route('superadmin.materials.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}">
+            <a href="{{ route('superadmin.materials.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-book"></i>
                 Materi
             </a>
-            <a href="{{ route('superadmin.global-questions.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.global-questions.index') ? 'active' : '' }}">
+            <a href="{{ route('superadmin.global-questions.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.global-questions.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-database"></i>
-                Soal
+                Bank Soal
             </a>
-            <a href="{{ route('superadmin.exams.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
+            <a href="{{ route('superadmin.paket-soal.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.paket-soal.*') || request()->routeIs('superadmin.soal.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-database"></i>
+                Paket Soal
+            </a>
+            <a href="{{ route('superadmin.exams.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-file-lines"></i>
                 Ujian
             </a>
-            <a href="{{ route('superadmin.audit-logs.index') }}" class="mobile-nav-link {{ request()->routeIs('superadmin.audit-logs.index') ? 'active' : '' }}">
+            <a href="{{ route('superadmin.audit-logs.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.audit-logs.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-shield-halved"></i>
                 Audit
             </a>
@@ -108,51 +124,55 @@
 
     <div class="app-body">
         <aside class="sidebar-container">
-            <div class="sidebar-brand">
-                <div class="sidebar-brand-title">Mission Control</div>
-                <div class="sidebar-brand-copy">Monitor guru, ujian, transaksi, dan audit dalam satu panel yang lebih fokus.</div>
-            </div>
 
             <nav class="sidebar-nav">
                 <div class="sidebar-section-title">Utama</div>
-                <a href="{{ route('superadmin.dashboard') }}" class="sidebar-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('superadmin.dashboard') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-gauge-high w-5"></i> Dashboard
                 </a>
-                <a href="{{ route('superadmin.finance.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
+                <a href="{{ route('superadmin.finance.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-credit-card w-5"></i> Keuangan & QR
                 </a>
-                <a href="{{ route('superadmin.chat.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
+                <a href="{{ route('superadmin.chat.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-comments w-5"></i> Live Chat
                 </a>
 
                 <div class="sidebar-section-title">Akademik</div>
-                <a href="{{ route('superadmin.teachers.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.teachers.index') ? 'active' : '' }}">
+                <a href="{{ route('superadmin.teachers.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.teachers.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-chalkboard-user w-5"></i> Daftar Guru
                 </a>
-                <a href="{{ route('superadmin.materials.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}">
+                <a href="{{ route('superadmin.materials.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-book w-5"></i> Master Materi
                 </a>
-                <a href="{{ route('superadmin.global-questions.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.global-questions.index') ? 'active' : '' }}">
+                <a href="{{ route('superadmin.global-questions.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.global-questions.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-database w-5"></i> Bank Soal Global
                 </a>
-                <a href="{{ route('superadmin.exams.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
+                <a href="{{ route('superadmin.paket-soal.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.paket-soal.*') || request()->routeIs('superadmin.soal.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-database w-5"></i> Paket Soal TKA
+                </a>
+                <a href="{{ route('superadmin.exams.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-file-lines w-5"></i> Manajemen Ujian
                 </a>
 
                 <div class="sidebar-section-title">Sistem</div>
-                <a href="{{ route('superadmin.audit-logs.index') }}" class="sidebar-link {{ request()->routeIs('superadmin.audit-logs.index') ? 'active' : '' }}">
+                <a href="{{ route('superadmin.audit-logs.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.audit-logs.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-shield-halved w-5"></i> Log Aktivitas
                 </a>
-                <a href="{{ route('superadmin.guide') }}" class="sidebar-link {{ request()->routeIs('superadmin.guide') ? 'active' : '' }}">
+                <a href="{{ route('superadmin.guide') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.guide') ? 'active' : '' }}">
                     <i class="fa-solid fa-circle-info w-5"></i> Panduan
                 </a>
             </nav>
 
-            <div class="sidebar-footer">
-                <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary dark:text-slate-400">Uptime Tim</div>
-                <div class="mt-2 text-sm font-semibold text-slate-900 dark:text-white">Panel siap dipakai sepanjang hari</div>
-                <p class="mt-1 text-xs leading-5 text-textSecondary dark:text-slate-400">Gunakan dashboard untuk memantau performa guru, transaksi, dan aktivitas sistem secara cepat.</p>
-            </div>
         </aside>
 
         <main class="page-shell">
@@ -170,4 +190,5 @@
         </main>
     </div>
 </body>
+
 </html>

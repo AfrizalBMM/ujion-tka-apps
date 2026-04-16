@@ -5,8 +5,12 @@ use App\Http\Controllers\Superadmin\AuditLogController;
 use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\GlobalQuestionController;
 use App\Http\Controllers\Superadmin\MaterialController;
+use App\Http\Controllers\Superadmin\MapelPaketController as SuperadminMapelPaketController;
 use App\Http\Controllers\Superadmin\PaymentQrController;
+use App\Http\Controllers\Superadmin\PaketSoalController;
 use App\Http\Controllers\Superadmin\PricingPlanController;
+use App\Http\Controllers\Superadmin\SoalController as SuperadminSoalController;
+use App\Http\Controllers\Superadmin\TeksBacaanController as SuperadminTeksBacaanController;
 use App\Http\Controllers\Superadmin\TeacherController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,9 +38,7 @@ Route::get('/siswa/identitas', function () {
 })->name('siswa.identitas');
 
 Route::post('/siswa/mulai', [ExamController::class , 'mulai'])->name('siswa.mulai');
-Route::get('/siswa/petunjuk', function () {
-	return view('siswa.petunjuk');
-})->name('siswa.petunjuk');
+Route::get('/siswa/petunjuk', [ExamController::class , 'petunjuk'])->name('siswa.petunjuk');
 Route::get('/siswa/ujian', [ExamController::class , 'showUjian'])->name('siswa.ujian');
 Route::post('/siswa/api/save-answer', [ExamController::class , 'apiSaveAnswer'])->name('siswa.api.save_answer');
 Route::get('/siswa/selesai', [ExamController::class , 'selesai'])->name('siswa.selesai');
@@ -44,6 +46,7 @@ Route::get('/siswa/selesai', [ExamController::class , 'selesai'])->name('siswa.s
 Route::prefix('superadmin')
 	->name('superadmin.')
 	->middleware('audit')
+	->scopeBindings()
 	->group(function () {
 	    Route::get('/', [DashboardController::class , 'index'])->name('dashboard');
 
@@ -96,6 +99,28 @@ Route::prefix('superadmin')
 	    Route::get('/exams/{exam}', [\App\Http\Controllers\Superadmin\ExamController::class , 'show'])->name('exams.show');
 	    Route::post('/exams/{exam}/import-bank', [\App\Http\Controllers\Superadmin\ExamController::class , 'importBankQuestions'])->name('exams.import-bank');
 	    Route::get('/exams/{exam}/analysis', [\App\Http\Controllers\Superadmin\ExamAnalysisController::class , 'show'])->name('exams.analysis');
+
+        Route::get('/paket-soal', [PaketSoalController::class, 'index'])->name('paket-soal.index');
+        Route::get('/paket-soal/create', [PaketSoalController::class, 'create'])->name('paket-soal.create');
+        Route::post('/paket-soal', [PaketSoalController::class, 'store'])->name('paket-soal.store');
+        Route::get('/paket-soal/{paket}', [PaketSoalController::class, 'show'])->name('paket-soal.show');
+        Route::get('/paket-soal/{paket}/edit', [PaketSoalController::class, 'edit'])->name('paket-soal.edit');
+        Route::put('/paket-soal/{paket}', [PaketSoalController::class, 'update'])->name('paket-soal.update');
+        Route::delete('/paket-soal/{paket}', [PaketSoalController::class, 'destroy'])->name('paket-soal.destroy');
+        Route::patch('/paket-soal/{paket}/toggle', [PaketSoalController::class, 'toggleAktif'])->name('paket-soal.toggle');
+        Route::put('/paket-soal/{paket}/mapel/{mapel}', [SuperadminMapelPaketController::class, 'update'])->name('mapel.update');
+
+        Route::get('/paket-soal/{paket}/mapel/{mapel}/soal', [SuperadminSoalController::class, 'index'])->name('soal.index');
+        Route::get('/paket-soal/{paket}/mapel/{mapel}/soal/create', [SuperadminSoalController::class, 'create'])->name('soal.create');
+        Route::post('/paket-soal/{paket}/mapel/{mapel}/soal', [SuperadminSoalController::class, 'store'])->name('soal.store');
+        Route::get('/paket-soal/{paket}/mapel/{mapel}/soal/{soal}/edit', [SuperadminSoalController::class, 'edit'])->name('soal.edit');
+        Route::put('/paket-soal/{paket}/mapel/{mapel}/soal/{soal}', [SuperadminSoalController::class, 'update'])->name('soal.update');
+        Route::delete('/paket-soal/{paket}/mapel/{mapel}/soal/{soal}', [SuperadminSoalController::class, 'destroy'])->name('soal.destroy');
+
+        Route::get('/paket-soal/{paket}/mapel/{mapel}/teks-bacaan', [SuperadminTeksBacaanController::class, 'index'])->name('teks-bacaan.index');
+        Route::post('/paket-soal/{paket}/mapel/{mapel}/teks-bacaan', [SuperadminTeksBacaanController::class, 'store'])->name('teks-bacaan.store');
+        Route::put('/paket-soal/{paket}/mapel/{mapel}/teks-bacaan/{bacaan}', [SuperadminTeksBacaanController::class, 'update'])->name('teks-bacaan.update');
+        Route::delete('/paket-soal/{paket}/mapel/{mapel}/teks-bacaan/{bacaan}', [SuperadminTeksBacaanController::class, 'destroy'])->name('teks-bacaan.destroy');
 
 	    Route::get('/guide', function () {
 		    return view('superadmin.guide'); }

@@ -2,17 +2,20 @@
 namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\PaketSoal;
 use App\Models\Question;
 use Illuminate\Http\Request;
 use App\Models\Material;
 
 class ExamController extends Controller {
     public function index() {
-        $exams = Exam::all();
-        return view('superadmin.exams', compact('exams'));
+        $exams = Exam::with('paketSoal.jenjang')->latest()->get();
+        $paketSoals = PaketSoal::with('jenjang')->latest()->get();
+        return view('superadmin.exams', compact('exams', 'paketSoals'));
     }
     public function store(Request $request) {
         $data = $request->validate([
+            'paket_soal_id' => 'required|exists:paket_soals,id',
             'judul' => 'required',
             'tanggal_terbit' => 'required|date',
             'max_peserta' => 'required|integer',
@@ -20,6 +23,9 @@ class ExamController extends Controller {
             'status' => 'required|in:draft,terbit',
         ]);
         $data['token'] = strtoupper(substr(md5(uniqid()), 0, 6));
+        if (blank($data['timer'])) {
+            $data['timer'] = PaketSoal::with('mapelPakets')->find($data['paket_soal_id'])?->mapelPakets?->sum('durasi_menit') ?? 150;
+        }
         Exam::create($data);
         return back()->with('flash', ['type' => 'success', 'message' => 'Ujian berhasil dibuat.']);
     }

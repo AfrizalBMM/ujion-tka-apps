@@ -6,8 +6,8 @@
     <div class="card mb-4 h-[420px] overflow-y-auto p-4 sm:h-96" id="chat-box">
         <ul class="space-y-2">
             @foreach($chats as $chat)
-                <li class="flex {{ $chat->user_id == auth()->id() ? 'justify-end' : 'justify-start' }}">
-                    <div class="max-w-[85%] rounded-lg p-2 sm:max-w-xs {{ $chat->user_id == auth()->id() ? 'bg-blue-100' : 'bg-gray-100' }}">
+                <li class="flex {{ $chat->from_user_id == auth()->id() ? 'justify-end' : 'justify-start' }}">
+                    <div class="max-w-[85%] rounded-lg p-2 sm:max-w-xs {{ $chat->from_user_id == auth()->id() ? 'bg-blue-100' : 'bg-gray-100' }}">
                         <div class="text-sm">{{ $chat->message }}</div>
                         @if($chat->image_path)
                             <img src="{{ asset('storage/'.$chat->image_path) }}" class="max-h-32 mt-2 rounded">

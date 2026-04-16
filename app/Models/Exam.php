@@ -17,7 +17,17 @@ class Exam extends Model {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function paketSoal()
+    {
+        return $this->belongsTo(PaketSoal::class);
+    }
+
     public function participants() {
         return $this->hasMany(Participant::class);
+    }
+
+    public function ujianSesis()
+    {
+        return $this->hasMany(UjianSesi::class);
     }
 }

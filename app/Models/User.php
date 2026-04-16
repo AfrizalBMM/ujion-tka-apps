@@ -33,6 +33,10 @@ class User extends Authenticatable
         'role',
         'account_status',
         'access_token',
+        'jenjang',
+        'tingkat',
+        'satuan_pendidikan',
+        'no_wa',
     ];
 
     /**
@@ -55,6 +59,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'bookmarks' => 'array',
         ];
     }
 
@@ -71,5 +76,10 @@ class User extends Authenticatable
     public function exams()
     {
         return $this->hasMany(Exam::class, 'user_id');
+    }
+
+    public function createdPaketSoals()
+    {
+        return $this->hasMany(PaketSoal::class, 'created_by');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Siswa;
 
+use App\Models\Exam;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -17,12 +18,18 @@ class AuthController extends Controller
         $request->validate([
             'token' => 'required|string',
         ]);
-        // TODO: Validasi token dari database atau sumber lain
-        $token = $request->input('token');
-        if ($token === 'UJION2026') { // Contoh validasi token
-            session(['siswa_token' => $token]);
-            return redirect()->route('siswa.identitas');
+
+        $exam = Exam::with('paketSoal.mapelPakets')
+            ->where('token', strtoupper($request->input('token')))
+            ->where('is_active', true)
+            ->first();
+
+        if (! $exam || ! $exam->paketSoal || $exam->paketSoal->mapelPakets->isEmpty()) {
+            return back()->withErrors(['token' => 'Token tidak valid atau paket soal belum siap.']);
         }
-        return back()->withErrors(['token' => 'Token tidak valid']);
+
+        session(['siswa_token' => $exam->token]);
+
+        return redirect()->route('siswa.identitas');
     }
 }

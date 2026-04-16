@@ -43,6 +43,10 @@ class RegisterGuruController extends Controller
             'password' => Hash::make('password'), // Default password, should be updated
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
+            'jenjang' => $request->jenjang,
+            'tingkat' => $request->tingkat,
+            'satuan_pendidikan' => $request->satuan_pendidikan,
+            'no_wa' => $request->no_wa,
         ]);
 
         // Ambil harga aktif dari PricingPlan

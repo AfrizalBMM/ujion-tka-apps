@@ -8,6 +8,15 @@
             @csrf
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <div>
+                    <label class="text-xs font-bold">Paket Soal</label>
+                    <select name="paket_soal_id" class="input w-full" required>
+                        <option value="">Pilih paket</option>
+                        @foreach($paketSoals as $paket)
+                            <option value="{{ $paket->id }}">{{ $paket->nama }} &middot; {{ $paket->jenjang?->kode }} &middot; {{ $paket->tahun_ajaran }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
                     <label class="text-xs font-bold">Judul</label>
                     <input name="judul" class="input w-full" required>
                 </div>
@@ -40,6 +49,7 @@
             <thead>
                 <tr>
                     <th>Judul</th>
+                    <th>Paket</th>
                     <th>Tanggal Terbit</th>
                     <th>Max Peserta</th>
                     <th>Token</th>
@@ -52,6 +62,7 @@
                 @foreach($exams as $exam)
                 <tr>
                     <td>{{ $exam->judul }}</td>
+                    <td>{{ $exam->paketSoal?->nama ?? '-' }}</td>
                     <td>{{ $exam->tanggal_terbit->format('d M Y H:i') }}</td>
                     <td>{{ $exam->max_peserta }}</td>
                     <td>

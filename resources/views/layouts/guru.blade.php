@@ -97,7 +97,11 @@
       </a>
       <a href="{{ route('guru.personal-questions') }}" class="mobile-nav-link {{ request()->routeIs('guru.personal-questions*') ? 'active' : '' }}">
         <i class="fa-solid fa-database"></i>
-        Soal
+        Bank Soal
+      </a>
+      <a href="{{ route('guru.paket-soal.index') }}" class="mobile-nav-link {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
+        <i class="fa-solid fa-database"></i>
+        Paket Soal
       </a>
       <a href="{{ route('guru.exams') }}" class="mobile-nav-link {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
         <i class="fa-solid fa-file-lines"></i>
@@ -134,6 +138,10 @@
         <a href="{{ route('guru.personal-questions') }}"
           class="sidebar-link {{ request()->routeIs('guru.personal-questions*') ? 'active' : '' }}">
           <i class="fa-solid fa-database w-5"></i> Bank Soal Pribadi
+        </a>
+        <a href="{{ route('guru.paket-soal.index') }}"
+          class="sidebar-link {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-database w-5"></i> Paket Soal TKA
         </a>
         <a href="{{ route('guru.exams') }}"
           class="sidebar-link {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
