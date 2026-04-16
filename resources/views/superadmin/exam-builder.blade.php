@@ -18,9 +18,9 @@
             <form method="POST" action="{{ route('superadmin.exams.import-bank', $exam) }}" class="mt-6">
                 @csrf
                 <div class="font-bold mb-2">Import dari Bank Soal</div>
-                <select name="question_ids[]" multiple class="input h-32 w-full">
+                <select name="global_question_ids[]" multiple class="input h-32 w-full">
                     @foreach($bankQuestions as $bq)
-                        <option value="{{ $bq->id }}">{{ $bq->pertanyaan }}</option>
+                        <option value="{{ $bq->id }}">{{ $bq->question_text }}</option>
                     @endforeach
                 </select>
                 <button class="btn-secondary mt-2 w-full">Import</button>
@@ -35,6 +35,15 @@
                             <button type="button" class="btn-secondary w-full sm:w-auto" @click="prev" :disabled="current===0">Prev</button>
                             <button type="button" class="btn-secondary w-full sm:w-auto" @click="next" :disabled="current===questions.length-1">Next</button>
                         </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="text-xs font-bold">Materi</label>
+                        <select v-model="questions[current].material_id" class="input w-full">
+                            <option value="">Pilih materi</option>
+                            @foreach($materials as $material)
+                                <option value="{{ $material->id }}">{{ $material->curriculum }} - {{ $material->sub_unit }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="mb-4">
                         <label class="text-xs font-bold">Tipe Soal</label>
@@ -93,6 +102,7 @@ new Vue({
     el: '#builder-app',
     data: {
         questions: @json($questions->map(fn($q)=>[
+            'material_id'=>$q->material_id,
             'tipe'=>$q->tipe,
             'pertanyaan'=>$q->pertanyaan,
             'opsi'=>$q->opsi ?? [],
@@ -106,7 +116,7 @@ new Vue({
         go(idx){ this.current=idx; },
         next(){ if(this.current<this.questions.length-1) this.current++; },
         prev(){ if(this.current>0) this.current--; },
-        add(){ this.questions.push({tipe:'PG',pertanyaan:'',opsi:[''],jawaban_benar:'',pembahasan:'',image:''}); this.current=this.questions.length-1; },
+        add(){ this.questions.push({material_id:'',tipe:'PG',pertanyaan:'',opsi:[''],jawaban_benar:'',pembahasan:'',image:''}); this.current=this.questions.length-1; },
         remove(idx){ this.questions.splice(idx,1); if(this.current>=this.questions.length) this.current=this.questions.length-1; },
         addOpsi(){ this.questions[this.current].opsi.push(''); },
         removeOpsi(i){ this.questions[this.current].opsi.splice(i,1); },

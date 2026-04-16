@@ -111,8 +111,8 @@
                     <p class="section-description">Jumlah aksi yang tercatat dalam 14 hari terakhir.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <button class="btn-secondary px-3 py-1 text-xs">PDF Report</button>
-                    <button class="btn-secondary px-3 py-1 text-xs">CSV</button>
+                    <a href="{{ route('superadmin.dashboard.print') }}" target="_blank" rel="noopener" class="btn-secondary px-3 py-1 text-xs">Versi Cetak</a>
+                    <a href="{{ route('superadmin.dashboard.export-csv') }}" class="btn-secondary px-3 py-1 text-xs">CSV</a>
                 </div>
             </div>
             <div class="h-[320px]">
@@ -141,7 +141,7 @@
                             </div>
                             <div class="min-w-0 flex-1">
                                 <div class="truncate text-xs font-bold text-slate-800 dark:text-white">{{ $log->method }} {{ $log->path }}</div>
-                                <div class="mt-1 text-[10px] text-textSecondary dark:text-slate-400">{{ $log->created_at->diffForHumans() }} · IP: {{ $log->ip_address }}</div>
+                                <div class="mt-1 text-[10px] text-textSecondary dark:text-slate-400">{{ $log->created_at->diffForHumans() }} ï¿½ IP: {{ $log->ip_address }}</div>
                             </div>
                         </div>
                     </div>

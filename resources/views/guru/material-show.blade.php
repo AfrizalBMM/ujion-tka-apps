@@ -50,8 +50,9 @@
             </div>
 
             <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
-                <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Soal Terikat</div>
-                <div class="mt-2 text-3xl font-bold">{{ $questionCount }}</div>
+                <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Bank Soal Global</div>
+                <div class="mt-2 text-3xl font-bold">{{ $globalQuestionCount }}</div>
+                <div class="mt-2 text-xs text-textSecondary">Snapshot builder ujian: {{ $examSnapshotCount }}</div>
             </div>
 
             <div class="mt-4">
@@ -71,4 +72,3 @@
     </section>
 </div>
 @endsection
-

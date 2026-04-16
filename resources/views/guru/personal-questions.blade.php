@@ -29,7 +29,7 @@
                 </div>
                 <div>
                     <label class="text-xs font-bold">Opsi (jika PG/Checklist, pisahkan dengan koma)</label>
-                    <input name="opsi[]" class="input w-full" placeholder="A,B,C,D">
+                    <input name="options_raw" class="input w-full" placeholder="A, B, C, D">
                 </div>
                 <div>
                     <label class="text-xs font-bold">Jawaban Benar</label>

@@ -37,6 +37,10 @@
                 <input type="text" name="name" class="input w-full" value="{{ old('name') }}" required>
             </div>
             <div>
+                <label class="mb-1 block font-semibold">Email Aktif</label>
+                <input type="email" name="email" class="input w-full" value="{{ old('email') }}" required>
+            </div>
+            <div>
                 <label class="mb-1 block font-semibold">Jenjang</label>
                 <select name="jenjang" class="input w-full" required>
                     <option value="" disabled selected>Pilih Jenjang</option>

@@ -11,19 +11,21 @@ class TeacherController extends Controller
 {
     public function activate(User $teacher): RedirectResponse
     {
+        $token = $teacher->access_token ?: $this->generateUniqueToken();
+
         $updateData = [
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_ACTIVE,
+            'access_token' => $token,
         ];
-
-        // Generate token if not exists
-        if (!$teacher->access_token) {
-            $updateData['access_token'] = strtoupper(Str::random(10)); // Format lebih pendek & ramah
-        }
 
         $teacher->update($updateData);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Guru berhasil diaktifkan. ' . ($teacher->wasRecentlyUpdated && isset($updateData['access_token']) ? 'Token baru: ' . $updateData['access_token'] : '')]);
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Guru berhasil diaktifkan. Token akses siap digunakan.',
+            'token' => $token,
+        ]);
     }
 
     public function suspend(User $teacher): RedirectResponse
@@ -37,28 +39,33 @@ class TeacherController extends Controller
 
     public function refreshToken(User $teacher): RedirectResponse
     {
-        $token = null;
-        for ($i = 0; $i < 5; $i++) {
-            $candidate = Str::random(32);
-            if (! User::query()->where('access_token', $candidate)->exists()) {
-                $token = $candidate;
-                break;
-            }
-        }
-
-        if (! $token) {
-            return back()->with('flash', ['type' => 'warning', 'message' => 'Gagal generate token. Coba lagi.']);
-        }
+        $token = $this->generateUniqueToken();
 
         $teacher->update([
             'access_token' => $token,
         ]);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Token akses guru berhasil diperbarui.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Token akses guru berhasil diperbarui.',
+            'token' => $token,
+        ]);
     }
 
     public function index() {
         $teachers = User::where('role', User::ROLE_GURU)->get();
         return view('superadmin.teachers', compact('teachers'));
+    }
+
+    private function generateUniqueToken(): string
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $candidate = strtoupper(Str::random(10));
+            if (! User::query()->where('access_token', $candidate)->exists()) {
+                return $candidate;
+            }
+        }
+
+        abort(500, 'Gagal generate token unik.');
     }
 }

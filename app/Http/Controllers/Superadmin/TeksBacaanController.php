@@ -48,9 +48,15 @@ class TeksBacaanController extends Controller
         abort_if($mapel->paket_soal_id !== $paket->id || $bacaan->mapel_paket_id !== $mapel->id, 404);
         $this->authorize('create', [\App\Models\Soal::class, $mapel]);
 
+        if ($bacaan->soals()->exists()) {
+            return back()->with('flash', [
+                'type' => 'warning',
+                'message' => 'Teks bacaan tidak bisa dihapus karena masih dipakai oleh soal pada mapel ini.',
+            ]);
+        }
+
         $bacaan->delete();
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Teks bacaan dihapus.']);
     }
 }
-

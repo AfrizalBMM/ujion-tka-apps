@@ -155,8 +155,8 @@
             </div>
 
             <div class="mt-6 flex flex-col sm:flex-row gap-3">
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="btn-primary">
+                @if (Route::has('register.guru.form'))
+                    <a href="{{ route('register.guru.form') }}" class="btn-primary">
                         Mulai Free Trial
                         <i class="fa-solid fa-arrow-right"></i>
                     </a>

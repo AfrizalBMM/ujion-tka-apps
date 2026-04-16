@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Models\GlobalQuestion;
 use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,10 +49,11 @@ class MaterialController extends Controller {
             abort_unless($material->jenjang === ($user->jenjang ?? null), 403);
         }
 
-        $questionCount = Question::where('material_id', $material->id)->count();
+        $globalQuestionCount = GlobalQuestion::where('material_id', $material->id)->count();
+        $examSnapshotCount = Question::where('material_id', $material->id)->count();
         $isBookmarked = in_array($material->id, $user->bookmarks ?? []);
 
-        return view('guru.material-show', compact('material', 'questionCount', 'isBookmarked'));
+        return view('guru.material-show', compact('material', 'globalQuestionCount', 'examSnapshotCount', 'isBookmarked'));
     }
     public function bookmark(Material $material) {
         $user = Auth::user();

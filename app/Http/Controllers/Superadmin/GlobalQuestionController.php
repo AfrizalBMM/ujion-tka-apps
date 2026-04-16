@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\GlobalQuestion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Schema;
 
@@ -39,21 +38,11 @@ class GlobalQuestionController extends Controller
             $validated['material_id'] = null;
         }
 
-        $options = null;
-        $raw = trim((string) ($validated['options_raw'] ?? ''));
-        if ($raw !== '') {
-            $options = collect(preg_split('/\r\n|\r|\n/', $raw))
-                ->map(fn ($v) => trim((string) $v))
-                ->filter(fn ($v) => $v !== '')
-                ->values()
-                ->all();
-        }
-
         GlobalQuestion::create([
             'material_id' => $validated['material_id'],
             'question_type' => $validated['question_type'],
             'question_text' => $validated['question_text'],
-            'options' => $options,
+            'options' => $this->parseOptions($validated['options_raw'] ?? null),
             'answer_key' => $validated['answer_key'] ?? null,
             'explanation' => $validated['explanation'] ?? null,
             'is_active' => (bool) ($validated['is_active'] ?? true),
@@ -68,6 +57,39 @@ class GlobalQuestionController extends Controller
         $globalQuestion->delete();
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Soal global berhasil dihapus.']);
+    }
+
+    public function update(Request $request, GlobalQuestion $globalQuestion): RedirectResponse
+    {
+        $validated = $request->validate([
+            'material_id' => ['nullable', 'integer'],
+            'question_type' => ['required', 'string', 'max:40'],
+            'question_text' => ['required', 'string'],
+            'options_raw' => ['nullable', 'string'],
+            'answer_key' => ['nullable', 'string', 'max:40'],
+            'explanation' => ['nullable', 'string'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        if (! empty($validated['material_id']) && Schema::hasTable('materials')) {
+            $request->validate([
+                'material_id' => ['exists:materials,id'],
+            ]);
+        } else {
+            $validated['material_id'] = null;
+        }
+
+        $globalQuestion->update([
+            'material_id' => $validated['material_id'],
+            'question_type' => $validated['question_type'],
+            'question_text' => $validated['question_text'],
+            'options' => $this->parseOptions($validated['options_raw'] ?? null),
+            'answer_key' => $validated['answer_key'] ?? null,
+            'explanation' => $validated['explanation'] ?? null,
+            'is_active' => (bool) ($validated['is_active'] ?? true),
+        ]);
+
+        return back()->with('flash', ['type' => 'success', 'message' => 'Soal global berhasil diperbarui.']);
     }
 
     public function template(): StreamedResponse
@@ -143,5 +165,21 @@ class GlobalQuestionController extends Controller
         fclose($handle);
 
         return back()->with('flash', ['type' => 'success', 'message' => "Import selesai. Berhasil: {$created} soal."]);
+    }
+
+    private function parseOptions(?string $raw): ?array
+    {
+        $raw = trim((string) $raw);
+        if ($raw === '') {
+            return null;
+        }
+
+        $separator = str_contains($raw, "\n") || str_contains($raw, "\r") ? '/\r\n|\r|\n/' : '/\s*,\s*/';
+
+        return collect(preg_split($separator, $raw))
+            ->map(fn ($value) => trim((string) $value))
+            ->filter(fn ($value) => $value !== '')
+            ->values()
+            ->all();
     }
 }

@@ -37,6 +37,7 @@ class User extends Authenticatable
         'tingkat',
         'satuan_pendidikan',
         'no_wa',
+        'avatar',
     ];
 
     /**
@@ -81,5 +82,20 @@ class User extends Authenticatable
     public function createdPaketSoals()
     {
         return $this->hasMany(PaketSoal::class, 'created_by');
+    }
+
+    public function personalQuestions()
+    {
+        return $this->hasMany(PersonalQuestion::class);
+    }
+
+    public function sentChats()
+    {
+        return $this->hasMany(Chat::class, 'from_user_id');
+    }
+
+    public function receivedChats()
+    {
+        return $this->hasMany(Chat::class, 'to_user_id');
     }
 }

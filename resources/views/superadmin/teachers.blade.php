@@ -41,8 +41,8 @@
                             </td>
                             <td class="font-mono text-sm text-blue-600 dark:text-blue-400">
                                 @if($teacher->access_token)
-                                    <span class="cursor-help border-b border-dotted border-blue-400" title="{{ $teacher->access_token }}">
-                                        {{ substr($teacher->access_token, 0, 8) }}...
+                                    <span>
+                                        {{ str_repeat('•', max(strlen($teacher->access_token) - 4, 0)) }}{{ substr($teacher->access_token, -4) }}
                                     </span>
                                 @else
                                     <span class="text-muted italic">Belum aktif</span>

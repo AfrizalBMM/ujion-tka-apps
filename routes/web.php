@@ -12,6 +12,7 @@ use App\Http\Controllers\Superadmin\PricingPlanController;
 use App\Http\Controllers\Superadmin\SoalController as SuperadminSoalController;
 use App\Http\Controllers\Superadmin\TeksBacaanController as SuperadminTeksBacaanController;
 use App\Http\Controllers\Superadmin\TeacherController;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Siswa\AuthController as SiswaAuthController;
@@ -45,7 +46,7 @@ Route::get('/siswa/selesai', [ExamController::class , 'selesai'])->name('siswa.s
 
 Route::prefix('superadmin')
 	->name('superadmin.')
-	->middleware('audit')
+	->middleware(['auth', 'role:superadmin', 'audit'])
 	->scopeBindings()
 	->group(function () {
 	    Route::get('/', [DashboardController::class , 'index'])->name('dashboard');
@@ -71,11 +72,14 @@ Route::prefix('superadmin')
 
 	    Route::get('/global-questions', [GlobalQuestionController::class , 'index'])->name('global-questions.index');
 	    Route::post('/global-questions', [GlobalQuestionController::class , 'store'])->name('global-questions.store');
+	    Route::post('/global-questions/{globalQuestion}', [GlobalQuestionController::class , 'update'])->name('global-questions.update');
 	    Route::post('/global-questions/{globalQuestion}/delete', [GlobalQuestionController::class , 'destroy'])->name('global-questions.destroy');
 	    Route::post('/global-questions/import', [GlobalQuestionController::class , 'import'])->name('global-questions.import');
 	    Route::get('/global-questions/template', [GlobalQuestionController::class , 'template'])->name('global-questions.template');
 
 	    Route::get('/audit-logs', [AuditLogController::class , 'index'])->name('audit-logs.index');
+        Route::get('/dashboard/export/csv', [DashboardController::class, 'exportCsv'])->name('dashboard.export-csv');
+        Route::get('/dashboard/print', [DashboardController::class, 'print'])->name('dashboard.print');
 
 	    Route::get('/chat', [\App\Http\Controllers\Superadmin\ChatController::class , 'index'])->name('chat.index');
 	    Route::post('/chat', [\App\Http\Controllers\Superadmin\ChatController::class , 'store'])->name('chat.store');
@@ -85,10 +89,9 @@ Route::prefix('superadmin')
 	    Route::get('/teachers', [TeacherController::class , 'index'])->name('teachers.index');
 	    Route::get('/materials', [MaterialController::class , 'index'])->name('materials.index');
 
-	    Route::get('/questions', [\App\Http\Controllers\Superadmin\QuestionController::class , 'index'])->name('questions.index');
-	    Route::post('/questions', [\App\Http\Controllers\Superadmin\QuestionController::class , 'store'])->name('questions.store');
-	    Route::post('/questions/{question}/destroy', [\App\Http\Controllers\Superadmin\QuestionController::class , 'destroy'])->name('questions.destroy');
-	    Route::post('/questions/{question}/toggle', [\App\Http\Controllers\Superadmin\QuestionController::class , 'toggle'])->name('questions.toggle');
+	    Route::get('/questions', function (): RedirectResponse {
+            return redirect()->route('superadmin.global-questions.index');
+        })->name('questions.index');
 
 	    Route::get('/exams', [\App\Http\Controllers\Superadmin\ExamController::class , 'index'])->name('exams.index');
 	    Route::post('/exams', [\App\Http\Controllers\Superadmin\ExamController::class , 'store'])->name('exams.store');
@@ -99,6 +102,8 @@ Route::prefix('superadmin')
 	    Route::get('/exams/{exam}', [\App\Http\Controllers\Superadmin\ExamController::class , 'show'])->name('exams.show');
 	    Route::post('/exams/{exam}/import-bank', [\App\Http\Controllers\Superadmin\ExamController::class , 'importBankQuestions'])->name('exams.import-bank');
 	    Route::get('/exams/{exam}/analysis', [\App\Http\Controllers\Superadmin\ExamAnalysisController::class , 'show'])->name('exams.analysis');
+        Route::get('/exams/{exam}/analysis/export/csv', [\App\Http\Controllers\Superadmin\ExamAnalysisController::class, 'exportCsv'])->name('exams.analysis.export-csv');
+        Route::get('/exams/{exam}/analysis/print', [\App\Http\Controllers\Superadmin\ExamAnalysisController::class, 'print'])->name('exams.analysis.print');
 
         Route::get('/paket-soal', [PaketSoalController::class, 'index'])->name('paket-soal.index');
         Route::get('/paket-soal/create', [PaketSoalController::class, 'create'])->name('paket-soal.create');

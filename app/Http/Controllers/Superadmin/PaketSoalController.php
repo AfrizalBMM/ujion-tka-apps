@@ -127,6 +127,20 @@ class PaketSoalController extends Controller
     {
         $this->authorize('delete', $paket);
 
+        $hasExamDependencies = $paket->exams()
+            ->where(function ($query) {
+                $query->where('is_active', true)
+                    ->orWhereHas('ujianSesis');
+            })
+            ->exists();
+
+        if ($hasExamDependencies) {
+            return back()->with('flash', [
+                'type' => 'warning',
+                'message' => 'Paket soal tidak bisa dihapus karena sudah dipakai oleh ujian aktif atau memiliki riwayat sesi ujian.',
+            ]);
+        }
+
         $paket->delete();
 
         return redirect()->route('superadmin.paket-soal.index')

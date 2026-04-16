@@ -22,15 +22,19 @@
                         <th>User</th>
                     </tr>
                 </thead>
+                <tbody>
                     @if($auditLogs->isNotEmpty())
                         @foreach ($auditLogs as $log)
                             <tr>
                                 <td class="text-xs text-muted dark:text-slate-400">{{ $log->created_at }}</td>
                                 <td class="font-bold">{{ $log->method }}</td>
-                                <td class="text-textSecondary dark:text-slate-300">{{ $log->path }}</td>
-                                <td class="text-textSecondary dark:text-slate-300">{{ $log->ip_address }}</td>
-                                <td class="text-xs text-muted dark:text-slate-400">{{ $log->route_name }}</td>
-                                <td class="text-xs text-muted dark:text-slate-400">{{ $log->user_id ?: '-' }}</td>
+                                <td class="text-textSecondary dark:text-slate-300">{{ $log->path ?: '/' }}</td>
+                                <td class="text-textSecondary dark:text-slate-300">{{ $log->ip_address ?: '-' }}</td>
+                                <td class="text-xs text-muted dark:text-slate-400">
+                                    <div>{{ $log->route_name ?: '-' }}</div>
+                                    <div class="mt-1 text-[11px]">{{ $log->user_agent ?: '-' }}</div>
+                                </td>
+                                <td class="text-xs text-muted dark:text-slate-400">{{ $log->user_id ? 'ID '.$log->user_id : '-' }}</td>
                             </tr>
                         @endforeach
                     @else

@@ -1,124 +1,135 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Laravel Logo">
-</p>
+# Ujion TKA
 
-# Ujion TKA - Platform Platform Ujian Terintegrasi
+Platform ujian terintegrasi berbasis Laravel untuk superadmin, guru/operator, dan siswa. Project ini sekarang memakai satu jalur utama untuk flow ujian siswa berbasis `paket_soal`, `mapel_paket`, `soal`, `ujian_sesi`, dan `jawaban_siswa`, sambil tetap mempertahankan beberapa tabel snapshot legacy yang masih dipakai builder ujian admin.
 
-Ujion TKA adalah sistem manajemen ujian (LMS) modern yang dirancang untuk memfasilitasi ujian kompetensi guru dan siswa dengan fokus pada keamanan, kemudahan penggunaan, dan estetika premium.
+## Stack
 
----
+- Laravel 12
+- PHP 8.2+
+- Tailwind CSS
+- Vite
+- MySQL/MariaDB
 
-## 🚀 Arsitektur & Teknologi
+## Peran dan Akses
 
-Sistem ini dibangun menggunakan fondasi teknologi terbaru:
+### Superadmin
+- Login dari `/ngadimin/login`
+- Kelola guru, token akses, materi, bank soal global, paket soal, ujian, audit log, chat, dan finance
+- Route `superadmin/*` sudah diproteksi `auth` dan `role:superadmin`
 
-- **Framework**: [Laravel 12.x](https://laravel.com)
-- **Frontend Tools**: [Vite](https://vitejs.dev/) & [Tailwind CSS 4.0](https://tailwindcss.com)
-- **Icons & UI**: FontAwesome 6 (Pro-grade setup) & Google Fonts (Inter)
-- **Database**: MySQL/MariaDB
-- **State Management**: Dual Session (traditional session-based for admins, token-persistent for examination)
+### Guru / Operator
+- Login dari `/login`
+- Registrasi dari `/register/guru`
+- Kelola profil, bank soal pribadi, paket soal sesuai jenjang, ikut ujian guru, dan chat
 
----
+### Siswa
+- Login dari `/siswa/login`
+- Masuk ujian memakai token ujian
+- Flow aktif siswa memakai view `resources/views/ujian/*`
 
-## 🔐 Sistem Otentikasi Terpisah (Multi-Path Auth)
+## Arsitektur Data Aktif
 
-Sistem ini menggunakan alur login yang unik untuk setiap peran guna meningkatkan keamanan dan privasi:
+### Jalur utama ujian
+- `paket_soals`
+- `mapel_pakets`
+- `soals`
+- `teks_bacaans`
+- `ujian_sesis`
+- `jawaban_siswas`
 
-1. **Superadmin (Ngadimin)**
-   - **URL**: `/ngadimin/login`
-   - **Metode**: Email & Password tradisional.
-   - **Tujuan**: Mengelola ekosistem, kurikulum, dan aktivasi guru.
+### Jalur pendukung admin
+- `global_questions` sebagai bank soal global resmi
+- `questions` sebagai snapshot soal yang ditempel ke ujian admin
+- `exam_question` sebagai pivot relasi ujian ke snapshot soal
 
-2. **Guru / Operator**
-   - **URL**: `/login`
-   - **Metode**: Nama Lengkap & **Token Akses** (di-generate otomatis setelah aktivasi).
-   - **Alur**: Registrasi -> Menunggu Aktivasi Superadmin -> Mendapatkan Token via WhatsApp -> Login.
+## Modul Penting
 
-3. **Siswa**
-   - **URL**: `/siswa/login`
-   - **Metode**: Token Ujian khusus.
-   - **Fitur**: Anti-cheat (blokir perpindahan tab) dan fullscreen examination.
+### Superadmin
+- Dashboard metrik nyata, bukan placeholder
+- Bank soal global dengan create, import CSV, edit, delete
+- Builder ujian admin berbasis pivot `exam_question`
+- Analisis ujian dengan ranking, distribusi nilai, export CSV, dan versi cetak
+- Audit log dengan data yang sudah disanitasi
+- Chat per percakapan dengan pagination
 
----
+### Guru
+- Profil guru sinkron dengan field yang benar-benar diproses
+- Bank soal pribadi dengan form cepat dan fullscreen builder
+- Dashboard guru berbasis `ujian_sesis`
+- Join ujian guru, histori, dan hasil berbasis data nyata
+- Guard hapus soal pribadi lintas akun
 
-## 🛠️ Modul Utama
+### Siswa
+- Mulai ujian dari token
+- Timer per mapel
+- Penyimpanan jawaban ke schema baru
+- Penyelesaian ujian menghitung skor dari jawaban aktual
 
-### 🖥️ Superadmin Dashboard (Analytics Hub)
-- **Analytics**: Grafik aktivitas harian dan statistik guru aktif.
-- **Finance Module**: Manajemen QR Pembayaran dan Paket Harga (Pricing Plans).
-- **User Management**: Aktivasi manual, suspend, dan rotasi token guru.
-- **Master Data**: Kelola struktur materi (Kurikulum Merdeka/K-13).
-- **Global Bank Soal**: Database soal pusat yang dapat di-import via CSV.
-- **Audit Logs**: Rekaman jejak IP dan aktivitas untuk keamanan sistem.
+## Perubahan Besar Yang Sudah Dirapikan
 
-### 👨‍🏫 Guru / Operator Dashboard
-- **Personal Bank Soal**: Guru dapat menyusun bank soal sendiri dari materi yang tersedia.
-- **Exam Builder**: Membuat jadwal dan mengatur durasi ujian.
-- **Student Monitoring**: Memantau hasil dan progress siswa peserta ujian.
+- Proteksi route `superadmin/*`
+- Konsolidasi jalur bank soal admin ke `global_questions`
+- Perbaikan create ujian superadmin agar menyimpan `user_id`
+- Builder ujian admin tidak lagi memakai `questions.exam_id` yang tidak ada
+- Registrasi guru sekarang memakai email asli, password acak, dan validasi unik email/no WA
+- Token aktivasi dan refresh guru sekarang konsisten dan ditampilkan one-time lewat flash
+- View/controller legacy yang membingungkan sudah dibersihkan
+- Audit log sekarang menyamarkan path dinamis, IP, dan user agent
+- Chat superadmin difilter per percakapan
+- Guard bisnis untuk hapus paket soal dan teks bacaan yang masih dipakai
 
-### ✍️ Siswa Examination Room
-- **Fluid UI**: Desain minimalis untuk meminimalkan gangguan saat ujian.
-- **Indikator Status**: Penomoran soal interaktif dengan status jawaban (ragu-ragu/selesai).
-- **Anti-Cheat System**: Mendeteksi jika siswa mencoba membuka tab lain atau memperkecil jendela browser.
-
----
-
-## 📂 Struktur Codebase
+## Struktur Folder Penting
 
 ```text
 app/
-├── Http/Controllers/
-│   ├── AuthController.php          # Handle Guru & Admin Auth
-│   ├── Superadmin/                 # Modul khusus Admin
-│   ├── Siswa/                      # Modul khusus Siswa
-│   └── Guru/                       # Modul khusus Guru
-├── Models/                         # User, Material, GlobalQuestion, AuditLog, etc.
+  Http/Controllers/
+    Guru/
+    Siswa/
+    Superadmin/
+  Models/
 database/
-├── migrations/                     # Schema database yang ter-normalisasi
-└── seeders/                        # SuperadminGuruSeeder untuk inisialisasi awal
+  migrations/
 resources/
-├── css/app.css                     # Tailwind 4 configuration & Design System
-├── views/
-│   ├── auth/                       # Halaman login spesifik
-│   ├── layouts/                    # Layout @vite (guest, superadmin, guru)
-│   ├── superadmin/                 # View per-modul (finance, teachers, etc)
-│   └── components/                 # UI components reusable (flash messages, etc)
+  views/
+    guru/
+    superadmin/
+    ujian/
+routes/
+  web.php
+  guru.php
+tests/
+  Feature/
 ```
 
----
+## Setup Lokal
 
-## 🛠️ Instalasi & Pengembangan
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+npm run dev
+php artisan serve
+```
 
-1. **Clone & Setup**:
-   ```bash
-   composer install
-   npm install
-   cp .env.example .env
-   php artisan key:generate
-   ```
+## Testing
 
-2. **Database & Seeding**:
-   ```bash
-   php artisan migrate:fresh --seed
-   ```
+```bash
+php artisan test
+```
 
-3. **Run Dev Server**:
-   ```bash
-   php artisan serve
-   # Di terminal terpisah
-   npm run dev
-   ```
+Status terakhir setelah batch audit dan hardening:
 
----
+- 31 test lulus
+- 96 assertion lulus
 
-## 📝 Catatan Pengembangan Terbaru
-- [x] Migrasi Dashboard Superadmin ke sistem multi-halaman (Multi-page routing).
-- [x] Implementasi Tailwind 4.0 Design System.
-- [x] Integrasi Audit Logs untuk monitoring aktivitas sensitif.
-- [x] Perbaikan pemuatan aset CSS menggunakan direktif `@vite`.
-- [x] Set timezone & locale default: `config/app.php` (timezone `Asia/Jakarta`, locale `id`, faker `id_ID`).
-- [x] Tambah route API: `routes/api.php` dan didaftarkan di `bootstrap/app.php` (`withRouting(api: ...)`).
-- [x] Siapkan struktur folder tambahan: `app/Services` dan `app/Http/Requests` (tracked via `.gitkeep`).
+## Dokumen Audit
 
----
-&copy; 2026 Ujion TKA Project. Built with ❤️ for Education.
+- `errorbug.md` berisi daftar bug, status ceklis, dan prioritas perbaikan
+- `ERD.md`, `allmenu.md`, `alur.md`, dan file DFD dipakai sebagai dokumen pendukung analisis
+
+## Catatan
+
+- Beberapa tabel legacy masih ada karena masih dipakai untuk kompatibilitas builder/admin snapshot
+- Jika ingin refactor lanjutan, titik utama berikutnya adalah memutus total ketergantungan modul lama `questions/participants`

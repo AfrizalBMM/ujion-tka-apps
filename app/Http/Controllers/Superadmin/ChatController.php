@@ -3,14 +3,61 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Models\Chat;
 use App\Models\User;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller {
-    public function index() {
-        $chats = Chat::with(['fromUser', 'toUser'])->orderBy('created_at')->get();
-        $users = User::where('role', User::ROLE_GURU)->get();
-        return view('superadmin.chat', compact('chats', 'users'));
+    public function index(Request $request): View {
+        $users = User::query()
+            ->where('role', User::ROLE_GURU)
+            ->withCount([
+                'sentChats as unread_messages_count' => function ($query) {
+                    $query->where('to_user_id', auth()->id())
+                        ->where('is_read', false);
+                },
+            ])
+            ->withMax('sentChats', 'created_at')
+            ->withMax('receivedChats', 'created_at')
+            ->get()
+            ->sortByDesc(function (User $user) {
+                return max(
+                    strtotime((string) $user->sent_chats_max_created_at),
+                    strtotime((string) $user->received_chats_max_created_at)
+                );
+            })
+            ->values();
+
+        $selectedUser = $users->firstWhere('id', (int) $request->query('user')) ?? $users->first();
+        $chatPaginator = null;
+        $chats = collect();
+
+        if ($selectedUser) {
+            $chatPaginator = Chat::query()
+                ->with(['fromUser', 'toUser'])
+                ->where(function ($query) use ($selectedUser) {
+                    $query->where('from_user_id', auth()->id())
+                        ->where('to_user_id', $selectedUser->id);
+                })
+                ->orWhere(function ($query) use ($selectedUser) {
+                    $query->where('from_user_id', $selectedUser->id)
+                        ->where('to_user_id', auth()->id());
+                })
+                ->latest()
+                ->paginate(25)
+                ->withQueryString();
+
+            $chatPaginator->setCollection($chatPaginator->getCollection()->sortBy('created_at')->values());
+            $chats = $chatPaginator->getCollection();
+
+            Chat::query()
+                ->where('from_user_id', $selectedUser->id)
+                ->where('to_user_id', auth()->id())
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+        }
+
+        return view('superadmin.chat', compact('chats', 'users', 'selectedUser', 'chatPaginator'));
     }
     public function store(Request $request) {
         $data = $request->validate([

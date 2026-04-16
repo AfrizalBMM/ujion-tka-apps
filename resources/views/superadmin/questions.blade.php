@@ -96,10 +96,7 @@
             <div class="card min-h-[400px]">
                 <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div class="font-bold text-lg">Daftar Soal Global ({{ count($globalQuestions) }})</div>
-                    <div class="flex gap-2">
-                        <!-- Search/Filter Placeholder -->
-                        <input type="text" placeholder="Cari soal..." class="input w-full py-1 text-sm sm:w-48">
-                    </div>
+                    <div class="text-xs text-muted">Kelola soal aktif, edit metadata, dan hapus jika sudah tidak dipakai.</div>
                 </div>
                 
                 <div class="space-y-4">
@@ -146,7 +143,21 @@
                                             <i class="fa-solid fa-trash-can"></i>
                                         </button>
                                     </form>
-                                    <button class="btn-secondary p-2" title="Edit (Coming Soon)"><i class="fa-solid fa-pen-to-square"></i></button>
+                                    <button
+                                        class="btn-secondary p-2"
+                                        type="button"
+                                        title="Edit"
+                                        data-edit-question='@json([
+                                            "id" => $q->id,
+                                            "material_id" => $q->material_id,
+                                            "question_type" => $q->question_type,
+                                            "question_text" => $q->question_text,
+                                            "options_raw" => collect($q->options ?? [])->implode("\n"),
+                                            "answer_key" => $q->answer_key,
+                                            "explanation" => $q->explanation,
+                                            "is_active" => $q->is_active ? "1" : "0",
+                                        ])'
+                                    ><i class="fa-solid fa-pen-to-square"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -164,4 +175,112 @@
         </div>
     </div>
 </div>
+
+<div id="edit-question-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-2xl rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-modal">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Edit</div>
+                <div class="mt-2 text-xl font-bold">Soal Global</div>
+            </div>
+            <button type="button" class="icon-button" data-close-question-modal><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="edit-question-form" method="POST" class="mt-5 space-y-4">
+            @csrf
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenis Soal</label>
+                    <select class="input mt-1" name="question_type" id="edit-question-type" required>
+                        <option value="multiple_choice">Pilihan Ganda</option>
+                        <option value="short_answer">Jawaban Singkat</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Materi Ref</label>
+                    <select class="input mt-1" name="material_id" id="edit-material-id">
+                        <option value="">Tanpa Materi</option>
+                        @foreach ($materials as $m)
+                            <option value="{{ $m->id }}">{{ $m->curriculum }} | {{ \Illuminate\Support\Str::limit($m->sub_unit, 20) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Pertanyaan (Teks)</label>
+                <textarea class="input mt-1" name="question_text" id="edit-question-text" rows="4" required></textarea>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Opsi Jawaban (1 per baris atau pisahkan koma)</label>
+                <textarea class="input mt-1" name="options_raw" id="edit-options-raw" rows="4"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Kunci Jawaban</label>
+                    <input class="input mt-1" name="answer_key" id="edit-answer-key">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Status</label>
+                    <select class="input mt-1" name="is_active" id="edit-is-active">
+                        <option value="1">Aktif (Publik)</option>
+                        <option value="0">Draft (Sembunyi)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Pembahasan / Penjelasan</label>
+                <textarea class="input mt-1" name="explanation" id="edit-explanation" rows="2"></textarea>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+                <button class="btn-primary" type="submit">Simpan Perubahan</button>
+                <button class="btn-secondary" type="button" data-close-question-modal>Batal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('edit-question-modal');
+    const form = document.getElementById('edit-question-form');
+    const closeButtons = document.querySelectorAll('[data-close-question-modal]');
+    const fields = {
+        questionType: document.getElementById('edit-question-type'),
+        materialId: document.getElementById('edit-material-id'),
+        questionText: document.getElementById('edit-question-text'),
+        optionsRaw: document.getElementById('edit-options-raw'),
+        answerKey: document.getElementById('edit-answer-key'),
+        isActive: document.getElementById('edit-is-active'),
+        explanation: document.getElementById('edit-explanation'),
+    };
+
+    const close = () => modal.classList.add('hidden');
+    closeButtons.forEach((button) => button.addEventListener('click', close));
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            close();
+        }
+    });
+
+    document.querySelectorAll('[data-edit-question]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const data = JSON.parse(button.dataset.editQuestion);
+            form.action = "{{ route('superadmin.global-questions.update', ['globalQuestion' => '__ID__']) }}".replace('__ID__', data.id);
+            fields.questionType.value = data.question_type ?? 'multiple_choice';
+            fields.materialId.value = data.material_id ?? '';
+            fields.questionText.value = data.question_text ?? '';
+            fields.optionsRaw.value = data.options_raw ?? '';
+            fields.answerKey.value = data.answer_key ?? '';
+            fields.isActive.value = data.is_active ?? '1';
+            fields.explanation.value = data.explanation ?? '';
+            modal.classList.remove('hidden');
+            fields.questionText.focus();
+        });
+    });
+});
+</script>
 @endsection

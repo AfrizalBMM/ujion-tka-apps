@@ -18,6 +18,7 @@
             <thead>
                 <tr>
                     <th>Judul</th>
+                    <th>Paket</th>
                     <th>Tanggal</th>
                     <th>Status</th>
                 </tr>
@@ -26,6 +27,7 @@
                 @foreach ($available as $exam)
                 <tr>
                     <td>{{ $exam->judul }}</td>
+                    <td>{{ $exam->paketSoal?->nama ?? '-' }}</td>
                     <td>{{ $exam->tanggal_terbit->format('d M Y H:i') }}</td>
                     <td>{{ $exam->status }}</td>
                 </tr>
@@ -52,7 +54,7 @@
                     <td>{{ $h['judul'] }}</td>
                     <td>{{ $h['skor'] }}</td>
                     <td>{{ $h['status'] }}</td>
-                    <td><a href="#" class="btn-secondary">Lihat Hasil</a></td>
+                    <td><a href="{{ route('guru.exams.result', $h['exam_id']) }}" class="btn-secondary">Lihat Hasil</a></td>
                 </tr>
                 @empty
                 <tr><td colspan="4" class="text-gray-400">Belum ada histori ujian.</td></tr>
