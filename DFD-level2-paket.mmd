@@ -1,0 +1,50 @@
+flowchart TB
+    superadmin["Superadmin"]
+    guru["Guru / Operator"]
+
+    p31["3.1 Kelola Metadata Paket"]
+    p32["3.2 Kelola Konfigurasi Mapel"]
+    p33["3.3 Kelola Teks Bacaan"]
+    p34["3.4 Kelola Soal per Mapel"]
+    p35["3.5 Kelola Bank Soal Pribadi / Global"]
+
+    d3[("D3 Global Questions")]
+    d4a[("D4a Paket Soal")]
+    d4b[("D4b Mapel Paket")]
+    d4c[("D4c Teks Bacaan")]
+    d4d[("D4d Soals")]
+    d4e[("D4e Pilihan Jawaban")]
+    d4f[("D4f Pasangan Menjodohkan")]
+    d12[("D12 Personal Questions")]
+
+    superadmin -->|buat/edit/hapus paket| p31
+    p31 <--> d4a
+    p31 -->|detail paket| superadmin
+
+    superadmin -->|jumlah soal, durasi, urutan| p32
+    guru -->|jumlah soal, durasi, urutan| p32
+    p32 <--> d4b
+    p32 -->|konfigurasi mapel| superadmin
+    p32 -->|konfigurasi mapel| guru
+
+    superadmin -->|judul dan konten bacaan| p33
+    guru -->|judul dan konten bacaan| p33
+    p33 <--> d4c
+    p33 -->|daftar teks bacaan| superadmin
+    p33 -->|daftar teks bacaan| guru
+
+    superadmin -->|input soal, edit, hapus| p34
+    guru -->|input soal, edit, hapus| p34
+    p34 <--> d4d
+    p34 <--> d4e
+    p34 <--> d4f
+    p34 <--> d4c
+    p34 -->|daftar soal mapel| superadmin
+    p34 -->|daftar soal mapel| guru
+
+    superadmin -->|input soal global| p35
+    guru -->|input soal pribadi| p35
+    p35 <--> d3
+    p35 <--> d12
+    p35 -->|bank soal global| superadmin
+    p35 -->|bank soal pribadi| guru

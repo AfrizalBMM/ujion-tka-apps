@@ -1,0 +1,43 @@
+flowchart TB
+    siswa["Siswa"]
+
+    p51["5.1 Validasi Token Ujian"]
+    p52["5.2 Input Identitas Peserta"]
+    p53["5.3 Generate Sesi Ujian"]
+    p54["5.4 Ambil Paket, Mapel, dan Soal"]
+    p55["5.5 Simpan Jawaban & Timer"]
+    p56["5.6 Hitung Skor & Tutup Sesi"]
+
+    d5[("D5 Exams")]
+    d4[("D4 Paket Soal TKA")]
+    d6[("D6 Ujian Sesis")]
+    d7[("D7 Jawaban Siswa")]
+
+    siswa -->|token ujian| p51
+    p51 <--> d5
+    p51 <--> d4
+    p51 -->|status valid / invalid| siswa
+
+    siswa -->|nama, nomor WA| p52
+    p52 --> p53
+
+    p53 <--> d6
+    p53 <--> d5
+    p53 <--> d4
+    p53 -->|session token, status menunggu| siswa
+
+    siswa -->|mulai ujian / pilih mapel| p54
+    p54 <--> d6
+    p54 <--> d4
+    p54 -->|petunjuk, soal, timer per mapel| siswa
+
+    siswa -->|jawaban PG, jawaban menjodohkan, ragu-ragu| p55
+    p55 <--> d7
+    p55 <--> d6
+    p55 -->|autosave status| siswa
+
+    siswa -->|selesai ujian / waktu habis| p56
+    p56 <--> d6
+    p56 <--> d7
+    p56 <--> d4
+    p56 -->|skor akhir, sesi ditutup| siswa

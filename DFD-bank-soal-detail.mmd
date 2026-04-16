@@ -1,0 +1,56 @@
+flowchart TB
+    superadmin["Superadmin"]
+    guru["Guru / Operator"]
+
+    p31["3.1 Kelola Bank Soal Global"]
+    p32["3.2 Import CSV Soal Global"]
+    p33["3.3 Ambil Template CSV"]
+    p34["3.4 Kelola Bank Soal Pribadi"]
+    p35["3.5 Builder Bank Soal Pribadi"]
+    p36["3.6 Gunakan Soal pada Paket TKA"]
+
+    d31[("Materials")]
+    d32[("Global Questions")]
+    d33[("Personal Questions")]
+    d34[("Users")]
+    d35[("Paket Soals")]
+    d36[("Mapel Pakets")]
+    d37[("Soals")]
+    d38[("Pilihan Jawabans")]
+    d39[("Pasangan Menjodohkans")]
+    d40[("Teks Bacaans")]
+
+    superadmin -->|material, jenis soal, pertanyaan, opsi, kunci, pembahasan, status| p31
+    p31 <--> d31
+    p31 <--> d32
+    p31 <--> d34
+    p31 -->|daftar soal global| superadmin
+
+    superadmin -->|file CSV| p32
+    p32 <--> d32
+    p32 <--> d34
+    p32 -->|jumlah soal berhasil diimport| superadmin
+
+    superadmin -->|request template| p33
+    p33 -->|template CSV bank soal global| superadmin
+
+    guru -->|jenjang, kategori, tipe, pertanyaan, opsi, kunci, pembahasan, gambar, status| p34
+    p34 <--> d33
+    p34 <--> d34
+    p34 -->|daftar soal pribadi| guru
+
+    guru -->|payload seluruh soal builder| p35
+    p35 <--> d33
+    p35 <--> d34
+    p35 -->|hasil simpan builder| guru
+
+    superadmin -->|input soal paket TKA| p36
+    guru -->|input soal paket TKA sesuai mapel & jenjang| p36
+    p36 <--> d35
+    p36 <--> d36
+    p36 <--> d37
+    p36 <--> d38
+    p36 <--> d39
+    p36 <--> d40
+    p36 -->|soal paket siap dipakai ujian| superadmin
+    p36 -->|soal paket siap dipakai ujian| guru

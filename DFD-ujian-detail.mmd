@@ -1,0 +1,74 @@
+flowchart TB
+    superadmin["Superadmin"]
+    guru["Guru / Operator"]
+    siswa["Siswa"]
+
+    p41["4.1 Buat & Kelola Ujian"]
+    p42["4.2 Generate Token & Timer Ujian"]
+    p43["4.3 Publikasi dan Monitoring Ujian"]
+    p44["4.4 Validasi Token Siswa & Buat Sesi"]
+    p45["4.5 Sajikan Soal per Mapel"]
+    p46["4.6 Simpan Jawaban, Timer, dan Status"]
+    p47["4.7 Hitung Skor & Tutup Sesi"]
+    p48["4.8 Detail, Builder, dan Analisis Ujian"]
+
+    d41[("Exams")]
+    d42[("Paket Soals")]
+    d43[("Mapel Pakets")]
+    d44[("Soals")]
+    d45[("Ujian Sesis")]
+    d46[("Jawaban Siswas")]
+    d47[("Questions Legacy")]
+    d48[("Exam Question Legacy")]
+
+    superadmin -->|paket_soal_id, judul, tanggal_terbit, max_peserta, timer, status| p41
+    guru -->|lihat daftar ujian tersedia| p41
+    p41 <--> d41
+    p41 <--> d42
+    p41 --> p42
+    p41 -->|daftar ujian| superadmin
+    p41 -->|daftar ujian tersedia| guru
+
+    p42 <--> d41
+    p42 <--> d42
+    p42 <--> d43
+    p42 -->|token ujian, total timer| superadmin
+
+    superadmin -->|toggle aktif, buka detail, buka monitoring| p43
+    p43 <--> d41
+    p43 <--> d45
+    p43 <--> d46
+    p43 -->|status aktif, daftar sesi, progres| superadmin
+
+    siswa -->|token ujian, nama, nomor WA| p44
+    p44 <--> d41
+    p44 <--> d42
+    p44 <--> d43
+    p44 <--> d45
+    p44 -->|petunjuk ujian, session token| siswa
+
+    siswa -->|mulai ujian, pilih mapel| p45
+    p45 <--> d42
+    p45 <--> d43
+    p45 <--> d44
+    p45 <--> d45
+    p45 -->|soal, teks bacaan, pilihan jawaban, timer mapel| siswa
+
+    siswa -->|jawaban PG, jawaban menjodohkan, tanda ragu, sisa waktu| p46
+    p46 <--> d45
+    p46 <--> d46
+    p46 -->|autosave, status mengerjakan| siswa
+
+    siswa -->|selesai ujian / waktu habis| p47
+    p47 <--> d45
+    p47 <--> d46
+    p47 <--> d44
+    p47 -->|skor akhir, sesi selesai| siswa
+
+    superadmin -->|builder soal ujian, import bank soal, analisis| p48
+    p48 <--> d41
+    p48 <--> d47
+    p48 <--> d48
+    p48 <--> d45
+    p48 <--> d46
+    p48 -->|detail ujian, builder, analisis| superadmin

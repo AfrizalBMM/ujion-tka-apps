@@ -1,0 +1,15 @@
+flowchart LR
+    guru["Guru / Operator"]
+    siswa["Siswa"]
+    superadmin["Superadmin"]
+
+    ujion["Sistem Ujion TKA"]
+
+    guru -->|login token, kelola profil, materi, soal, chat| ujion
+    ujion -->|dashboard, paket soal, materi, chat, log| guru
+
+    siswa -->|token ujian, identitas, jawaban ujian| ujion
+    ujion -->|petunjuk, soal, timer, hasil akhir| siswa
+
+    superadmin -->|login, kelola guru, pricing, QR, materi, paket, ujian| ujion
+    ujion -->|dashboard, audit, token ujian, data guru, laporan| superadmin

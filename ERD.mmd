@@ -1,0 +1,320 @@
+erDiagram
+    USERS {
+        bigint id PK
+        string name
+        string email UK
+        string password
+        string role
+        string account_status
+        string access_token UK
+        string jenjang
+        string tingkat
+        string satuan_pendidikan
+        string no_wa
+        json bookmarks
+    }
+
+    PRICING_PLANS {
+        bigint id PK
+        string name
+        string subtitle
+        string price
+        string original_price
+        boolean promo_active
+        string period
+        boolean is_active
+        int sort_order
+    }
+
+    PAYMENT_QRS {
+        bigint id PK
+        string label
+        string image_path
+        boolean is_active
+        int sort_order
+    }
+
+    MATERIALS {
+        bigint id PK
+        string jenjang
+        string curriculum
+        string subelement
+        string unit
+        string sub_unit
+        string link
+    }
+
+    GLOBAL_QUESTIONS {
+        bigint id PK
+        bigint material_id FK
+        string question_type
+        text question_text
+        json options
+        string answer_key
+        text explanation
+        boolean is_active
+        bigint created_by FK
+    }
+
+    AUDIT_LOGS {
+        bigint id PK
+        bigint user_id FK
+        string method
+        string path
+        string route_name
+        string ip_address
+        text user_agent
+        string country
+        string city
+    }
+
+    CHATS {
+        bigint id PK
+        bigint from_user_id FK
+        bigint to_user_id FK
+        text message
+        string image_path
+        boolean is_read
+    }
+
+    QUESTIONS {
+        bigint id PK
+        bigint material_id FK
+        string jenjang
+        string tingkat
+        string kategori
+        string tipe
+        text pertanyaan
+        json opsi
+        string jawaban_benar
+        text pembahasan
+        string image_path
+        enum status
+        boolean is_active
+    }
+
+    EXAMS {
+        bigint id PK
+        bigint user_id FK
+        bigint paket_soal_id FK
+        string judul
+        datetime tanggal_terbit
+        int max_peserta
+        string token UK
+        int timer
+        enum status
+        boolean is_active
+    }
+
+    EXAM_QUESTION {
+        bigint id PK
+        bigint exam_id FK
+        bigint question_id FK
+        int order
+    }
+
+    PERSONAL_QUESTIONS {
+        bigint id PK
+        bigint user_id FK
+        string jenjang
+        string kategori
+        string tipe
+        text pertanyaan
+        json opsi
+        string jawaban_benar
+        text pembahasan
+        string image_path
+        enum status
+    }
+
+    PARTICIPANTS {
+        bigint id PK
+        bigint exam_id FK
+        string nama
+        string nomor_wa
+        string session_token UK
+        timestamp waktu_mulai
+        timestamp waktu_selesai
+        float skor
+        enum status_ujian
+    }
+
+    PARTICIPANT_ANSWERS {
+        bigint id PK
+        bigint participant_id FK
+        bigint question_id FK
+        text jawaban
+        boolean ragu_ragu
+    }
+
+    JENJANGS {
+        bigint id PK
+        string kode UK
+        string nama
+        int urutan
+    }
+
+    PAKET_SOALS {
+        bigint id PK
+        bigint jenjang_id FK
+        string nama
+        string tahun_ajaran
+        boolean is_active
+        bigint created_by FK
+    }
+
+    MAPEL_PAKETS {
+        bigint id PK
+        bigint paket_soal_id FK
+        enum nama_mapel
+        int jumlah_soal
+        int durasi_menit
+        int urutan
+    }
+
+    TEKS_BACAANS {
+        bigint id PK
+        bigint mapel_paket_id FK
+        string judul
+        longtext konten
+    }
+
+    SOALS {
+        bigint id PK
+        bigint mapel_paket_id FK
+        bigint teks_bacaan_id FK
+        int nomor_soal
+        enum tipe_soal
+        text indikator
+        text pertanyaan
+        string gambar
+        int bobot
+    }
+
+    PILIHAN_JAWABANS {
+        bigint id PK
+        bigint soal_id FK
+        enum kode
+        text teks
+        string gambar
+        boolean is_benar
+    }
+
+    PASANGAN_MENJODOHKANS {
+        bigint id PK
+        bigint soal_id FK
+        text teks_kiri
+        text teks_kanan
+        int urutan
+    }
+
+    UJIAN_SESIS {
+        bigint id PK
+        bigint exam_id FK
+        bigint paket_soal_id FK
+        string nama
+        string nomor_wa
+        string session_token UK
+        json timer_state
+        enum status
+        timestamp waktu_mulai
+        timestamp waktu_selesai
+        decimal skor
+    }
+
+    JAWABAN_SISWAS {
+        bigint id PK
+        bigint ujian_sesi_id FK
+        bigint soal_id FK
+        enum tipe_soal
+        string jawaban_pg
+        json jawaban_menjodohkan
+        boolean is_ragu
+    }
+
+    PASSWORD_RESET_TOKENS {
+        string email PK
+        string token
+        timestamp created_at
+    }
+
+    SESSIONS {
+        string id PK
+        bigint user_id
+        string ip_address
+        text user_agent
+        longtext payload
+        int last_activity
+    }
+
+    CACHE {
+        string key PK
+        mediumtext value
+        int expiration
+    }
+
+    CACHE_LOCKS {
+        string key PK
+        string owner
+        int expiration
+    }
+
+    JOBS {
+        bigint id PK
+        string queue
+        longtext payload
+        int attempts
+        int reserved_at
+        int available_at
+        int created_at
+    }
+
+    JOB_BATCHES {
+        string id PK
+        string name
+        int total_jobs
+        int pending_jobs
+        int failed_jobs
+        longtext failed_job_ids
+        mediumtext options
+        int cancelled_at
+        int created_at
+        int finished_at
+    }
+
+    FAILED_JOBS {
+        bigint id PK
+        string uuid UK
+        text connection
+        text queue
+        longtext payload
+        longtext exception
+        timestamp failed_at
+    }
+
+    USERS ||--o{ GLOBAL_QUESTIONS : creates
+    MATERIALS ||--o{ GLOBAL_QUESTIONS : references
+    USERS ||--o{ AUDIT_LOGS : generates
+    USERS ||--o{ CHATS : sends
+    USERS ||--o{ CHATS : receives
+    MATERIALS ||--o{ QUESTIONS : owns
+    USERS ||--o{ PERSONAL_QUESTIONS : owns
+    USERS ||--o{ EXAMS : creates
+    PAKET_SOALS ||--o{ EXAMS : used_by
+    EXAMS ||--o{ EXAM_QUESTION : contains
+    QUESTIONS ||--o{ EXAM_QUESTION : assigned_to
+    EXAMS ||--o{ PARTICIPANTS : has
+    PARTICIPANTS ||--o{ PARTICIPANT_ANSWERS : answers
+    QUESTIONS ||--o{ PARTICIPANT_ANSWERS : answered
+    JENJANGS ||--o{ PAKET_SOALS : groups
+    USERS ||--o{ PAKET_SOALS : created_by
+    PAKET_SOALS ||--o{ MAPEL_PAKETS : contains
+    MAPEL_PAKETS ||--o{ TEKS_BACAANS : has
+    MAPEL_PAKETS ||--o{ SOALS : has
+    TEKS_BACAANS ||--o{ SOALS : referenced_by
+    SOALS ||--o{ PILIHAN_JAWABANS : has
+    SOALS ||--o{ PASANGAN_MENJODOHKANS : has
+    EXAMS ||--o{ UJIAN_SESIS : has
+    PAKET_SOALS ||--o{ UJIAN_SESIS : uses
+    UJIAN_SESIS ||--o{ JAWABAN_SISWAS : has
+    SOALS ||--o{ JAWABAN_SISWAS : answered

@@ -1,0 +1,56 @@
+flowchart TB
+    superadmin["Superadmin"]
+    guru["Guru / Operator"]
+
+    p1["1.0 Autentikasi & Akses Role"]
+    p2["2.0 Kelola Paket Soal TKA"]
+    p3["3.0 Kelola Bank Soal"]
+    p4["4.0 Kelola Ujian"]
+    p5["5.0 Chat, Audit, dan Monitoring"]
+
+    d1[("Users")]
+    d2[("Paket Soal TKA")]
+    d3[("Bank Soal Global")]
+    d4[("Bank Soal Pribadi")]
+    d5[("Exams")]
+    d6[("Ujian Sesis")]
+    d7[("Jawaban Siswa")]
+    d8[("Chats")]
+    d9[("Audit Logs")]
+
+    superadmin -->|email, password| p1
+    guru -->|nama, access token| p1
+    p1 <--> d1
+    p1 -->|status login, hak akses| superadmin
+    p1 -->|status login, hak akses| guru
+
+    superadmin -->|buat paket, edit metadata, aktifkan, hapus| p2
+    guru -->|lihat paket sesuai jenjang, ubah konfigurasi mapel, kelola soal| p2
+    p2 <--> d2
+    p2 -->|detail paket, detail mapel, daftar soal| superadmin
+    p2 -->|detail paket, detail mapel, daftar soal| guru
+
+    superadmin -->|input soal global, import CSV, hapus soal global| p3
+    guru -->|input soal pribadi, builder fullscreen, hapus soal pribadi| p3
+    guru -->|kelola soal mapel dan teks bacaan| p3
+    p3 <--> d3
+    p3 <--> d4
+    p3 <--> d2
+    p3 -->|bank soal global| superadmin
+    p3 -->|bank soal pribadi, soal mapel| guru
+
+    superadmin -->|buat ujian, toggle, lihat detail, builder, analisis| p4
+    guru -->|lihat daftar ujian tersedia| p4
+    p4 <--> d5
+    p4 <--> d2
+    p4 <--> d6
+    p4 <--> d7
+    p4 -->|token ujian, status ujian, daftar sesi, analisis| superadmin
+    p4 -->|daftar ujian| guru
+
+    superadmin -->|kirim chat, baca audit, monitor aktivitas| p5
+    guru -->|kirim chat, lihat log pribadi| p5
+    p5 <--> d8
+    p5 <--> d9
+    p5 -->|percakapan, audit, monitoring| superadmin
+    p5 -->|percakapan, log aktivitas| guru

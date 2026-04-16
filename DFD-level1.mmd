@@ -1,0 +1,71 @@
+flowchart TB
+    guru["Guru / Operator"]
+    siswa["Siswa"]
+    superadmin["Superadmin"]
+
+    p1["1.0 Autentikasi & Manajemen Akun"]
+    p2["2.0 Manajemen Materi"]
+    p3["3.0 Manajemen Bank Soal & Paket TKA"]
+    p4["4.0 Manajemen Ujian"]
+    p5["5.0 Pengerjaan Ujian Siswa"]
+    p6["6.0 Chat & Audit"]
+    p7["7.0 Pricing & Pembayaran"]
+
+    d1[("D1 Users")]
+    d2[("D2 Materials")]
+    d3[("D3 Global Questions")]
+    d4[("D4 Paket Soal TKA")]
+    d5[("D5 Exams")]
+    d6[("D6 Ujian Sesis")]
+    d7[("D7 Jawaban Siswa")]
+    d8[("D8 Chats")]
+    d9[("D9 Audit Logs")]
+    d10[("D10 Pricing Plans")]
+    d11[("D11 Payment QRs")]
+    d12[("D12 Personal Questions")]
+
+    guru -->|nama, token akses, data profil| p1
+    superadmin -->|email, password, aktivasi guru| p1
+    p1 <--> d1
+    p1 -->|status login, data akun| guru
+    p1 -->|status login, data guru| superadmin
+
+    superadmin -->|input materi, filter, hapus| p2
+    guru -->|lihat materi, bookmark| p2
+    p2 <--> d2
+    p2 -->|daftar materi, detail materi| guru
+    p2 -->|daftar materi| superadmin
+
+    superadmin -->|input soal global, kelola paket| p3
+    guru -->|kelola soal mapel, teks bacaan, soal pribadi| p3
+    p3 <--> d3
+    p3 <--> d4
+    p3 <--> d12
+    p3 -->|paket soal, detail mapel, daftar soal| guru
+    p3 -->|bank soal global, paket, teks bacaan| superadmin
+
+    superadmin -->|buat ujian, toggle, token| p4
+    guru -->|lihat ujian tersedia| p4
+    p4 <--> d5
+    p4 <--> d4
+    p4 -->|jadwal ujian, token, detail ujian| superadmin
+    p4 -->|daftar ujian| guru
+
+    siswa -->|token ujian, identitas, jawaban| p5
+    p5 <--> d5
+    p5 <--> d4
+    p5 <--> d6
+    p5 <--> d7
+    p5 -->|petunjuk, soal, timer, skor| siswa
+
+    guru -->|pesan chat| p6
+    superadmin -->|pesan chat, baca audit| p6
+    p6 <--> d8
+    p6 <--> d9
+    p6 -->|percakapan| guru
+    p6 -->|percakapan, audit trail| superadmin
+
+    superadmin -->|kelola harga dan QR| p7
+    p7 <--> d10
+    p7 <--> d11
+    p7 -->|preview harga & QR| superadmin

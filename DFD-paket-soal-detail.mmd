@@ -1,0 +1,67 @@
+flowchart TB
+    superadmin["Superadmin"]
+    guru["Guru / Operator"]
+
+    p21["2.1 Filter & Lihat Daftar Paket"]
+    p22["2.2 Buat / Edit Metadata Paket"]
+    p23["2.3 Inisialisasi Mapel Default"]
+    p24["2.4 Kelola Konfigurasi Mapel"]
+    p25["2.5 Kelola Teks Bacaan per Mapel"]
+    p26["2.6 Kelola Soal per Mapel"]
+    p27["2.7 Aktivasi / Nonaktifkan Paket"]
+
+    d21[("Jenjangs")]
+    d22[("Paket Soals")]
+    d23[("Mapel Pakets")]
+    d24[("Teks Bacaans")]
+    d25[("Soals")]
+    d26[("Pilihan Jawabans")]
+    d27[("Pasangan Menjodohkans")]
+    d28[("Users")]
+
+    superadmin -->|filter jenjang, filter tahun ajaran| p21
+    guru -->|lihat paket sesuai jenjang| p21
+    p21 <--> d21
+    p21 <--> d22
+    p21 <--> d23
+    p21 -->|daftar paket| superadmin
+    p21 -->|daftar paket sesuai jenjang| guru
+
+    superadmin -->|jenjang_id, tahun_ajaran, nama, is_active| p22
+    p22 <--> d22
+    p22 <--> d21
+    p22 <--> d28
+    p22 --> p23
+    p22 -->|metadata paket| superadmin
+
+    p23 <--> d23
+    p23 -->|mapel default matematika & bahasa_indonesia| superadmin
+
+    superadmin -->|jumlah_soal, durasi_menit, urutan| p24
+    guru -->|jumlah_soal, durasi_menit, urutan| p24
+    p24 <--> d23
+    p24 <--> d22
+    p24 -->|konfigurasi mapel terbaru| superadmin
+    p24 -->|konfigurasi mapel terbaru| guru
+
+    superadmin -->|judul bacaan, konten| p25
+    guru -->|judul bacaan, konten| p25
+    p25 <--> d24
+    p25 <--> d23
+    p25 -->|daftar teks bacaan| superadmin
+    p25 -->|daftar teks bacaan| guru
+
+    superadmin -->|nomor soal, tipe, indikator, pertanyaan, bobot, pilihan / pasangan| p26
+    guru -->|nomor soal, tipe, indikator, pertanyaan, bobot, pilihan / pasangan| p26
+    p26 <--> d25
+    p26 <--> d26
+    p26 <--> d27
+    p26 <--> d24
+    p26 <--> d23
+    p26 -->|daftar soal mapel| superadmin
+    p26 -->|daftar soal mapel| guru
+
+    superadmin -->|toggle aktif, nonaktifkan paket lain pada jenjang sama| p27
+    p27 <--> d22
+    p27 <--> d21
+    p27 -->|status paket aktif| superadmin
