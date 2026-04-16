@@ -16,13 +16,8 @@ use App\Http\Controllers\Guru\TeksBacaanGuruController;
 
 Route::get('/register/guru', [RegisterGuruController::class, 'showForm'])->name('register.guru.form');
 Route::post('/register/guru', [RegisterGuruController::class, 'register'])->name('register.guru');
-Route::get('/register/guru/pending', function () {
-    if (! session()->has('pending_registration')) {
-        return redirect()->route('register.guru.form');
-    }
-
-    return view('pending-aktivasi', session('pending_registration'));
-})->name('register.guru.pending');
+Route::get('/register/guru/pending', [RegisterGuruController::class, 'showPending'])->name('register.guru.pending');
+Route::post('/register/guru/pending/payment-proof', [RegisterGuruController::class, 'uploadPaymentProof'])->name('register.guru.payment-proof');
 
 Route::middleware(['auth','role:guru'])->prefix('guru')->name('guru.')->scopeBindings()->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

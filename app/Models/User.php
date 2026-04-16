@@ -21,6 +21,11 @@ class User extends Authenticatable
     public const STATUS_ACTIVE = 'active';
     public const STATUS_SUSPEND = 'suspend';
 
+    public const PAYMENT_AWAITING = 'awaiting_payment';
+    public const PAYMENT_SUBMITTED = 'submitted';
+    public const PAYMENT_APPROVED = 'approved';
+    public const PAYMENT_REJECTED = 'rejected';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -32,6 +37,12 @@ class User extends Authenticatable
         'password',
         'role',
         'account_status',
+        'payment_status',
+        'payment_proof_path',
+        'payment_submitted_at',
+        'payment_verified_at',
+        'payment_reviewed_by',
+        'payment_rejection_reason',
         'access_token',
         'jenjang',
         'tingkat',
@@ -61,7 +72,14 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'bookmarks' => 'array',
+            'payment_submitted_at' => 'datetime',
+            'payment_verified_at' => 'datetime',
         ];
+    }
+
+    public function paymentReviewer()
+    {
+        return $this->belongsTo(self::class, 'payment_reviewed_by');
     }
 
     public function isSuperadmin(): bool

@@ -6,6 +6,8 @@ use App\Models\PersonalQuestion;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class GuruProfileAndRegistrationFlowTest extends TestCase
@@ -38,11 +40,37 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'email' => 'guru.baru@example.com',
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
+            'payment_status' => User::PAYMENT_AWAITING,
             'no_wa' => '08123456789',
         ]);
 
         $user = User::where('email', 'guru.baru@example.com')->firstOrFail();
         $this->assertFalse(Hash::check('password', $user->password));
+    }
+
+    public function test_guru_can_upload_payment_proof_from_pending_page(): void
+    {
+        Storage::fake('public');
+
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'payment_status' => User::PAYMENT_AWAITING,
+        ]);
+
+        $response = $this->withSession([
+            'pending_registration' => ['teacher_id' => $guru->id],
+        ])->post(route('register.guru.payment-proof'), [
+            'payment_proof' => UploadedFile::fake()->image('proof.png'),
+        ]);
+
+        $response->assertRedirect();
+        $guru->refresh();
+
+        $this->assertSame(User::PAYMENT_SUBMITTED, $guru->payment_status);
+        $this->assertNotNull($guru->payment_proof_path);
+        $this->assertNotNull($guru->payment_submitted_at);
+        Storage::disk('public')->assertExists($guru->payment_proof_path);
     }
 
     public function test_guru_can_update_complete_profile_fields(): void

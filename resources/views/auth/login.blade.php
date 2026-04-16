@@ -9,7 +9,7 @@
             <i class="fa-solid fa-chalkboard-user text-white text-2xl"></i>
         </div>
         <h1 class="text-2xl font-bold text-slate-800">Masuk Guru / Operator</h1>
-        <p class="text-slate-500 mt-1">Gunakan Token Akses yang telah diberikan</p>
+        <p class="text-slate-500 mt-1">Masuk menggunakan nama yang terdaftar dan token akses yang dikirim saat akun Anda aktif.</p>
     </div>
 
     @if ($errors->any())
@@ -33,7 +33,7 @@
                 <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input type="text" name="name" 
                     class="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20" 
-                    placeholder="Masukkan nama sesuai registrasi"
+                    placeholder="Masukkan nama sesuai data pendaftaran"
                     value="{{ old('name') }}" required autofocus>
             </div>
         </div>
@@ -55,15 +55,15 @@
         </div>
 
         <button type="submit" class="btn-primary w-full py-3 text-lg">
-            Masuk Sekarang
+            Masuk ke Dashboard
             <i class="fa-solid fa-arrow-right ml-2 text-sm"></i>
         </button>
     </form>
 
     <div class="mt-6 border-t border-slate-100 pt-5 text-center">
         <p class="text-slate-500 text-sm">
-            Belum punya akun atau token? 
-            <a href="{{ route('register.guru.form') }}" class="text-primary font-bold hover:underline">Daftar Sekarang</a>
+            Belum punya akun atau masih menunggu token?
+            <a href="{{ route('register.guru.form') }}" class="text-primary font-bold hover:underline">Mulai pendaftaran di sini</a>
         </p>
     </div>
 </div>

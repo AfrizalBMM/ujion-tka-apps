@@ -27,7 +27,11 @@ class PaymentQrController extends Controller
             'sort_order' => (int) ($validated['sort_order'] ?? 0),
         ]);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'QR berhasil ditambahkan.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'QR pembayaran ditambahkan',
+            'message' => 'Metode pembayaran baru sudah siap dipakai di halaman pendaftaran guru.',
+        ]);
     }
 
     public function update(Request $request, PaymentQr $paymentQr): RedirectResponse
@@ -51,7 +55,11 @@ class PaymentQrController extends Controller
 
         $paymentQr->update($payload);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'QR berhasil diupdate.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'QR pembayaran diperbarui',
+            'message' => 'Perubahan tampilan dan urutan QR sudah disimpan.',
+        ]);
     }
 
     public function toggle(PaymentQr $paymentQr): RedirectResponse
@@ -60,7 +68,13 @@ class PaymentQrController extends Controller
             'is_active' => ! $paymentQr->is_active,
         ]);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Status QR diperbarui.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Status QR pembayaran diperbarui',
+            'message' => $paymentQr->is_active
+                ? 'QR ini sekarang aktif dan bisa tampil di halaman pembayaran.'
+                : 'QR ini sekarang nonaktif dan tidak akan ditampilkan ke pendaftar.',
+        ]);
     }
 
     public function destroy(PaymentQr $paymentQr): RedirectResponse
@@ -68,6 +82,10 @@ class PaymentQrController extends Controller
         Storage::disk('public')->delete($paymentQr->image_path);
         $paymentQr->delete();
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'QR berhasil dihapus.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'QR pembayaran dihapus',
+            'message' => 'Metode pembayaran ini sudah tidak tersedia untuk pendaftar baru.',
+        ]);
     }
 }

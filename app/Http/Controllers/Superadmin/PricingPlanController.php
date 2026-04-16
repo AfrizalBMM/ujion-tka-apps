@@ -31,7 +31,11 @@ class PricingPlanController extends Controller
             'sort_order' => (int) ($validated['sort_order'] ?? 0),
         ]);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Paket harga berhasil ditambahkan.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Paket harga ditambahkan',
+            'message' => 'Paket baru sudah tersedia dan bisa diatur status aktif atau promonya.',
+        ]);
     }
 
     public function update(Request $request, PricingPlan $pricingPlan): RedirectResponse
@@ -54,7 +58,11 @@ class PricingPlanController extends Controller
             'sort_order' => (int) ($validated['sort_order'] ?? $pricingPlan->sort_order),
         ]);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Paket harga berhasil diupdate.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Paket harga diperbarui',
+            'message' => 'Informasi harga dan detail paket berhasil disimpan.',
+        ]);
     }
 
     public function toggleActive(PricingPlan $pricingPlan): RedirectResponse
@@ -63,7 +71,13 @@ class PricingPlanController extends Controller
             'is_active' => ! $pricingPlan->is_active,
         ]);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Status paket harga diperbarui.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Status paket harga diperbarui',
+            'message' => $pricingPlan->is_active
+                ? 'Paket ini sekarang aktif dan dapat dipakai sebagai harga berjalan.'
+                : 'Paket ini sekarang nonaktif dan tidak dipakai sebagai harga berjalan.',
+        ]);
     }
 
     public function togglePromo(PricingPlan $pricingPlan): RedirectResponse
@@ -72,13 +86,23 @@ class PricingPlanController extends Controller
             'promo_active' => ! $pricingPlan->promo_active,
         ]);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Promo paket harga diperbarui.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Status promo diperbarui',
+            'message' => $pricingPlan->promo_active
+                ? 'Label promo untuk paket ini sekarang aktif.'
+                : 'Label promo untuk paket ini sekarang dimatikan.',
+        ]);
     }
 
     public function destroy(PricingPlan $pricingPlan): RedirectResponse
     {
         $pricingPlan->delete();
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Paket harga berhasil dihapus.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Paket harga dihapus',
+            'message' => 'Paket ini tidak lagi tersedia untuk alur pendaftaran baru.',
+        ]);
     }
 }

@@ -6,7 +6,17 @@
 <div class="space-y-6">
     <div>
         <h1 class="text-2xl font-bold">Manajemen QR & Harga</h1>
-        <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola QR pembayaran dan promo harga paket.</p>
+        <p class="mt-2 text-textSecondary dark:text-slate-300">Atur instruksi pembayaran dan harga yang akan dilihat calon guru saat mendaftar.</p>
+    </div>
+
+    <div class="card border border-amber-100 bg-amber-50/80">
+        <div class="flex items-start gap-3 text-sm text-amber-900">
+            <i class="fa-solid fa-receipt mt-0.5"></i>
+            <div>
+                <p class="font-semibold">Catatan operasional</p>
+                <p class="mt-1">Pastikan minimal ada satu QR aktif dan satu paket harga aktif agar alur pendaftaran guru menampilkan instruksi pembayaran yang lengkap.</p>
+            </div>
+        </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
@@ -15,7 +25,7 @@
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <div class="font-bold text-lg">QR Pembayaran</div>
-                    <div class="mt-1 text-sm text-textSecondary dark:text-slate-300">Upload QRIS/Bank dan aktifkan/nonaktifkan.</div>
+                    <div class="mt-1 text-sm text-textSecondary dark:text-slate-300">Upload metode pembayaran yang akan muncul di halaman setelah guru selesai mengisi formulir.</div>
                 </div>
             </div>
 
@@ -24,7 +34,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Label</label>
-                        <input class="input mt-1" name="label" placeholder="QRIS / Bank Central" required>
+                        <input class="input mt-1" name="label" placeholder="Contoh: QRIS Sekolah / BCA Transfer" required>
                     </div>
                     <div>
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Urutan Tampil</label>
@@ -34,9 +44,10 @@
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">File Gambar QR</label>
                     <input class="input mt-1" type="file" name="image" accept="image/*" required>
+                    <p class="mt-1 text-xs text-muted">Gunakan gambar yang jelas agar mudah dipindai di perangkat mobile.</p>
                 </div>
                 <button class="btn-primary w-full md:w-auto" type="submit">
-                    <i class="fa-solid fa-plus mr-2"></i> Tambah QR
+                    <i class="fa-solid fa-plus mr-2"></i> Simpan QR Pembayaran
                 </button>
             </form>
 
@@ -63,17 +74,17 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <form method="POST" action="{{ route('superadmin.payment-qrs.toggle', $qr) }}">
                                     @csrf
-                                    <button class="btn-secondary p-2" type="submit" title="Toggle Status"><i class="fa-solid fa-power-off"></i></button>
+                                    <button class="btn-secondary p-2" type="submit" title="Ubah status QR"><i class="fa-solid fa-power-off"></i></button>
                                 </form>
                                 <form method="POST" action="{{ route('superadmin.payment-qrs.destroy', $qr) }}">
                                     @csrf
-                                    <button class="btn-danger p-2" type="submit" data-confirm="Hapus QR ini?"><i class="fa-solid fa-trash"></i></button>
+                                    <button class="btn-danger p-2" type="submit" data-confirm="Hapus QR ini?" title="Hapus QR pembayaran"><i class="fa-solid fa-trash"></i></button>
                                 </form>
                             </div>
                         </div>
 
                         <details class="mt-4">
-                            <summary class="text-sm font-bold cursor-pointer text-primary">Edit Detail QR</summary>
+                            <summary class="text-sm font-bold cursor-pointer text-primary">Edit detail QR</summary>
                             <form class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3" method="POST" action="{{ route('superadmin.payment-qrs.update', $qr) }}" enctype="multipart/form-data">
                                 @csrf
                                 <div>
@@ -85,11 +96,11 @@
                                     <input class="input mt-1" type="number" name="sort_order" min="0" value="{{ $qr->sort_order }}">
                                 </div>
                                 <div class="md:col-span-2">
-                                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Ganti Gambar (opsional)</label>
+                                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Ganti gambar (opsional)</label>
                                     <input class="input mt-1" type="file" name="image" accept="image/*">
                                 </div>
                                 <div class="md:col-span-2">
-                                    <button class="btn-primary w-full" type="submit">Simpan Perubahan</button>
+                                    <button class="btn-primary w-full" type="submit">Simpan perubahan</button>
                                 </div>
                             </form>
                         </details>
@@ -104,8 +115,8 @@
         <!-- PRICING SECTION -->
         <div class="card">
             <div>
-                <div class="font-bold text-lg">Paket Harga (Pricing)</div>
-                <div class="mt-1 text-sm text-textSecondary dark:text-slate-300">Set harga coret vs normal, dan aktifkan fitur promo.</div>
+                <div class="font-bold text-lg">Paket Harga</div>
+                <div class="mt-1 text-sm text-textSecondary dark:text-slate-300">Tentukan nominal yang ditampilkan ke calon guru beserta informasi promo jika diperlukan.</div>
             </div>
 
             <form class="mt-6 space-y-4" method="POST" action="{{ route('superadmin.pricing-plans.store') }}">
@@ -113,11 +124,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Nama Paket</label>
-                        <input class="input mt-1" name="name" placeholder="E.g: Starter" required>
+                        <input class="input mt-1" name="name" placeholder="Contoh: Paket Aktivasi Guru" required>
                     </div>
                     <div>
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Subtitle</label>
-                        <input class="input mt-1" name="subtitle" placeholder="E.g: Untuk sekolah kecil">
+                        <input class="input mt-1" name="subtitle" placeholder="Contoh: Akses 1 akun guru / operator">
                     </div>
                     <div>
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Harga (Angka saja)</label>
@@ -137,7 +148,7 @@
                     </div>
                 </div>
                 <button class="btn-primary w-full md:w-auto" type="submit">
-                    <i class="fa-solid fa-plus mr-2"></i> Tambah Paket
+                    <i class="fa-solid fa-plus mr-2"></i> Simpan Paket Harga
                 </button>
             </form>
 
@@ -169,21 +180,21 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <form method="POST" action="{{ route('superadmin.pricing-plans.toggle-active', $plan) }}">
                                     @csrf
-                                    <button class="btn-secondary p-2" type="submit" title="Toggle Aktif"><i class="fa-solid fa-eye"></i></button>
+                                    <button class="btn-secondary p-2" type="submit" title="Ubah status paket"><i class="fa-solid fa-eye"></i></button>
                                 </form>
                                 <form method="POST" action="{{ route('superadmin.pricing-plans.toggle-promo', $plan) }}">
                                     @csrf
-                                    <button class="btn-secondary p-2" type="submit" title="Toggle Promo"><i class="fa-solid fa-bolt"></i></button>
+                                    <button class="btn-secondary p-2" type="submit" title="Ubah status promo"><i class="fa-solid fa-bolt"></i></button>
                                 </form>
                                 <form method="POST" action="{{ route('superadmin.pricing-plans.destroy', $plan) }}">
                                     @csrf
-                                    <button class="btn-danger p-2" type="submit" data-confirm="Hapus paket ini?"><i class="fa-solid fa-trash"></i></button>
+                                    <button class="btn-danger p-2" type="submit" data-confirm="Hapus paket ini?" title="Hapus paket harga"><i class="fa-solid fa-trash"></i></button>
                                 </form>
                             </div>
                         </div>
 
                         <details class="mt-4">
-                            <summary class="text-sm font-bold cursor-pointer text-primary">Edit Paket</summary>
+                            <summary class="text-sm font-bold cursor-pointer text-primary">Edit paket</summary>
                             <form class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3" method="POST" action="{{ route('superadmin.pricing-plans.update', $plan) }}">
                                 @csrf
                                 <div>

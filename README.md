@@ -14,12 +14,13 @@ Platform ujian terintegrasi berbasis Laravel untuk superadmin, guru/operator, da
 
 ### Superadmin
 - Login dari `/ngadimin/login`
-- Kelola guru, token akses, materi, bank soal global, paket soal, ujian, audit log, chat, dan finance
+- Kelola guru, review pembayaran, token akses, materi, bank soal global, paket soal, ujian, audit log, chat, dan finance
 - Route `superadmin/*` sudah diproteksi `auth` dan `role:superadmin`
 
 ### Guru / Operator
 - Login dari `/login`
 - Registrasi dari `/register/guru`
+- Upload bukti pembayaran dari halaman pending aktivasi
 - Kelola profil, bank soal pribadi, paket soal sesuai jenjang, ikut ujian guru, dan chat
 
 ### Siswa
@@ -51,8 +52,12 @@ Platform ujian terintegrasi berbasis Laravel untuk superadmin, guru/operator, da
 - Analisis ujian dengan ranking, distribusi nilai, export CSV, dan versi cetak
 - Audit log dengan data yang sudah disanitasi
 - Chat per percakapan dengan pagination
+- Review pembayaran guru dengan status, preview bukti bayar, filter, dan approve/reject
+- Template pesan siap kirim untuk aktivasi, approval, rejection, dan reminder
 
 ### Guru
+- Registrasi guru terhubung ke status pembayaran nyata
+- Halaman pending aktivasi mendukung upload bukti pembayaran dan status review
 - Profil guru sinkron dengan field yang benar-benar diproses
 - Bank soal pribadi dengan form cepat dan fullscreen builder
 - Dashboard guru berbasis `ujian_sesis`
@@ -72,7 +77,9 @@ Platform ujian terintegrasi berbasis Laravel untuk superadmin, guru/operator, da
 - Perbaikan create ujian superadmin agar menyimpan `user_id`
 - Builder ujian admin tidak lagi memakai `questions.exam_id` yang tidak ada
 - Registrasi guru sekarang memakai email asli, password acak, dan validasi unik email/no WA
+- Flow registrasi guru sekarang menyimpan status pembayaran, upload bukti transfer, approval/rejection admin, dan aktivasi token yang konsisten
 - Token aktivasi dan refresh guru sekarang konsisten dan ditampilkan one-time lewat flash
+- Halaman manajemen guru sekarang mendukung ringkasan status pembayaran, filter pencarian, preview bukti bayar, dan guard aktivasi manual saat review masih berjalan
 - View/controller legacy yang membingungkan sudah dibersihkan
 - Audit log sekarang menyamarkan path dinamis, IP, dan user agent
 - Chat superadmin difilter per percakapan
@@ -121,8 +128,8 @@ php artisan test
 
 Status terakhir setelah batch audit dan hardening:
 
-- 31 test lulus
-- 96 assertion lulus
+- 36 test lulus
+- 118 assertion lulus
 
 ## Dokumen Audit
 
@@ -132,4 +139,5 @@ Status terakhir setelah batch audit dan hardening:
 ## Catatan
 
 - Beberapa tabel legacy masih ada karena masih dipakai untuk kompatibilitas builder/admin snapshot
+- Flow pembayaran guru aktif sekarang memakai kolom status di tabel `users` untuk fase `awaiting_payment`, `submitted`, `approved`, dan `rejected`
 - Jika ingin refactor lanjutan, titik utama berikutnya adalah memutus total ketergantungan modul lama `questions/participants`

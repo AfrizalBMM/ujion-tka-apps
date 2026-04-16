@@ -66,6 +66,8 @@ Route::prefix('superadmin')
 	    Route::post('/teachers/{teacher}/activate', [TeacherController::class , 'activate'])->name('teachers.activate');
 	    Route::post('/teachers/{teacher}/suspend', [TeacherController::class , 'suspend'])->name('teachers.suspend');
 	    Route::post('/teachers/{teacher}/refresh-token', [TeacherController::class , 'refreshToken'])->name('teachers.refresh-token');
+	    Route::post('/teachers/{teacher}/approve-payment', [TeacherController::class , 'approvePayment'])->name('teachers.approve-payment');
+	    Route::post('/teachers/{teacher}/reject-payment', [TeacherController::class , 'rejectPayment'])->name('teachers.reject-payment');
 
 	    Route::post('/materials', [MaterialController::class , 'store'])->name('materials.store');
 	    Route::post('/materials/{material}/delete', [MaterialController::class , 'destroy'])->name('materials.destroy');
