@@ -21,14 +21,14 @@ class StoreSoalRequest extends FormRequest
             'gambar' => 'nullable|image|max:2048',
             'teks_bacaan_id' => 'nullable|exists:teks_bacaans,id',
             'bobot' => 'nullable|integer|min:1|max:100',
-            'pilihan' => 'required_if:tipe_soal,pilihan_ganda|array|size:4',
-            'pilihan.*.kode' => 'required_if:tipe_soal,pilihan_ganda|in:A,B,C,D',
-            'pilihan.*.teks' => 'required_if:tipe_soal,pilihan_ganda|string',
+            'pilihan' => 'exclude_unless:tipe_soal,pilihan_ganda|required|array|size:4',
+            'pilihan.*.kode' => 'exclude_unless:tipe_soal,pilihan_ganda|required|in:A,B,C,D',
+            'pilihan.*.teks' => 'exclude_unless:tipe_soal,pilihan_ganda|required|string',
             'pilihan_gambar.*' => 'nullable|image|max:2048',
-            'jawaban_benar' => 'required_if:tipe_soal,pilihan_ganda|in:A,B,C,D',
-            'pasangan' => 'required_if:tipe_soal,menjodohkan|array|min:3',
-            'pasangan.*.teks_kiri' => 'required_if:tipe_soal,menjodohkan|string',
-            'pasangan.*.teks_kanan' => 'required_if:tipe_soal,menjodohkan|string',
+            'jawaban_benar' => 'exclude_unless:tipe_soal,pilihan_ganda|required|in:A,B,C,D',
+            'pasangan' => 'exclude_unless:tipe_soal,menjodohkan|required|array|min:3',
+            'pasangan.*.teks_kiri' => 'exclude_unless:tipe_soal,menjodohkan|required|string',
+            'pasangan.*.teks_kanan' => 'exclude_unless:tipe_soal,menjodohkan|required|string',
         ];
     }
 }

@@ -20,7 +20,8 @@ Platform ujian terintegrasi berbasis Laravel untuk superadmin, guru/operator, da
 ### Guru / Operator
 - Login dari `/login`
 - Registrasi dari `/register/guru`
-- Upload bukti pembayaran dari halaman pending aktivasi
+- Upload bukti pembayaran dari halaman pending aktivasi lalu diarahkan kembali ke login
+- Akun `pending` atau `suspend` tidak bisa masuk workspace guru
 - Kelola profil, bank soal pribadi, paket soal sesuai jenjang, ikut ujian guru, dan chat
 
 ### Siswa
@@ -57,11 +58,15 @@ Platform ujian terintegrasi berbasis Laravel untuk superadmin, guru/operator, da
 
 ### Guru
 - Registrasi guru terhubung ke status pembayaran nyata
-- Halaman pending aktivasi mendukung upload bukti pembayaran dan status review
+- Halaman pending aktivasi mendukung upload bukti pembayaran dan status review, lalu kembali ke login guru
 - Profil guru sinkron dengan field yang benar-benar diproses
 - Bank soal pribadi dengan form cepat dan fullscreen builder
+- Builder soal pribadi fullscreen memakai layout editor kiri dan navigasi soal kanan
 - Dashboard guru berbasis `ujian_sesis`
 - Join ujian guru, histori, dan hasil berbasis data nyata
+- Materi, bank soal pribadi, dan paket soal guru difilter otomatis sesuai `jenjang` akun
+- Guru tetap bisa melihat materi global selama `jenjang` materi sama, dengan badge `Materi dari Ujion`
+- Paket soal TKA milik superadmin tampil read-only di sisi guru
 - Guard hapus soal pribadi lintas akun
 
 ### Siswa
@@ -78,12 +83,16 @@ Platform ujian terintegrasi berbasis Laravel untuk superadmin, guru/operator, da
 - Builder ujian admin tidak lagi memakai `questions.exam_id` yang tidak ada
 - Registrasi guru sekarang memakai email asli, password acak, dan validasi unik email/no WA
 - Flow registrasi guru sekarang menyimpan status pembayaran, upload bukti transfer, approval/rejection admin, dan aktivasi token yang konsisten
+- Setelah upload bukti transfer, guru diarahkan ke login dan akses area guru diblokir sampai akun aktif
 - Token aktivasi dan refresh guru sekarang konsisten dan ditampilkan one-time lewat flash
+- Registrasi ulang dengan email/no WA yang masih `pending` diarahkan ke flow aktivasi yang sama, bukan gagal validasi duplikat
 - Halaman manajemen guru sekarang mendukung ringkasan status pembayaran, filter pencarian, preview bukti bayar, dan guard aktivasi manual saat review masih berjalan
 - View/controller legacy yang membingungkan sudah dibersihkan
 - Audit log sekarang menyamarkan path dinamis, IP, dan user agent
 - Chat superadmin difilter per percakapan
 - Guard bisnis untuk hapus paket soal dan teks bacaan yang masih dipakai
+- Guru tidak bisa edit/hapus/kelola paket soal TKA milik superadmin
+- Token ujian siswa sekarang tergenerate otomatis saat `Exam` dibuat bila token belum diisi
 
 ## Struktur Folder Penting
 
@@ -140,4 +149,6 @@ Status terakhir setelah batch audit dan hardening:
 
 - Beberapa tabel legacy masih ada karena masih dipakai untuk kompatibilitas builder/admin snapshot
 - Flow pembayaran guru aktif sekarang memakai kolom status di tabel `users` untuk fase `awaiting_payment`, `submitted`, `approved`, dan `rejected`
+- Middleware guru sekarang menahan akun `pending` dan `suspend` di halaman login sampai statusnya aktif
+- Filtering konten guru memakai `jenjang` akun sebagai guard utama untuk materi, builder soal pribadi, paket soal, dan akses detail terkait
 - Jika ingin refactor lanjutan, titik utama berikutnya adalah memutus total ketergantungan modul lama `questions/participants`

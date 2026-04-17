@@ -12,6 +12,10 @@
         <p class="text-slate-500 mt-1">Masuk menggunakan nama yang terdaftar dan token akses yang dikirim saat akun Anda aktif.</p>
     </div>
 
+    @if (session('flash'))
+        @include('components.ui.flash')
+    @endif
+
     @if ($errors->any())
         <div class="mb-5 flex gap-3 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
             <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
@@ -55,7 +59,7 @@
         </div>
 
         <button type="submit" class="btn-primary w-full py-3 text-lg">
-            Masuk ke Dashboard
+            Mulai Mengelola
             <i class="fa-solid fa-arrow-right ml-2 text-sm"></i>
         </button>
     </form>

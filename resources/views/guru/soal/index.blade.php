@@ -3,15 +3,22 @@
 @section('title', 'Kelola Soal')
 
 @section('content')
+@php($canManage = $paket->isManagedByGuru(auth()->user()))
 <div class="space-y-6">
     <section class="page-hero">
         <span class="page-kicker">{{ $paket->nama }}</span>
         <h1 class="page-title">{{ $mapel->nama_label }}</h1>
-        <p class="page-description">Kelola bank soal mapel ini dengan tipe pilihan ganda atau menjodohkan.</p>
+        <p class="page-description">
+            {{ $canManage
+                ? 'Kelola bank soal mapel ini dengan tipe pilihan ganda atau menjodohkan.'
+                : 'Soal pada paket milik superadmin hanya dapat dilihat dari akun guru.' }}
+        </p>
         <div class="page-actions">
-            <a href="{{ route('guru.soal.create', [$paket, $mapel, 'tipe_soal' => 'pilihan_ganda']) }}" class="btn-primary">Tambah PG</a>
-            <a href="{{ route('guru.soal.create', [$paket, $mapel, 'tipe_soal' => 'menjodohkan']) }}" class="btn-secondary">Tambah Menjodohkan</a>
-            <a href="{{ route('guru.teks-bacaan.index', [$paket, $mapel]) }}" class="btn-secondary">Teks Bacaan</a>
+            @if($canManage)
+                <a href="{{ route('guru.soal.create', [$paket, $mapel, 'tipe_soal' => 'pilihan_ganda']) }}" class="btn-primary">Tambah PG</a>
+                <a href="{{ route('guru.soal.create', [$paket, $mapel, 'tipe_soal' => 'menjodohkan']) }}" class="btn-secondary">Tambah Menjodohkan</a>
+                <a href="{{ route('guru.teks-bacaan.index', [$paket, $mapel]) }}" class="btn-secondary">Teks Bacaan</a>
+            @endif
         </div>
     </section>
 
@@ -37,14 +44,18 @@
                             <td>{{ $soal->teksBacaan?->judul ?? '-' }}</td>
                             <td>{{ $soal->isPilihanGanda() ? $soal->pilihanJawabans->count().' pilihan' : $soal->pasanganMenjodohkans->count().' pasangan' }}</td>
                             <td>
-                                <div class="flex flex-wrap gap-2">
-                                    <a href="{{ route('guru.soal.edit', [$paket, $mapel, $soal]) }}" class="btn-secondary px-3 py-2 text-xs">Edit</a>
-                                    <form method="POST" action="{{ route('guru.soal.destroy', [$paket, $mapel, $soal]) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn-danger px-3 py-2 text-xs" type="submit">Hapus</button>
-                                    </form>
-                                </div>
+                                @if($canManage)
+                                    <div class="flex flex-wrap gap-2">
+                                        <a href="{{ route('guru.soal.edit', [$paket, $mapel, $soal]) }}" class="btn-secondary px-3 py-2 text-xs">Edit</a>
+                                        <form method="POST" action="{{ route('guru.soal.destroy', [$paket, $mapel, $soal]) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn-danger px-3 py-2 text-xs" type="submit">Hapus</button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <span class="text-xs text-textSecondary">Read only</span>
+                                @endif
                             </td>
                         </tr>
                     @empty

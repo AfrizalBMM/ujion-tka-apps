@@ -28,7 +28,6 @@ class ExamController extends Controller {
             'timer' => 'nullable|integer',
             'status' => 'required|in:draft,terbit',
         ]);
-        $data['token'] = strtoupper(substr(md5(uniqid()), 0, 6));
         if (blank($data['timer'])) {
             $data['timer'] = PaketSoal::with('mapelPakets')->find($data['paket_soal_id'])?->mapelPakets?->sum('durasi_menit') ?? 150;
         }

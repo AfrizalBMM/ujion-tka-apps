@@ -14,16 +14,17 @@ class PersonalQuestionController extends Controller {
     public function index(Request $request): View {
         $user = Auth::user();
         $questions = PersonalQuestion::where('user_id', $user->id)
-            ->when($request->jenjang, fn($q)=>$q->where('jenjang',$request->jenjang))
+            ->where('jenjang', $user->jenjang)
             ->when($request->kategori, fn($q)=>$q->where('kategori',$request->kategori))
             ->get();
 
-        return view('guru.personal-questions', compact('questions'));
+        return view('guru.personal-questions', compact('questions', 'user'));
     }
 
     public function store(Request $request): RedirectResponse {
+        $user = Auth::user();
         $data = $request->validate([
-            'jenjang' => 'required',
+            'jenjang' => 'nullable|string',
             'kategori' => 'required',
             'tipe' => 'required',
             'pertanyaan' => 'required',
@@ -33,7 +34,8 @@ class PersonalQuestionController extends Controller {
             'image' => 'nullable|image|max:2048',
             'status' => 'required|in:draft,terbit',
         ]);
-        $data['user_id'] = Auth::id();
+        $data['user_id'] = $user->id;
+        $data['jenjang'] = $user->jenjang ?: $request->string('jenjang')->toString();
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('personal-question-images', 'public');
         }
@@ -58,9 +60,11 @@ class PersonalQuestionController extends Controller {
 
     public function builder(): View {
         $user = Auth::user();
-        $questions = PersonalQuestion::where('user_id', $user->id)->get();
+        $questions = PersonalQuestion::where('user_id', $user->id)
+            ->where('jenjang', $user->jenjang)
+            ->get();
 
-        return view('guru.personal-question-builder', compact('questions'));
+        return view('guru.personal-question-builder', compact('questions', 'user'));
     }
 
     public function saveBuilder(Request $request): RedirectResponse {
@@ -73,7 +77,7 @@ class PersonalQuestionController extends Controller {
             'questions.*.jawaban_benar' => 'nullable|string',
             'questions.*.pembahasan' => 'nullable|string',
             'questions.*.image' => 'nullable|string',
-            'questions.*.jenjang' => 'required',
+            'questions.*.jenjang' => 'nullable|string',
             'questions.*.kategori' => 'required',
             'questions.*.status' => 'required|in:draft,terbit',
         ]);
@@ -96,6 +100,7 @@ class PersonalQuestionController extends Controller {
                 }
 
                 $q['user_id'] = $user->id;
+                $q['jenjang'] = $user->jenjang ?: ($q['jenjang'] ?? null);
                 PersonalQuestion::create($q);
             }
         });

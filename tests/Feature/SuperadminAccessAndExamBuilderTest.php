@@ -6,9 +6,12 @@ use App\Models\Exam;
 use App\Models\GlobalQuestion;
 use App\Models\Jenjang;
 use App\Models\Material;
+use App\Models\MapelPaket;
 use App\Models\PaketSoal;
+use App\Models\Soal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
 
 class SuperadminAccessAndExamBuilderTest extends TestCase
@@ -64,6 +67,62 @@ class SuperadminAccessAndExamBuilderTest extends TestCase
             'user_id' => $superadmin->id,
             'paket_soal_id' => $paket->id,
         ]);
+
+        $exam = Exam::where('judul', 'Ujian Creator Check')->firstOrFail();
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6}$/', $exam->token);
+    }
+
+    public function test_exam_model_generates_unique_token_when_missing(): void
+    {
+        $superadmin = $this->createSuperadmin();
+        $paket = $this->createPaket($superadmin);
+
+        $first = Exam::create([
+            'user_id' => $superadmin->id,
+            'paket_soal_id' => $paket->id,
+            'judul' => 'Exam Auto Token 1',
+            'tanggal_terbit' => now(),
+            'max_peserta' => 20,
+            'timer' => 60,
+            'status' => 'draft',
+            'is_active' => true,
+        ]);
+
+        $second = Exam::create([
+            'user_id' => $superadmin->id,
+            'paket_soal_id' => $paket->id,
+            'judul' => 'Exam Auto Token 2',
+            'tanggal_terbit' => now(),
+            'max_peserta' => 20,
+            'timer' => 60,
+            'status' => 'draft',
+            'is_active' => true,
+        ]);
+
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6}$/', $first->token);
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6}$/', $second->token);
+        $this->assertNotSame($first->token, $second->token);
+    }
+
+    public function test_guru_cannot_manage_superadmin_owned_package_content(): void
+    {
+        $superadmin = $this->createSuperadmin();
+        $paket = $this->createPaket($superadmin);
+        $mapel = MapelPaket::create([
+            'paket_soal_id' => $paket->id,
+            'nama_mapel' => 'matematika',
+            'jumlah_soal' => 30,
+            'durasi_menit' => 75,
+            'urutan' => 1,
+        ]);
+
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'jenjang' => 'SMP',
+        ]);
+
+        $this->assertTrue(Gate::forUser($guru)->denies('create', [Soal::class, $mapel]));
     }
 
     public function test_superadmin_can_save_exam_builder_questions_using_pivot_schema(): void

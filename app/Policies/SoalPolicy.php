@@ -20,16 +20,18 @@ class SoalPolicy
 
     public function create(User $user, MapelPaket $mapelPaket): bool
     {
-        return $user->isSuperadmin() || ($user->isGuru() && $user->jenjang === $mapelPaket->paketSoal?->jenjang?->kode);
+        return $user->isSuperadmin()
+            || ($user->isGuru() && $mapelPaket->paketSoal?->isManagedByGuru($user));
     }
 
     public function update(User $user, Soal $soal): bool
     {
-        return $this->view($user, $soal);
+        return $user->isSuperadmin()
+            || ($user->isGuru() && $soal->mapelPaket?->paketSoal?->isManagedByGuru($user));
     }
 
     public function delete(User $user, Soal $soal): bool
     {
-        return $this->view($user, $soal);
+        return $this->update($user, $soal);
     }
 }

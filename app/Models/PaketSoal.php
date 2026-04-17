@@ -25,6 +25,11 @@ class PaketSoal extends Model
         return $this->hasMany(MapelPaket::class)->orderBy('urutan');
     }
 
+    public function mapels(): HasMany
+    {
+        return $this->mapelPakets();
+    }
+
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -38,5 +43,12 @@ class PaketSoal extends Model
     public function scopeAktif(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    public function isManagedByGuru(?User $user): bool
+    {
+        return $user?->isGuru()
+            && $this->created_by === $user->id
+            && $this->jenjang?->kode === $user->jenjang;
     }
 }

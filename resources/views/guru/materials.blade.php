@@ -4,21 +4,17 @@
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Materi</h1>
     <div class="card p-4">
-        <form method="GET" action="{{ route('guru.materials') }}" class="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div class="input-group flex-1">
-                <label class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Filter</label>
-                <select name="jenjang" class="input">
-                    <option value="" @selected(empty($selectedJenjang))>Global + Jenjang Saya ({{ $jenjangUser ?? '-' }})</option>
-                    <option value="GLOBAL" @selected($selectedJenjang === 'GLOBAL')>Hanya Global</option>
-                </select>
-            </div>
-            <button class="btn-secondary w-full sm:w-auto" type="submit">Terapkan</button>
-        </form>
+        <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            Anda melihat materi jenjang <strong>{{ $jenjangUser ?? '-' }}</strong>, termasuk materi global yang ditetapkan untuk jenjang yang sama.
+        </div>
     </div>
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         @foreach($materials as $material)
         <div class="card p-4 flex flex-col">
-            <div class="font-bold">{{ $material->subelement }}</div>
+            <div class="flex items-start justify-between gap-3">
+                <div class="font-bold">{{ $material->subelement }}</div>
+                <span class="badge-info shrink-0">Materi dari Ujion</span>
+            </div>
             <div class="mt-1 text-sm text-textSecondary">
                 <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $material->unit }}
                 <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $material->sub_unit }}

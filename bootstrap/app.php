@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'audit' => \App\Http\Middleware\AuditRequest::class,
             'role' => \App\Http\Middleware\EnsureRole::class,
+            'guru.active' => \App\Http\Middleware\EnsureGuruAccountIsActive::class,
             'guru.jenjang' => \App\Http\Middleware\EnsureGuruJenjangAccess::class,
         ]);
     })

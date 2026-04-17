@@ -34,8 +34,12 @@ class AuthController extends Controller
 
         if ($user) {
             if ($user->account_status !== User::STATUS_ACTIVE) {
+                $message = $user->account_status === User::STATUS_PENDING
+                    ? 'Akun Anda masih pending. Token akses akan bisa dipakai setelah pembayaran diverifikasi admin.'
+                    : 'Akun Anda sedang ditangguhkan. Silakan hubungi admin.';
+
                 throw ValidationException::withMessages([
-                    'access_token' => 'Akun Anda belum aktif atau sedang ditangguhkan. Silakan hubungi admin.',
+                    'access_token' => $message,
                 ]);
             }
 

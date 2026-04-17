@@ -64,13 +64,112 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'payment_proof' => UploadedFile::fake()->image('proof.png'),
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('login'));
+        $response->assertSessionMissing('pending_registration');
         $guru->refresh();
 
         $this->assertSame(User::PAYMENT_SUBMITTED, $guru->payment_status);
         $this->assertNotNull($guru->payment_proof_path);
         $this->assertNotNull($guru->payment_submitted_at);
         Storage::disk('public')->assertExists($guru->payment_proof_path);
+    }
+
+    public function test_pending_registration_session_persists_for_upload_after_pending_page_is_opened(): void
+    {
+        Storage::fake('public');
+
+        $response = $this->post(route('register.guru'), [
+            'name' => 'Guru Baru',
+            'email' => 'guru.persist@example.com',
+            'jenjang' => 'SMP',
+            'tingkat' => '7',
+            'satuan_pendidikan' => 'SMPN 1 Contoh',
+            'no_wa' => '0812-7777-9999',
+        ]);
+
+        $response->assertRedirect(route('register.guru.pending'));
+
+        $this->get(route('register.guru.pending'))->assertOk();
+
+        $uploadResponse = $this->post(route('register.guru.payment-proof'), [
+            'payment_proof' => UploadedFile::fake()->image('proof.png'),
+        ]);
+
+        $uploadResponse->assertRedirect(route('login'));
+
+        $guru = User::where('email', 'guru.persist@example.com')->firstOrFail();
+        $this->assertSame(User::PAYMENT_SUBMITTED, $guru->payment_status);
+        $this->assertNotNull($guru->payment_proof_path);
+        Storage::disk('public')->assertExists($guru->payment_proof_path);
+    }
+
+    public function test_duplicate_pending_registration_redirects_back_to_pending_page(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'payment_status' => User::PAYMENT_AWAITING,
+            'email' => 'guru.pending@example.com',
+            'no_wa' => '08123456789',
+        ]);
+
+        $response = $this->post(route('register.guru'), [
+            'name' => 'Guru Daftar Ulang',
+            'email' => 'guru.pending@example.com',
+            'jenjang' => 'SMP',
+            'tingkat' => '7',
+            'satuan_pendidikan' => 'SMPN 1 Contoh',
+            'no_wa' => '0812-3456-789',
+        ]);
+
+        $response->assertRedirect(route('register.guru.pending'));
+        $response->assertSessionHas('pending_registration', [
+            'teacher_id' => $guru->id,
+            'harga' => null,
+            'qr_url' => null,
+        ]);
+        $response->assertSessionHas('flash.message', 'Kami menemukan data pendaftaran Anda yang masih pending. Silakan lanjutkan dari halaman aktivasi pembayaran.');
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_duplicate_active_registration_returns_clear_errors(): void
+    {
+        User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'email' => 'guru.aktif@example.com',
+            'no_wa' => '08123456789',
+        ]);
+
+        $response = $this->from(route('register.guru.form'))->post(route('register.guru'), [
+            'name' => 'Guru Baru',
+            'email' => 'guru.aktif@example.com',
+            'jenjang' => 'SMP',
+            'tingkat' => '7',
+            'satuan_pendidikan' => 'SMPN 1 Contoh',
+            'no_wa' => '0812-3456-789',
+        ]);
+
+        $response->assertRedirect(route('register.guru.form'));
+        $response->assertSessionHasErrors([
+            'email' => 'Email ini sudah terdaftar. Silakan gunakan email lain atau login bila akun Anda sudah aktif.',
+            'no_wa' => 'Nomor WhatsApp ini sudah terdaftar. Silakan gunakan nomor lain atau lanjutkan pendaftaran sebelumnya.',
+        ]);
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_pending_guru_is_redirected_to_login_when_trying_to_open_guru_area(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+        ]);
+
+        $response = $this->actingAs($guru)->get(route('guru.dashboard'));
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHas('flash.message', 'Akun Anda masih menunggu verifikasi pembayaran. Silakan tunggu token akses dari admin.');
+        $this->assertGuest();
     }
 
     public function test_guru_can_update_complete_profile_fields(): void

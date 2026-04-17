@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\PaymentQr;
 use App\Models\PricingPlan;
-use App\Support\GuruNotificationTemplates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
@@ -31,14 +29,49 @@ class RegisterGuruController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            'email' => ['required', 'email', 'max:255'],
             'jenjang' => 'required|in:SD,SMP',
             'tingkat' => 'required|in:4,5,6,7,8,9',
             'satuan_pendidikan' => 'required|string|max:255',
-            'no_wa' => ['required', 'string', 'max:20', Rule::unique('users', 'no_wa')],
+            'no_wa' => ['required', 'string', 'max:20'],
         ]);
 
         $normalizedWa = preg_replace('/\D+/', '', $validated['no_wa']) ?: $validated['no_wa'];
+        $existingByEmail = User::query()->where('email', $validated['email'])->first();
+        $existingByWa = User::query()->where('no_wa', $normalizedWa)->first();
+
+        if ($existingByEmail && $existingByWa && $existingByEmail->id !== $existingByWa->id) {
+            return back()
+                ->withErrors([
+                    'email' => 'Email ini sudah dipakai akun lain.',
+                    'no_wa' => 'Nomor WhatsApp ini sudah dipakai akun lain.',
+                ])
+                ->withInput();
+        }
+
+        $existingTeacher = $existingByEmail ?? $existingByWa;
+
+        if ($existingTeacher instanceof User) {
+            if ($existingTeacher->role === User::ROLE_GURU && $existingTeacher->account_status === User::STATUS_PENDING) {
+                $this->storePendingRegistrationSession($request, $existingTeacher);
+
+                return redirect()->route('register.guru.pending')->with('flash', [
+                    'type' => 'info',
+                    'title' => 'Pendaftaran sebelumnya masih aktif',
+                    'message' => 'Kami menemukan data pendaftaran Anda yang masih pending. Silakan lanjutkan dari halaman aktivasi pembayaran.',
+                ]);
+            }
+
+            return back()
+                ->withErrors($this->buildDuplicateRegistrationErrors(
+                    $validated['email'],
+                    $normalizedWa,
+                    $existingByEmail,
+                    $existingByWa,
+                ))
+                ->withInput();
+        }
+
         $generatedPassword = Str::password(24);
 
         $user = User::create([
@@ -54,14 +87,9 @@ class RegisterGuruController extends Controller
             'no_wa' => $normalizedWa,
         ]);
 
-        $plan = PricingPlan::where('is_active', true)->orderBy('sort_order')->first();
-        $qr = PaymentQr::where('is_active', true)->orderBy('sort_order')->first();
+        $this->storePendingRegistrationSession($request, $user);
 
-        return redirect()->route('register.guru.pending')->with('pending_registration', [
-            'teacher_id' => $user->id,
-            'harga' => $plan?->price,
-            'qr_url' => $qr ? asset('storage/' . $qr->image_path) : null,
-        ]);
+        return redirect()->route('register.guru.pending');
     }
 
     public function showPending(Request $request): RedirectResponse|View
@@ -119,16 +147,44 @@ class RegisterGuruController extends Controller
             'payment_rejection_reason' => null,
         ]);
 
-        return back()->with('flash', [
+        $request->session()->forget('pending_registration');
+
+        return redirect()->route('login')->with('flash', [
             'type' => 'success',
             'title' => 'Bukti pembayaran berhasil dikirim',
-            'message' => 'Tim kami akan memverifikasi pembayaran Anda secepatnya. Setelah disetujui, token akses akan dikirim ke WhatsApp Anda.',
-            'copy_block' => GuruNotificationTemplates::paymentSubmittedAlert(
-                $teacher->name,
-                $teacher->satuan_pendidikan ?? '-',
-                $teacher->no_wa ?? '-',
-            ),
-            'copy_block_label' => 'Template notifikasi untuk admin',
+            'message' => 'Bukti pembayaran Anda sudah kami terima. Silakan login kembali setelah admin mengirim token akses.',
+            'description' => 'Selama akun masih pending, halaman guru akan menampilkan informasi bahwa verifikasi masih diproses.',
         ]);
+    }
+
+    private function storePendingRegistrationSession(Request $request, User $teacher): void
+    {
+        $plan = PricingPlan::where('is_active', true)->orderBy('sort_order')->first();
+        $qr = PaymentQr::where('is_active', true)->orderBy('sort_order')->first();
+
+        $request->session()->put('pending_registration', [
+            'teacher_id' => $teacher->id,
+            'harga' => $plan?->price,
+            'qr_url' => $qr ? asset('storage/' . $qr->image_path) : null,
+        ]);
+    }
+
+    private function buildDuplicateRegistrationErrors(
+        string $email,
+        string $normalizedWa,
+        ?User $existingByEmail,
+        ?User $existingByWa,
+    ): array {
+        $errors = [];
+
+        if ($existingByEmail?->email === $email) {
+            $errors['email'] = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login bila akun Anda sudah aktif.';
+        }
+
+        if ($existingByWa?->no_wa === $normalizedWa) {
+            $errors['no_wa'] = 'Nomor WhatsApp ini sudah terdaftar. Silakan gunakan nomor lain atau lanjutkan pendaftaran sebelumnya.';
+        }
+
+        return $errors;
     }
 }

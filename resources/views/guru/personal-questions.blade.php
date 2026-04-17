@@ -9,7 +9,7 @@
             <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <div>
                     <label class="text-xs font-bold">Jenjang</label>
-                    <input name="jenjang" class="input w-full" required>
+                    <input class="input w-full bg-slate-100" value="{{ $user->jenjang }}" readonly>
                 </div>
                 <div>
                     <label class="text-xs font-bold">Kategori</label>

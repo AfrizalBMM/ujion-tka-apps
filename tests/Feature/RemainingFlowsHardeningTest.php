@@ -19,8 +19,11 @@ use App\Models\Soal;
 use App\Models\TeksBacaan;
 use App\Models\UjianSesi;
 use App\Models\User;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class RemainingFlowsHardeningTest extends TestCase
@@ -32,7 +35,7 @@ class RemainingFlowsHardeningTest extends TestCase
         $guru = $this->createGuru();
 
         $response = $this->actingAs($guru)->post(route('guru.personal-questions.store'), [
-            'jenjang' => 'SMP',
+            'jenjang' => 'SD',
             'kategori' => 'Numerasi',
             'tipe' => 'PG',
             'pertanyaan' => 'Pilih bilangan genap',
@@ -46,6 +49,7 @@ class RemainingFlowsHardeningTest extends TestCase
 
         $question = PersonalQuestion::query()->firstOrFail();
         $this->assertSame(['1', '2', '3', '4'], $question->opsi);
+        $this->assertSame('SMP', $question->jenjang);
     }
 
     public function test_superadmin_can_update_global_question_from_edit_flow(): void
@@ -115,6 +119,7 @@ class RemainingFlowsHardeningTest extends TestCase
     {
         $guru = $this->createGuru();
         $material = Material::create([
+            'jenjang' => 'SMP',
             'curriculum' => 'Merdeka',
             'subelement' => 'Literasi',
             'unit' => 'Teks',
@@ -152,6 +157,81 @@ class RemainingFlowsHardeningTest extends TestCase
 
         $this->assertSame(1, $data['globalQuestionCount']);
         $this->assertSame(1, $data['examSnapshotCount']);
+    }
+
+    public function test_guru_material_index_only_shows_matching_jenjang(): void
+    {
+        $guru = $this->createGuru();
+
+        Material::create([
+            'jenjang' => 'SMP',
+            'curriculum' => 'Merdeka',
+            'subelement' => 'Materi SMP',
+            'unit' => 'Unit SMP',
+            'sub_unit' => 'Sub SMP',
+        ]);
+
+        Material::create([
+            'jenjang' => 'SD',
+            'curriculum' => 'Merdeka',
+            'subelement' => 'Materi SD',
+            'unit' => 'Unit SD',
+            'sub_unit' => 'Sub SD',
+        ]);
+
+        $this->be($guru);
+
+        $request = Request::create(route('guru.materials'), 'GET');
+        $request->setUserResolver(fn () => $guru);
+
+        $view = app(MaterialController::class)->index($request);
+        $materials = $view->getData()['materials'];
+
+        $this->assertCount(1, $materials);
+        $this->assertSame('Materi SMP', $materials->first()->subelement);
+    }
+
+    public function test_guru_cannot_open_material_from_other_jenjang(): void
+    {
+        $guru = $this->createGuru();
+
+        $material = Material::create([
+            'jenjang' => 'SD',
+            'curriculum' => 'Merdeka',
+            'subelement' => 'Materi SD',
+            'unit' => 'Unit SD',
+            'sub_unit' => 'Sub SD',
+        ]);
+
+        $this->be($guru);
+        $this->expectException(HttpException::class);
+
+        app(MaterialController::class)->show($material);
+    }
+
+    public function test_personal_question_builder_forces_logged_in_guru_jenjang(): void
+    {
+        $guru = $this->createGuru();
+
+        $response = $this->actingAs($guru)->post(route('guru.personal-questions.builder.save'), [
+            'questions' => [
+                [
+                    'pertanyaan' => 'Soal lintas jenjang',
+                    'tipe' => 'PG',
+                    'opsi' => ['A', 'B'],
+                    'jawaban_benar' => 'A',
+                    'pembahasan' => 'Pembahasan',
+                    'image' => null,
+                    'jenjang' => 'SD',
+                    'kategori' => 'Numerasi',
+                    'status' => 'draft',
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $question = PersonalQuestion::query()->firstOrFail();
+        $this->assertSame('SMP', $question->jenjang);
     }
 
     public function test_superadmin_cannot_delete_package_with_exam_dependencies(): void
@@ -245,6 +325,43 @@ class RemainingFlowsHardeningTest extends TestCase
         $this->be($superadmin);
         $analysisPrint = app(ExamAnalysisController::class)->print($exam);
         $this->assertSame('superadmin.exports.exam-analysis-print', $analysisPrint->name());
+    }
+
+    public function test_superadmin_can_store_pilihan_ganda_even_when_hidden_matching_fields_are_empty(): void
+    {
+        Storage::fake('public');
+
+        $superadmin = $this->createSuperadmin();
+        [$paket, $mapel] = $this->createPaketWithMapel($superadmin);
+
+        $response = $this->actingAs($superadmin)->post(route('superadmin.soal.store', [$paket, $mapel]), [
+            'nomor_soal' => 1,
+            'tipe_soal' => 'pilihan_ganda',
+            'indikator' => 'Indikator pilihan ganda',
+            'pertanyaan' => 'Berapa 2 + 2?',
+            'bobot' => 1,
+            'jawaban_benar' => 'A',
+            'gambar' => UploadedFile::fake()->image('soal.png'),
+            'pilihan' => [
+                ['kode' => 'A', 'teks' => '4'],
+                ['kode' => 'B', 'teks' => '3'],
+                ['kode' => 'C', 'teks' => '5'],
+                ['kode' => 'D', 'teks' => '6'],
+            ],
+            'pasangan' => [
+                ['teks_kiri' => '', 'teks_kanan' => ''],
+                ['teks_kiri' => '', 'teks_kanan' => ''],
+                ['teks_kiri' => '', 'teks_kanan' => ''],
+            ],
+        ]);
+
+        $response->assertRedirect(route('superadmin.soal.index', [$paket, $mapel]));
+        $this->assertDatabaseHas('soals', [
+            'mapel_paket_id' => $mapel->id,
+            'nomor_soal' => 1,
+            'tipe_soal' => 'pilihan_ganda',
+        ]);
+        $this->assertDatabaseCount('pasangan_menjodohkans', 0);
     }
 
     private function createSuperadmin(): User

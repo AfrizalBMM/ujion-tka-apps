@@ -32,7 +32,7 @@
 
       <div class="app-topbar-actions">
         <div class="app-topbar-meta">
-          <span class="font-semibold uppercase tracking-[0.24em] text-[11px]">Jam Server</span>
+          <span class="font-semibold uppercase tracking-[0.24em] text-[11px]">Jam</span>
           <span id="live-clock" class="app-clock"></span>
         </div>
         <button class="icon-button" title="Perbesar Font" onclick="document.body.style.fontSize='1.05em'">
