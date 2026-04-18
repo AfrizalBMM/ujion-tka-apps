@@ -1,6 +1,6 @@
 # Ujion TKA
 
-Platform ujian terintegrasi berbasis Laravel untuk superadmin, guru/operator, dan siswa. Project ini sekarang memakai satu jalur utama untuk flow ujian siswa berbasis `paket_soal`, `mapel_paket`, `soal`, `ujian_sesi`, dan `jawaban_siswa`, sambil tetap mempertahankan beberapa tabel snapshot legacy yang masih dipakai builder ujian admin.
+Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`, dan `siswa`. Flow aktif project ini berpusat pada paket soal TKA, sesi ujian, dan penyimpanan jawaban berbasis schema baru, sementara sebagian tabel legacy masih dipertahankan untuk kompatibilitas builder/admin snapshot.
 
 ## Stack
 
@@ -10,89 +10,136 @@ Platform ujian terintegrasi berbasis Laravel untuk superadmin, guru/operator, da
 - Vite
 - MySQL/MariaDB
 
-## Peran dan Akses
+## Pintu Masuk Aplikasi
+
+- Landing page: `/`
+- Login guru: `/login`
+- Registrasi guru: `/register/guru`
+- Login superadmin: `/ngadimin/login`
+- Login siswa: `/siswa/login`
+
+## Flow Aktif Per Role
 
 ### Superadmin
-- Login dari `/ngadimin/login`
-- Kelola guru, review pembayaran, token akses, materi, bank soal global, paket soal, ujian, audit log, chat, dan finance
-- Route `superadmin/*` sudah diproteksi `auth` dan `role:superadmin`
+
+- Login memakai `email + password`
+- Workspace `superadmin/*` diproteksi `auth`, `role:superadmin`, dan `audit`
+- Kelola:
+  - dashboard
+  - finance, pricing plan, dan QR pembayaran
+  - guru, review pembayaran, aktivasi, suspend, dan refresh token akses
+  - materi global
+  - bank soal global
+  - paket soal TKA
+  - ujian, builder ujian, analisis, export CSV, dan print
+  - chat dengan guru
+  - audit log
 
 ### Guru / Operator
-- Login dari `/login`
+
 - Registrasi dari `/register/guru`
-- Upload bukti pembayaran dari halaman pending aktivasi lalu diarahkan kembali ke login
-- Akun `pending` atau `suspend` tidak bisa masuk workspace guru
-- Kelola profil, bank soal pribadi, paket soal sesuai jenjang, ikut ujian guru, dan chat
+- Setelah registrasi, guru masuk ke halaman pending aktivasi
+- Guru upload bukti pembayaran lalu diarahkan kembali ke login
+- Login guru memakai `name + access_token`
+- Akun `pending` dan `suspend` diblokir dari workspace guru oleh middleware `guru.active`
+- Guru aktif dapat:
+  - melihat dashboard
+  - mengelola profil dan password
+  - melihat materi sesuai `jenjang`
+  - bookmark materi
+  - mengelola bank soal pribadi
+  - melihat paket soal sesuai `jenjang`
+  - mengelola soal dan teks bacaan hanya pada paket yang memang boleh diakses
+  - ikut simulasi ujian dengan token
+  - melihat hasil simulasi
+  - chat ke superadmin
+  - melihat log aktivitas
 
 ### Siswa
-- Login dari `/siswa/login`
-- Masuk ujian memakai token ujian
-- Flow aktif siswa memakai view `resources/views/ujian/*`
+
+- Masuk dari `/siswa/login` memakai token ujian
+- Isi identitas peserta
+- Sistem membuat `ujian_sesis`
+- Siswa melihat halaman petunjuk lalu mulai ujian
+- Pengerjaan ujian berjalan per mapel dengan timer masing-masing
+- Jawaban tersimpan ke `jawaban_siswas`
+- Saat selesai, sistem menghitung skor dari jawaban aktual lalu menutup sesi
+
+## End-to-End Flow Utama
+
+1. Superadmin menyiapkan pricing plan dan QR pembayaran.
+2. Guru registrasi dan mengirim bukti pembayaran.
+3. Superadmin review pembayaran lalu mengaktifkan guru dan memberi token akses.
+4. Superadmin membuat paket soal TKA dan exam.
+5. Superadmin atau guru mengisi mapel, teks bacaan, dan soal pada paket yang relevan.
+6. Siswa atau guru masuk ujian menggunakan token exam.
+7. Sistem membuat sesi ujian dan menyimpan jawaban selama pengerjaan.
+8. Sistem menghitung skor ketika ujian selesai.
 
 ## Arsitektur Data Aktif
 
 ### Jalur utama ujian
+
 - `paket_soals`
 - `mapel_pakets`
-- `soals`
 - `teks_bacaans`
+- `soals`
+- `pilihan_jawabans`
+- `pasangan_menjodohkans`
 - `ujian_sesis`
 - `jawaban_siswas`
 
-### Jalur pendukung admin
+### Jalur pendukung admin dan kompatibilitas
+
 - `global_questions` sebagai bank soal global resmi
-- `questions` sebagai snapshot soal yang ditempel ke ujian admin
+- `global_questions` sekarang menyimpan snapshot materi (`material_curriculum`, `material_subelement`, `material_unit`, `material_sub_unit`) selain `material_id`
+- `questions` sebagai snapshot soal builder ujian admin
 - `exam_question` sebagai pivot relasi ujian ke snapshot soal
+- `participants` dan `participant_answers` masih ada untuk kompatibilitas modul lama tertentu
+- `personal_questions` dipakai untuk bank soal pribadi guru
 
 ## Modul Penting
 
 ### Superadmin
-- Dashboard metrik nyata, bukan placeholder
-- Bank soal global dengan create, import CSV, edit, delete
-- Builder ujian admin berbasis pivot `exam_question`
-- Analisis ujian dengan ranking, distribusi nilai, export CSV, dan versi cetak
-- Audit log dengan data yang sudah disanitasi
-- Chat per percakapan dengan pagination
-- Review pembayaran guru dengan status, preview bukti bayar, filter, dan approve/reject
-- Template pesan siap kirim untuk aktivasi, approval, rejection, dan reminder
+
+- Dashboard dengan metrik operasional
+- Review pembayaran guru lengkap dengan preview bukti bayar
+- Kelola token akses guru
+- Bank soal global dengan create, import, update, delete, filter, hapus massal, dan template
+- Input dan edit bank soal global sekarang memakai picker materi bertingkat dari `curriculum` sampai `sub_unit`
+- Template import bank soal global mengikuti struktur materi yang sama dengan input manual
+- Builder ujian admin berbasis `exam_question`
+- Analisis ujian dengan ranking, distribusi nilai, export CSV, dan print
+- Audit log yang sudah disanitasi
+- Chat per percakapan
 
 ### Guru
-- Registrasi guru terhubung ke status pembayaran nyata
-- Halaman pending aktivasi mendukung upload bukti pembayaran dan status review, lalu kembali ke login guru
-- Profil guru sinkron dengan field yang benar-benar diproses
-- Bank soal pribadi dengan form cepat dan fullscreen builder
-- Builder soal pribadi fullscreen memakai layout editor kiri dan navigasi soal kanan
-- Dashboard guru berbasis `ujian_sesis`
-- Join ujian guru, histori, dan hasil berbasis data nyata
-- Materi, bank soal pribadi, dan paket soal guru difilter otomatis sesuai `jenjang` akun
-- Guru tetap bisa melihat materi global selama `jenjang` materi sama, dengan badge `Materi dari Ujion`
-- Paket soal TKA milik superadmin tampil read-only di sisi guru
-- Guard hapus soal pribadi lintas akun
+
+- Halaman pending aktivasi dan upload bukti pembayaran
+- Materi sesuai `jenjang` dan fitur bookmark
+- Bank soal pribadi dengan builder
+- Paket soal TKA yang difilter sesuai `jenjang`
+- Simulasi ujian memakai engine yang sama dengan flow siswa
+- Hasil simulasi dan pembahasan jawaban
 
 ### Siswa
-- Mulai ujian dari token
+
+- Login token ujian
 - Timer per mapel
-- Penyimpanan jawaban ke schema baru
-- Penyelesaian ujian menghitung skor dari jawaban aktual
+- Autosave jawaban
+- Perhitungan skor saat selesai
 
-## Perubahan Besar Yang Sudah Dirapikan
+## Catatan Arsitektur
 
-- Proteksi route `superadmin/*`
-- Konsolidasi jalur bank soal admin ke `global_questions`
-- Perbaikan create ujian superadmin agar menyimpan `user_id`
-- Builder ujian admin tidak lagi memakai `questions.exam_id` yang tidak ada
-- Registrasi guru sekarang memakai email asli, password acak, dan validasi unik email/no WA
-- Flow registrasi guru sekarang menyimpan status pembayaran, upload bukti transfer, approval/rejection admin, dan aktivasi token yang konsisten
-- Setelah upload bukti transfer, guru diarahkan ke login dan akses area guru diblokir sampai akun aktif
-- Token aktivasi dan refresh guru sekarang konsisten dan ditampilkan one-time lewat flash
-- Registrasi ulang dengan email/no WA yang masih `pending` diarahkan ke flow aktivasi yang sama, bukan gagal validasi duplikat
-- Halaman manajemen guru sekarang mendukung ringkasan status pembayaran, filter pencarian, preview bukti bayar, dan guard aktivasi manual saat review masih berjalan
-- View/controller legacy yang membingungkan sudah dibersihkan
-- Audit log sekarang menyamarkan path dinamis, IP, dan user agent
-- Chat superadmin difilter per percakapan
-- Guard bisnis untuk hapus paket soal dan teks bacaan yang masih dipakai
-- Guru tidak bisa edit/hapus/kelola paket soal TKA milik superadmin
-- Token ujian siswa sekarang tergenerate otomatis saat `Exam` dibuat bila token belum diisi
+- Project ini masih memiliki dua domain ujian yang hidup berdampingan:
+  - schema baru untuk flow ujian aktif
+  - schema lama untuk sebagian builder/admin compatibility
+- Flow ujian nyata siswa dan simulasi guru sekarang memakai schema baru `ujian_sesis` dan `jawaban_siswas`
+- Builder ujian superadmin masih memakai snapshot `questions` melalui pivot `exam_question`
+- Modul `global_questions` sekarang memakai snapshot materi di tabelnya sendiri agar data edit tetap tampil stabil walaupun relasi materi berubah
+- Import bank soal global tetap bisa mencocokkan `material_id`, tetapi jalur utamanya sekarang memakai struktur materi `curriculum -> subelement -> unit -> sub_unit`
+- Filtering akses guru memakai `jenjang` akun sebagai guard utama
+- Paket soal TKA milik superadmin tampil terbatas di sisi guru sesuai aturan akses yang ada
 
 ## Struktur Folder Penting
 
@@ -102,9 +149,11 @@ app/
     Guru/
     Siswa/
     Superadmin/
+  Http/Middleware/
   Models/
 database/
   migrations/
+  seeders/
 resources/
   views/
     guru/
@@ -135,20 +184,15 @@ php artisan serve
 php artisan test
 ```
 
-Status terakhir setelah batch audit dan hardening:
+## Dokumen Pendukung
 
-- 36 test lulus
-- 118 assertion lulus
+- `alur.md` untuk pembacaan flow aplikasi
+- `ERD.md` untuk relasi data
+- `DFD.md` dan file diagram terkait untuk analisis proses
+- `allmenu.md` untuk peta menu
+- `errorbug.md` untuk daftar bug, status ceklis, dan prioritas perbaikan
 
-## Dokumen Audit
+## Catatan Refactor
 
-- `errorbug.md` berisi daftar bug, status ceklis, dan prioritas perbaikan
-- `ERD.md`, `allmenu.md`, `alur.md`, dan file DFD dipakai sebagai dokumen pendukung analisis
-
-## Catatan
-
-- Beberapa tabel legacy masih ada karena masih dipakai untuk kompatibilitas builder/admin snapshot
-- Flow pembayaran guru aktif sekarang memakai kolom status di tabel `users` untuk fase `awaiting_payment`, `submitted`, `approved`, dan `rejected`
-- Middleware guru sekarang menahan akun `pending` dan `suspend` di halaman login sampai statusnya aktif
-- Filtering konten guru memakai `jenjang` akun sebagai guard utama untuk materi, builder soal pribadi, paket soal, dan akses detail terkait
-- Jika ingin refactor lanjutan, titik utama berikutnya adalah memutus total ketergantungan modul lama `questions/participants`
+- Tabel legacy belum dihapus karena masih dipakai sebagian flow admin
+- Titik refactor terbesar berikutnya adalah memutus ketergantungan builder/admin dari schema lama `questions`, `participants`, dan `participant_answers`

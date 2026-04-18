@@ -17,7 +17,7 @@
   </script>
 </head>
 
-<body class="app-shell flex flex-col">
+<body class="app-shell flex flex-col" data-dashboard-shell="guru">
   <header class="app-topbar">
     <div class="app-topbar-panel">
       <div class="app-brand">
@@ -25,8 +25,8 @@
           <i class="fa-solid fa-graduation-cap"></i>
         </div>
         <div class="app-brand-copy">
-          <div class="app-brand-subtitle">Teaching Workspace</div>
-          <div class="app-brand-title">Ujion Guru/Operator</div>
+          <div class="app-brand-subtitle">Semangat!!!</div>
+          <div class="app-brand-title">Guru / Operator</div>
         </div>
       </div>
 
@@ -105,7 +105,7 @@
       </a>
       <a href="{{ route('guru.exams') }}" class="mobile-nav-link {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
         <i class="fa-solid fa-file-lines"></i>
-        Ujian
+        Simulasi
       </a>
       <a href="{{ route('guru.profile') }}" class="mobile-nav-link {{ request()->routeIs('guru.profile*') ? 'active' : '' }}">
         <i class="fa-solid fa-user"></i>
@@ -115,46 +115,66 @@
   </nav>
 
   <div class="app-body">
-    <aside class="sidebar-container">
-
+    <aside class="sidebar-container" data-app-sidebar>
       <nav class="sidebar-nav">
-        <div class="sidebar-section-title">Utama</div>
+        <div class="sidebar-section-row">
+          <div class="sidebar-section-title sidebar-section-title-static">Utama</div>
+          <button
+            type="button"
+            class="sidebar-toggle"
+            data-sidebar-toggle
+            aria-label="Toggle sidebar"
+            aria-expanded="true"
+            title="Ciutkan sidebar"
+          >
+            <i class="fa-solid fa-angles-left" data-sidebar-toggle-icon></i>
+          </button>
+        </div>
         <a href="{{ route('guru.dashboard') }}"
           class="sidebar-link {{ request()->routeIs('guru.dashboard') ? 'active' : '' }}">
-          <i class="fa-solid fa-gauge-high w-5"></i> Dashboard
+          <i class="fa-solid fa-gauge-high w-5"></i>
+          <span class="sidebar-link-label">Dashboard</span>
         </a>
         <a href="{{ route('guru.chat') }}" class="sidebar-link {{ request()->routeIs('guru.chat') ? 'active' : '' }}">
-          <i class="fa-solid fa-comments w-5"></i> Live Chat
+          <i class="fa-solid fa-comments w-5"></i>
+          <span class="sidebar-link-label">Live Chat</span>
         </a>
         <a href="{{ route('guru.logs') }}" class="sidebar-link {{ request()->routeIs('guru.logs') ? 'active' : '' }}">
-          <i class="fa-solid fa-clock-rotate-left w-5"></i> Log Aktivitas
+          <i class="fa-solid fa-clock-rotate-left w-5"></i>
+          <span class="sidebar-link-label">Log Aktivitas</span>
         </a>
 
         <div class="sidebar-section-title">Konten</div>
         <a href="{{ route('guru.materials') }}"
           class="sidebar-link {{ request()->routeIs('guru.materials') ? 'active' : '' }}">
-          <i class="fa-solid fa-book w-5"></i> Materi
+          <i class="fa-solid fa-book w-5"></i>
+          <span class="sidebar-link-label">Materi</span>
         </a>
         <a href="{{ route('guru.personal-questions') }}"
           class="sidebar-link {{ request()->routeIs('guru.personal-questions*') ? 'active' : '' }}">
-          <i class="fa-solid fa-database w-5"></i> Bank Soal Pribadi
+          <i class="fa-solid fa-database w-5"></i>
+          <span class="sidebar-link-label">Bank Soal Pribadi</span>
         </a>
         <a href="{{ route('guru.paket-soal.index') }}"
           class="sidebar-link {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-database w-5"></i> Paket Soal TKA
+          <i class="fa-solid fa-database w-5"></i>
+          <span class="sidebar-link-label">Paket Soal TKA</span>
         </a>
         <a href="{{ route('guru.exams') }}"
           class="sidebar-link {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
-          <i class="fa-solid fa-file-lines w-5"></i> Ujian
+          <i class="fa-solid fa-file-lines w-5"></i>
+          <span class="sidebar-link-label">Simulasi Ujian</span>
         </a>
 
         <div class="sidebar-section-title">Akun</div>
         <a href="{{ route('guru.guide') }}" class="sidebar-link {{ request()->routeIs('guru.guide') ? 'active' : '' }}">
-          <i class="fa-solid fa-circle-info w-5"></i> Cara Menggunakan
+          <i class="fa-solid fa-circle-info w-5"></i>
+          <span class="sidebar-link-label">Cara Menggunakan</span>
         </a>
         <a href="{{ route('guru.profile') }}"
           class="sidebar-link {{ request()->routeIs('guru.profile*') ? 'active' : '' }}">
-          <i class="fa-solid fa-user w-5"></i> Profil
+          <i class="fa-solid fa-user w-5"></i>
+          <span class="sidebar-link-label">Profil</span>
         </a>
       </nav>
 

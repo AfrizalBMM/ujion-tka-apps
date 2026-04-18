@@ -8,6 +8,64 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller {
+    public function destroyAllGuru(Request $request) {
+        // Ambil semua chat antara superadmin dan seluruh guru
+        $guruIds = User::where('role', User::ROLE_GURU)->pluck('id');
+        $chats = Chat::query()
+            ->where(function ($q) use ($guruIds) {
+                $q->where('from_user_id', auth()->id())
+                  ->whereIn('to_user_id', $guruIds);
+            })
+            ->orWhere(function ($q) use ($guruIds) {
+                $q->whereIn('from_user_id', $guruIds)
+                  ->where('to_user_id', auth()->id());
+            })
+            ->get();
+
+        // Hapus semua gambar
+        foreach ($chats as $chat) {
+            if ($chat->image_path) {
+                Storage::disk('public')->delete($chat->image_path);
+            }
+        }
+
+        // Hapus semua chat
+        Chat::whereIn('id', $chats->pluck('id'))->delete();
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Semua pesan dan gambar dari seluruh guru berhasil dihapus.'
+        ]);
+    }
+
+    public function destroyAll(Request $request, User $user) {
+        // Ambil semua chat antara superadmin dan user
+        $chats = Chat::query()
+            ->where(function ($q) use ($user) {
+                $q->where('from_user_id', auth()->id())
+                  ->where('to_user_id', $user->id);
+            })
+            ->orWhere(function ($q) use ($user) {
+                $q->where('from_user_id', $user->id)
+                  ->where('to_user_id', auth()->id());
+            })
+            ->get();
+
+        // Hapus semua gambar
+        foreach ($chats as $chat) {
+            if ($chat->image_path) {
+                Storage::disk('public')->delete($chat->image_path);
+            }
+        }
+
+        // Hapus semua chat
+        Chat::whereIn('id', $chats->pluck('id'))->delete();
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Semua pesan dan gambar berhasil dihapus.'
+        ]);
+    }
     public function index(Request $request): View {
         $users = User::query()
             ->where('role', User::ROLE_GURU)
@@ -69,6 +127,7 @@ class ChatController extends Controller {
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('chat-images', 'public');
         }
+        unset($data['image']);
         Chat::create($data);
         return back()->with('flash', ['type' => 'success', 'message' => 'Pesan terkirim.']);
     }

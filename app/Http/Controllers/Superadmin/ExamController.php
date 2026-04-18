@@ -7,10 +7,15 @@ use App\Models\GlobalQuestion;
 use App\Models\Material;
 use App\Models\PaketSoal;
 use App\Models\Question;
+use App\Support\SpreadsheetTable;
+use App\Support\SpreadsheetTemplateExporter;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamController extends Controller {
     public function index(): View {
@@ -36,6 +41,73 @@ class ExamController extends Controller {
         Exam::create($data);
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Ujian berhasil dibuat.']);
+    }
+
+    public function template(): StreamedResponse
+    {
+        return SpreadsheetTemplateExporter::download('template-ujian.xls', [
+            'paket_soal_id',
+            'judul',
+            'tanggal_terbit',
+            'max_peserta',
+            'timer',
+            'status',
+            'is_active',
+        ], [
+            ['1', 'Simulasi TKA SD Gelombang 1', '2026-05-10 08:00', '120', '120', 'draft', '1'],
+            ['2', 'Tryout TKA SMP Final', '2026-05-12 13:30', '200', '', 'terbit', '1'],
+        ]);
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
+        ]);
+
+        try {
+            $rows = SpreadsheetTable::rowsFromUpload($validated['file']);
+        } catch (RuntimeException $exception) {
+            return back()->with('flash', ['type' => 'warning', 'message' => $exception->getMessage()]);
+        }
+
+        $created = 0;
+        $skipped = 0;
+
+        foreach ($rows as $row) {
+            $paketSoalId = $this->resolvePaketSoalId($row['paket_soal_id'] ?? null);
+            $judul = trim((string) ($row['judul'] ?? ''));
+            $tanggalTerbit = $this->parseTanggalTerbit($row['tanggal_terbit'] ?? null);
+            $status = $this->normalizeStatus($row['status'] ?? null);
+
+            if (! $paketSoalId || $judul === '' || ! $tanggalTerbit || ! $status) {
+                $skipped++;
+                continue;
+            }
+
+            $timer = $this->normalizeNullableInteger($row['timer'] ?? null);
+            if ($timer === null) {
+                $timer = PaketSoal::with('mapelPakets')->find($paketSoalId)?->mapelPakets?->sum('durasi_menit') ?? 150;
+            }
+
+            Exam::create([
+                'user_id' => $request->user()->id,
+                'paket_soal_id' => $paketSoalId,
+                'judul' => $judul,
+                'tanggal_terbit' => $tanggalTerbit,
+                'max_peserta' => $this->normalizeNullableInteger($row['max_peserta'] ?? null) ?? 50,
+                'timer' => $timer,
+                'status' => $status,
+                'is_active' => $this->toBoolean($row['is_active'] ?? true),
+            ]);
+
+            $created++;
+        }
+
+        return back()->with('flash', [
+            'type' => $created > 0 ? 'success' : 'warning',
+            'message' => "Import ujian selesai. Berhasil: {$created}, dilewati: {$skipped}.",
+        ]);
     }
 
     public function destroy(Exam $exam): RedirectResponse {
@@ -185,5 +257,60 @@ class ExamController extends Controller {
         if ($questionIds->isNotEmpty()) {
             Question::query()->whereIn('id', $questionIds)->delete();
         }
+    }
+
+    private function resolvePaketSoalId(mixed $value): ?int
+    {
+        $paketSoalId = (int) trim((string) $value);
+
+        if ($paketSoalId <= 0) {
+            return null;
+        }
+
+        return PaketSoal::query()->whereKey($paketSoalId)->exists() ? $paketSoalId : null;
+    }
+
+    private function parseTanggalTerbit(mixed $value): ?Carbon
+    {
+        $raw = trim((string) $value);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($raw);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function normalizeStatus(mixed $value): ?string
+    {
+        $normalized = SpreadsheetTable::normalizeHeader((string) $value);
+
+        return match ($normalized) {
+            '', 'draft' => 'draft',
+            'terbit', 'published', 'publish' => 'terbit',
+            default => null,
+        };
+    }
+
+    private function normalizeNullableInteger(mixed $value): ?int
+    {
+        $raw = trim((string) $value);
+
+        if ($raw === '' || ! is_numeric($raw)) {
+            return null;
+        }
+
+        return max(0, (int) $raw);
+    }
+
+    private function toBoolean(mixed $value): bool
+    {
+        $normalized = strtolower(trim((string) $value));
+
+        return ! in_array($normalized, ['0', 'false', 'tidak', 'nonaktif'], true);
     }
 }

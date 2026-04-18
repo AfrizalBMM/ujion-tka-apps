@@ -10,7 +10,7 @@
             <li><b>Profil:</b> Edit profil, ganti password, avatar.</li>
             <li><b>Materi:</b> Lihat & bookmark materi sesuai jenjang.</li>
             <li><b>Bank Soal Pribadi:</b> CRUD soal, builder fullscreen.</li>
-            <li><b>Ujian:</b> Join ujian, lihat hasil & pembahasan.</li>
+            <li><b>Simulasi Ujian:</b> Coba alur ujian dari sisi siswa, lalu lihat hasil dan pembahasan untuk evaluasi.</li>
             <li><b>Live Chat:</b> Chat dengan superadmin/operator.</li>
             <li><b>Log Aktivitas:</b> Riwayat aktivitas pribadi.</li>
         </ul>

@@ -1,4 +1,4 @@
-@extends('layouts.guru')
+﻿@extends('layouts.guru')
 @section('title', 'Dashboard Guru')
 @section('content')
 <div class="space-y-6">
@@ -27,7 +27,7 @@
             </a>
             <a href="{{ route('guru.exams') }}" class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
                 <i class="fa-solid fa-file-lines"></i>
-                Kelola Ujian
+                Coba Simulasi
             </a>
         </div>
     </section>
@@ -97,7 +97,7 @@
                         </span>
                         <div>
                             <div class="font-semibold text-slate-800 dark:text-white">{{ $log->route_name }}</div>
-                            <div class="mt-1 text-xs text-textSecondary dark:text-slate-400">{{ $log->created_at }} � {{ $log->ip_address }}</div>
+                            <div class="mt-1 text-xs text-textSecondary dark:text-slate-400">{{ $log->created_at }} · {{ $log->ip_address }}</div>
                         </div>
                     </li>
                 @endforeach
@@ -127,4 +127,3 @@
     </div>
 </div>
 @endsection
-

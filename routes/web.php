@@ -70,14 +70,18 @@ Route::prefix('superadmin')
 	    Route::post('/teachers/{teacher}/reject-payment', [TeacherController::class , 'rejectPayment'])->name('teachers.reject-payment');
 
 	    Route::post('/materials', [MaterialController::class , 'store'])->name('materials.store');
-	    Route::post('/materials/{material}/delete', [MaterialController::class , 'destroy'])->name('materials.destroy');
+	    Route::post('/materials/import', [MaterialController::class , 'import'])->name('materials.import');
+	    Route::get('/materials/template', [MaterialController::class , 'template'])->name('materials.template');
+		Route::post('/materials/{material}/delete', [MaterialController::class , 'destroy'])->name('materials.destroy');
+		Route::post('/materials/destroy-all', [MaterialController::class, 'destroyAll'])->name('materials.destroyAll');
 
 	    Route::get('/global-questions', [GlobalQuestionController::class , 'index'])->name('global-questions.index');
 	    Route::post('/global-questions', [GlobalQuestionController::class , 'store'])->name('global-questions.store');
-	    Route::post('/global-questions/{globalQuestion}', [GlobalQuestionController::class , 'update'])->name('global-questions.update');
-	    Route::post('/global-questions/{globalQuestion}/delete', [GlobalQuestionController::class , 'destroy'])->name('global-questions.destroy');
 	    Route::post('/global-questions/import', [GlobalQuestionController::class , 'import'])->name('global-questions.import');
 	    Route::get('/global-questions/template', [GlobalQuestionController::class , 'template'])->name('global-questions.template');
+	    Route::post('/global-questions/destroy-all', [GlobalQuestionController::class , 'destroyAll'])->name('global-questions.destroyAll');
+	    Route::post('/global-questions/{globalQuestion}', [GlobalQuestionController::class , 'update'])->name('global-questions.update');
+	    Route::post('/global-questions/{globalQuestion}/delete', [GlobalQuestionController::class , 'destroy'])->name('global-questions.destroy');
 
 	    Route::get('/audit-logs', [AuditLogController::class , 'index'])->name('audit-logs.index');
         Route::get('/dashboard/export/csv', [DashboardController::class, 'exportCsv'])->name('dashboard.export-csv');
@@ -85,7 +89,9 @@ Route::prefix('superadmin')
 
 	    Route::get('/chat', [\App\Http\Controllers\Superadmin\ChatController::class , 'index'])->name('chat.index');
 	    Route::post('/chat', [\App\Http\Controllers\Superadmin\ChatController::class , 'store'])->name('chat.store');
-	    Route::post('/chat/{chat}/destroy', [\App\Http\Controllers\Superadmin\ChatController::class , 'destroy'])->name('chat.destroy');
+		Route::post('/chat/{chat}/destroy', [\App\Http\Controllers\Superadmin\ChatController::class , 'destroy'])->name('chat.destroy');
+		Route::post('/chat/{user}/destroy-all', [\App\Http\Controllers\Superadmin\ChatController::class , 'destroyAll'])->name('chat.destroyAll');
+		Route::post('/chat/destroy-all-guru', [\App\Http\Controllers\Superadmin\ChatController::class , 'destroyAllGuru'])->name('chat.destroyAllGuru');
 	    Route::post('/chat/{chat}/read', [\App\Http\Controllers\Superadmin\ChatController::class , 'markRead'])->name('chat.read');
 
 	    Route::get('/teachers', [TeacherController::class , 'index'])->name('teachers.index');
@@ -97,6 +103,8 @@ Route::prefix('superadmin')
 
 	    Route::get('/exams', [\App\Http\Controllers\Superadmin\ExamController::class , 'index'])->name('exams.index');
 	    Route::post('/exams', [\App\Http\Controllers\Superadmin\ExamController::class , 'store'])->name('exams.store');
+	    Route::post('/exams/import', [\App\Http\Controllers\Superadmin\ExamController::class , 'import'])->name('exams.import');
+	    Route::get('/exams/template', [\App\Http\Controllers\Superadmin\ExamController::class , 'template'])->name('exams.template');
 	    Route::post('/exams/{exam}/destroy', [\App\Http\Controllers\Superadmin\ExamController::class , 'destroy'])->name('exams.destroy');
 	    Route::post('/exams/{exam}/toggle', [\App\Http\Controllers\Superadmin\ExamController::class , 'toggle'])->name('exams.toggle');
 	    Route::get('/exams/{exam}/builder', [\App\Http\Controllers\Superadmin\ExamController::class , 'builder'])->name('exams.builder');

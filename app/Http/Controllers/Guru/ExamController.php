@@ -57,7 +57,7 @@ class ExamController extends Controller {
 
         if (blank($user->no_wa)) {
             return redirect()->route('guru.profile')
-                ->with('flash', ['type' => 'warning', 'message' => 'Lengkapi nomor WhatsApp di profil sebelum join ujian.']);
+                ->with('flash', ['type' => 'warning', 'message' => 'Lengkapi nomor WhatsApp di profil sebelum memulai simulasi.']);
         }
 
         $exam = Exam::query()
@@ -72,7 +72,7 @@ class ExamController extends Controller {
         }
 
         if (! $exam->paketSoal || $exam->paketSoal->mapelPakets->isEmpty()) {
-            return back()->with('flash', ['type' => 'warning', 'message' => 'Paket ujian belum siap dipakai.']);
+            return back()->with('flash', ['type' => 'warning', 'message' => 'Paket ujian belum siap dipakai untuk simulasi.']);
         }
 
         $existingSession = $this->sessionQueryForUser($user)
@@ -82,7 +82,7 @@ class ExamController extends Controller {
 
         if ($existingSession?->status === 'selesai') {
             return redirect()->route('guru.exams.result', $exam)
-                ->with('flash', ['type' => 'info', 'message' => 'Ujian ini sudah selesai. Menampilkan hasil terbaru Anda.']);
+                ->with('flash', ['type' => 'info', 'message' => 'Simulasi ini sudah selesai. Menampilkan hasil terbaru Anda.']);
         }
 
         $session = $existingSession ?? UjianSesi::create([
@@ -113,7 +113,7 @@ class ExamController extends Controller {
 
         if (! $session) {
             return redirect()->route('guru.exams')
-                ->with('flash', ['type' => 'warning', 'message' => 'Hasil ujian belum tersedia untuk akun Anda.']);
+                ->with('flash', ['type' => 'warning', 'message' => 'Hasil simulasi belum tersedia untuk akun Anda.']);
         }
 
         $session->load([

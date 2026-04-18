@@ -26,9 +26,13 @@ class ChatController extends Controller {
 
     public function store(Request $request): RedirectResponse {
         $data = $request->validate([
-            'message' => 'required',
+            'message' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
         ]);
+
+        if (! $request->filled('message') && ! $request->hasFile('image')) {
+            return back()->withErrors(['message' => 'Isi pesan atau unggah gambar terlebih dahulu.']);
+        }
 
         $superadminId = User::where('role', User::ROLE_SUPERADMIN)->value('id');
         if (! $superadminId) {
@@ -41,6 +45,8 @@ class ChatController extends Controller {
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('chat-images', 'public');
         }
+
+        unset($data['image']);
 
         Chat::create($data);
 

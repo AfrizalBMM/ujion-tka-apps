@@ -3,45 +3,69 @@
 @section('content')
 <div class="space-y-6">
     <h1 class="text-2xl font-bold">Manajemen Ujian</h1>
-    <div class="card p-4 mb-4">
-        <form method="POST" action="{{ route('superadmin.exams.store') }}">
-            @csrf
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                <div>
-                    <label class="text-xs font-bold">Paket Soal</label>
-                    <select name="paket_soal_id" class="input w-full" required>
-                        <option value="">Pilih paket</option>
-                        @foreach($paketSoals as $paket)
-                            <option value="{{ $paket->id }}">{{ $paket->nama }} &middot; {{ $paket->jenjang?->kode }} &middot; {{ $paket->tahun_ajaran }}</option>
-                        @endforeach
-                    </select>
+    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div class="card p-4">
+            <form method="POST" action="{{ route('superadmin.exams.store') }}">
+                @csrf
+                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <div>
+                        <label class="text-xs font-bold">Paket Soal</label>
+                        <select name="paket_soal_id" class="input w-full" required>
+                            <option value="">Pilih paket</option>
+                            @foreach($paketSoals as $paket)
+                                <option value="{{ $paket->id }}">{{ $paket->nama }} &middot; {{ $paket->jenjang?->kode }} &middot; {{ $paket->tahun_ajaran }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold">Judul</label>
+                        <input name="judul" class="input w-full" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold">Tanggal Terbit</label>
+                        <input type="datetime-local" name="tanggal_terbit" class="input w-full" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold">Max Peserta</label>
+                        <input type="number" name="max_peserta" class="input w-full" value="50" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold">Timer (menit)</label>
+                        <input type="number" name="timer" class="input w-full">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold">Status</label>
+                        <select name="status" class="input w-full" required>
+                            <option value="draft">Draft</option>
+                            <option value="terbit">Terbit</option>
+                        </select>
+                    </div>
                 </div>
+                <button class="btn-primary mt-3 w-full sm:w-auto" type="submit">Buat Ujian</button>
+            </form>
+        </div>
+        <div class="card bg-gradient-to-r from-blue-600 to-indigo-700 text-white border-none shadow-glow p-4">
+            <div class="flex items-start justify-between gap-4">
                 <div>
-                    <label class="text-xs font-bold">Judul</label>
-                    <input name="judul" class="input w-full" required>
+                    <div class="font-bold text-lg">Import Ujian</div>
+                    <p class="mt-1 text-xs text-blue-100">Download template Excel, isi data ujian, lalu upload kembali untuk membuat banyak sesi ujian sekaligus.</p>
                 </div>
-                <div>
-                    <label class="text-xs font-bold">Tanggal Terbit</label>
-                    <input type="datetime-local" name="tanggal_terbit" class="input w-full" required>
-                </div>
-                <div>
-                    <label class="text-xs font-bold">Max Peserta</label>
-                    <input type="number" name="max_peserta" class="input w-full" value="50" required>
-                </div>
-                <div>
-                    <label class="text-xs font-bold">Timer (menit)</label>
-                    <input type="number" name="timer" class="input w-full">
-                </div>
-                <div>
-                    <label class="text-xs font-bold">Status</label>
-                    <select name="status" class="input w-full" required>
-                        <option value="draft">Draft</option>
-                        <option value="terbit">Terbit</option>
-                    </select>
-                </div>
+                <i class="fa-solid fa-file-arrow-up text-2xl text-white/80"></i>
             </div>
-            <button class="btn-primary mt-3 w-full sm:w-auto" type="submit">Buat Ujian</button>
-        </form>
+            <div class="mt-4 flex flex-col gap-3">
+                <form method="POST" action="{{ route('superadmin.exams.import') }}" enctype="multipart/form-data" class="flex flex-col gap-2">
+                    @csrf
+                    <input class="input bg-white/10 border-white/20 text-white file:mr-3 file:rounded-lg file:border-0 file:bg-white/20 file:px-3 file:py-2 file:text-white" type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
+                    <button class="btn-primary bg-white text-blue-700 hover:bg-blue-50 border-none" type="submit">
+                        <i class="fa-solid fa-upload mr-2"></i> Import File
+                    </button>
+                </form>
+                <a href="{{ route('superadmin.exams.template') }}" class="btn-secondary bg-transparent border-white/30 text-white hover:bg-white/10">
+                    <i class="fa-solid fa-file-excel mr-2"></i> Download Template Excel
+                </a>
+                <p class="text-[11px] text-blue-100">Gunakan `paket_soal_id` yang sudah tersedia di sistem agar ujian langsung terhubung ke paket yang benar.</p>
+            </div>
+        </div>
     </div>
     <div class="card p-4">
         <div class="table-container">

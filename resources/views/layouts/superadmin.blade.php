@@ -17,7 +17,10 @@
     </script>
 </head>
 
-<body class="app-shell flex flex-col">
+<body class="app-shell flex flex-col" data-dashboard-shell="superadmin">
+    @php
+        $materialFilter = request()->query('jenjang');
+    @endphp
     <header class="app-topbar">
         <div class="app-topbar-panel">
             <div class="app-brand">
@@ -25,7 +28,7 @@
                     <i class="fa-solid fa-shield-halved"></i>
                 </div>
                 <div class="app-brand-copy">
-                    <div class="app-brand-subtitle">Control Center</div>
+                    <div class="app-brand-subtitle">Pusat Kontrol</div>
                     <div class="app-brand-title">Ujion Superadmin</div>
                 </div>
             </div>
@@ -61,7 +64,7 @@
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="app-dropdown-link w-full text-left">
+                            <button type="submit" class="app-dropdown-link w-full text-left" data-confirm data-confirm-title="Konfirmasi Logout" data-confirm="Apakah Anda yakin ingin logout?">
                                 <i class="fa-solid fa-right-from-bracket w-4"></i>
                                 Keluar
                             </button>
@@ -123,53 +126,95 @@
     </nav>
 
     <div class="app-body">
-        <aside class="sidebar-container">
-
+        <aside class="sidebar-container" data-app-sidebar>
             <nav class="sidebar-nav">
-                <div class="sidebar-section-title">Utama</div>
+                <div class="sidebar-section-row">
+                    <div class="sidebar-section-title sidebar-section-title-static">Utama</div>
+                    <button
+                        type="button"
+                        class="sidebar-toggle"
+                        data-sidebar-toggle
+                        aria-label="Toggle sidebar"
+                        aria-expanded="true"
+                        title="Ciutkan sidebar"
+                    >
+                        <i class="fa-solid fa-angles-left" data-sidebar-toggle-icon></i>
+                    </button>
+                </div>
                 <a href="{{ route('superadmin.dashboard') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                    <i class="fa-solid fa-gauge-high w-5"></i> Dashboard
+                    <i class="fa-solid fa-gauge-high w-5"></i>
+                    <span class="sidebar-link-label">Dashboard</span>
                 </a>
                 <a href="{{ route('superadmin.finance.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
-                    <i class="fa-solid fa-credit-card w-5"></i> Keuangan & QR
+                    <i class="fa-solid fa-credit-card w-5"></i>
+                    <span class="sidebar-link-label">Keuangan & QR</span>
                 </a>
                 <a href="{{ route('superadmin.chat.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
-                    <i class="fa-solid fa-comments w-5"></i> Live Chat
+                    <i class="fa-solid fa-comments w-5"></i>
+                    <span class="sidebar-link-label">Live Chat</span>
                 </a>
 
                 <div class="sidebar-section-title">Akademik</div>
                 <a href="{{ route('superadmin.teachers.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.teachers.index') ? 'active' : '' }}">
-                    <i class="fa-solid fa-chalkboard-user w-5"></i> Daftar Guru
+                    <i class="fa-solid fa-chalkboard-user w-5"></i>
+                    <span class="sidebar-link-label">Daftar Guru</span>
                 </a>
-                <a href="{{ route('superadmin.materials.index') }}"
-                    class="sidebar-link {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}">
-                    <i class="fa-solid fa-book w-5"></i> Master Materi
-                </a>
+                <details class="sidebar-submenu" data-sidebar-submenu>
+                    <summary class="sidebar-link sidebar-submenu-trigger {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}" data-sidebar-submenu-trigger>
+                        <span class="flex items-center gap-3.5">
+                            <i class="fa-solid fa-book w-5"></i>
+                            <span class="sidebar-link-label">Master Materi</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-down sidebar-submenu-caret"></i>
+                    </summary>
+                    <div class="sidebar-submenu-links">
+                        <a href="{{ route('superadmin.materials.index') }}"
+                            class="sidebar-sublink {{ empty($materialFilter) ? 'active' : '' }}">
+                            <span class="sidebar-sublink-badge">ALL</span>
+                            <span class="sidebar-sublink-label">Semua jenjang</span>
+                        </a>
+                        <a href="{{ route('superadmin.materials.index', ['jenjang' => 'SD']) }}"
+                            class="sidebar-sublink {{ $materialFilter === 'SD' ? 'active' : '' }}">
+                            <span class="sidebar-sublink-badge">SD</span>
+                            <span class="sidebar-sublink-label">Materi SD</span>
+                        </a>
+                        <a href="{{ route('superadmin.materials.index', ['jenjang' => 'SMP']) }}"
+                            class="sidebar-sublink {{ $materialFilter === 'SMP' ? 'active' : '' }}">
+                            <span class="sidebar-sublink-badge">SMP</span>
+                            <span class="sidebar-sublink-label">Materi SMP</span>
+                        </a>
+                    </div>
+                </details>
                 <a href="{{ route('superadmin.global-questions.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.global-questions.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-database w-5"></i> Bank Soal Global
+                    <i class="fa-solid fa-database w-5"></i>
+                    <span class="sidebar-link-label">Bank Soal Global</span>
                 </a>
                 <a href="{{ route('superadmin.paket-soal.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.paket-soal.*') || request()->routeIs('superadmin.soal.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-database w-5"></i> Paket Soal TKA
+                    <i class="fa-solid fa-database w-5"></i>
+                    <span class="sidebar-link-label">Paket Soal TKA</span>
                 </a>
                 <a href="{{ route('superadmin.exams.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
-                    <i class="fa-solid fa-file-lines w-5"></i> Manajemen Ujian
+                    <i class="fa-solid fa-file-lines w-5"></i>
+                    <span class="sidebar-link-label">Manajemen Ujian</span>
                 </a>
 
                 <div class="sidebar-section-title">Sistem</div>
                 <a href="{{ route('superadmin.audit-logs.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.audit-logs.index') ? 'active' : '' }}">
-                    <i class="fa-solid fa-shield-halved w-5"></i> Log Aktivitas
+                    <i class="fa-solid fa-shield-halved w-5"></i>
+                    <span class="sidebar-link-label">Log Aktivitas</span>
                 </a>
                 <a href="{{ route('superadmin.guide') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.guide') ? 'active' : '' }}">
-                    <i class="fa-solid fa-circle-info w-5"></i> Panduan
+                    <i class="fa-solid fa-circle-info w-5"></i>
+                    <span class="sidebar-link-label">Panduan</span>
                 </a>
             </nav>
 
@@ -180,6 +225,7 @@
                 <div class="page-content">
                     <div class="page-content-inner">
                         @include('components.ui.flash')
+                        @include('components.ui.confirm-modal')
                         @yield('content')
                     </div>
                 </div>

@@ -14,4 +14,8 @@ class GlobalQuestion extends Model
         'material_id' => 'integer',
         'created_by' => 'integer',
     ];
+    public function material()
+    {
+        return $this->belongsTo(Material::class, 'material_id');
+    }
 }

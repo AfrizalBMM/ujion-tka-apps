@@ -28,6 +28,8 @@ class PersonalQuestionController extends Controller {
             'kategori' => 'required',
             'tipe' => 'required',
             'pertanyaan' => 'required',
+            'options' => 'nullable|array',
+            'options.*' => 'nullable|string|max:255',
             'options_raw' => 'nullable|string',
             'jawaban_benar' => 'nullable|string',
             'pembahasan' => 'nullable|string',
@@ -39,7 +41,9 @@ class PersonalQuestionController extends Controller {
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('personal-question-images', 'public');
         }
-        $data['opsi'] = $this->normalizeOptions($request->input('options_raw'));
+        $data['opsi'] = $this->normalizeOptions($request->input('options'), $request->input('options_raw'));
+        $data['jawaban_benar'] = $this->normalizeCorrectAnswer($data['tipe'], $request->input('jawaban_benar'), $data['opsi']);
+        unset($data['options']);
         unset($data['options_raw']);
         PersonalQuestion::create($data);
 
@@ -115,8 +119,18 @@ class PersonalQuestionController extends Controller {
         return $question;
     }
 
-    private function normalizeOptions(?string $raw): ?array
+    private function normalizeOptions(?array $options = null, ?string $raw = null): ?array
     {
+        $normalized = collect($options ?? [])
+            ->map(fn ($item) => trim((string) $item))
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($normalized !== []) {
+            return $normalized;
+        }
+
         if (blank($raw)) {
             return null;
         }
@@ -126,5 +140,27 @@ class PersonalQuestionController extends Controller {
             ->filter()
             ->values()
             ->all();
+    }
+
+    private function normalizeCorrectAnswer(string $type, mixed $answer, ?array $options): ?string
+    {
+        $rawAnswer = trim((string) $answer);
+
+        if ($rawAnswer === '') {
+            return null;
+        }
+
+        if (! in_array($type, ['PG', 'Checklist'], true) || empty($options)) {
+            return $rawAnswer;
+        }
+
+        $labels = range('A', 'Z');
+        $labelIndex = array_search(strtoupper($rawAnswer), $labels, true);
+
+        if ($labelIndex !== false && array_key_exists($labelIndex, $options)) {
+            return $options[$labelIndex];
+        }
+
+        return $rawAnswer;
     }
 }

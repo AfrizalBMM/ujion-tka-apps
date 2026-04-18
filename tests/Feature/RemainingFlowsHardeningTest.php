@@ -52,6 +52,29 @@ class RemainingFlowsHardeningTest extends TestCase
         $this->assertSame('SMP', $question->jenjang);
     }
 
+    public function test_personal_question_quick_form_accepts_split_option_inputs(): void
+    {
+        $guru = $this->createGuru();
+
+        $response = $this->actingAs($guru)->post(route('guru.personal-questions.store'), [
+            'jenjang' => 'SD',
+            'kategori' => 'Numerasi',
+            'tipe' => 'PG',
+            'pertanyaan' => 'Pilih jawaban yang benar',
+            'options' => ['Empat', 'Lima', 'Enam', ''],
+            'jawaban_benar' => 'A',
+            'pembahasan' => 'Jawaban pertama benar',
+            'status' => 'draft',
+        ]);
+
+        $response->assertRedirect();
+
+        $question = PersonalQuestion::query()->latest('id')->firstOrFail();
+        $this->assertSame(['Empat', 'Lima', 'Enam'], $question->opsi);
+        $this->assertSame('Empat', $question->jawaban_benar);
+        $this->assertSame('SMP', $question->jenjang);
+    }
+
     public function test_superadmin_can_update_global_question_from_edit_flow(): void
     {
         $superadmin = $this->createSuperadmin();
@@ -80,6 +103,126 @@ class RemainingFlowsHardeningTest extends TestCase
         $this->assertSame(['Alpha', 'Beta'], $question->options);
         $this->assertSame('Beta', $question->answer_key);
         $this->assertFalse($question->is_active);
+    }
+
+    public function test_superadmin_can_store_global_question_with_split_option_inputs(): void
+    {
+        $superadmin = $this->createSuperadmin();
+
+        $response = $this->actingAs($superadmin)->post(route('superadmin.global-questions.store'), [
+            'question_type' => 'multiple_choice',
+            'question_text' => 'Ibu kota Indonesia adalah?',
+            'options' => ['Jakarta', 'Bandung', 'Surabaya', ''],
+            'answer_key' => 'A',
+            'is_active' => 1,
+        ]);
+
+        $response->assertRedirect();
+
+        $question = GlobalQuestion::query()->latest('id')->firstOrFail();
+        $this->assertSame(['Jakarta', 'Bandung', 'Surabaya'], $question->options);
+        $this->assertSame('Jakarta', $question->answer_key);
+    }
+
+    public function test_superadmin_can_import_materials_from_csv(): void
+    {
+        $superadmin = $this->createSuperadmin();
+
+        $file = UploadedFile::fake()->createWithContent('materials.csv', implode("\n", [
+            'jenjang,curriculum,subelement,unit,sub_unit,link',
+            'SD,Merdeka,Literasi,Teks Narasi,Ide Pokok,https://contoh.test/ide-pokok',
+            'SMP,K-13,Numerasi,Perbandingan,Rasio,',
+        ]));
+
+        $response = $this->actingAs($superadmin)->post(route('superadmin.materials.import'), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('materials', [
+            'jenjang' => 'SD',
+            'curriculum' => 'Merdeka',
+            'subelement' => 'Literasi',
+            'sub_unit' => 'Ide Pokok',
+        ]);
+        $this->assertDatabaseHas('materials', [
+            'jenjang' => 'SMP',
+            'curriculum' => 'K-13',
+            'subelement' => 'Numerasi',
+            'sub_unit' => 'Rasio',
+        ]);
+    }
+
+    public function test_superadmin_can_import_global_questions_from_csv(): void
+    {
+        $superadmin = $this->createSuperadmin();
+        $material = Material::create([
+            'jenjang' => 'SMP',
+            'curriculum' => 'Merdeka',
+            'subelement' => 'Literasi',
+            'unit' => 'Teks',
+            'sub_unit' => 'Ide Pokok',
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('questions.csv', implode("\n", [
+            'material_id,question_type,question_text,option_a,option_b,option_c,option_d,answer_key,explanation,is_active',
+            $material->id . ',multiple_choice,Pertanyaan contoh,Jakarta,Bandung,Surabaya,Medan,A,Pembahasan,1',
+        ]));
+
+        $response = $this->actingAs($superadmin)->post(route('superadmin.global-questions.import'), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('global_questions', [
+            'material_id' => $material->id,
+            'question_type' => 'multiple_choice',
+            'question_text' => 'Pertanyaan contoh',
+            'answer_key' => 'Jakarta',
+        ]);
+    }
+
+    public function test_superadmin_can_import_exams_from_csv(): void
+    {
+        $superadmin = $this->createSuperadmin();
+        $paket = $this->createPaket($superadmin);
+
+        $file = UploadedFile::fake()->createWithContent('exams.csv', implode("\n", [
+            'paket_soal_id,judul,tanggal_terbit,max_peserta,timer,status,is_active',
+            $paket->id . ',Tryout TKA SMP,2026-05-10 08:00,120,90,terbit,1',
+        ]));
+
+        $response = $this->actingAs($superadmin)->post(route('superadmin.exams.import'), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('exams', [
+            'paket_soal_id' => $paket->id,
+            'judul' => 'Tryout TKA SMP',
+            'max_peserta' => 120,
+            'timer' => 90,
+            'status' => 'terbit',
+            'is_active' => true,
+        ]);
+    }
+
+    public function test_superadmin_can_download_excel_templates_for_batch_imports(): void
+    {
+        $superadmin = $this->createSuperadmin();
+
+        $materialsTemplate = $this->actingAs($superadmin)->get(route('superadmin.materials.template'));
+        $materialsTemplate->assertOk();
+        $this->assertStringContainsString('template-materi.xls', $materialsTemplate->headers->get('content-disposition', ''));
+        $this->assertStringContainsString('<Workbook', $materialsTemplate->streamedContent());
+
+        $questionsTemplate = $this->actingAs($superadmin)->get(route('superadmin.global-questions.template'));
+        $questionsTemplate->assertOk();
+        $this->assertStringContainsString('template-soal-global.xls', $questionsTemplate->headers->get('content-disposition', ''));
+
+        $examsTemplate = $this->actingAs($superadmin)->get(route('superadmin.exams.template'));
+        $examsTemplate->assertOk();
+        $this->assertStringContainsString('template-ujian.xls', $examsTemplate->headers->get('content-disposition', ''));
     }
 
     public function test_superadmin_chat_index_filters_to_selected_conversation(): void

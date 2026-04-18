@@ -47,6 +47,16 @@ class SuperadminAccessAndExamBuilderTest extends TestCase
         $response->assertRedirect(route('superadmin.global-questions.index'));
     }
 
+    public function test_superadmin_global_questions_page_renders(): void
+    {
+        $superadmin = $this->createSuperadmin();
+
+        $response = $this->actingAs($superadmin)->get(route('superadmin.global-questions.index'));
+
+        $response->assertOk();
+        $response->assertSee('Bank Soal Global');
+    }
+
     public function test_superadmin_exam_creation_stores_creator_id(): void
     {
         $superadmin = $this->createSuperadmin();
