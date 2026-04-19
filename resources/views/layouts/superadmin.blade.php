@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Superadmin') - Ujion</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    {{-- KaTeX Math Rendering --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        throwOnError: false
+    });"></script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
         function updateClock() {
@@ -20,6 +34,7 @@
 <body class="app-shell flex flex-col" data-dashboard-shell="superadmin">
     @php
         $materialFilter = request()->query('jenjang');
+        $globalQuestionFilter = request()->query('jenjang_id');
     @endphp
     <header class="app-topbar">
         <div class="app-topbar-panel">
@@ -189,11 +204,32 @@
                         </a>
                     </div>
                 </details>
-                <a href="{{ route('superadmin.global-questions.index') }}"
-                    class="sidebar-link {{ request()->routeIs('superadmin.global-questions.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-database w-5"></i>
-                    <span class="sidebar-link-label">Bank Soal Global</span>
-                </a>
+                <details class="sidebar-submenu" data-sidebar-submenu>
+                    <summary class="sidebar-link sidebar-submenu-trigger {{ request()->routeIs('superadmin.global-questions.index') ? 'active' : '' }}" data-sidebar-submenu-trigger>
+                        <span class="flex items-center gap-3.5">
+                            <i class="fa-solid fa-database w-5"></i>
+                            <span class="sidebar-link-label">Bank Soal Global</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-down sidebar-submenu-caret"></i>
+                    </summary>
+                    <div class="sidebar-submenu-links">
+                        <a href="{{ route('superadmin.global-questions.index') }}"
+                            class="sidebar-sublink {{ empty($globalQuestionFilter) ? 'active' : '' }}">
+                            <span class="sidebar-sublink-badge">ALL</span>
+                            <span class="sidebar-sublink-label">Semua jenjang</span>
+                        </a>
+                        <a href="{{ route('superadmin.global-questions.index', ['jenjang_id' => 1]) }}"
+                            class="sidebar-sublink {{ $globalQuestionFilter == '1' ? 'active' : '' }}">
+                            <span class="sidebar-sublink-badge">SD</span>
+                            <span class="sidebar-sublink-label">Bank Soal SD</span>
+                        </a>
+                        <a href="{{ route('superadmin.global-questions.index', ['jenjang_id' => 2]) }}"
+                            class="sidebar-sublink {{ $globalQuestionFilter == '2' ? 'active' : '' }}">
+                            <span class="sidebar-sublink-badge">SMP</span>
+                            <span class="sidebar-sublink-label">Bank Soal SMP</span>
+                        </a>
+                    </div>
+                </details>
                 <a href="{{ route('superadmin.paket-soal.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.paket-soal.*') || request()->routeIs('superadmin.soal.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-database w-5"></i>

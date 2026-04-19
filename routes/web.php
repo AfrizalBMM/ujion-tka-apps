@@ -78,7 +78,11 @@ Route::prefix('superadmin')
 	    Route::get('/global-questions', [GlobalQuestionController::class , 'index'])->name('global-questions.index');
 	    Route::post('/global-questions', [GlobalQuestionController::class , 'store'])->name('global-questions.store');
 	    Route::post('/global-questions/import', [GlobalQuestionController::class , 'import'])->name('global-questions.import');
+	    Route::post('/global-questions/import-pg', [GlobalQuestionController::class, 'importPG'])->name('global-questions.import-pg');
+	    Route::post('/global-questions/import-menjodohkan', [GlobalQuestionController::class, 'importMenjodohkan'])->name('global-questions.import-menjodohkan');
 	    Route::get('/global-questions/template', [GlobalQuestionController::class , 'template'])->name('global-questions.template');
+	    Route::get('/global-questions/template-pg', [GlobalQuestionController::class, 'templatePG'])->name('global-questions.template-pg');
+	    Route::get('/global-questions/template-menjodohkan', [GlobalQuestionController::class, 'templateMenjodohkan'])->name('global-questions.template-menjodohkan');
 	    Route::post('/global-questions/destroy-all', [GlobalQuestionController::class , 'destroyAll'])->name('global-questions.destroyAll');
 	    Route::post('/global-questions/{globalQuestion}', [GlobalQuestionController::class , 'update'])->name('global-questions.update');
 	    Route::post('/global-questions/{globalQuestion}/delete', [GlobalQuestionController::class , 'destroy'])->name('global-questions.destroy');
@@ -131,6 +135,9 @@ Route::prefix('superadmin')
         Route::get('/paket-soal/{paket}/mapel/{mapel}/soal/{soal}/edit', [SuperadminSoalController::class, 'edit'])->name('soal.edit');
         Route::put('/paket-soal/{paket}/mapel/{mapel}/soal/{soal}', [SuperadminSoalController::class, 'update'])->name('soal.update');
         Route::delete('/paket-soal/{paket}/mapel/{mapel}/soal/{soal}', [SuperadminSoalController::class, 'destroy'])->name('soal.destroy');
+
+        Route::get('/paket-soal/{paket}/mapel/{mapel}/bank-builder', [SuperadminSoalController::class, 'bankBuilder'])->name('soal.bank-builder');
+        Route::post('/paket-soal/{paket}/mapel/{mapel}/bank-builder/import', [SuperadminSoalController::class, 'importFromBank'])->name('soal.import-from-bank');
 
         Route::get('/paket-soal/{paket}/mapel/{mapel}/teks-bacaan', [SuperadminTeksBacaanController::class, 'index'])->name('teks-bacaan.index');
         Route::post('/paket-soal/{paket}/mapel/{mapel}/teks-bacaan', [SuperadminTeksBacaanController::class, 'store'])->name('teks-bacaan.store');

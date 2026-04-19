@@ -210,6 +210,19 @@ document.addEventListener('DOMContentLoaded', () => {
         body.innerHTML = '';
         body.appendChild(question.tipe_soal === 'pilihan_ganda' ? renderMultipleChoice(question) : renderMatching(question));
         renderGrid();
+
+        // Re-render MathJax/KaTeX
+        if (window.renderMathInElement) {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError: false
+            });
+        }
     };
 
     document.getElementById('prev-btn').addEventListener('click', () => {

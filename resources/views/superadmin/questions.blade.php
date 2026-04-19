@@ -20,9 +20,23 @@
             <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola kumpulan soal yang dapat diakses oleh seluruh guru di platform Ujion.</p>
         </div>
         <div class="flex flex-wrap gap-3">
-            <button class="btn-secondary" type="button" data-open-modal="import-question-modal">
-                <i class="fa-solid fa-file-import mr-2"></i> Import Soal
-            </button>
+            <div class="relative" id="import-dropdown-wrapper">
+                <button class="btn-secondary" type="button" id="import-dropdown-btn">
+                    <i class="fa-solid fa-file-import mr-2"></i> Import Soal
+                    <i class="fa-solid fa-chevron-down ml-2 text-xs"></i>
+                </button>
+                <div id="import-dropdown-menu"
+                     class="absolute right-0 top-full z-30 mt-2 hidden w-52 rounded-2xl border border-border bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                    <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                            data-open-modal="import-pg-modal">
+                        <i class="fa-solid fa-list-check w-4 text-blue-500"></i> Pilihan Ganda
+                    </button>
+                    <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                            data-open-modal="import-menjodohkan-modal">
+                        <i class="fa-solid fa-shuffle w-4 text-amber-500"></i> Menjodohkan
+                    </button>
+                </div>
+            </div>
             <button class="btn-primary" type="button" data-open-modal="create-question-modal">
                 <i class="fa-solid fa-plus mr-2"></i> Input Soal Baru
             </button>
@@ -30,7 +44,7 @@
     </div>
 
     <div class="card">
-        <form method="GET" action="{{ route('superadmin.global-questions.index') }}" class="grid grid-cols-1 gap-3 lg:grid-cols-5">
+        <form method="GET" action="{{ route('superadmin.global-questions.index') }}" class="grid grid-cols-1 gap-3 lg:grid-cols-6">
             <div class="lg:col-span-2">
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Cari Soal</label>
                 <input class="input mt-1" type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari pertanyaan, kunci, pembahasan, atau materi...">
@@ -40,7 +54,8 @@
                 <select class="input mt-1" name="question_type">
                     <option value="">Semua Jenis</option>
                     <option value="multiple_choice" @selected(($filters['question_type'] ?? '') === 'multiple_choice')>Pilihan Ganda</option>
-                    <option value="short_answer" @selected(($filters['question_type'] ?? '') === 'short_answer')>Jawaban Singkat</option>
+                    <option value="matching"        @selected(($filters['question_type'] ?? '') === 'matching')>Menjodohkan</option>
+                    <option value="short_answer"    @selected(($filters['question_type'] ?? '') === 'short_answer')>Jawaban Singkat</option>
                 </select>
             </div>
             <div>
@@ -60,7 +75,16 @@
                     @endforeach
                 </select>
             </div>
-            <div class="flex flex-wrap items-end gap-3 lg:col-span-5">
+            <div>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang</label>
+                <select class="input mt-1" name="jenjang_id">
+                    <option value="">Semua Jenjang</option>
+                    @foreach ($jenjangs as $jenjang)
+                        <option value="{{ $jenjang->id }}" @selected(($filters['jenjang_id'] ?? '') == $jenjang->id)>{{ $jenjang->nama }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex flex-wrap items-end gap-3 lg:col-span-6">
                 <button class="btn-primary" type="submit">
                     <i class="fa-solid fa-filter mr-2"></i> Terapkan Filter
                 </button>
@@ -99,10 +123,21 @@
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div class="flex-1">
                             <div class="mb-2 flex flex-wrap items-center gap-3">
-                                <span class="badge-info text-[10px] font-bold uppercase tracking-wider">{{ str_replace('_', ' ', $q->question_type) }}</span>
+                                <span class="badge-info text-[10px] font-bold uppercase tracking-wider">
+                                    {{ $q->question_type === 'matching' ? 'Menjodohkan' : str_replace('_', ' ', $q->question_type) }}
+                                </span>
+                                @if ($q->jenjang)
+                                    <span class="badge-primary bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                                        {{ $q->jenjang->nama }}
+                                    </span>
+                                @endif
                                 @if ($q->material)
                                     <span class="flex items-center gap-1 text-[10px] text-muted">
                                         <i class="fa-solid fa-book text-[8px]"></i> {{ $q->material->sub_unit }}
+                                    </span>
+                                @elseif($q->material_sub_unit)
+                                    <span class="flex items-center gap-1 text-[10px] text-muted">
+                                        <i class="fa-solid fa-book text-[8px]"></i> {{ $q->material_sub_unit }}
                                     </span>
                                 @endif
                                 @if ($q->is_active)
@@ -115,6 +150,23 @@
                             <div class="font-medium leading-relaxed text-slate-800 dark:text-slate-200">
                                 {{ $q->question_text }}
                             </div>
+
+                            {{-- Teks Bacaan --}}
+                            @if ($q->reading_passage)
+                                <div class="mt-2">
+                                    <button type="button"
+                                            class="toggle-reading-passage flex items-center gap-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                                            data-target="rp-{{ $q->id }}">
+                                        <i class="fa-solid fa-book-open"></i> Lihat Teks Bacaan
+                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" data-rp-chevron></i>
+                                    </button>
+                                    <div id="rp-{{ $q->id }}" class="hidden mt-2">
+                                        <div class="rounded-xl bg-blue-50/70 p-3 text-sm leading-relaxed text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                            {{ $q->reading_passage }}
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
 
                             @if ($q->options)
                                 <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -136,6 +188,23 @@
                                     <span class="font-bold text-blue-600">Kunci:</span> {{ $q->answer_key }}
                                 </div>
                             @endif
+
+                            {{-- Pembahasan --}}
+                            @if ($q->explanation)
+                                <div class="mt-2 text-xs">
+                                    <button type="button"
+                                            class="toggle-explanation flex items-center gap-2 font-semibold text-emerald-600 hover:text-emerald-700"
+                                            data-target="ex-{{ $q->id }}">
+                                        <i class="fa-solid fa-lightbulb"></i> Lihat Pembahasan
+                                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" data-ex-chevron></i>
+                                    </button>
+                                    <div id="ex-{{ $q->id }}" class="hidden mt-2">
+                                        <div class="rounded-xl bg-emerald-50/70 p-3 italic leading-relaxed text-slate-700 dark:bg-emerald-900/10 dark:text-slate-300">
+                                            {{ $q->explanation }}
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="flex flex-row gap-2 lg:flex-col">
@@ -148,17 +217,19 @@
 
                             @php
                                 $editPayload = [
-                                    'id' => $q->id,
-                                    'question_type' => $q->question_type,
-                                    'question_text' => $q->question_text,
+                                    'id'                  => $q->id,
+                                    'question_type'       => $q->question_type,
+                                    'reading_passage'     => $q->reading_passage,
+                                    'question_text'       => $q->question_text,
                                     'material_curriculum' => $q->material_curriculum ?? $q->material?->curriculum,
                                     'material_subelement' => $q->material_subelement ?? $q->material?->subelement,
-                                    'material_unit' => $q->material_unit ?? $q->material?->unit,
-                                    'material_sub_unit' => $q->material_sub_unit ?? $q->material?->sub_unit,
-                                    'options' => $q->options ?? [],
-                                    'answer_key' => $q->answer_key,
-                                    'explanation' => $q->explanation,
-                                    'is_active' => $q->is_active ? '1' : '0',
+                                    'material_unit'       => $q->material_unit ?? $q->material?->unit,
+                                    'material_sub_unit'   => $q->material_sub_unit ?? $q->material?->sub_unit,
+                                    'options'             => $q->options ?? [],
+                                    'answer_key'          => $q->answer_key,
+                                    'explanation'         => $q->explanation,
+                                    'is_active'           => $q->is_active ? '1' : '0',
+                                    'jenjang_id'          => $q->jenjang_id,
                                 ];
                             @endphp
 
@@ -199,12 +270,31 @@
             @csrf
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenis Soal</label>
-                    <select class="input mt-1" name="question_type" required>
-                        <option value="multiple_choice">Pilihan Ganda</option>
-                        <option value="short_answer">Jawaban Singkat</option>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang *</label>
+                    <select class="input mt-1" name="jenjang_id" id="create-jenjang-id" required>
+                        <option value="" disabled selected>Pilih Jenjang</option>
+                        @foreach($jenjangs as $jenjang)
+                            <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
+                        @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenis Soal</label>
+                    <select class="input mt-1" name="question_type" id="create-question-type" required>
+                        <option value="multiple_choice">Pilihan Ganda</option>
+                        <option value="short_answer">Jawaban Singkat</option>
+                        <option value="matching">Menjodohkan</option>
+                    </select>
+                </div>
+            </div>
+
+            {{-- Teks Bacaan (hanya untuk PG) --}}
+            <div id="create-reading-passage-wrapper">
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">
+                    Teks Bacaan <span class="font-normal italic text-muted">(opsional, khusus Pilihan Ganda)</span>
+                </label>
+                <textarea class="input mt-1" name="reading_passage" rows="3"
+                          placeholder="Isi teks/wacana bacaan yang menjadi konteks soal ini. Kosongkan jika tidak ada."></textarea>
             </div>
             <div class="space-y-3" data-material-picker="create">
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -309,36 +399,97 @@
     </div>
 </div>
 
-<div id="import-question-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+{{-- ================================================ --}}
+{{--   Modal Import Pilihan Ganda                      --}}
+{{-- ================================================ --}}
+<div id="import-pg-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
     <div class="w-full max-w-xl rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-modal">
         <div class="flex items-start justify-between gap-4">
             <div>
-                <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Import</div>
-                <div class="mt-2 text-xl font-bold">Upload Soal Global</div>
-                <p class="mt-2 text-sm text-textSecondary">Gunakan Excel atau CSV untuk upload soal global dalam jumlah besar.</p>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-blue-500"></i>
+                    <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Import</div>
+                </div>
+                <div class="mt-2 text-xl font-bold">Upload Soal Pilihan Ganda</div>
+                <p class="mt-2 text-sm text-textSecondary">Gunakan Excel atau CSV. Kolom <code>reading_passage</code> untuk teks bacaan (boleh kosong).</p>
             </div>
-            <button type="button" class="icon-button" data-close-modal="import-question-modal"><i class="fa-solid fa-xmark"></i></button>
+            <button type="button" class="icon-button" data-close-modal="import-pg-modal"><i class="fa-solid fa-xmark"></i></button>
         </div>
-
-        <form class="mt-5 space-y-4" method="POST" action="{{ route('superadmin.global-questions.import') }}" enctype="multipart/form-data">
+        <form class="mt-5 space-y-4" method="POST" action="{{ route('superadmin.global-questions.import-pg') }}" enctype="multipart/form-data">
             @csrf
             <div>
-                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">File Import</label>
-                <input class="input mt-1 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2" type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang *</label>
+                <select class="input mt-1" name="jenjang_id" required>
+                    <option value="" disabled selected>Pilih Jenjang Tujuan</option>
+                    @foreach($jenjangs as $jenjang)
+                        <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
+                    @endforeach
+                </select>
             </div>
-
-            <div class="rounded-2xl border border-blue-200/70 bg-blue-50/70 p-4 text-sm text-blue-900">
-                <div class="font-semibold">jangan merubah nama kolom agar import berjalan dengan baik</div>
+            <div>
+                <label class="text-xs font-bold text-textSecondary">File Import</label>
+                <input class="input mt-1 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2"
+                       type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
             </div>
-
+            <div class="rounded-2xl border border-blue-200/70 bg-blue-50/70 p-3 text-sm text-blue-900">
+                <strong>Kolom wajib:</strong> question_text. Kolom opsional: reading_passage, option_a–e, answer_key, material_*, explanation, is_active.
+            </div>
             <div class="flex flex-wrap gap-3">
                 <button class="btn-primary" type="submit">
                     <i class="fa-solid fa-file-import mr-2"></i> Import Sekarang
                 </button>
-                <a class="btn-secondary" href="{{ route('superadmin.global-questions.template') }}">
-                    <i class="fa-solid fa-file-excel mr-2"></i> Template Excel
+                <a class="btn-secondary" href="{{ route('superadmin.global-questions.template-pg') }}">
+                    <i class="fa-solid fa-file-excel mr-2"></i> Template PG
                 </a>
-                <button class="btn-secondary" type="button" data-close-modal="import-question-modal">Batal</button>
+                <button class="btn-secondary" type="button" data-close-modal="import-pg-modal">Batal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ================================================ --}}
+{{--   Modal Import Menjodohkan                        --}}
+{{-- ================================================ --}}
+<div id="import-menjodohkan-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-xl rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-modal">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-shuffle text-amber-500"></i>
+                    <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Import</div>
+                </div>
+                <div class="mt-2 text-xl font-bold">Upload Soal Menjodohkan</div>
+                <p class="mt-2 text-sm text-textSecondary">Format: kolom <code>pair_1_left</code>, <code>pair_1_right</code>, dst. hingga pair_8.</p>
+            </div>
+            <button type="button" class="icon-button" data-close-modal="import-menjodohkan-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form class="mt-5 space-y-4" method="POST" action="{{ route('superadmin.global-questions.import-menjodohkan') }}" enctype="multipart/form-data">
+            @csrf
+            <div>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang *</label>
+                <select class="input mt-1" name="jenjang_id" required>
+                    <option value="" disabled selected>Pilih Jenjang Tujuan</option>
+                    @foreach($jenjangs as $jenjang)
+                        <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-textSecondary">File Import</label>
+                <input class="input mt-1 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2"
+                       type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
+            </div>
+            <div class="rounded-2xl border border-amber-200/70 bg-amber-50/70 p-3 text-sm text-amber-900">
+                <strong>Kolom wajib:</strong> question_text + minimal pair_1_left & pair_1_right. Maksimal 8 pasangan (pair_1 s/d pair_8).
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <button class="btn-primary" type="submit">
+                    <i class="fa-solid fa-file-import mr-2"></i> Import Sekarang
+                </button>
+                <a class="btn-secondary" href="{{ route('superadmin.global-questions.template-menjodohkan') }}">
+                    <i class="fa-solid fa-file-excel mr-2"></i> Template Menjodohkan
+                </a>
+                <button class="btn-secondary" type="button" data-close-modal="import-menjodohkan-modal">Batal</button>
             </div>
         </form>
     </div>
@@ -358,12 +509,31 @@
             @csrf
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang *</label>
+                    <select class="input mt-1" name="jenjang_id" id="edit-jenjang-id" required>
+                        <option value="" disabled selected>Pilih Jenjang</option>
+                        @foreach($jenjangs as $jenjang)
+                            <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenis Soal</label>
                     <select class="input mt-1" name="question_type" id="edit-question-type" required>
                         <option value="multiple_choice">Pilihan Ganda</option>
                         <option value="short_answer">Jawaban Singkat</option>
+                        <option value="matching">Menjodohkan</option>
                     </select>
                 </div>
+            </div>
+
+            {{-- Teks Bacaan (edit) --}}
+            <div id="edit-reading-passage-wrapper">
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">
+                    Teks Bacaan <span class="font-normal italic text-muted">(opsional, khusus Pilihan Ganda)</span>
+                </label>
+                <textarea class="input mt-1" name="reading_passage" id="edit-reading-passage" rows="3"
+                          placeholder="Teks bacaan konteks soal..."></textarea>
             </div>
             <div class="space-y-3" data-material-picker="edit">
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -487,7 +657,21 @@ document.addEventListener('DOMContentLoaded', () => {
         answerKey: document.getElementById('edit-answer-key'),
         isActive: document.getElementById('edit-is-active'),
         explanation: document.getElementById('edit-explanation'),
+        readingPassage: document.getElementById('edit-reading-passage'),
     };
+
+    // ── Import Dropdown ──────────────────────────────────────────
+    const importDropdownBtn  = document.getElementById('import-dropdown-btn');
+    const importDropdownMenu = document.getElementById('import-dropdown-menu');
+    importDropdownBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        importDropdownMenu.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#import-dropdown-wrapper')) {
+            importDropdownMenu?.classList.add('hidden');
+        }
+    });
 
     const openModal = (modal) => {
         if (!modal) return;
@@ -732,6 +916,8 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             const data = JSON.parse(button.dataset.editQuestion);
             form.action = "{{ route('superadmin.global-questions.update', ['globalQuestion' => '__ID__']) }}".replace('__ID__', data.id);
+            const jenjangInput = document.getElementById('edit-jenjang-id');
+            if (jenjangInput) jenjangInput.value = data.jenjang_id ?? '';
             fields.questionType.value = data.question_type ?? 'multiple_choice';
             materialPickers.get('edit')?.setValues({
                 curriculum: data.material_curriculum ?? '',
@@ -740,12 +926,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 sub_unit: data.material_sub_unit ?? '',
             });
             fields.questionText.value = data.question_text ?? '';
+            if (fields.readingPassage) fields.readingPassage.value = data.reading_passage ?? '';
             renderOptionFields(editOptionList, data.options ?? []);
             fields.answerKey.value = data.answer_key ?? '';
             fields.isActive.value = data.is_active ?? '1';
             fields.explanation.value = data.explanation ?? '';
             openModal(editModal);
             fields.questionText.focus();
+        });
+    });
+
+    // ── Accordion: Teks Bacaan di card list ──────────────────────
+    document.querySelectorAll('.toggle-reading-passage').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target  = document.getElementById(btn.dataset.target);
+            const chevron = btn.querySelector('[data-rp-chevron]');
+            target?.classList.toggle('hidden');
+            chevron?.classList.toggle('rotate-180');
+        });
+    });
+
+    // ── Accordion: Pembahasan di card list ──────────────────────
+    document.querySelectorAll('.toggle-explanation').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target  = document.getElementById(btn.dataset.target);
+            const chevron = btn.querySelector('[data-ex-chevron]');
+            target?.classList.toggle('hidden');
+            chevron?.classList.toggle('rotate-180');
         });
     });
 

@@ -63,12 +63,6 @@ class PaketSoalController extends Controller
                 'urutan' => $item['urutan'],
             ]));
 
-            if ($paket->is_active) {
-                PaketSoal::where('jenjang_id', $paket->jenjang_id)
-                    ->where('id', '!=', $paket->id)
-                    ->update(['is_active' => false]);
-            }
-
             return $paket;
         });
 
@@ -104,20 +98,12 @@ class PaketSoalController extends Controller
     {
         $this->authorize('update', $paket);
 
-        DB::transaction(function () use ($request, $paket) {
-            $paket->update([
-                'jenjang_id' => $request->integer('jenjang_id'),
-                'nama' => $request->string('nama')->toString(),
-                'tahun_ajaran' => $request->string('tahun_ajaran')->toString(),
-                'is_active' => $request->boolean('is_active'),
-            ]);
-
-            if ($paket->is_active) {
-                PaketSoal::where('jenjang_id', $paket->jenjang_id)
-                    ->where('id', '!=', $paket->id)
-                    ->update(['is_active' => false]);
-            }
-        });
+        $paket->update([
+            'jenjang_id' => $request->integer('jenjang_id'),
+            'nama' => $request->string('nama')->toString(),
+            'tahun_ajaran' => $request->string('tahun_ajaran')->toString(),
+            'is_active' => $request->boolean('is_active'),
+        ]);
 
         return redirect()->route('superadmin.paket-soal.show', $paket)
             ->with('flash', ['type' => 'success', 'message' => 'Metadata paket soal diperbarui.']);
@@ -151,15 +137,7 @@ class PaketSoalController extends Controller
     {
         $this->authorize('toggleAktif', $paket);
 
-        DB::transaction(function () use ($paket) {
-            $next = ! $paket->is_active;
-
-            if ($next) {
-                PaketSoal::where('jenjang_id', $paket->jenjang_id)->update(['is_active' => false]);
-            }
-
-            $paket->update(['is_active' => $next]);
-        });
+        $paket->update(['is_active' => ! $paket->is_active]);
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Status aktif paket diperbarui.']);
     }

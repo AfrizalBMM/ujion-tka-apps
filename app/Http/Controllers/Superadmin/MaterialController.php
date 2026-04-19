@@ -51,7 +51,7 @@ class MaterialController extends Controller
     public function destroyAll(): RedirectResponse
     {
         $count = Material::count();
-        Material::truncate();
+        Material::query()->delete();
         return back()->with('flash', [
             'type' => 'success',
             'message' => "Berhasil menghapus semua materi ($count data)."

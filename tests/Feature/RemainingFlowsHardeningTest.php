@@ -78,7 +78,9 @@ class RemainingFlowsHardeningTest extends TestCase
     public function test_superadmin_can_update_global_question_from_edit_flow(): void
     {
         $superadmin = $this->createSuperadmin();
+        $jenjang = Jenjang::firstOrCreate(['kode' => 'SMP'], ['nama' => 'SMP', 'urutan' => 2]);
         $question = GlobalQuestion::create([
+            'jenjang_id' => $jenjang->id,
             'question_type' => 'multiple_choice',
             'question_text' => 'Teks lama',
             'options' => ['A'],
@@ -88,6 +90,7 @@ class RemainingFlowsHardeningTest extends TestCase
         ]);
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.global-questions.update', $question), [
+            'jenjang_id' => $jenjang->id,
             'question_type' => 'multiple_choice',
             'question_text' => 'Teks baru',
             'options_raw' => 'Alpha, Beta',
@@ -108,8 +111,10 @@ class RemainingFlowsHardeningTest extends TestCase
     public function test_superadmin_can_store_global_question_with_split_option_inputs(): void
     {
         $superadmin = $this->createSuperadmin();
+        $jenjang = Jenjang::firstOrCreate(['kode' => 'SMP'], ['nama' => 'SMP', 'urutan' => 2]);
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.global-questions.store'), [
+            'jenjang_id' => $jenjang->id,
             'question_type' => 'multiple_choice',
             'question_text' => 'Ibu kota Indonesia adalah?',
             'options' => ['Jakarta', 'Bandung', 'Surabaya', ''],
@@ -170,11 +175,13 @@ class RemainingFlowsHardeningTest extends TestCase
         ]));
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.global-questions.import'), [
+            'jenjang_id' => $material->jenjang === 'SMP' ? 2 : 1, // using rough static assumption for test
             'file' => $file,
         ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('global_questions', [
+            'jenjang_id' => $material->jenjang === 'SMP' ? 2 : 1,
             'material_id' => $material->id,
             'question_type' => 'multiple_choice',
             'question_text' => 'Pertanyaan contoh',
@@ -218,7 +225,7 @@ class RemainingFlowsHardeningTest extends TestCase
 
         $questionsTemplate = $this->actingAs($superadmin)->get(route('superadmin.global-questions.template'));
         $questionsTemplate->assertOk();
-        $this->assertStringContainsString('template-soal-global.xls', $questionsTemplate->headers->get('content-disposition', ''));
+        $this->assertStringContainsString('template-soal-pg.xls', $questionsTemplate->headers->get('content-disposition', ''));
 
         $examsTemplate = $this->actingAs($superadmin)->get(route('superadmin.exams.template'));
         $examsTemplate->assertOk();

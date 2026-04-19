@@ -105,9 +105,14 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
 - Dashboard dengan metrik operasional
 - Review pembayaran guru lengkap dengan preview bukti bayar
 - Kelola token akses guru
-- Bank soal global dengan create, import, update, delete, filter, hapus massal, dan template
-- Input dan edit bank soal global sekarang memakai picker materi bertingkat dari `curriculum` sampai `sub_unit`
-- Template import bank soal global mengikuti struktur materi yang sama dengan input manual
+- Paket Soal TKA dengan dukungan **multi-aktif** per jenjang (lebih dari satu paket bisa aktif sekaligus)
+- Bank soal global dengan fitur:
+  - Create, update, delete, filter, dan hapus massal
+  - **Teks Bacaan (Reading Passage)** opsional untuk soal Pilihan Ganda
+  - **Dukungan Soal Menjodohkan (Matching)** dengan struktur pasangan kiri-kanan
+  - **Split Import**: Pemisahan alur import dan template untuk Pilihan Ganda vs Menjodohkan
+  - Picker materi bertingkat dari `curriculum` sampai `sub_unit`
+- **Bank Builder Paket**: Integrasi langsung untuk memasukkan soal dari bank global ke paket ujian menggunakan UI seleksi terfilter
 - Builder ujian admin berbasis `exam_question`
 - Analisis ujian dengan ranking, distribusi nilai, export CSV, dan print
 - Audit log yang sudah disanitasi
@@ -137,7 +142,9 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
 - Flow ujian nyata siswa dan simulasi guru sekarang memakai schema baru `ujian_sesis` dan `jawaban_siswas`
 - Builder ujian superadmin masih memakai snapshot `questions` melalui pivot `exam_question`
 - Modul `global_questions` sekarang memakai snapshot materi di tabelnya sendiri agar data edit tetap tampil stabil walaupun relasi materi berubah
-- Import bank soal global tetap bisa mencocokkan `material_id`, tetapi jalur utamanya sekarang memakai struktur materi `curriculum -> subelement -> unit -> sub_unit`
+- Modul `global_questions` mendukung tipe soal `matching` dan `reading_passage` untuk konten literasi
+- Paket soal TKA tidak lagi dibatasi hanya satu yang aktif per jenjang; superadmin dapat mengaktifkan beberapa paket sekaligus
+- Import soal dari bank global ke paket ujian dilakukan dengan metode **cloning**, sehingga perubahan data di bank soal global setelah import tidak akan merusak integritas soal yang sudah ada di dalam paket
 - Filtering akses guru memakai `jenjang` akun sebagai guard utama
 - Paket soal TKA milik superadmin tampil terbatas di sisi guru sesuai aturan akses yang ada
 

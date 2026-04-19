@@ -21,7 +21,16 @@
                         <h2 class="section-title">{{ $mapel->nama_label }}</h2>
                         <p class="section-description">{{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} soal &middot; {{ $mapel->durasi_menit }} menit</p>
                     </div>
-                    <a href="{{ route('superadmin.soal.index', [$paket, $mapel]) }}" class="btn-primary px-4 py-2 text-xs">Kelola Soal</a>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('superadmin.soal.create', [$paket, $mapel]) }}"
+                           class="btn-primary px-4 py-2 text-xs">
+                            <i class="fa-solid fa-pen-to-square mr-1.5"></i>Buat Manual
+                        </a>
+                        <a href="{{ route('superadmin.soal.bank-builder', [$paket, $mapel]) }}"
+                           class="btn-secondary px-4 py-2 text-xs">
+                            <i class="fa-solid fa-layer-group mr-1.5"></i>Dari Bank Soal
+                        </a>
+                    </div>
                 </div>
                 <form class="grid gap-3 rounded-[24px] border border-slate-200/80 bg-slate-50/70 p-4 md:grid-cols-3 dark:border-slate-800 dark:bg-slate-900/60" method="POST" action="{{ route('superadmin.mapel.update', [$paket, $mapel]) }}">
                     @csrf
