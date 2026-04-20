@@ -1,23 +1,13 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Exam extends Model {
     protected $guarded = [];
     protected $casts = [
         'tanggal_terbit' => 'datetime',
-        'is_active' => 'boolean',
+        'is_active'      => 'boolean',
     ];
-
-    protected static function booted(): void
-    {
-        static::creating(function (self $exam): void {
-            if (blank($exam->token)) {
-                $exam->token = self::generateUniqueToken();
-            }
-        });
-    }
 
     public function questions() {
         return $this->belongsToMany(Question::class, 'exam_question')->withTimestamps()->withPivot('order');
@@ -41,16 +31,13 @@ class Exam extends Model {
         return $this->hasMany(UjianSesi::class);
     }
 
-    public static function generateUniqueToken(): string
+    public function examMapelTokens()
     {
-        for ($attempt = 0; $attempt < 20; $attempt++) {
-            $candidate = strtoupper(Str::random(6));
+        return $this->hasMany(ExamMapelToken::class);
+    }
 
-            if (! self::query()->where('token', $candidate)->exists()) {
-                return $candidate;
-            }
-        }
-
-        abort(500, 'Gagal generate token ujian unik.');
+    public function mapels()
+    {
+        return $this->paketSoal->mapels();
     }
 }

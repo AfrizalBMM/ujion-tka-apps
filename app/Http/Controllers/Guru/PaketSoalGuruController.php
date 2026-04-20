@@ -32,6 +32,10 @@ class PaketSoalGuruController extends Controller
             'mapelPakets.teksBacaans',
             'mapelPakets.soals.pilihanJawabans',
             'mapelPakets.soals.pasanganMenjodohkans',
+            'exams' => fn ($q) => $q->with('examMapelTokens.mapelPaket')
+                                    ->where('status', 'terbit')
+                                    ->where('is_active', true)
+                                    ->orderByDesc('tanggal_terbit'),
         ]);
 
         return view('guru.paket-soal.show', compact('paket'));

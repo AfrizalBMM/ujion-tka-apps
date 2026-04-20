@@ -80,6 +80,7 @@ class PaketSoalController extends Controller
             'mapelPakets.teksBacaans',
             'mapelPakets.soals.pilihanJawabans',
             'mapelPakets.soals.pasanganMenjodohkans',
+            'exams' => fn ($q) => $q->with('examMapelTokens.mapelPaket')->orderByDesc('tanggal_terbit'),
         ]);
 
         return view('superadmin.paket-soal.show', compact('paket'));

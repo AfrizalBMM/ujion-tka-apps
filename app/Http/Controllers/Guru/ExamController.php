@@ -19,7 +19,7 @@ class ExamController extends Controller {
         $user = Auth::user();
 
         $available = Exam::query()
-            ->with('paketSoal.jenjang')
+            ->with(['paketSoal.jenjang', 'examMapelTokens.mapelPaket'])
             ->where('status', 'terbit')
             ->where('is_active', true)
             ->whereHas('paketSoal.jenjang', fn ($query) => $query->where('kode', $user->jenjang))
@@ -60,12 +60,13 @@ class ExamController extends Controller {
                 ->with('flash', ['type' => 'warning', 'message' => 'Lengkapi nomor WhatsApp di profil sebelum memulai simulasi.']);
         }
 
-        $exam = Exam::query()
-            ->with('paketSoal.mapelPakets', 'paketSoal.jenjang')
+        $examMapelToken = \App\Models\ExamMapelToken::with(['exam.paketSoal.mapelPakets', 'exam.paketSoal.jenjang', 'mapelPaket'])
             ->where('token', $token)
-            ->where('status', 'terbit')
-            ->where('is_active', true)
+            ->whereHas('exam', fn ($q) => $q->where('status', 'terbit')->where('is_active', true))
             ->firstOrFail();
+
+        $exam = $examMapelToken->exam;
+        $mapel = $examMapelToken->mapelPaket;
 
         if (($exam->paketSoal?->jenjang?->kode ?? null) !== $user->jenjang) {
             abort(403);
@@ -77,6 +78,7 @@ class ExamController extends Controller {
 
         $existingSession = $this->sessionQueryForUser($user)
             ->where('exam_id', $exam->id)
+            ->where('mapel_paket_id', $mapel->id)
             ->latest('id')
             ->first();
 
@@ -86,17 +88,20 @@ class ExamController extends Controller {
         }
 
         $session = $existingSession ?? UjianSesi::create([
-            'exam_id' => $exam->id,
-            'paket_soal_id' => $exam->paket_soal_id,
-            'nama' => $user->name,
-            'nomor_wa' => $user->no_wa,
-            'session_token' => Str::random(60),
-            'status' => 'menunggu',
-            'timer_state' => $this->buildTimerState($exam),
+            'exam_id'        => $exam->id,
+            'paket_soal_id'  => $exam->paket_soal_id,
+            'mapel_paket_id' => $mapel->id,
+            'nama'           => $user->name,
+            'nomor_wa'       => $user->no_wa,
+            'session_token'  => Str::random(60),
+            'status'         => 'menunggu',
+            'timer_state'    => $this->buildTimerState($exam, $mapel),
         ]);
 
         session([
-            'siswa_token' => $exam->token,
+            'siswa_mapel_token' => $token,
+            'siswa_exam_id'     => $exam->id,
+            'siswa_mapel_id'    => $mapel->id,
             'participant_token' => $session->session_token,
         ]);
 
@@ -154,18 +159,16 @@ class ExamController extends Controller {
         return UjianSesi::query()->where('nomor_wa', $user->no_wa);
     }
 
-    private function buildTimerState(Exam $exam): array
+    private function buildTimerState(Exam $exam, MapelPaket $mapel): array
     {
-        return $exam->paketSoal->mapelPakets
-            ->mapWithKeys(fn (MapelPaket $mapel) => [
-                $mapel->id => [
-                    'duration_seconds' => $mapel->durasi_menit * 60,
-                    'remaining_seconds' => $mapel->durasi_menit * 60,
-                    'started_at' => null,
-                    'finished_at' => null,
-                ],
-            ])
-            ->all();
+        return [
+            $mapel->id => [
+                'duration_seconds' => $mapel->durasi_menit * 60,
+                'remaining_seconds' => $mapel->durasi_menit * 60,
+                'started_at' => null,
+                'finished_at' => null,
+            ],
+        ];
     }
 
     private function formatCorrectAnswer(Soal $soal): string

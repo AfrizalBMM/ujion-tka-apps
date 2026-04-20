@@ -67,5 +67,109 @@
             </article>
         @endforeach
     </section>
+
+    {{-- ── Section Token Ujian ─────────────────────────────────────── --}}
+    <section class="card">
+        <div class="section-heading mb-5">
+            <div>
+                <h2 class="section-title flex items-center gap-2">
+                    <i class="fa-solid fa-key text-primary"></i>
+                    Token Akses Ujian
+                </h2>
+                <p class="section-description">
+                    Daftar sesi ujian yang menggunakan paket ini. Bagikan token kepada guru agar bisa melakukan simulasi.
+                </p>
+            </div>
+            <a href="{{ route('superadmin.exams.index') }}" class="btn-secondary px-4 py-2 text-xs">
+                <i class="fa-solid fa-plus mr-1.5"></i>Buat Ujian Baru
+            </a>
+        </div>
+
+        @if($paket->exams->isEmpty())
+            <div class="empty-state">
+                <i class="fa-solid fa-triangle-exclamation mb-2 text-2xl text-amber-400"></i>
+                <p>Belum ada ujian yang dibuat dari paket ini.</p>
+                <a href="{{ route('superadmin.exams.index') }}" class="btn-primary mt-3 px-4 py-2 text-xs">Buat Ujian Pertama</a>
+            </div>
+        @else
+            <div class="table-container">
+                <table class="table-ujion min-w-[700px]">
+                    <thead>
+                        <tr>
+                            <th>Judul Ujian</th>
+                            <th>Tanggal Terbit</th>
+                            <th>Max Peserta</th>
+                            <th>Status</th>
+                            <th class="text-center">Token Akses</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($paket->exams as $exam)
+                            <tr>
+                                <td>
+                                    <div class="font-semibold">{{ $exam->judul }}</div>
+                                    <div class="text-xs text-textSecondary">ID #{{ $exam->id }}</div>
+                                </td>
+                                <td>{{ $exam->tanggal_terbit->format('d M Y H:i') }}</td>
+                                <td>{{ $exam->max_peserta }} peserta</td>
+                                <td>
+                                    @if($exam->status === 'terbit' && $exam->is_active)
+                                        <span class="badge-success">Aktif & Terbit</span>
+                                    @elseif($exam->status === 'terbit')
+                                        <span class="badge-warning">Terbit (Nonaktif)</span>
+                                    @else
+                                        <span class="badge-info">Draft</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($exam->examMapelTokens->isEmpty())
+                                        <span class="badge-warning text-xs">Belum ada token</span>
+                                    @else
+                                        <div class="space-y-1.5 flex flex-col items-center">
+                                            @foreach($exam->examMapelTokens as $mt)
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[10px] font-bold text-textSecondary w-16 truncate text-right">
+                                                        {{ $mt->mapelPaket?->nama_label ?? 'Mapel' }}
+                                                    </span>
+                                                    <span id="token-sa-detail-{{ $mt->id }}"
+                                                          class="rounded-lg border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold tracking-widest text-primary">
+                                                        {{ $mt->token }}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        id="copy-sa-detail-{{ $mt->id }}"
+                                                        onclick="copyMapelTokenDetail('{{ $mt->token }}', {{ $mt->id }})"
+                                                        class="btn-secondary px-2 py-1 text-[10px]">
+                                                        <i class="fa-solid fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </section>
 </div>
+
+@push('scripts')
+<script>
+function copyMapelTokenDetail(token, id) {
+    navigator.clipboard.writeText(token).then(() => {
+        const btn = document.getElementById('copy-sa-detail-' + id);
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        btn.classList.add('text-emerald-600');
+        setTimeout(() => {
+            btn.innerHTML = original;
+            btn.classList.remove('text-emerald-600');
+        }, 2000);
+    });
+}
+</script>
+@endpush
 @endsection

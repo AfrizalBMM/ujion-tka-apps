@@ -24,9 +24,16 @@
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%); }
     </style>
 </head>
+@php
+    // Otomatis sembunyikan showcase untuk semua halaman siswa
+    if (request()->is('siswa*')) {
+        $hideShowcase = true;
+    }
+@endphp
 <body class="min-h-screen">
-    <div class="guest-shell mx-auto">
-        <div class="guest-panel">
+    <div class="guest-shell mx-auto {{ isset($hideShowcase) && $hideShowcase ? 'max-w-xl' : '' }}">
+        <div class="guest-panel {{ isset($hideShowcase) && $hideShowcase ? '!grid-cols-1' : '' }}">
+            @if(!isset($hideShowcase) || !$hideShowcase)
             <section class="guest-showcase">
                 <span class="page-kicker">Platform Ujian TKA</span>
                 <h1 class="mt-5 text-3xl md:text-4xl">Ruang belajar dan operasional yang terasa lebih modern, ringan, dan jelas.</h1>
@@ -48,6 +55,7 @@
                     </div>
                 </div>
             </section>
+            @endif
 
             <section class="guest-content">
                 @yield('content')

@@ -52,6 +52,7 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
     - mengelola soal dan teks bacaan hanya pada paket yang memang boleh diakses
     - ikut simulasi ujian dengan token
     - melihat hasil simulasi
+    - melihat dan menganalisis hasil ujian seluruh siswa (mandiri & resmi)
     - chat ke superadmin
     - melihat log aktivitas
 
@@ -126,6 +127,13 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
 - Paket soal TKA yang difilter sesuai `jenjang`
 - Simulasi ujian memakai engine yang sama dengan flow siswa
 - Hasil simulasi dan pembahasan jawaban
+- **Analisis Hasil Ujian (Full Feature)**:
+    - Dashboard ringkasan ujian (mandiri & resmi dari superadmin)
+    - Statistik mapel: rata-rata, skor tertinggi, skor terendah
+    - Leaderboard/Ranking Top 5 siswa
+    - **Analisis Butir Soal (Heatmap)**: Visualisasi tingkat akurasi per nomor soal
+    - **Detail Jawaban Per Butir**: Transparansi jawaban siswa (PG/pembahasan)
+    - Export data nilai ke format CSV/Excel
 
 ### Siswa
 

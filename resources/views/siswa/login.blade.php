@@ -1,17 +1,42 @@
 @extends('layouts.guest')
 
+@section('title', 'Masuk Ujian — Ujion')
+
 @section('content')
-<div class="flex flex-col items-center justify-center">
-    <div class="w-full max-w-md space-y-6 rounded-2xl border border-white/70 bg-white/90 p-5 shadow-card sm:p-6">
-        <h2 class="text-2xl font-bold text-center">Masuk Ujian Siswa</h2>
-        <form method="POST" action="{{ route('siswa.token.validate') }}">
-            @csrf
-            <div class="mb-4">
-                <label for="token" class="block mb-1 font-semibold">Token Ujian</label>
-                <input id="token" name="token" type="text" required autofocus class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300" placeholder="Masukkan token dari guru/superadmin">
-            </div>
-            <button type="submit" class="w-full py-2 font-semibold text-white bg-blue-600 rounded hover:bg-blue-700">Masuk</button>
-        </form>
+<div class="w-full max-w-md space-y-5">
+    <div class="text-center">
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-xl font-black text-white shadow-lg">U</div>
+        <h1 class="text-2xl font-bold text-slate-900">Masuk Ujian</h1>
+        <p class="mt-1 text-sm text-textSecondary">Masukkan token mapel yang diberikan guru atau pengawas</p>
     </div>
+
+    @if($errors->any())
+        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ $errors->first('token') }}
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('siswa.token.validate') }}" class="space-y-4">
+        @csrf
+        <div class="input-group">
+            <label class="text-xs font-bold uppercase tracking-widest text-textSecondary" for="token">Token Ujian</label>
+            <input
+                id="token"
+                name="token"
+                type="text"
+                required
+                autofocus
+                autocomplete="off"
+                maxlength="10"
+                class="input text-center font-mono text-xl font-bold uppercase tracking-[0.4em]"
+                placeholder="— — — — — —"
+                oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+            >
+            <p class="text-xs text-textSecondary">Token berisi 8 karakter huruf dan angka. Tanyakan kepada guru jika belum menerima token.</p>
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 text-base font-bold">
+            Masuk &rarr;
+        </button>
+    </form>
 </div>
 @endsection

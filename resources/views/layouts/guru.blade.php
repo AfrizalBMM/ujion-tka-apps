@@ -179,6 +179,11 @@
           <i class="fa-solid fa-file-lines w-5"></i>
           <span class="sidebar-link-label">Simulasi Ujian</span>
         </a>
+        <a href="{{ route('guru.results.index') }}"
+          class="sidebar-link {{ request()->routeIs('guru.results.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-chart-line w-5"></i>
+          <span class="sidebar-link-label">Hasil Ujian</span>
+        </a>
 
         <div class="sidebar-section-title">Akun</div>
         <a href="{{ route('guru.guide') }}" class="sidebar-link {{ request()->routeIs('guru.guide') ? 'active' : '' }}">

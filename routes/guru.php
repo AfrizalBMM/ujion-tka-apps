@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Guru\ExamResultController;
 use App\Http\Controllers\RegisterGuruController;
 use App\Http\Controllers\Guru\DashboardController;
 use App\Http\Controllers\Guru\PaketSoalGuruController;
@@ -36,6 +37,14 @@ Route::middleware(['auth','role:guru','guru.active'])->prefix('guru')->name('gur
     Route::get('/exams', [ExamController::class, 'index'])->name('exams');
     Route::post('/exams/join', [ExamController::class, 'join'])->name('exams.join');
     Route::get('/exams/{exam}/result', [ExamController::class, 'result'])->name('exams.result');
+
+    // New Exam Results Analysis Routes
+    Route::get('/results', [ExamResultController::class, 'index'])->name('results.index');
+    Route::get('/results/{exam}', [ExamResultController::class, 'show'])->name('results.show');
+    Route::get('/results/{exam}/mapel/{mapel}', [ExamResultController::class, 'mapel'])->name('results.mapel');
+    Route::get('/results/session/{session}', [ExamResultController::class, 'studentDetail'])->name('results.student');
+    Route::get('/results/{exam}/mapel/{mapel}/export', [ExamResultController::class, 'export'])->name('results.export');
+
     Route::get('/chat', [ChatController::class, 'index'])->name('chat');
     Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');
     Route::get('/logs', [LogController::class, 'index'])->name('logs');

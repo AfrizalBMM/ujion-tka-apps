@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Siswa;
 
-use App\Models\Exam;
+use App\Models\ExamMapelToken;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -16,19 +16,35 @@ class AuthController extends Controller
     public function validateToken(Request $request)
     {
         $request->validate([
-            'token' => 'required|string',
+            'token' => 'required|string|min:6|max:10',
         ]);
 
-        $exam = Exam::with('paketSoal.mapelPakets')
-            ->where('token', strtoupper($request->input('token')))
-            ->where('is_active', true)
+        $token = strtoupper(trim($request->input('token')));
+
+        $examMapelToken = ExamMapelToken::with([
+            'exam.paketSoal.mapelPakets',
+            'mapelPaket',
+        ])
+            ->where('token', $token)
+            ->whereHas('exam', fn ($q) => $q->where('is_active', true)->where('status', 'terbit'))
             ->first();
 
-        if (! $exam || ! $exam->paketSoal || $exam->paketSoal->mapelPakets->isEmpty()) {
-            return back()->withErrors(['token' => 'Token tidak valid atau paket soal belum siap.']);
+        if (! $examMapelToken) {
+            return back()->withErrors(['token' => 'Token tidak valid, ujian tidak aktif, atau belum diterbitkan.']);
         }
 
-        session(['siswa_token' => $exam->token]);
+        $exam  = $examMapelToken->exam;
+        $mapel = $examMapelToken->mapelPaket;
+
+        if (! $exam->paketSoal || ! $mapel) {
+            return back()->withErrors(['token' => 'Paket soal atau mapel tidak ditemukan.']);
+        }
+
+        session([
+            'siswa_mapel_token' => $token,
+            'siswa_exam_id'     => $exam->id,
+            'siswa_mapel_id'    => $mapel->id,
+        ]);
 
         return redirect()->route('siswa.identitas');
     }

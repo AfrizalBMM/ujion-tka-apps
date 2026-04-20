@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\ExamMapelToken;
 use App\Models\GlobalQuestion;
 use App\Models\Material;
 use App\Models\PaketSoal;
@@ -19,7 +20,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamController extends Controller {
     public function index(): View {
-        $exams = Exam::with('paketSoal.jenjang')->latest()->get();
+        $exams = Exam::with(['paketSoal.jenjang', 'examMapelTokens.mapelPaket'])->latest()->get();
         $paketSoals = PaketSoal::with('jenjang')->latest()->get();
         return view('superadmin.exams', compact('exams', 'paketSoals'));
     }
@@ -33,14 +34,25 @@ class ExamController extends Controller {
             'timer' => 'nullable|integer',
             'status' => 'required|in:draft,terbit',
         ]);
+
+        $paket = PaketSoal::with('mapelPakets')->findOrFail($data['paket_soal_id']);
+
         if (blank($data['timer'])) {
-            $data['timer'] = PaketSoal::with('mapelPakets')->find($data['paket_soal_id'])?->mapelPakets?->sum('durasi_menit') ?? 150;
+            $data['timer'] = $paket->mapelPakets->sum('durasi_menit') ?? 150;
         }
         $data['user_id'] = $request->user()->id;
 
-        Exam::create($data);
+        $exam = Exam::create($data);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Ujian berhasil dibuat.']);
+        // Auto-generate token per mapel
+        foreach ($paket->mapelPakets as $mapel) {
+            ExamMapelToken::create([
+                'exam_id'        => $exam->id,
+                'mapel_paket_id' => $mapel->id,
+            ]);
+        }
+
+        return back()->with('flash', ['type' => 'success', 'message' => 'Ujian berhasil dibuat. Token per mapel sudah digenerate.']);
     }
 
     public function template(): StreamedResponse
@@ -90,16 +102,25 @@ class ExamController extends Controller {
                 $timer = PaketSoal::with('mapelPakets')->find($paketSoalId)?->mapelPakets?->sum('durasi_menit') ?? 150;
             }
 
-            Exam::create([
-                'user_id' => $request->user()->id,
+            $exam = Exam::create([
+                'user_id'       => $request->user()->id,
                 'paket_soal_id' => $paketSoalId,
-                'judul' => $judul,
-                'tanggal_terbit' => $tanggalTerbit,
-                'max_peserta' => $this->normalizeNullableInteger($row['max_peserta'] ?? null) ?? 50,
-                'timer' => $timer,
-                'status' => $status,
-                'is_active' => $this->toBoolean($row['is_active'] ?? true),
+                'judul'         => $judul,
+                'tanggal_terbit'=> $tanggalTerbit,
+                'max_peserta'   => $this->normalizeNullableInteger($row['max_peserta'] ?? null) ?? 50,
+                'timer'         => $timer,
+                'status'        => $status,
+                'is_active'     => $this->toBoolean($row['is_active'] ?? true),
             ]);
+
+            // Auto-generate token per mapel
+            $paketObj = PaketSoal::with('mapelPakets')->find($paketSoalId);
+            foreach (($paketObj?->mapelPakets ?? []) as $mapel) {
+                ExamMapelToken::create([
+                    'exam_id'        => $exam->id,
+                    'mapel_paket_id' => $mapel->id,
+                ]);
+            }
 
             $created++;
         }

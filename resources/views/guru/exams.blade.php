@@ -26,24 +26,54 @@
             <p class="mt-1 text-sm text-textSecondary dark:text-slate-400">Daftar ujian aktif yang bisa guru buka untuk melihat pengalaman siswa secara langsung.</p>
         </div>
         <div class="table-container">
-        <table class="table-ujion w-full min-w-[520px]">
+        <table class="table-ujion w-full min-w-[640px]">
             <thead>
                 <tr>
                     <th>Judul</th>
                     <th>Paket</th>
                     <th>Tanggal</th>
                     <th>Status</th>
+                    <th class="text-center">Token Akses</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($available as $exam)
+                @forelse ($available as $exam)
                 <tr>
                     <td>{{ $exam->judul }}</td>
                     <td>{{ $exam->paketSoal?->nama ?? '-' }}</td>
                     <td>{{ $exam->tanggal_terbit->format('d M Y H:i') }}</td>
                     <td>{{ $exam->status }}</td>
+                    <td>
+                        @if($exam->examMapelTokens->isEmpty())
+                            <span class="badge-warning text-xs">Belum ada token</span>
+                        @else
+                            <div class="space-y-1.5">
+                                @foreach($exam->examMapelTokens as $mt)
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-bold text-textSecondary w-20 truncate">
+                                            {{ $mt->mapelPaket?->nama_label ?? 'Mapel' }}
+                                        </span>
+                                        <span id="token-guru-{{ $mt->id }}"
+                                              class="rounded-lg border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-sm font-bold tracking-widest text-primary">
+                                            {{ $mt->token }}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            id="copy-guru-{{ $mt->id }}"
+                                            onclick="guruCopyMapelToken('{{ $mt->token }}', {{ $mt->id }})"
+                                            title="Salin token"
+                                            class="btn-secondary px-2 py-1 text-[11px] transition-all">
+                                            <i class="fa-solid fa-copy"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr><td colspan="5" class="text-center text-textSecondary">Belum ada ujian aktif yang sesuai jenjang Anda.</td></tr>
+                @endforelse
             </tbody>
         </table>
         </div>
@@ -79,4 +109,41 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function guruCopyMapelToken(token, id) {
+    const doCopy = () => {
+        const btn = document.getElementById('copy-guru-' + id);
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        btn.classList.add('text-emerald-600');
+        setTimeout(() => {
+            btn.innerHTML = original;
+            btn.classList.remove('text-emerald-600');
+        }, 2000);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(token).then(doCopy);
+    } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = token;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            doCopy();
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+        }
+        document.body.removeChild(textArea);
+    }
+}
+</script>
+@endpush
 @endsection

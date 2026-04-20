@@ -11,6 +11,7 @@ class UjianSesi extends Model
     protected $fillable = [
         'exam_id',
         'paket_soal_id',
+        'mapel_paket_id',
         'nama',
         'nomor_wa',
         'session_token',
@@ -22,10 +23,10 @@ class UjianSesi extends Model
     ];
 
     protected $casts = [
-        'timer_state' => 'array',
-        'waktu_mulai' => 'datetime',
+        'timer_state'   => 'array',
+        'waktu_mulai'   => 'datetime',
         'waktu_selesai' => 'datetime',
-        'skor' => 'decimal:2',
+        'skor'          => 'decimal:2',
     ];
 
     public function exam(): BelongsTo
@@ -36,6 +37,11 @@ class UjianSesi extends Model
     public function paketSoal(): BelongsTo
     {
         return $this->belongsTo(PaketSoal::class);
+    }
+
+    public function mapelPaket(): BelongsTo
+    {
+        return $this->belongsTo(MapelPaket::class);
     }
 
     public function jawabanSiswas(): HasMany

@@ -1,276 +1,513 @@
-@extends('layouts.guest')
+@extends('layouts.ujian')
 
-@section('title', 'Pengerjaan Ujian')
+@section('title', ($mapel->nama_label ?? 'Ujian') . ' — ' . ($exam->judul ?? 'Ujion'))
+
+@push('styles')
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .exam-shell  { display: flex; flex-direction: column; height: 100dvh; }
+  .exam-body   { display: grid; grid-template-columns: 1fr 280px; flex: 1; overflow: hidden; }
+  .question-pane { overflow-y: auto; padding: 1.5rem; }
+  .sidebar-pane  { overflow-y: auto; border-left: 1px solid #e2e8f0; background: #f8fafc; padding: 1.25rem; }
+  @media (max-width:768px) {
+    .exam-body { grid-template-columns: 1fr; }
+    .sidebar-pane { display: none; }
+    .mobile-nav-bar { display: flex !important; z-index: 40; }
+    .question-pane { padding: 1rem 1rem 8rem 1rem !important; }
+  }
+  .mobile-nav-bar { display: none; }
+
+  /* Option button */
+  .opt-btn {
+    display:flex; align-items:flex-start; gap:12px;
+    width:100%; text-align:left;
+    padding:14px 18px;
+    border-radius:16px; border:2px solid #e2e8f0;
+    background:#fff; cursor:pointer; transition: all .15s;
+    font-size:0.9rem; line-height:1.5;
+  }
+  .opt-btn:hover  { border-color:#6366f1; background:#eef2ff; }
+  .opt-btn.active { border-color:#6366f1; background:#eef2ff; font-weight:600; }
+  .opt-kode {
+    flex-shrink:0; width:32px; height:32px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%; border:2px solid #c7d2fe;
+    background:#eef2ff; font-weight:700; font-size:.8rem; color:#4f46e5;
+  }
+  .opt-btn.active .opt-kode { background:#6366f1; color:#fff; border-color:#6366f1; }
+
+  /* Soal grid button */
+  .soal-nav-btn {
+    aspect-ratio:1; border-radius:10px; font-size:.75rem; font-weight:700;
+    border:none; cursor:pointer; transition:all .12s;
+  }
+  .soal-nav-btn.answered { background:#dcfce7; color:#166534; }
+  .soal-nav-btn.ragu     { background:#fef3c7; color:#92400e; }
+  .soal-nav-btn.unanswered { background:#f1f5f9; color:#475569; }
+  .soal-nav-btn.current  { outline:3px solid #6366f1; outline-offset:2px; }
+
+  /* Timer */
+  #timer-display { font-variant-numeric: tabular-nums; }
+  .timer-danger  { color: #ef4444 !important; animation: pulse-red 1s infinite; }
+  /* Hide scrollbar */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+@endpush
 
 @section('content')
-<div
-    id="ujian-app"
-    class="space-y-4"
-    data-exam='@json(["saveUrl" => route("siswa.api.save_answer"), "finishUrl" => route("siswa.selesai"), "currentMapelId" => $currentMapel->id, "timer" => $timer, "questions" => $questions])'
->
-    <section class="rounded-[28px] border border-white/80 bg-slate-900 px-5 py-5 text-white shadow-modal">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-                <div class="text-xs font-bold uppercase tracking-[0.24em] text-white/70">{{ $exam->judul }}</div>
-                <h1 class="mt-2 text-2xl font-bold">{{ $currentMapel->nama_label }}</h1>
-                <p class="mt-1 text-sm text-slate-300">{{ $session->nama }} &middot; {{ $paket->nama }}</p>
+{{-- ─── Data utama ─────────────────────────────────────────────────────────── --}}
+@php
+$payload = [
+    'saveUrl'        => route('siswa.api.save_answer'),
+    'finishUrl'      => route('siswa.selesai'),
+    'currentMapelId' => $mapel->id,
+    'timer'          => $timer,
+    'questions'      => $questions,
+];
+@endphp
+
+<div class="exam-shell" id="ujian-app">
+    <script id="exam-data" type="application/json">@json($payload)</script>
+
+    {{-- ─── Header Sticky ──────────────────────────────────────────────────── --}}
+    <header class="flex items-center justify-between gap-2 bg-slate-900 px-4 py-2 text-white shadow-lg md:px-6 md:py-3" style="flex-shrink:0">
+        <div class="flex items-center gap-2 md:gap-4 truncate">
+            <div class="hidden h-10 w-10 items-center justify-center rounded-xl bg-white/10 md:flex">
+                <i class="fa-solid fa-graduation-cap text-lg text-indigo-400"></i>
             </div>
-            <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-center">
-                <div class="text-[11px] font-bold uppercase tracking-[0.22em] text-white/70">Sisa Waktu</div>
-                <div id="timer-display" class="mt-2 text-3xl font-bold">--:--</div>
+            <div class="truncate">
+                <h1 class="truncate text-sm font-bold md:text-base">{{ $exam->judul }}</h1>
+                <p class="truncate text-[10px] text-slate-400 md:text-xs">
+                    {{ $mapel->nama_label }} &middot; {{ $questions->count() }} Soal
+                </p>
             </div>
         </div>
-        <div class="mt-5 flex flex-wrap gap-2">
-            @foreach($mapels as $mapel)
-                <a href="{{ route('siswa.ujian', ['mapel' => $mapel->id]) }}" class="rounded-full px-4 py-2 text-sm font-semibold {{ $currentMapel->id === $mapel->id ? 'bg-white text-slate-900' : 'border border-white/20 bg-white/10 text-white' }}">
-                    {{ $mapel->nama_label }}
-                </a>
-            @endforeach
+
+        <div class="flex items-center gap-3 md:gap-6">
+            <div class="text-right">
+                <div class="text-[9px] font-bold uppercase tracking-wider text-slate-500 md:text-[10px]">Sisa Waktu</div>
+                <div id="timer-display" class="font-mono text-lg font-bold text-indigo-400 md:text-2xl">00:00</div>
+            </div>
+            <button id="header-finish-btn" class="rounded-xl bg-red-600 px-3 py-1.5 text-[10px] font-bold text-white hover:bg-red-700 md:px-4 md:text-xs">
+                Selesai
+            </button>
         </div>
-    </section>
+    </header>
 
-    <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <section class="rounded-[28px] border border-white/80 bg-white/90 p-5 shadow-card">
-            <div id="reading-panel" class="mb-5 hidden rounded-[24px] border border-sky-200 bg-sky-50 p-4">
-                <div class="text-xs font-bold uppercase tracking-[0.22em] text-sky-700">Teks Bacaan</div>
-                <h2 id="reading-title" class="mt-2 text-lg font-bold text-slate-900"></h2>
-                <div id="reading-content" class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700"></div>
+    {{-- ─── Body ──────────────────────────────────────────────────────────── --}}
+    <div class="exam-body">
+
+        {{-- ── Kiri: Area Soal ──────────────────────────────────────────── --}}
+        <div class="question-pane pb-32 px-4 md:px-12 py-6">
+
+            {{-- Teks Bacaan --}}
+            <div id="reading-panel" class="mb-8 hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="mb-3 flex items-center gap-2">
+                    <div class="h-6 w-1 bg-indigo-500 rounded-full"></div>
+                    <span class="text-xs font-bold uppercase tracking-widest text-slate-500">Teks Bacaan</span>
+                </div>
+                <div id="reading-body">
+                    <h3 id="reading-title" class="mb-3 text-lg font-bold text-slate-900 md:text-xl"></h3>
+                    <div id="reading-content" class="text-sm leading-relaxed text-slate-700 md:text-base md:leading-8"></div>
+                </div>
             </div>
 
-            <div class="text-sm text-textSecondary">Soal <span id="soal-index">1</span> dari <span id="soal-total">{{ $questions->count() }}</span></div>
-            <div class="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Indikator</div>
-            <div id="question-indicator" class="mt-2 rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 text-sm"></div>
-            <div id="question-text" class="mt-5 text-lg font-semibold leading-8 text-slate-900"></div>
-            <img id="question-image" src="" alt="Gambar soal" class="mt-4 hidden max-h-72 rounded-2xl border border-slate-200">
-
-            <div id="question-body" class="mt-6"></div>
-
-            <div class="mt-8 flex flex-wrap gap-3">
-                <button id="prev-btn" class="btn-secondary" type="button">Sebelumnya</button>
-                <button id="flag-btn" class="btn-secondary" type="button">Tandai Ragu</button>
-                <button id="next-btn" class="btn-primary" type="button">Selanjutnya</button>
-            </div>
-        </section>
-
-        <aside class="rounded-[28px] border border-white/80 bg-white/90 p-5 shadow-card">
-            <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Status Navigasi</div>
-            <div class="mt-4 grid grid-cols-3 gap-2 text-xs">
-                <div class="rounded-xl bg-emerald-100 px-3 py-2 text-center font-semibold text-emerald-700">Dijawab</div>
-                <div class="rounded-xl bg-amber-100 px-3 py-2 text-center font-semibold text-amber-700">Ragu</div>
-                <div class="rounded-xl bg-slate-100 px-3 py-2 text-center font-semibold text-slate-600">Belum</div>
+            {{-- Header soal --}}
+            <div class="mb-6 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-bold text-white">Soal</span>
+                    <span id="soal-index" class="text-lg font-black text-slate-900 md:text-xl">1</span>
+                    <span class="text-slate-400">/</span>
+                    <span id="soal-total" class="text-sm font-bold text-slate-500">{{ $questions->count() }}</span>
+                </div>
+                <span id="indikator-badge" class="max-w-[120px] truncate rounded-full bg-slate-100 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-slate-500 md:max-w-none md:px-3 md:text-[10px]"></span>
             </div>
 
-            <div id="question-grid" class="mt-5 grid grid-cols-5 gap-2"></div>
+            {{-- Pertanyaan --}}
+            <div id="question-text" class="mb-4 text-base font-semibold leading-8 text-slate-900 md:text-lg"></div>
 
-            <button id="finish-btn" type="button" class="btn-danger mt-6 w-full">Selesaikan Ujian</button>
+            {{-- Gambar --}}
+            <img id="question-image" src="" alt="Gambar soal"
+                class="mb-5 hidden max-h-72 w-auto rounded-2xl border border-slate-200 shadow-sm">
+
+            {{-- Jawaban --}}
+            <div id="question-body" class="space-y-3"></div>
+
+            {{-- Navigasi bawah --}}
+            <div class="mt-10 flex items-center justify-between gap-2">
+                <button id="prev-btn" class="flex flex-1 items-center justify-center rounded-2xl border border-slate-200 bg-white py-3 text-[11px] font-bold text-slate-700 shadow-sm transition active:scale-95 md:flex-none md:px-8 md:text-sm">
+                    <i class="fa-solid fa-arrow-left mr-1.5 md:mr-2"></i>Sebelumnya
+                </button>
+                <button id="flag-btn" class="flex flex-1 items-center justify-center rounded-2xl border border-amber-200 bg-white py-3 text-[11px] font-bold text-amber-700 shadow-sm transition active:scale-95 md:flex-none md:px-8 md:text-sm">
+                    <i class="fa-solid fa-flag mr-1.5 md:mr-2"></i>Ragu
+                </button>
+                <button id="next-btn" class="flex flex-[1.2] items-center justify-center rounded-2xl bg-indigo-600 py-3 text-[11px] font-bold text-white shadow-lg transition active:scale-95 md:flex-none md:px-12 md:text-sm">
+                    Selanjutnya<i class="fa-solid fa-arrow-right ml-1.5 md:ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        {{-- ── Kanan: Sidebar Navigator ──────────────────────────────────── --}}
+        <aside class="sidebar-pane">
+            {{-- Progres --}}
+            <div class="mb-4">
+                <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                    <span>Dijawab</span>
+                    <span id="answered-count">0</span>/<span id="total-count">{{ $questions->count() }}</span>
+                </div>
+                <div class="h-2 rounded-full bg-slate-200">
+                    <div id="progress-bar" class="h-2 rounded-full bg-indigo-500 transition-all" style="width:0%"></div>
+                </div>
+            </div>
+
+            {{-- Grid nomor soal --}}
+            <div id="question-grid" class="grid grid-cols-5 gap-2 mb-5"></div>
+
+            {{-- Legenda --}}
+            <div class="space-y-2 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="h-4 w-4 rounded bg-emerald-100 ring-1 ring-green-300"></span>
+                    <span class="text-slate-600">Dijawab</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="h-4 w-4 rounded bg-amber-100 ring-1 ring-amber-300"></span>
+                    <span class="text-slate-600">Ragu-ragu</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="h-4 w-4 rounded bg-slate-100 ring-1 ring-slate-300"></span>
+                    <span class="text-slate-600">Belum dijawab</span>
+                </div>
+            </div>
+
+            <hr class="my-4 border-slate-200">
+
+            <button id="sidebar-finish-btn" type="button"
+                class="w-full rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white shadow transition hover:bg-red-700">
+                Selesaikan Ujian
+            </button>
         </aside>
+    </div>
+
+    {{-- ─── Mobile Bottom Bar ──────────────────────────────────────────────── --}}
+    <div class="mobile-nav-bar fixed bottom-0 left-0 right-0 z-10 border-t border-slate-200 bg-white px-4 py-2 shadow-xl">
+        <div id="mobile-grid" class="flex gap-1 overflow-x-auto pb-1"></div>
     </div>
 </div>
 
+{{-- ─── Modal Konfirmasi Selesai ──────────────────────────────────────────── --}}
+<div id="finish-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="mx-4 w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+        <h3 class="text-lg font-bold text-slate-900">Selesaikan Ujian?</h3>
+        <div id="finish-summary" class="mt-3 space-y-2 text-sm text-slate-600"></div>
+        <div class="mt-6 flex gap-3">
+            <button id="modal-cancel" type="button"
+                class="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                Kembali
+            </button>
+            <button id="modal-confirm" type="button"
+                class="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white hover:bg-red-700">
+                Ya, Selesai
+            </button>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const app = document.getElementById('ujian-app');
-    if (!app) return;
-
-    const payload = JSON.parse(app.dataset.exam);
+    const dataEl    = document.getElementById('exam-data');
+    if (!dataEl) return;
+    const payload   = JSON.parse(dataEl.textContent);
     const questions = payload.questions;
-    const timerKey = `ujion-mapel-${payload.currentMapelId}`;
-    const timerDisplay = document.getElementById('timer-display');
-    const body = document.getElementById('question-body');
-    const image = document.getElementById('question-image');
-    const readingPanel = document.getElementById('reading-panel');
-    const readingTitle = document.getElementById('reading-title');
-    const readingContent = document.getElementById('reading-content');
-    const questionText = document.getElementById('question-text');
-    const indicator = document.getElementById('question-indicator');
-    const indexEl = document.getElementById('soal-index');
-    const totalEl = document.getElementById('soal-total');
-    const grid = document.getElementById('question-grid');
-    let currentIndex = 0;
-    let warned = false;
 
-    const initialRemaining = Number(sessionStorage.getItem(timerKey) ?? payload.timer.remaining_seconds ?? payload.timer.duration_seconds);
+    // DOM refs
+    const timerEl       = document.getElementById('timer-display');
+    const soalIndex     = document.getElementById('soal-index');
+    const soalTotal     = document.getElementById('soal-total');
+    const indikatorBadge= document.getElementById('indikator-badge');
+    const questionText  = document.getElementById('question-text');
+    const questionImage = document.getElementById('question-image');
+    const questionBody  = document.getElementById('question-body');
+    const readingPanel  = document.getElementById('reading-panel');
+    const readingBody   = document.getElementById('reading-body');
+    const readingToggle = document.getElementById('reading-toggle');
+    const readingTitle  = document.getElementById('reading-title');
+    const readingContent= document.getElementById('reading-content');
+    const grid          = document.getElementById('question-grid');
+    const mobileGrid    = document.getElementById('mobile-grid');
+    const progressBar   = document.getElementById('progress-bar');
+    const answeredCount = document.getElementById('answered-count');
+    const totalCount    = document.getElementById('total-count');
+    const finishModal   = document.getElementById('finish-modal');
+    const finishSummary = document.getElementById('finish-summary');
+
+    const timerKey = `ujion-mapel-${payload.currentMapelId}`;
+    let currentIndex      = 0;
+    let warned5           = false;
+    let readingOpen       = false;
+
+    // Timer
+    const initialRemaining = Number(sessionStorage.getItem(timerKey) ??
+        payload.timer?.remaining_seconds ?? payload.timer?.duration_seconds ?? 0);
     let remainingSeconds = Number.isFinite(initialRemaining) ? initialRemaining : 0;
 
-    const postAnswer = (question) => fetch(payload.saveUrl, {
-        method: 'POST',
+    // ─── Format waktu ──────────────────────────────────────────────────────────
+    const fmt = (s) => {
+        const safe = Math.max(s, 0);
+        const m    = Math.floor(safe / 60);
+        const sec  = safe % 60;
+        return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    };
+
+    // ─── API save ──────────────────────────────────────────────────────────────
+    const postAnswer = (q) => fetch(payload.saveUrl, {
+        method : 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json'
+            'X-CSRF-TOKEN' : '{{ csrf_token() }}',
+            'Accept'       : 'application/json',
         },
         body: JSON.stringify({
-            question_id: question.id,
-            mapel_paket_id: payload.currentMapelId,
-            tipe_soal: question.tipe_soal,
-            jawaban_pg: question.jawaban_pg ?? null,
-            jawaban_menjodohkan: question.jawaban_menjodohkan ?? null,
-            is_ragu: question.is_ragu ?? false,
-            remaining_seconds: remainingSeconds
-        })
-    });
+            question_id      : q.id,
+            mapel_paket_id   : payload.currentMapelId,
+            tipe_soal        : q.tipe_soal,
+            jawaban_pg       : q.jawaban_pg ?? null,
+            jawaban_menjodohkan: q.jawaban_menjodohkan ?? null,
+            is_ragu          : q.is_ragu ?? false,
+            remaining_seconds: remainingSeconds,
+        }),
+    }).catch(() => {});
 
-    const formatTime = (seconds) => {
-        const safe = Math.max(seconds, 0);
-        const minutes = Math.floor(safe / 60);
-        const secs = safe % 60;
-        return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    };
-
+    // ─── Render Grid ──────────────────────────────────────────────────────────
     const renderGrid = () => {
-        grid.innerHTML = '';
-        questions.forEach((question, index) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.textContent = question.nomor_soal;
-            let className = 'rounded-xl px-3 py-3 text-sm font-semibold ';
-            if (question.is_ragu) className += 'bg-amber-100 text-amber-800 ';
-            else if (question.tipe_soal === 'pilihan_ganda' ? question.jawaban_pg : (question.jawaban_menjodohkan || []).length) className += 'bg-emerald-100 text-emerald-800 ';
-            else className += 'bg-slate-100 text-slate-600 ';
-            if (index === currentIndex) className += 'ring-2 ring-primary ';
-            button.className = className;
-            button.addEventListener('click', () => {
-                currentIndex = index;
-                renderQuestion();
+        const answered = questions.filter(q =>
+            q.tipe_soal === 'pilihan_ganda' ? !!q.jawaban_pg : (q.jawaban_menjodohkan||[]).length > 0
+        ).length;
+
+        answeredCount.textContent = answered;
+        const mobileAnswersCount = document.getElementById('answered-count-mobile');
+        if (mobileAnswersCount) mobileAnswersCount.textContent = answered;
+        
+        const pct = questions.length ? Math.round(answered / questions.length * 100) : 0;
+        progressBar.style.width   = pct + '%';
+
+        [grid, mobileGrid].forEach(container => {
+            container.innerHTML = '';
+            questions.forEach((q, i) => {
+                const btn = document.createElement('button');
+                btn.type        = 'button';
+                btn.textContent = q.nomor_soal;
+                btn.title       = `Soal ${q.nomor_soal}`;
+                btn.className   = 'soal-nav-btn ';
+
+                const hasPg  = q.tipe_soal === 'pilihan_ganda' && !!q.jawaban_pg;
+                const hasM   = q.tipe_soal !== 'pilihan_ganda' && (q.jawaban_menjodohkan||[]).length > 0;
+
+                if (q.is_ragu)            btn.className += 'ragu';
+                else if (hasPg || hasM)   btn.className += 'answered';
+                else                      btn.className += 'unanswered';
+
+                if (i === currentIndex)   btn.className += ' current';
+
+                btn.addEventListener('click', () => { currentIndex = i; renderQuestion(); });
+                container.appendChild(btn);
             });
-            grid.appendChild(button);
         });
     };
 
-    const renderMultipleChoice = (question) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'grid gap-3';
-        question.pilihan.forEach((option) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = `rounded-[24px] border px-4 py-4 text-left ${question.jawaban_pg === option.kode ? 'border-primary bg-primary/8' : 'border-slate-200 bg-white'}`;
-            button.innerHTML = `<div class="font-semibold">${option.kode}</div><div class="mt-2 text-sm text-slate-700">${option.teks}</div>`;
-            button.addEventListener('click', () => {
-                question.jawaban_pg = option.kode;
-                question.is_ragu = false;
+    // ─── Render PG ────────────────────────────────────────────────────────────
+    const renderPG = (q) => {
+        const wrap = document.createElement('div');
+        // md:grid-flow-col + md:grid-rows-2 akan membuat item mengisi kolom dulu:
+        // Col 1: Item 1 (A), Item 2 (B)
+        // Col 2: Item 3 (C), Item 4 (D)
+        wrap.className = 'grid grid-cols-1 md:grid-cols-2 md:grid-flow-col md:grid-rows-2 gap-3';
+        q.pilihan.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.type      = 'button';
+            btn.className = 'opt-btn' + (q.jawaban_pg === opt.kode ? ' active' : '');
+            btn.innerHTML = `<span class="opt-kode">${opt.kode}</span><span>${opt.teks}</span>`;
+            btn.addEventListener('click', () => {
+                q.jawaban_pg = opt.kode;
+                q.is_ragu    = false;
                 renderQuestion();
                 renderGrid();
-                postAnswer(question);
+                postAnswer(q);
             });
-            wrapper.appendChild(button);
+            wrap.appendChild(btn);
         });
-        return wrapper;
+        return wrap;
     };
 
-    const renderMatching = (question) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'space-y-3';
-        const answers = Array.isArray(question.jawaban_menjodohkan) ? question.jawaban_menjodohkan : [];
-        question.pasangan.forEach((pair) => {
-            const row = document.createElement('div');
-            row.className = 'grid gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-[1fr_220px]';
-            const selected = answers.find((item) => Number(item.pair_id) === Number(pair.id))?.match_id ?? '';
-            row.innerHTML = `<div class="text-sm font-medium text-slate-800">${pair.teks_kiri}</div>`;
-            const select = document.createElement('select');
-            select.className = 'input';
-            select.innerHTML = `<option value="">Pilih jawaban</option>${question.matching_options.map((opt) => `<option value="${opt.id}" ${Number(selected) === Number(opt.id) ? 'selected' : ''}>${opt.label}</option>`).join('')}`;
-            select.addEventListener('change', () => {
-                const nextAnswers = answers.filter((item) => Number(item.pair_id) !== Number(pair.id));
-                if (select.value) {
-                    nextAnswers.push({ pair_id: pair.id, match_id: Number(select.value) });
-                }
-                question.jawaban_menjodohkan = nextAnswers;
-                question.is_ragu = false;
+    // ─── Render Menjodohkan ───────────────────────────────────────────────────
+    const renderMatching = (q) => {
+        const wrap    = document.createElement('div');
+        wrap.className = 'space-y-3';
+        const answers  = Array.isArray(q.jawaban_menjodohkan) ? q.jawaban_menjodohkan : [];
+        q.pasangan.forEach(pair => {
+            const row      = document.createElement('div');
+            row.className  = 'grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[1fr_220px]';
+            const selected = answers.find(a => Number(a.pair_id) === Number(pair.id))?.match_id ?? '';
+            row.innerHTML  = `<div class="text-sm font-medium text-slate-800 flex items-center">${pair.teks_kiri}</div>`;
+            const sel      = document.createElement('select');
+            sel.className  = 'input';
+            sel.innerHTML  = `<option value="">Pilih jawaban...</option>` +
+                q.matching_options.map(opt =>
+                    `<option value="${opt.id}" ${Number(selected) === Number(opt.id) ? 'selected' : ''}>${opt.label}</option>`
+                ).join('');
+            sel.addEventListener('change', () => {
+                const next = answers.filter(a => Number(a.pair_id) !== Number(pair.id));
+                if (sel.value) next.push({ pair_id: pair.id, match_id: Number(sel.value) });
+                q.jawaban_menjodohkan = next;
+                q.is_ragu = false;
                 renderGrid();
-                postAnswer(question);
+                postAnswer(q);
             });
-            row.appendChild(select);
-            wrapper.appendChild(row);
+            row.appendChild(sel);
+            wrap.appendChild(row);
         });
-        return wrapper;
+        return wrap;
     };
 
+    // ─── Render Soal ──────────────────────────────────────────────────────────
     const renderQuestion = () => {
-        const question = questions[currentIndex];
-        indexEl.textContent = question.nomor_soal;
-        totalEl.textContent = questions.length;
-        indicator.textContent = question.indikator;
-        questionText.textContent = question.pertanyaan;
+        const q = questions[currentIndex];
+        soalIndex.textContent      = q.nomor_soal;
+        indikatorBadge.textContent = q.indikator || '';
+        questionText.textContent   = q.pertanyaan;
 
-        if (question.gambar_url) {
-            image.src = question.gambar_url;
-            image.classList.remove('hidden');
+        if (q.gambar_url) {
+            questionImage.src = q.gambar_url;
+            questionImage.classList.remove('hidden');
         } else {
-            image.classList.add('hidden');
+            questionImage.classList.add('hidden');
         }
 
-        if (question.teks_bacaan) {
+        if (q.teks_bacaan) {
             readingPanel.classList.remove('hidden');
-            readingTitle.textContent = question.teks_bacaan.judul || 'Teks Bacaan';
-            readingContent.textContent = question.teks_bacaan.konten;
+            readingTitle.textContent   = q.teks_bacaan.judul || 'Teks Bacaan';
+            readingContent.textContent = q.teks_bacaan.konten;
         } else {
             readingPanel.classList.add('hidden');
         }
 
-        body.innerHTML = '';
-        body.appendChild(question.tipe_soal === 'pilihan_ganda' ? renderMultipleChoice(question) : renderMatching(question));
+        questionBody.innerHTML = '';
+        questionBody.appendChild(q.tipe_soal === 'pilihan_ganda' ? renderPG(q) : renderMatching(q));
         renderGrid();
 
-        // Re-render MathJax/KaTeX
+        // Update flag button style
+        // Update nav buttons
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex === questions.length - 1;
+        
+        prevBtn.classList.toggle('opacity-30', prevBtn.disabled);
+        nextBtn.classList.toggle('opacity-30', nextBtn.disabled);
+        prevBtn.classList.toggle('cursor-not-allowed', prevBtn.disabled);
+        nextBtn.classList.toggle('cursor-not-allowed', nextBtn.disabled);
+
+        // Render math
         if (window.renderMathInElement) {
             renderMathInElement(document.body, {
-                delimiters: [
-                    {left: '$$', right: '$$', display: true},
-                    {left: '$', right: '$', display: false},
-                    {left: '\\(', right: '\\)', display: false},
-                    {left: '\\[', right: '\\]', display: true}
-                ],
-                throwOnError: false
+                delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],
+                throwOnError: false,
             });
         }
+
+        // Scroll to top of question pane
+        document.querySelector('.question-pane')?.scrollTo(0, 0);
     };
 
-    document.getElementById('prev-btn').addEventListener('click', () => {
+    // ─── Event Listeners ──────────────────────────────────────────────────────
+    const prevBtn   = document.getElementById('prev-btn');
+    const nextBtn   = document.getElementById('next-btn');
+    const flagBtn   = document.getElementById('flag-btn');
+
+    prevBtn.addEventListener('click', () => {
         currentIndex = Math.max(0, currentIndex - 1);
         renderQuestion();
     });
 
-    document.getElementById('next-btn').addEventListener('click', () => {
+    nextBtn.addEventListener('click', () => {
         currentIndex = Math.min(questions.length - 1, currentIndex + 1);
         renderQuestion();
     });
 
-    document.getElementById('flag-btn').addEventListener('click', () => {
-        const question = questions[currentIndex];
-        question.is_ragu = !question.is_ragu;
+    flagBtn.addEventListener('click', () => {
+        const q = questions[currentIndex];
+        q.is_ragu = !q.is_ragu;
         renderGrid();
-        postAnswer(question);
+        postAnswer(q);
+        flagBtn.classList.toggle('bg-amber-200', q.is_ragu);
+        flagBtn.classList.toggle('ring-2', q.is_ragu);
+        flagBtn.classList.toggle('ring-amber-400', q.is_ragu);
     });
 
-    document.getElementById('finish-btn').addEventListener('click', () => {
-        if (window.confirm('Yakin ingin menyelesaikan ujian sekarang?')) {
-            window.location.href = payload.finishUrl;
-        }
+    const showFinishModal = () => {
+        const answered  = questions.filter(q =>
+            q.tipe_soal === 'pilihan_ganda' ? !!q.jawaban_pg : (q.jawaban_menjodohkan||[]).length > 0
+        ).length;
+        const ragu      = questions.filter(q => q.is_ragu).length;
+        const unanswered= questions.length - answered;
+
+        finishSummary.innerHTML = `
+            <div class="flex justify-between rounded-xl bg-emerald-50 px-4 py-2">
+                <span>Dijawab</span><strong class="text-emerald-700">${answered}</strong>
+            </div>
+            <div class="flex justify-between rounded-xl bg-amber-50 px-4 py-2">
+                <span>Ragu-ragu</span><strong class="text-amber-700">${ragu}</strong>
+            </div>
+            <div class="flex justify-between rounded-xl bg-rose-50 px-4 py-2">
+                <span>Belum dijawab</span><strong class="text-rose-700">${unanswered}</strong>
+            </div>`;
+
+        finishModal.classList.remove('hidden');
+        finishModal.classList.add('flex');
+    };
+
+    const headerFinish  = document.getElementById('header-finish-btn');
+    const sidebarFinish = document.getElementById('sidebar-finish-btn');
+    [headerFinish, sidebarFinish].filter(b => b).forEach(b => b.addEventListener('click', showFinishModal));
+
+    document.getElementById('modal-cancel').addEventListener('click', () => {
+        finishModal.classList.add('hidden');
+        finishModal.classList.remove('flex');
     });
 
-    timerDisplay.textContent = formatTime(remainingSeconds);
-    renderQuestion();
+    document.getElementById('modal-confirm').addEventListener('click', () => {
+        window.location.href = payload.finishUrl;
+    });
 
-    window.setInterval(() => {
+    // ─── Auto-save tiap 30 detik ──────────────────────────────────────────────
+    setInterval(() => {
+        const current = questions[currentIndex];
+        if (current) postAnswer(current);
+    }, 30000);
+
+    // ─── Countdown ────────────────────────────────────────────────────────────
+    timerEl.textContent = fmt(remainingSeconds);
+
+    const tick = setInterval(() => {
         remainingSeconds -= 1;
         sessionStorage.setItem(timerKey, String(Math.max(remainingSeconds, 0)));
-        timerDisplay.textContent = formatTime(remainingSeconds);
+        timerEl.textContent = fmt(remainingSeconds);
 
-        if (remainingSeconds <= 300 && !warned) {
-            warned = true;
-            window.alert('Sisa waktu 5 menit lagi.');
+        if (remainingSeconds <= 300 && !warned5) {
+            warned5 = true;
+            timerEl.classList.add('timer-danger');
+            if (window.confirm('⚠️ Sisa waktu 5 menit lagi! Periksa kembali jawaban Anda.')) { /* dismiss */ }
         }
 
         if (remainingSeconds <= 0) {
+            clearInterval(tick);
             sessionStorage.removeItem(timerKey);
             window.location.href = payload.finishUrl;
         }
     }, 1000);
 
-    window.setInterval(() => {
-        const current = questions[currentIndex];
-        if (current) postAnswer(current);
-    }, 30000);
+    // ─── Init ─────────────────────────────────────────────────────────────────
+    renderQuestion();
 });
 </script>
-@endsection
+@endpush
