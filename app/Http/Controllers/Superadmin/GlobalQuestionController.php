@@ -159,6 +159,7 @@ class GlobalQuestionController extends Controller
     public function templatePG(): StreamedResponse
     {
         return SpreadsheetTemplateExporter::download('template-soal-pg.xls', [
+            'jenjang_id',
             'question_type',
             'reading_passage',
             'question_text',
@@ -175,14 +176,15 @@ class GlobalQuestionController extends Controller
             'explanation',
             'is_active',
         ], [
-            ['multiple_choice', 'Bacaan opsional, boleh dikosongkan.', 'Contoh pertanyaan pilihan ganda?', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'Jakarta', 'Bandung', 'Surabaya', 'Medan', '', 'A', 'Pembahasan singkat...', '1'],
-            ['multiple_choice', '', 'Ibu kota Indonesia adalah...?', 'K-13', 'Literasi', 'Teks Deskripsi', 'Menentukan informasi tersurat', 'Jakarta', 'Bandung', 'Surabaya', 'Bali', '', 'A', '', '1'],
+            ['1', 'multiple_choice', 'Bacaan opsional, boleh dikosongkan.', 'Contoh pertanyaan pilihan ganda?', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'Jakarta', 'Bandung', 'Surabaya', 'Medan', '', 'A', 'Pembahasan singkat...', '1'],
+            ['2', 'multiple_choice', '', 'Ibu kota Indonesia adalah...?', 'K-13', 'Literasi', 'Teks Deskripsi', 'Menentukan informasi tersurat', 'Jakarta', 'Bandung', 'Surabaya', 'Bali', '', 'A', '', '1'],
         ]);
     }
 
     public function templateMenjodohkan(): StreamedResponse
     {
         return SpreadsheetTemplateExporter::download('template-soal-menjodohkan.xls', [
+            'jenjang_id',
             'question_type',
             'question_text',
             'material_curriculum',
@@ -200,8 +202,8 @@ class GlobalQuestionController extends Controller
             'explanation',
             'is_active',
         ], [
-            ['matching', 'Jodohkan kata dengan artinya!', 'Merdeka', 'Literasi', 'Kosakata', 'Makna kata', 'Dinamis', 'Bergerak', 'Statis', 'Diam', 'Eksplisit', 'Jelas/Tersurat', 'Implisit', 'Tersirat', '', '1'],
-            ['matching', 'Pasangkan bilangan dengan hasil kuadratnya!', 'K-13', 'Numerasi', 'Bilangan', 'Operasi hitung', '2', '4', '3', '9', '4', '16', '5', '25', '', '1'],
+            ['1', 'matching', 'Jodohkan kata dengan artinya!', 'Merdeka', 'Literasi', 'Kosakata', 'Makna kata', 'Dinamis', 'Bergerak', 'Statis', 'Diam', 'Eksplisit', 'Jelas/Tersurat', 'Implisit', 'Tersirat', '', '1'],
+            ['2', 'matching', 'Pasangkan bilangan dengan hasil kuadratnya!', 'K-13', 'Numerasi', 'Bilangan', 'Operasi hitung', '2', '4', '3', '9', '4', '16', '5', '25', '', '1'],
         ]);
     }
 
@@ -215,7 +217,6 @@ class GlobalQuestionController extends Controller
     public function importPG(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'jenjang_id' => ['required', 'integer', 'exists:jenjangs,id'],
             'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
         ]);
 
@@ -247,11 +248,18 @@ class GlobalQuestionController extends Controller
                 continue;
             }
 
+            // Ambil jenjang_id dari file jika ada, wajib jika import dari semua jenjang
+            $jenjangId = isset($row['jenjang_id']) ? (int) $row['jenjang_id'] : null;
+            if (!$jenjangId || !\App\Models\Jenjang::find($jenjangId)) {
+                $skipped++;
+                continue;
+            }
+
             $options = $this->extractOptionsFromImportRow($row);
             $readingPassage = $this->normalizeNullableString($row['reading_passage'] ?? $row['bacaan'] ?? null);
 
             GlobalQuestion::create([
-                'jenjang_id'          => $validated['jenjang_id'],
+                'jenjang_id'          => $jenjangId,
                 'material_id'         => $this->resolveMaterialIdFromRow($row),
                 'question_type'       => $questionType,
                 'reading_passage'     => $readingPassage,

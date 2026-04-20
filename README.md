@@ -25,15 +25,15 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
 - Login memakai `email + password`
 - Workspace `superadmin/*` diproteksi `auth`, `role:superadmin`, dan `audit`
 - Kelola:
-  - dashboard
-  - finance, pricing plan, dan QR pembayaran
-  - guru, review pembayaran, aktivasi, suspend, dan refresh token akses
-  - materi global
-  - bank soal global
-  - paket soal TKA
-  - ujian, builder ujian, analisis, export CSV, dan print
-  - chat dengan guru
-  - audit log
+    - dashboard
+    - finance, pricing plan, dan QR pembayaran
+    - guru, review pembayaran, aktivasi, suspend, dan refresh token akses
+    - materi global
+    - bank soal global
+    - paket soal TKA
+    - ujian, builder ujian, analisis, export CSV, dan print
+    - chat dengan guru
+    - audit log
 
 ### Guru / Operator
 
@@ -43,17 +43,17 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
 - Login guru memakai `name + access_token`
 - Akun `pending` dan `suspend` diblokir dari workspace guru oleh middleware `guru.active`
 - Guru aktif dapat:
-  - melihat dashboard
-  - mengelola profil dan password
-  - melihat materi sesuai `jenjang`
-  - bookmark materi
-  - mengelola bank soal pribadi
-  - melihat paket soal sesuai `jenjang`
-  - mengelola soal dan teks bacaan hanya pada paket yang memang boleh diakses
-  - ikut simulasi ujian dengan token
-  - melihat hasil simulasi
-  - chat ke superadmin
-  - melihat log aktivitas
+    - melihat dashboard
+    - mengelola profil dan password
+    - melihat materi sesuai `jenjang`
+    - bookmark materi
+    - mengelola bank soal pribadi
+    - melihat paket soal sesuai `jenjang`
+    - mengelola soal dan teks bacaan hanya pada paket yang memang boleh diakses
+    - ikut simulasi ujian dengan token
+    - melihat hasil simulasi
+    - chat ke superadmin
+    - melihat log aktivitas
 
 ### Siswa
 
@@ -107,11 +107,11 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
 - Kelola token akses guru
 - Paket Soal TKA dengan dukungan **multi-aktif** per jenjang (lebih dari satu paket bisa aktif sekaligus)
 - Bank soal global dengan fitur:
-  - Create, update, delete, filter, dan hapus massal
-  - **Teks Bacaan (Reading Passage)** opsional untuk soal Pilihan Ganda
-  - **Dukungan Soal Menjodohkan (Matching)** dengan struktur pasangan kiri-kanan
-  - **Split Import**: Pemisahan alur import dan template untuk Pilihan Ganda vs Menjodohkan
-  - Picker materi bertingkat dari `curriculum` sampai `sub_unit`
+    - Create, update, delete, filter, dan hapus massal
+    - **Teks Bacaan (Reading Passage)** opsional untuk soal Pilihan Ganda
+    - **Dukungan Soal Menjodohkan (Matching)** dengan struktur pasangan kiri-kanan
+    - **Split Import**: Pemisahan alur import dan template untuk Pilihan Ganda vs Menjodohkan
+    - Picker materi bertingkat dari `curriculum` sampai `sub_unit`
 - **Bank Builder Paket**: Integrasi langsung untuk memasukkan soal dari bank global ke paket ujian menggunakan UI seleksi terfilter
 - Builder ujian admin berbasis `exam_question`
 - Analisis ujian dengan ranking, distribusi nilai, export CSV, dan print
@@ -137,8 +137,8 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
 ## Catatan Arsitektur
 
 - Project ini masih memiliki dua domain ujian yang hidup berdampingan:
-  - schema baru untuk flow ujian aktif
-  - schema lama untuk sebagian builder/admin compatibility
+    - schema baru untuk flow ujian aktif
+    - schema lama untuk sebagian builder/admin compatibility
 - Flow ujian nyata siswa dan simulasi guru sekarang memakai schema baru `ujian_sesis` dan `jawaban_siswas`
 - Builder ujian superadmin masih memakai snapshot `questions` melalui pivot `exam_question`
 - Modul `global_questions` sekarang memakai snapshot materi di tabelnya sendiri agar data edit tetap tampil stabil walaupun relasi materi berubah

@@ -138,10 +138,25 @@ class SoalController extends Controller
             ->get();
 
         // Opsi filter dinamis
-        $curriculums   = GlobalQuestion::where('is_active', true)->whereNotNull('material_curriculum')->distinct()->pluck('material_curriculum');
-        $subelements   = GlobalQuestion::where('is_active', true)->whereNotNull('material_subelement')->distinct()->pluck('material_subelement');
-        $units         = GlobalQuestion::where('is_active', true)->whereNotNull('material_unit')->distinct()->pluck('material_unit');
-        $subUnits      = GlobalQuestion::where('is_active', true)->whereNotNull('material_sub_unit')->distinct()->pluck('material_sub_unit');
+
+        $jenjangId = $paket->jenjang_id;
+
+        $curriculums = GlobalQuestion::where('is_active', true)
+            ->where('jenjang_id', $jenjangId)
+            ->whereNotNull('material_curriculum')
+            ->distinct()->pluck('material_curriculum');
+        $subelements = GlobalQuestion::where('is_active', true)
+            ->where('jenjang_id', $jenjangId)
+            ->whereNotNull('material_subelement')
+            ->distinct()->pluck('material_subelement');
+        $units = GlobalQuestion::where('is_active', true)
+            ->where('jenjang_id', $jenjangId)
+            ->whereNotNull('material_unit')
+            ->distinct()->pluck('material_unit');
+        $subUnits = GlobalQuestion::where('is_active', true)
+            ->where('jenjang_id', $jenjangId)
+            ->whereNotNull('material_sub_unit')
+            ->distinct()->pluck('material_sub_unit');
 
         return view('superadmin.soal.bank-builder', compact(
             'paket', 'mapel', 'bankSoals', 'filters',

@@ -20,23 +20,25 @@
             <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola kumpulan soal yang dapat diakses oleh seluruh guru di platform Ujion.</p>
         </div>
         <div class="flex flex-wrap gap-3">
-            <div class="relative" id="import-dropdown-wrapper">
-                <button class="btn-secondary" type="button" id="import-dropdown-btn">
-                    <i class="fa-solid fa-file-import mr-2"></i> Import Soal
-                    <i class="fa-solid fa-chevron-down ml-2 text-xs"></i>
-                </button>
-                <div id="import-dropdown-menu"
-                     class="absolute right-0 top-full z-30 mt-2 hidden w-52 rounded-2xl border border-border bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                    <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
-                            data-open-modal="import-pg-modal">
-                        <i class="fa-solid fa-list-check w-4 text-blue-500"></i> Pilihan Ganda
+            @if (empty($filters['jenjang_id']))
+                <div class="relative" id="import-dropdown-wrapper">
+                    <button class="btn-secondary" type="button" id="import-dropdown-btn">
+                        <i class="fa-solid fa-file-import mr-2"></i> Import Soal
+                        <i class="fa-solid fa-chevron-down ml-2 text-xs"></i>
                     </button>
-                    <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
-                            data-open-modal="import-menjodohkan-modal">
-                        <i class="fa-solid fa-shuffle w-4 text-amber-500"></i> Menjodohkan
-                    </button>
+                    <div id="import-dropdown-menu"
+                         class="absolute right-0 top-full z-30 mt-2 hidden w-52 rounded-2xl border border-border bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                        <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                                data-open-modal="import-pg-modal">
+                            <i class="fa-solid fa-list-check w-4 text-blue-500"></i> Pilihan Ganda
+                        </button>
+                        <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                                data-open-modal="import-menjodohkan-modal">
+                            <i class="fa-solid fa-shuffle w-4 text-amber-500"></i> Menjodohkan
+                        </button>
+                    </div>
                 </div>
-            </div>
+            @endif
             <button class="btn-primary" type="button" data-open-modal="create-question-modal">
                 <i class="fa-solid fa-plus mr-2"></i> Input Soal Baru
             </button>
