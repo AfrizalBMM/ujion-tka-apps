@@ -51,22 +51,53 @@
             </div>
             <div>
                 <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Status pembayaran</label>
-                <select name="payment_status" class="input w-full">
-                    <option value="">Semua status pembayaran</option>
-                    <option value="{{ \App\Models\User::PAYMENT_SUBMITTED }}" @selected($paymentStatus === \App\Models\User::PAYMENT_SUBMITTED)>Menunggu review</option>
-                    <option value="{{ \App\Models\User::PAYMENT_REJECTED }}" @selected($paymentStatus === \App\Models\User::PAYMENT_REJECTED)>Ditolak</option>
-                    <option value="{{ \App\Models\User::PAYMENT_AWAITING }}" @selected($paymentStatus === \App\Models\User::PAYMENT_AWAITING)>Belum upload bukti</option>
-                    <option value="{{ \App\Models\User::PAYMENT_APPROVED }}" @selected($paymentStatus === \App\Models\User::PAYMENT_APPROVED)>Disetujui</option>
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="payment_status" value="{{ $paymentStatus ?? '' }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ match($paymentStatus ?? '') {
+                            \App\Models\User::PAYMENT_SUBMITTED => 'Menunggu review',
+                            \App\Models\User::PAYMENT_REJECTED  => 'Ditolak',
+                            \App\Models\User::PAYMENT_AWAITING  => 'Belum upload bukti',
+                            \App\Models\User::PAYMENT_APPROVED  => 'Disetujui',
+                            default => 'Semua status pembayaran'
+                        } }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($paymentStatus ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua status pembayaran</div>
+                            <div class="ssd-option{{ ($paymentStatus ?? '') === \App\Models\User::PAYMENT_SUBMITTED ? ' ssd-selected' : '' }}" data-value="{{ \App\Models\User::PAYMENT_SUBMITTED }}">Menunggu review</div>
+                            <div class="ssd-option{{ ($paymentStatus ?? '') === \App\Models\User::PAYMENT_REJECTED ? ' ssd-selected' : '' }}" data-value="{{ \App\Models\User::PAYMENT_REJECTED }}">Ditolak</div>
+                            <div class="ssd-option{{ ($paymentStatus ?? '') === \App\Models\User::PAYMENT_AWAITING ? ' ssd-selected' : '' }}" data-value="{{ \App\Models\User::PAYMENT_AWAITING }}">Belum upload bukti</div>
+                            <div class="ssd-option{{ ($paymentStatus ?? '') === \App\Models\User::PAYMENT_APPROVED ? ' ssd-selected' : '' }}" data-value="{{ \App\Models\User::PAYMENT_APPROVED }}">Disetujui</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div>
                 <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Status akun</label>
-                <select name="account_status" class="input w-full">
-                    <option value="">Semua status akun</option>
-                    <option value="{{ \App\Models\User::STATUS_PENDING }}" @selected($accountStatus === \App\Models\User::STATUS_PENDING)>Pending</option>
-                    <option value="{{ \App\Models\User::STATUS_ACTIVE }}" @selected($accountStatus === \App\Models\User::STATUS_ACTIVE)>Aktif</option>
-                    <option value="{{ \App\Models\User::STATUS_SUSPEND }}" @selected($accountStatus === \App\Models\User::STATUS_SUSPEND)>Ditangguhkan</option>
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="account_status" value="{{ $accountStatus ?? '' }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ match($accountStatus ?? '') {
+                            \App\Models\User::STATUS_PENDING  => 'Pending',
+                            \App\Models\User::STATUS_ACTIVE   => 'Aktif',
+                            \App\Models\User::STATUS_SUSPEND  => 'Ditangguhkan',
+                            default => 'Semua status akun'
+                        } }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($accountStatus ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua status akun</div>
+                            <div class="ssd-option{{ ($accountStatus ?? '') === \App\Models\User::STATUS_PENDING ? ' ssd-selected' : '' }}" data-value="{{ \App\Models\User::STATUS_PENDING }}">Pending</div>
+                            <div class="ssd-option{{ ($accountStatus ?? '') === \App\Models\User::STATUS_ACTIVE ? ' ssd-selected' : '' }}" data-value="{{ \App\Models\User::STATUS_ACTIVE }}">Aktif</div>
+                            <div class="ssd-option{{ ($accountStatus ?? '') === \App\Models\User::STATUS_SUSPEND ? ' ssd-selected' : '' }}" data-value="{{ \App\Models\User::STATUS_SUSPEND }}">Ditangguhkan</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="flex items-end gap-2">
                 <button type="submit" class="btn-primary w-full lg:w-auto">Terapkan</button>

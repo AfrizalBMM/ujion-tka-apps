@@ -21,16 +21,30 @@ class MaterialController extends Controller
 
         $examples = match ($defaultJenjang) {
             'SD' => [
-                ['SD', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'https://contoh-materi.test/ide-pokok'],
-                ['SD', 'K-13', 'Numerasi', 'Bilangan', 'Operasi hitung dasar', ''],
+                ['SD', 'Matematika',       'Merdeka', 'Numerasi',  'Bilangan',     'Bilangan Cacah',                    'https://contoh-materi.test/bilangan-cacah'],
+                ['SD', 'Matematika',       'K-13',    'Numerasi',  'Bilangan',     'Operasi hitung dasar',              ''],
+                ['SD', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Narasi',  'Mengidentifikasi ide pokok',        'https://contoh-materi.test/ide-pokok'],
+                ['SD', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Narasi',  'Menentukan gagasan utama',          ''],
             ],
             'SMP' => [
-                ['SMP', 'Merdeka', 'Literasi', 'Teks Informasi', 'Menentukan gagasan utama', 'https://contoh-materi.test/gagasan-utama'],
-                ['SMP', 'K-13', 'Numerasi', 'Perbandingan', 'Skala dan rasio', ''],
+                ['SMP', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan', 'Skala dan rasio',                  'https://contoh-materi.test/skala-rasio'],
+                ['SMP', 'Matematika',       'K-13',    'Numerasi',  'Aljabar',      'Persamaan linear satu variabel',   ''],
+                ['SMP', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Informasi','Menentukan gagasan utama',        'https://contoh-materi.test/gagasan-utama'],
+                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Deskripsi','Mengidentifikasi informasi tersurat',''],
+            ],
+            'SMA' => [
+                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat','Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
+                ['SMA', 'Matematika',       'K-13',    'Numerasi',  'Trigonometri',  'Nilai trigonometri sudut istimewa',''],
+                ['SMA', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   'https://contoh-materi.test/argumen-kompleks'],
+                ['SMA', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Eksposisi','Menentukan tesis dan argumen',    ''],
             ],
             default => [
-                ['SD', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'https://contoh-materi.test/ide-pokok'],
-                ['SMP', 'K-13', 'Numerasi', 'Perbandingan', 'Skala dan rasio', ''],
+                ['SD',  'Matematika',       'Merdeka', 'Numerasi',  'Bilangan',      'Bilangan Cacah',                  'https://contoh-materi.test/bilangan-cacah'],
+                ['SD',  'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Narasi',   'Mengidentifikasi ide pokok',      ''],
+                ['SMP', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan',  'Skala dan rasio',                 'https://contoh-materi.test/skala-rasio'],
+                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Informasi','Menentukan gagasan utama',        ''],
+                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat','Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
+                ['SMA', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   ''],
             ],
         };
 
@@ -40,6 +54,7 @@ class MaterialController extends Controller
 
         return SpreadsheetTemplateExporter::download($filename, [
             'jenjang',
+            'mapel',
             'curriculum',
             'subelement',
             'unit',
@@ -62,7 +77,7 @@ class MaterialController extends Controller
     {
         $validated = $request->validate([
             'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
-            'default_jenjang' => ['nullable', 'in:SD,SMP'],
+            'default_jenjang' => ['nullable', 'in:SD,SMP,SMA'],
         ]);
 
         try {
@@ -72,6 +87,7 @@ class MaterialController extends Controller
         }
 
         $created = 0;
+        $updated = 0;
         $skipped = 0;
 
         $defaultJenjang = $this->normalizeJenjang($validated['default_jenjang'] ?? null);
@@ -79,6 +95,7 @@ class MaterialController extends Controller
         foreach ($rows as $row) {
             $payload = [
                 'jenjang' => $this->normalizeJenjang($row['jenjang'] ?? null) ?? $defaultJenjang,
+                'mapel' => trim((string) ($row['mapel'] ?? '')),
                 'curriculum' => $this->normalizeCurriculum($row['curriculum'] ?? null),
                 'subelement' => trim((string) ($row['subelement'] ?? '')),
                 'unit' => trim((string) ($row['unit'] ?? '')),
@@ -104,20 +121,37 @@ class MaterialController extends Controller
                 unset($payload['link']);
             }
 
-            Material::create($payload);
-            $created++;
+            $matchKeys = [
+                'jenjang'    => $payload['jenjang'] ?? null,
+                'mapel'      => $payload['mapel'],
+                'curriculum' => $payload['curriculum'],
+                'subelement' => $payload['subelement'],
+                'unit'       => $payload['unit'],
+                'sub_unit'   => $payload['sub_unit'],
+            ];
+            $updateValues = ['link' => $payload['link'] ?? null];
+
+            $material = Material::firstOrNew($matchKeys);
+            if ($material->exists) {
+                $material->fill($updateValues)->save();
+                $updated++;
+            } else {
+                $material->fill($updateValues)->save();
+                $created++;
+            }
         }
 
         return back()->with('flash', [
-            'type' => $created > 0 ? 'success' : 'warning',
-            'message' => "Import materi selesai. Berhasil: {$created}, dilewati: {$skipped}.",
+            'type' => ($created + $updated) > 0 ? 'success' : 'warning',
+            'message' => "Import materi selesai. Ditambah: {$created}, diperbarui: {$updated}, dilewati: {$skipped}.",
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'jenjang' => ['nullable', 'in:SD,SMP'],
+            'jenjang' => ['nullable', 'in:SD,SMP,SMA'],
+            'mapel' => ['required', 'string', 'max:120'],
             'curriculum' => ['required', 'in:K-13,Merdeka'],
             'subelement' => ['required', 'string', 'max:120'],
             'unit' => ['required', 'string', 'max:120'],
@@ -145,10 +179,18 @@ class MaterialController extends Controller
     }
 
     public function index(Request $request): View {
-        $filter = $request->query('jenjang');
+        $filter     = $request->query('jenjang');
+        $mapel      = $request->query('mapel');
+        $curriculum = $request->query('curriculum');
+        $subelement = $request->query('subelement');
+        $unit       = $request->query('unit');
+        $subUnit    = $request->query('sub_unit');
+        $search     = trim((string) $request->query('search'));
 
         $materialsQuery = Material::query();
-        if (Schema::hasColumn('materials', 'jenjang') && in_array($filter, ['SD', 'SMP', 'GLOBAL'], true)) {
+
+        // Jenjang filter (via sidebar context)
+        if (Schema::hasColumn('materials', 'jenjang') && in_array($filter, ['SD', 'SMP', 'SMA', 'GLOBAL'], true)) {
             if ($filter === 'GLOBAL') {
                 $materialsQuery->whereNull('jenjang');
             } else {
@@ -156,16 +198,67 @@ class MaterialController extends Controller
             }
         }
 
-        $materials = $materialsQuery->orderBy('curriculum')->orderBy('subelement')->orderBy('unit')->orderBy('sub_unit')->get();
+        // Dropdown filters
+        if ($mapel) {
+            $materialsQuery->where('mapel', $mapel);
+        }
+        if ($curriculum) {
+            $materialsQuery->where('curriculum', $curriculum);
+        }
+        if ($subelement) {
+            $materialsQuery->where('subelement', $subelement);
+        }
+        if ($unit) {
+            $materialsQuery->where('unit', $unit);
+        }
+        if ($subUnit) {
+            $materialsQuery->where('sub_unit', $subUnit);
+        }
 
-        return view('superadmin.materials', compact('materials', 'filter'));
+        // Search (mapel, subelement, unit, sub_unit)
+        if ($search !== '') {
+            $materialsQuery->where(function ($q) use ($search) {
+                $q->where('mapel', 'like', "%{$search}%")
+                  ->orWhere('subelement', 'like', "%{$search}%")
+                  ->orWhere('unit', 'like', "%{$search}%")
+                  ->orWhere('sub_unit', 'like', "%{$search}%");
+            });
+        }
+
+        $materials = $materialsQuery
+            ->orderBy('curriculum')
+            ->orderBy('subelement')
+            ->orderBy('unit')
+            ->orderBy('sub_unit')
+            ->get();
+
+        // Build distinct option lists from the SAME jenjang context (before search/filter)
+        $baseQuery = Material::query();
+        if (Schema::hasColumn('materials', 'jenjang') && in_array($filter, ['SD', 'SMP', 'SMA', 'GLOBAL'], true)) {
+            if ($filter === 'GLOBAL') {
+                $baseQuery->whereNull('jenjang');
+            } else {
+                $baseQuery->where('jenjang', $filter);
+            }
+        }
+        $mapels      = $baseQuery->clone()->distinct()->whereNotNull('mapel')->where('mapel', '!=', '')->pluck('mapel')->sort()->values();
+        $curriculums = $baseQuery->clone()->distinct()->pluck('curriculum')->sort()->values();
+        $subelements = $baseQuery->clone()->distinct()->pluck('subelement')->sort()->values();
+        $units       = $baseQuery->clone()->distinct()->pluck('unit')->sort()->values();
+        $subUnits    = $baseQuery->clone()->distinct()->pluck('sub_unit')->sort()->values();
+
+        return view('superadmin.materials', compact(
+            'materials', 'filter',
+            'mapel', 'curriculum', 'subelement', 'unit', 'subUnit', 'search',
+            'mapels', 'curriculums', 'subelements', 'units', 'subUnits'
+        ));
     }
 
     private function normalizeJenjang(?string $value): ?string
     {
         $normalized = strtoupper(trim((string) $value));
 
-        return in_array($normalized, ['SD', 'SMP'], true) ? $normalized : null;
+        return in_array($normalized, ['SD', 'SMP', 'SMA'], true) ? $normalized : null;
     }
 
     private function normalizeCurriculum(?string $value): ?string

@@ -20,6 +20,7 @@
         throwOnError: false
     });"></script>
 
+    @include('partials.ssd-style')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
         function updateClock() {
@@ -202,6 +203,11 @@
                             <span class="sidebar-sublink-badge">SMP</span>
                             <span class="sidebar-sublink-label">Materi SMP</span>
                         </a>
+                        <a href="{{ route('superadmin.materials.index', ['jenjang' => 'SMA']) }}"
+                            class="sidebar-sublink {{ $materialFilter === 'SMA' ? 'active' : '' }}">
+                            <span class="sidebar-sublink-badge">SMA</span>
+                            <span class="sidebar-sublink-label">Materi SMA</span>
+                        </a>
                     </div>
                 </details>
                 <details class="sidebar-submenu" data-sidebar-submenu>
@@ -227,6 +233,11 @@
                             class="sidebar-sublink {{ $globalQuestionFilter == '2' ? 'active' : '' }}">
                             <span class="sidebar-sublink-badge">SMP</span>
                             <span class="sidebar-sublink-label">Bank Soal SMP</span>
+                        </a>
+                        <a href="{{ route('superadmin.global-questions.index', ['jenjang_id' => 3]) }}"
+                            class="sidebar-sublink {{ $globalQuestionFilter == '3' ? 'active' : '' }}">
+                            <span class="sidebar-sublink-badge">SMA</span>
+                            <span class="sidebar-sublink-label">Bank Soal SMA</span>
                         </a>
                     </div>
                 </details>
@@ -271,6 +282,8 @@
             </div>
         </main>
     </div>
+    @include('partials.ssd')
+    @stack('scripts')
 </body>
 
 </html>

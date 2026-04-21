@@ -6,12 +6,14 @@
 @php
     $optionLabels = range('A', 'Z');
     $materialOptions = $materials->map(fn ($material) => [
+        'mapel' => $material->mapel,
         'curriculum' => $material->curriculum,
         'subelement' => $material->subelement,
         'unit' => $material->unit,
         'sub_unit' => $material->sub_unit,
     ])->values();
     $curriculumFilters = $materials->pluck('curriculum')->filter()->unique()->values();
+    $mapelFilters = $materials->pluck('mapel')->filter()->unique()->values();
 @endphp
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -53,38 +55,98 @@
             </div>
             <div>
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenis Soal</label>
-                <select class="input mt-1" name="question_type">
-                    <option value="">Semua Jenis</option>
-                    <option value="multiple_choice" @selected(($filters['question_type'] ?? '') === 'multiple_choice')>Pilihan Ganda</option>
-                    <option value="matching"        @selected(($filters['question_type'] ?? '') === 'matching')>Menjodohkan</option>
-                    <option value="short_answer"    @selected(($filters['question_type'] ?? '') === 'short_answer')>Jawaban Singkat</option>
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="question_type" value="{{ $filters['question_type'] ?? '' }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ match($filters['question_type'] ?? '') { 'multiple_choice' => 'Pilihan Ganda', 'matching' => 'Menjodohkan', 'short_answer' => 'Jawaban Singkat', default => 'Semua Jenis' } }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($filters['question_type'] ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua Jenis</div>
+                            <div class="ssd-option{{ ($filters['question_type'] ?? '') === 'multiple_choice' ? ' ssd-selected' : '' }}" data-value="multiple_choice">Pilihan Ganda</div>
+                            <div class="ssd-option{{ ($filters['question_type'] ?? '') === 'matching' ? ' ssd-selected' : '' }}" data-value="matching">Menjodohkan</div>
+                            <div class="ssd-option{{ ($filters['question_type'] ?? '') === 'short_answer' ? ' ssd-selected' : '' }}" data-value="short_answer">Jawaban Singkat</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div>
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Status</label>
-                <select class="input mt-1" name="status">
-                    <option value="">Semua Status</option>
-                    <option value="active" @selected(($filters['status'] ?? '') === 'active')>Aktif</option>
-                    <option value="draft" @selected(($filters['status'] ?? '') === 'draft')>Draft</option>
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="status" value="{{ $filters['status'] ?? '' }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ match($filters['status'] ?? '') { 'active' => 'Aktif', 'draft' => 'Draft', default => 'Semua Status' } }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($filters['status'] ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua Status</div>
+                            <div class="ssd-option{{ ($filters['status'] ?? '') === 'active' ? ' ssd-selected' : '' }}" data-value="active">Aktif</div>
+                            <div class="ssd-option{{ ($filters['status'] ?? '') === 'draft' ? ' ssd-selected' : '' }}" data-value="draft">Draft</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mapel</label>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="material_mapel" value="{{ $filters['material_mapel'] ?? '' }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ ($filters['material_mapel'] ?? '') ?: 'Semua Mapel' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari mapel..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($filters['material_mapel'] ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua Mapel</div>
+                            @foreach ($mapelFilters as $m)
+                                <div class="ssd-option{{ ($filters['material_mapel'] ?? '') === $m ? ' ssd-selected' : '' }}" data-value="{{ $m }}">{{ $m }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
             <div>
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Kurikulum</label>
-                <select class="input mt-1" name="material_curriculum">
-                    <option value="">Semua Kurikulum</option>
-                    @foreach ($curriculumFilters as $curriculum)
-                        <option value="{{ $curriculum }}" @selected(($filters['material_curriculum'] ?? '') === $curriculum)>{{ $curriculum }}</option>
-                    @endforeach
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="material_curriculum" value="{{ $filters['material_curriculum'] ?? '' }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ ($filters['material_curriculum'] ?? '') ?: 'Semua Kurikulum' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kurikulum..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($filters['material_curriculum'] ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua Kurikulum</div>
+                            @foreach ($curriculumFilters as $curriculum)
+                                <div class="ssd-option{{ ($filters['material_curriculum'] ?? '') === $curriculum ? ' ssd-selected' : '' }}" data-value="{{ $curriculum }}">{{ $curriculum }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
             <div>
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang</label>
-                <select class="input mt-1" name="jenjang_id">
-                    <option value="">Semua Jenjang</option>
-                    @foreach ($jenjangs as $jenjang)
-                        <option value="{{ $jenjang->id }}" @selected(($filters['jenjang_id'] ?? '') == $jenjang->id)>{{ $jenjang->nama }}</option>
-                    @endforeach
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="jenjang_id" value="{{ $filters['jenjang_id'] ?? '' }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        @php $selectedJenjang = $jenjangs->firstWhere('id', $filters['jenjang_id'] ?? '') @endphp
+                        <span class="ssd-label">{{ $selectedJenjang ? $selectedJenjang->nama : 'Semua Jenjang' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($filters['jenjang_id'] ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua Jenjang</div>
+                            @foreach ($jenjangs as $jenjang)
+                                <div class="ssd-option{{ ($filters['jenjang_id'] ?? '') == $jenjang->id ? ' ssd-selected' : '' }}" data-value="{{ $jenjang->id }}">{{ $jenjang->nama }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="flex flex-wrap items-end gap-3 lg:col-span-6">
                 <button class="btn-primary" type="submit">
@@ -135,11 +197,11 @@
                                 @endif
                                 @if ($q->material)
                                     <span class="flex items-center gap-1 text-[10px] text-muted">
-                                        <i class="fa-solid fa-book text-[8px]"></i> {{ $q->material->sub_unit }}
+                                        <i class="fa-solid fa-book text-[8px]"></i> {{ $q->material->mapel }} | {{ $q->material->sub_unit }}
                                     </span>
                                 @elseif($q->material_sub_unit)
                                     <span class="flex items-center gap-1 text-[10px] text-muted">
-                                        <i class="fa-solid fa-book text-[8px]"></i> {{ $q->material_sub_unit }}
+                                        <i class="fa-solid fa-book text-[8px]"></i> {{ $q->material_mapel }} | {{ $q->material_sub_unit }}
                                     </span>
                                 @endif
                                 @if ($q->is_active)
@@ -223,6 +285,7 @@
                                     'question_type'       => $q->question_type,
                                     'reading_passage'     => $q->reading_passage,
                                     'question_text'       => $q->question_text,
+                                    'material_mapel'      => $q->material_mapel ?? $q->material?->mapel,
                                     'material_curriculum' => $q->material_curriculum ?? $q->material?->curriculum,
                                     'material_subelement' => $q->material_subelement ?? $q->material?->subelement,
                                     'material_unit'       => $q->material_unit ?? $q->material?->unit,
@@ -300,6 +363,18 @@
             </div>
             <div class="space-y-3" data-material-picker="create">
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="relative" data-material-field="mapel">
+                        <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mapel</label>
+                        <input type="hidden" name="material_mapel" data-material-value>
+                        <button type="button" class="input mt-1 flex w-full items-center justify-between text-left" data-material-trigger>
+                            <span data-material-label>Pilih mapel</span>
+                            <i class="fa-solid fa-chevron-down text-xs text-muted"></i>
+                        </button>
+                        <div class="absolute left-0 right-0 top-full z-20 mt-2 hidden rounded-2xl border border-border bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900" data-material-dropdown>
+                            <input type="text" class="input mb-2" placeholder="Cari mapel..." data-material-search>
+                            <div class="max-h-56 space-y-1 overflow-y-auto" data-material-options></div>
+                        </div>
+                    </div>
                     <div class="relative" data-material-field="curriculum">
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Materi Curriculum</label>
                         <input type="hidden" name="material_curriculum" data-material-value>
@@ -312,6 +387,8 @@
                             <div class="max-h-56 space-y-1 overflow-y-auto" data-material-options></div>
                         </div>
                     </div>
+                </div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div class="relative" data-material-field="subelement">
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Materi Subelement</label>
                         <input type="hidden" name="material_subelement" data-material-value>
@@ -324,8 +401,6 @@
                             <div class="max-h-56 space-y-1 overflow-y-auto" data-material-options></div>
                         </div>
                     </div>
-                </div>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div class="relative" data-material-field="unit">
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Materi Unit</label>
                         <input type="hidden" name="material_unit" data-material-value>
@@ -338,6 +413,8 @@
                             <div class="max-h-56 space-y-1 overflow-y-auto" data-material-options></div>
                         </div>
                     </div>
+                </div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div class="relative" data-material-field="sub_unit">
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Materi Sub Unit</label>
                         <input type="hidden" name="material_sub_unit" data-material-value>
@@ -539,6 +616,18 @@
             </div>
             <div class="space-y-3" data-material-picker="edit">
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="relative" data-material-field="mapel">
+                        <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mapel</label>
+                        <input type="hidden" name="material_mapel" id="edit-material-mapel" data-material-value>
+                        <button type="button" class="input mt-1 flex w-full items-center justify-between text-left" data-material-trigger>
+                            <span data-material-label>Pilih mapel</span>
+                            <i class="fa-solid fa-chevron-down text-xs text-muted"></i>
+                        </button>
+                        <div class="absolute left-0 right-0 top-full z-20 mt-2 hidden rounded-2xl border border-border bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900" data-material-dropdown>
+                            <input type="text" class="input mb-2" placeholder="Cari mapel..." data-material-search>
+                            <div class="max-h-56 space-y-1 overflow-y-auto" data-material-options></div>
+                        </div>
+                    </div>
                     <div class="relative" data-material-field="curriculum">
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Materi Curriculum</label>
                         <input type="hidden" name="material_curriculum" id="edit-material-curriculum" data-material-value>
@@ -551,6 +640,8 @@
                             <div class="max-h-56 space-y-1 overflow-y-auto" data-material-options></div>
                         </div>
                     </div>
+                </div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div class="relative" data-material-field="subelement">
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Materi Subelement</label>
                         <input type="hidden" name="material_subelement" id="edit-material-subelement" data-material-value>
@@ -563,8 +654,6 @@
                             <div class="max-h-56 space-y-1 overflow-y-auto" data-material-options></div>
                         </div>
                     </div>
-                </div>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div class="relative" data-material-field="unit">
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Materi Unit</label>
                         <input type="hidden" name="material_unit" id="edit-material-unit" data-material-value>
@@ -577,6 +666,8 @@
                             <div class="max-h-56 space-y-1 overflow-y-auto" data-material-options></div>
                         </div>
                     </div>
+                </div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div class="relative" data-material-field="sub_unit">
                         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Materi Sub Unit</label>
                         <input type="hidden" name="material_sub_unit" id="edit-material-sub-unit" data-material-value>
@@ -641,7 +732,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const materialData = @json($materialOptions);
-    const materialFieldOrder = ['curriculum', 'subelement', 'unit', 'sub_unit'];
+    const materialFieldOrder = ['mapel', 'curriculum', 'subelement', 'unit', 'sub_unit'];
     const editModal = document.getElementById('edit-question-modal');
     const form = document.getElementById('edit-question-form');
     const optionLabels = @json($optionLabels);
@@ -651,6 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const materialPickers = new Map();
     const fields = {
         questionType: document.getElementById('edit-question-type'),
+        materialMapel: document.getElementById('edit-material-mapel'),
         materialCurriculum: document.getElementById('edit-material-curriculum'),
         materialSubelement: document.getElementById('edit-material-subelement'),
         materialUnit: document.getElementById('edit-material-unit'),
@@ -715,6 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container,
             fields: fieldMap,
             state: {
+                mapel: '',
                 curriculum: '',
                 subelement: '',
                 unit: '',
@@ -744,6 +837,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const options = getOptions(fieldName);
             const selectedValue = picker.state[fieldName];
             const placeholderMap = {
+                mapel: 'Pilih mapel',
                 curriculum: 'Pilih kurikulum',
                 subelement: 'Pilih subelement',
                 unit: 'Pilih unit',
@@ -922,6 +1016,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (jenjangInput) jenjangInput.value = data.jenjang_id ?? '';
             fields.questionType.value = data.question_type ?? 'multiple_choice';
             materialPickers.get('edit')?.setValues({
+                mapel: data.material_mapel ?? '',
                 curriculum: data.material_curriculum ?? '',
                 subelement: data.material_subelement ?? '',
                 unit: data.material_unit ?? '',

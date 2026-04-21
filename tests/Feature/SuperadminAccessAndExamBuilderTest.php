@@ -79,40 +79,9 @@ class SuperadminAccessAndExamBuilderTest extends TestCase
         ]);
 
         $exam = Exam::where('judul', 'Ujian Creator Check')->firstOrFail();
-        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6}$/', $exam->token);
     }
 
-    public function test_exam_model_generates_unique_token_when_missing(): void
-    {
-        $superadmin = $this->createSuperadmin();
-        $paket = $this->createPaket($superadmin);
 
-        $first = Exam::create([
-            'user_id' => $superadmin->id,
-            'paket_soal_id' => $paket->id,
-            'judul' => 'Exam Auto Token 1',
-            'tanggal_terbit' => now(),
-            'max_peserta' => 20,
-            'timer' => 60,
-            'status' => 'draft',
-            'is_active' => true,
-        ]);
-
-        $second = Exam::create([
-            'user_id' => $superadmin->id,
-            'paket_soal_id' => $paket->id,
-            'judul' => 'Exam Auto Token 2',
-            'tanggal_terbit' => now(),
-            'max_peserta' => 20,
-            'timer' => 60,
-            'status' => 'draft',
-            'is_active' => true,
-        ]);
-
-        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6}$/', $first->token);
-        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6}$/', $second->token);
-        $this->assertNotSame($first->token, $second->token);
-    }
 
     public function test_guru_cannot_manage_superadmin_owned_package_content(): void
     {
@@ -245,7 +214,6 @@ class SuperadminAccessAndExamBuilderTest extends TestCase
             'judul' => 'Ujian Builder',
             'tanggal_terbit' => now(),
             'max_peserta' => 50,
-            'token' => 'BLD123',
             'timer' => 75,
             'status' => 'draft',
             'is_active' => true,

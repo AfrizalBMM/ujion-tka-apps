@@ -50,15 +50,16 @@
                 <label class="mb-1 block font-semibold">Jenjang</label>
                 <select name="jenjang" class="input w-full" required>
                     <option value="" disabled selected>Pilih jenjang yang diampu</option>
-                    <option value="SD" @if(old('jenjang')=='SD') selected @endif>SD</option>
-                    <option value="SMP" @if(old('jenjang')=='SMP') selected @endif>SMP</option>
+                    @foreach(config('ujion.jenjangs') as $jnj)
+                        <option value="{{ $jnj }}" @if(old('jenjang')==$jnj) selected @endif>{{ $jnj }}</option>
+                    @endforeach
                 </select>
             </div>
             <div>
                 <label class="mb-1 block font-semibold">Tingkat</label>
                 <select name="tingkat" class="input w-full" required>
                     <option value="" disabled selected>Pilih kelas utama</option>
-                    @foreach([4,5,6,7,8,9] as $tingkat)
+                    @foreach(config('ujion.tingkats') as $tingkat)
                         <option value="{{ $tingkat }}" @if(old('tingkat')==$tingkat) selected @endif>{{ $tingkat }}</option>
                     @endforeach
                 </select>

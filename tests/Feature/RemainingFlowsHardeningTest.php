@@ -161,6 +161,8 @@ class RemainingFlowsHardeningTest extends TestCase
     public function test_superadmin_can_import_global_questions_from_csv(): void
     {
         $superadmin = $this->createSuperadmin();
+        $jenjang = Jenjang::firstOrCreate(['kode' => 'SMP'], ['nama' => 'SMP', 'urutan' => 2]);
+
         $material = Material::create([
             'jenjang' => 'SMP',
             'curriculum' => 'Merdeka',
@@ -175,13 +177,13 @@ class RemainingFlowsHardeningTest extends TestCase
         ]));
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.global-questions.import'), [
-            'jenjang_id' => $material->jenjang === 'SMP' ? 2 : 1, // using rough static assumption for test
+            'jenjang_id' => $jenjang->id,
             'file' => $file,
         ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('global_questions', [
-            'jenjang_id' => $material->jenjang === 'SMP' ? 2 : 1,
+            'jenjang_id' => $jenjang->id,
             'material_id' => $material->id,
             'question_type' => 'multiple_choice',
             'question_text' => 'Pertanyaan contoh',
@@ -395,7 +397,6 @@ class RemainingFlowsHardeningTest extends TestCase
             'judul' => 'Ujian Aktif',
             'tanggal_terbit' => now(),
             'max_peserta' => 30,
-            'token' => 'DEPEND1234',
             'timer' => 90,
             'status' => 'draft',
             'is_active' => true,
@@ -445,7 +446,6 @@ class RemainingFlowsHardeningTest extends TestCase
             'judul' => 'Ujian Export',
             'tanggal_terbit' => now(),
             'max_peserta' => 30,
-            'token' => 'EXPORT1234',
             'timer' => 90,
             'status' => 'draft',
             'is_active' => true,

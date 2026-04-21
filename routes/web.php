@@ -128,6 +128,7 @@ Route::prefix('superadmin')
         Route::delete('/paket-soal/{paket}', [PaketSoalController::class, 'destroy'])->name('paket-soal.destroy');
         Route::patch('/paket-soal/{paket}/toggle', [PaketSoalController::class, 'toggleAktif'])->name('paket-soal.toggle');
         Route::put('/paket-soal/{paket}/mapel/{mapel}', [SuperadminMapelPaketController::class, 'update'])->name('mapel.update');
+        Route::delete('/paket-soal/{paket}/mapel/{mapel}/soal-all', [SuperadminMapelPaketController::class, 'destroyAllSoals'])->name('mapel.soal.destroy-all');
 
         Route::get('/paket-soal/{paket}/mapel/{mapel}/soal', [SuperadminSoalController::class, 'index'])->name('soal.index');
         Route::get('/paket-soal/{paket}/mapel/{mapel}/soal/create', [SuperadminSoalController::class, 'create'])->name('soal.create');

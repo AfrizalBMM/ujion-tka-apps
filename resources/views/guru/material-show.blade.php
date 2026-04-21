@@ -5,7 +5,7 @@
 @section('content')
 <div class="space-y-6">
     <section class="page-hero">
-        <span class="page-kicker">Materi Detail</span>
+        <span class="page-kicker">Materi Detail &middot; {{ $material->mapel }}</span>
         <h1 class="page-title">{{ $material->subelement }}</h1>
         <p class="page-description">{{ $material->unit }} &middot; {{ $material->sub_unit }}</p>
         <div class="page-actions">
@@ -29,6 +29,10 @@
                 <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
                     <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Jenjang</div>
                     <div class="mt-2 font-semibold">{{ $material->jenjang ?? 'Semua' }}</div>
+                </div>
+                <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+                    <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Mata Pelajaran</div>
+                    <div class="mt-2 font-semibold">{{ $material->mapel }}</div>
                 </div>
                 <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
                     <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Kurikulum</div>

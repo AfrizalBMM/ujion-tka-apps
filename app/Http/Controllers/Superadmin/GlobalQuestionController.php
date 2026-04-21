@@ -22,6 +22,7 @@ class GlobalQuestionController extends Controller
             'search'              => trim((string) $request->query('search', '')),
             'question_type'       => trim((string) $request->query('question_type', '')),
             'status'              => trim((string) $request->query('status', '')),
+            'material_mapel'      => trim((string) $request->query('material_mapel', '')),
             'material_curriculum' => trim((string) $request->query('material_curriculum', '')),
             'jenjang_id'          => $request->query('jenjang_id'),
         ];
@@ -33,6 +34,7 @@ class GlobalQuestionController extends Controller
                         ->orWhere('answer_key', 'like', '%' . $filters['search'] . '%')
                         ->orWhere('explanation', 'like', '%' . $filters['search'] . '%')
                         ->orWhere('reading_passage', 'like', '%' . $filters['search'] . '%')
+                        ->orWhere('material_mapel', 'like', '%' . $filters['search'] . '%')
                         ->orWhere('material_subelement', 'like', '%' . $filters['search'] . '%')
                         ->orWhere('material_unit', 'like', '%' . $filters['search'] . '%')
                         ->orWhere('material_sub_unit', 'like', '%' . $filters['search'] . '%');
@@ -40,6 +42,7 @@ class GlobalQuestionController extends Controller
             })
             ->when(in_array($filters['question_type'], ['multiple_choice', 'short_answer', 'matching'], true), fn ($query) => $query->where('question_type', $filters['question_type']))
             ->when(in_array($filters['status'], ['active', 'draft'], true), fn ($query) => $query->where('is_active', $filters['status'] === 'active'))
+            ->when($filters['material_mapel'] !== '', fn ($query) => $query->where('material_mapel', $filters['material_mapel']))
             ->when($filters['material_curriculum'] !== '', fn ($query) => $query->where('material_curriculum', $filters['material_curriculum']))
             ->when($filters['jenjang_id'], fn ($query) => $query->where('jenjang_id', $filters['jenjang_id']))
             ->latest()
@@ -57,6 +60,7 @@ class GlobalQuestionController extends Controller
             'question_type'       => ['required', 'string', 'max:40'],
             'reading_passage'     => ['nullable', 'string'],
             'question_text'       => ['required', 'string'],
+            'material_mapel'      => ['nullable', 'string', 'max:255'],
             'material_curriculum' => ['nullable', 'string', 'max:255'],
             'material_subelement' => ['nullable', 'string', 'max:255'],
             'material_unit'       => ['nullable', 'string', 'max:255'],
@@ -77,6 +81,7 @@ class GlobalQuestionController extends Controller
             'question_type'       => $validated['question_type'],
             'reading_passage'     => $this->normalizeNullableString($validated['reading_passage'] ?? null),
             'question_text'       => $validated['question_text'],
+            'material_mapel'      => $this->normalizeNullableString($validated['material_mapel'] ?? null),
             'material_curriculum' => $this->normalizeNullableString($validated['material_curriculum'] ?? null),
             'material_subelement' => $this->normalizeNullableString($validated['material_subelement'] ?? null),
             'material_unit'       => $this->normalizeNullableString($validated['material_unit'] ?? null),
@@ -101,7 +106,7 @@ class GlobalQuestionController extends Controller
     public function destroyAll(): RedirectResponse
     {
         $count = GlobalQuestion::count();
-        GlobalQuestion::truncate();
+        GlobalQuestion::query()->delete();
 
         return back()->with('flash', [
             'type'    => 'success',
@@ -116,6 +121,7 @@ class GlobalQuestionController extends Controller
             'question_type'       => ['required', 'string', 'max:40'],
             'reading_passage'     => ['nullable', 'string'],
             'question_text'       => ['required', 'string'],
+            'material_mapel'      => ['nullable', 'string', 'max:255'],
             'material_curriculum' => ['nullable', 'string', 'max:255'],
             'material_subelement' => ['nullable', 'string', 'max:255'],
             'material_unit'       => ['nullable', 'string', 'max:255'],
@@ -136,6 +142,7 @@ class GlobalQuestionController extends Controller
             'question_type'       => $validated['question_type'],
             'reading_passage'     => $this->normalizeNullableString($validated['reading_passage'] ?? null),
             'question_text'       => $validated['question_text'],
+            'material_mapel'      => $this->normalizeNullableString($validated['material_mapel'] ?? null),
             'material_curriculum' => $this->normalizeNullableString($validated['material_curriculum'] ?? null),
             'material_subelement' => $this->normalizeNullableString($validated['material_subelement'] ?? null),
             'material_unit'       => $this->normalizeNullableString($validated['material_unit'] ?? null),
@@ -163,6 +170,7 @@ class GlobalQuestionController extends Controller
             'question_type',
             'reading_passage',
             'question_text',
+            'material_mapel',
             'material_curriculum',
             'material_subelement',
             'material_unit',
@@ -176,8 +184,8 @@ class GlobalQuestionController extends Controller
             'explanation',
             'is_active',
         ], [
-            ['1', 'multiple_choice', 'Bacaan opsional, boleh dikosongkan.', 'Contoh pertanyaan pilihan ganda?', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'Jakarta', 'Bandung', 'Surabaya', 'Medan', '', 'A', 'Pembahasan singkat...', '1'],
-            ['2', 'multiple_choice', '', 'Ibu kota Indonesia adalah...?', 'K-13', 'Literasi', 'Teks Deskripsi', 'Menentukan informasi tersurat', 'Jakarta', 'Bandung', 'Surabaya', 'Bali', '', 'A', '', '1'],
+            ['1', 'multiple_choice', 'Bacaan opsional, boleh dikosongkan.', 'Contoh pertanyaan pilihan ganda?', 'Matematika', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'Jakarta', 'Bandung', 'Surabaya', 'Medan', '', 'A', 'Pembahasan singkat...', '1'],
+            ['2', 'multiple_choice', '', 'Ibu kota Indonesia adalah...?', 'Bahasa Indonesia', 'K-13', 'Literasi', 'Teks Deskripsi', 'Menentukan informasi tersurat', 'Jakarta', 'Bandung', 'Surabaya', 'Bali', '', 'A', '', '1'],
         ]);
     }
 
@@ -187,6 +195,7 @@ class GlobalQuestionController extends Controller
             'jenjang_id',
             'question_type',
             'question_text',
+            'material_mapel',
             'material_curriculum',
             'material_subelement',
             'material_unit',
@@ -202,8 +211,8 @@ class GlobalQuestionController extends Controller
             'explanation',
             'is_active',
         ], [
-            ['1', 'matching', 'Jodohkan kata dengan artinya!', 'Merdeka', 'Literasi', 'Kosakata', 'Makna kata', 'Dinamis', 'Bergerak', 'Statis', 'Diam', 'Eksplisit', 'Jelas/Tersurat', 'Implisit', 'Tersirat', '', '1'],
-            ['2', 'matching', 'Pasangkan bilangan dengan hasil kuadratnya!', 'K-13', 'Numerasi', 'Bilangan', 'Operasi hitung', '2', '4', '3', '9', '4', '16', '5', '25', '', '1'],
+            ['1', 'matching', 'Jodohkan kata dengan artinya!', 'Bahasa Indonesia', 'Merdeka', 'Literasi', 'Kosakata', 'Makna kata', 'Dinamis', 'Bergerak', 'Statis', 'Diam', 'Eksplisit', 'Jelas/Tersurat', 'Implisit', 'Tersirat', '', '1'],
+            ['2', 'matching', 'Pasangkan bilangan dengan hasil kuadratnya!', 'Matematika', 'K-13', 'Numerasi', 'Bilangan', 'Operasi hitung', '2', '4', '3', '9', '4', '16', '5', '25', '', '1'],
         ]);
     }
 
@@ -217,6 +226,7 @@ class GlobalQuestionController extends Controller
     public function importPG(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'jenjang_id' => ['nullable', 'integer', 'exists:jenjangs,id'],
             'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
         ]);
 
@@ -229,54 +239,59 @@ class GlobalQuestionController extends Controller
         $created = 0;
         $skipped = 0;
 
-        foreach ($rows as $row) {
-            $questionText = trim((string) ($row['question_text'] ?? ''));
-            if ($questionText === '') {
-                $skipped++;
-                continue;
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $request, $validated, &$created, &$skipped) {
+            foreach ($rows as $row) {
+                $questionText = trim((string) ($row['question_text'] ?? ''));
+                if ($questionText === '') {
+                    $skipped++;
+                    continue;
+                }
+
+                $rawType = SpreadsheetTable::normalizeHeader((string) ($row['question_type'] ?? ''));
+                $questionType = match ($rawType) {
+                    '', 'multiple_choice', 'pilihan_ganda', 'pg' => 'multiple_choice',
+                    'short_answer', 'jawaban_singkat', 'singkat'  => 'short_answer',
+                    default                                        => null,
+                };
+
+                if ($questionType === null) {
+                    $skipped++;
+                    continue;
+                }
+
+                // Ambil jenjang_id dari file jika ada, jika tidak ada pakai input fallback
+                $jenjangId = isset($row['jenjang_id']) && trim((string)$row['jenjang_id']) !== ''
+                    ? (int) $row['jenjang_id']
+                    : ($validated['jenjang_id'] ?? null);
+                if (!$jenjangId || !\App\Models\Jenjang::find($jenjangId)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $options = $this->extractOptionsFromImportRow($row);
+                $readingPassage = $this->normalizeNullableString($row['reading_passage'] ?? $row['bacaan'] ?? null);
+
+                GlobalQuestion::create([
+                    'jenjang_id'          => $jenjangId,
+                    'material_id'         => $this->resolveMaterialIdFromRow($row),
+                    'question_type'       => $questionType,
+                    'reading_passage'     => $readingPassage,
+                    'question_text'       => $questionText,
+                    'material_mapel'      => $this->normalizeNullableString($row['material_mapel'] ?? $row['mapel'] ?? null),
+                    'material_curriculum' => $this->normalizeNullableString($row['material_curriculum'] ?? $row['curriculum'] ?? null),
+                    'material_subelement' => $this->normalizeNullableString($row['material_subelement'] ?? $row['subelement'] ?? null),
+                    'material_unit'       => $this->normalizeNullableString($row['material_unit'] ?? $row['unit'] ?? null),
+                    'material_sub_unit'   => $this->normalizeNullableString($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null),
+                    'options'             => $options,
+                    'answer_key'          => $this->normalizeAnswerKey($questionType, $row['answer_key'] ?? null, $options),
+                    'explanation'         => trim((string) ($row['explanation'] ?? '')) ?: null,
+                    'is_active'           => $this->toBoolean($row['is_active'] ?? true),
+                    'created_by'          => $request->user()?->id,
+                ]);
+
+                $created++;
             }
-
-            $rawType = SpreadsheetTable::normalizeHeader((string) ($row['question_type'] ?? ''));
-            $questionType = match ($rawType) {
-                '', 'multiple_choice', 'pilihan_ganda', 'pg' => 'multiple_choice',
-                'short_answer', 'jawaban_singkat', 'singkat'  => 'short_answer',
-                default                                        => null,
-            };
-
-            if ($questionType === null) {
-                $skipped++;
-                continue;
-            }
-
-            // Ambil jenjang_id dari file jika ada, wajib jika import dari semua jenjang
-            $jenjangId = isset($row['jenjang_id']) ? (int) $row['jenjang_id'] : null;
-            if (!$jenjangId || !\App\Models\Jenjang::find($jenjangId)) {
-                $skipped++;
-                continue;
-            }
-
-            $options = $this->extractOptionsFromImportRow($row);
-            $readingPassage = $this->normalizeNullableString($row['reading_passage'] ?? $row['bacaan'] ?? null);
-
-            GlobalQuestion::create([
-                'jenjang_id'          => $jenjangId,
-                'material_id'         => $this->resolveMaterialIdFromRow($row),
-                'question_type'       => $questionType,
-                'reading_passage'     => $readingPassage,
-                'question_text'       => $questionText,
-                'material_curriculum' => $this->normalizeNullableString($row['material_curriculum'] ?? $row['curriculum'] ?? null),
-                'material_subelement' => $this->normalizeNullableString($row['material_subelement'] ?? $row['subelement'] ?? null),
-                'material_unit'       => $this->normalizeNullableString($row['material_unit'] ?? $row['unit'] ?? null),
-                'material_sub_unit'   => $this->normalizeNullableString($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null),
-                'options'             => $options,
-                'answer_key'          => $this->normalizeAnswerKey($questionType, $row['answer_key'] ?? null, $options),
-                'explanation'         => trim((string) ($row['explanation'] ?? '')) ?: null,
-                'is_active'           => $this->toBoolean($row['is_active'] ?? true),
-                'created_by'          => $request->user()?->id,
-            ]);
-
-            $created++;
-        }
+        });
 
         return back()->with('flash', [
             'type'    => $created > 0 ? 'success' : 'warning',
@@ -300,47 +315,50 @@ class GlobalQuestionController extends Controller
         $created = 0;
         $skipped = 0;
 
-        foreach ($rows as $row) {
-            $questionText = trim((string) ($row['question_text'] ?? ''));
-            if ($questionText === '') {
-                $skipped++;
-                continue;
-            }
-
-            // Bangun pasangan dari kolom pair_1_left, pair_1_right, pair_2_left, dst.
-            $pairs = [];
-            for ($i = 1; $i <= 8; $i++) {
-                $left  = $this->normalizeNullableString($row["pair_{$i}_left"] ?? null);
-                $right = $this->normalizeNullableString($row["pair_{$i}_right"] ?? null);
-                if ($left !== null && $right !== null) {
-                    $pairs[] = ['left' => $left, 'right' => $right];
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $validated, $request, &$created, &$skipped) {
+            foreach ($rows as $row) {
+                $questionText = trim((string) ($row['question_text'] ?? ''));
+                if ($questionText === '') {
+                    $skipped++;
+                    continue;
                 }
+
+                // Bangun pasangan dari kolom pair_1_left, pair_1_right, pair_2_left, dst.
+                $pairs = [];
+                for ($i = 1; $i <= 8; $i++) {
+                    $left  = $this->normalizeNullableString($row["pair_{$i}_left"] ?? null);
+                    $right = $this->normalizeNullableString($row["pair_{$i}_right"] ?? null);
+                    if ($left !== null && $right !== null) {
+                        $pairs[] = ['left' => $left, 'right' => $right];
+                    }
+                }
+
+                if (empty($pairs)) {
+                    $skipped++;
+                    continue;
+                }
+
+                GlobalQuestion::create([
+                    'jenjang_id'          => $validated['jenjang_id'],
+                    'material_id'         => $this->resolveMaterialIdFromRow($row),
+                    'question_type'       => 'matching',
+                    'reading_passage'     => null,
+                    'question_text'       => $questionText,
+                    'material_mapel'      => $this->normalizeNullableString($row['material_mapel'] ?? $row['mapel'] ?? null),
+                    'material_curriculum' => $this->normalizeNullableString($row['material_curriculum'] ?? $row['curriculum'] ?? null),
+                    'material_subelement' => $this->normalizeNullableString($row['material_subelement'] ?? $row['subelement'] ?? null),
+                    'material_unit'       => $this->normalizeNullableString($row['material_unit'] ?? $row['unit'] ?? null),
+                    'material_sub_unit'   => $this->normalizeNullableString($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null),
+                    'options'             => $pairs,
+                    'answer_key'          => null,
+                    'explanation'         => trim((string) ($row['explanation'] ?? '')) ?: null,
+                    'is_active'           => $this->toBoolean($row['is_active'] ?? true),
+                    'created_by'          => $request->user()?->id,
+                ]);
+
+                $created++;
             }
-
-            if (empty($pairs)) {
-                $skipped++;
-                continue;
-            }
-
-            GlobalQuestion::create([
-                'jenjang_id'          => $validated['jenjang_id'],
-                'material_id'         => $this->resolveMaterialIdFromRow($row),
-                'question_type'       => 'matching',
-                'reading_passage'     => null,
-                'question_text'       => $questionText,
-                'material_curriculum' => $this->normalizeNullableString($row['material_curriculum'] ?? $row['curriculum'] ?? null),
-                'material_subelement' => $this->normalizeNullableString($row['material_subelement'] ?? $row['subelement'] ?? null),
-                'material_unit'       => $this->normalizeNullableString($row['material_unit'] ?? $row['unit'] ?? null),
-                'material_sub_unit'   => $this->normalizeNullableString($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null),
-                'options'             => $pairs,
-                'answer_key'          => null,
-                'explanation'         => trim((string) ($row['explanation'] ?? '')) ?: null,
-                'is_active'           => $this->toBoolean($row['is_active'] ?? true),
-                'created_by'          => $request->user()?->id,
-            ]);
-
-            $created++;
-        }
+        });
 
         return back()->with('flash', [
             'type'    => $created > 0 ? 'success' : 'warning',
@@ -433,16 +451,18 @@ class GlobalQuestionController extends Controller
         }
 
         $curriculum = $this->normalizeNullableString($row['material_curriculum'] ?? $row['curriculum'] ?? null);
+        $mapel      = $this->normalizeNullableString($row['material_mapel'] ?? $row['mapel'] ?? null);
         $subelement = $this->normalizeNullableString($row['material_subelement'] ?? $row['subelement'] ?? null);
         $unit       = $this->normalizeNullableString($row['material_unit'] ?? $row['unit'] ?? null);
         $subUnit    = $this->normalizeNullableString($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null);
 
-        if (! $curriculum || ! $subelement || ! $unit || ! $subUnit) {
+        if (! $curriculum || ! $mapel || ! $subelement || ! $unit || ! $subUnit) {
             return null;
         }
 
         return Material::query()
             ->where('curriculum', $curriculum)
+            ->where('mapel', $mapel)
             ->where('subelement', $subelement)
             ->where('unit', $unit)
             ->where('sub_unit', $subUnit)
@@ -456,16 +476,18 @@ class GlobalQuestionController extends Controller
         }
 
         $curriculum = $this->normalizeNullableString($attributes['material_curriculum'] ?? null);
+        $mapel      = $this->normalizeNullableString($attributes['material_mapel'] ?? null);
         $subelement = $this->normalizeNullableString($attributes['material_subelement'] ?? null);
         $unit       = $this->normalizeNullableString($attributes['material_unit'] ?? null);
         $subUnit    = $this->normalizeNullableString($attributes['material_sub_unit'] ?? null);
 
-        if (! $curriculum || ! $subelement || ! $unit || ! $subUnit) {
+        if (! $curriculum || ! $mapel || ! $subelement || ! $unit || ! $subUnit) {
             return null;
         }
 
         return Material::query()
             ->where('curriculum', $curriculum)
+            ->where('mapel', $mapel)
             ->where('subelement', $subelement)
             ->where('unit', $unit)
             ->where('sub_unit', $subUnit)

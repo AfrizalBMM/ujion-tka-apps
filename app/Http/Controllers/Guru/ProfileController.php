@@ -21,8 +21,8 @@ class ProfileController extends Controller {
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'jenjang' => 'required|in:SD,SMP',
-            'tingkat' => 'required|string|max:10',
+            'jenjang' => 'required|in:' . implode(',', config('ujion.jenjangs')),
+            'tingkat' => 'required|in:' . implode(',', config('ujion.tingkats')),
             'satuan_pendidikan' => 'required|string|max:255',
             'no_wa' => ['required', 'string', 'max:20', Rule::unique('users', 'no_wa')->ignore($user->id)],
             'avatar' => 'nullable|image|max:2048',

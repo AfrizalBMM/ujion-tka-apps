@@ -4,10 +4,11 @@
 
 @section('content')
 @php
-    $contextJenjang = in_array($filter, ['SD', 'SMP'], true) ? $filter : null;
+    $contextJenjang = in_array($filter, ['SD', 'SMP', 'SMA'], true) ? $filter : null;
     $contextTitle = match ($contextJenjang) {
         'SD' => 'Materi SD',
         'SMP' => 'Materi SMP',
+        'SMA' => 'Materi SMA',
         default => 'Semua Jenjang',
     };
     $templateLabel = $contextJenjang ? "Download Template {$contextJenjang}" : 'Download Template Excel';
@@ -31,7 +32,7 @@
                     @if ($contextJenjang)
                         Form tambah data, template, dan import di halaman ini diselaraskan ke jenjang {{ $contextJenjang }} agar tidak mudah tertukar.
                     @else
-                        Pilih submenu `SD` atau `SMP` dari sidebar jika ingin fokus input materi per jenjang tertentu.
+                        Pilih submenu `SD`, `SMP`, atau `SMA` dari sidebar jika ingin fokus input materi per jenjang tertentu.
                     @endif
                 </p>
             </div>
@@ -45,12 +46,22 @@
     </div>
 
     <div class="card">
-        <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
+        {{-- ─── Header Row ─── --}}
+        <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center gap-3">
                 <div class="font-bold text-lg">Daftar Materi</div>
+                @php
+                    $activeFilterCount = collect([$mapel, $curriculum, $subelement, $unit, $subUnit, ($search !== '' ? $search : null)])->filter()->count();
+                @endphp
+                @if ($activeFilterCount > 0)
+                    <span class="badge-info text-xs">{{ $activeFilterCount }} filter aktif</span>
+                    <a href="{{ route('superadmin.materials.index', array_filter(['jenjang' => $filter])) }}"
+                       class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-xmark"></i> Reset
+                    </a>
+                @endif
             </div>
             <div class="flex flex-col gap-2 sm:flex-row items-center">
-                <!-- Hapus Semua Materi Button -->
                 @if(count($materials) > 0)
                 <form method="POST" action="{{ route('superadmin.materials.destroyAll') }}" onsubmit="return false;" id="delete-all-materials-form">
                     @csrf
@@ -70,6 +81,134 @@
             </div>
         </div>
 
+        {{-- ─── Filter & Search Bar ─── --}}
+        <form method="GET" action="{{ route('superadmin.materials.index') }}" id="material-filter-form"
+              class="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-ssd-autosubmit>
+            @if ($filter)
+                <input type="hidden" name="jenjang" value="{{ $filter }}">
+            @endif
+
+            {{-- Mata Pelajaran --}}
+            <div class="flex flex-col gap-1 min-w-[160px]">
+                <label class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Mata Pelajaran</label>
+                <div class="ssd-wrap">
+                    <input type="hidden" name="mapel" value="{{ $mapel ?? '' }}">
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label truncate">{{ $mapel ?: 'Semua' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option" data-value="">Semua</div>
+                            @foreach ($mapels as $m)
+                                <div class="ssd-option{{ $mapel === $m ? ' ssd-selected' : '' }}" data-value="{{ $m }}">{{ $m }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Kurikulum --}}
+            <div class="flex flex-col gap-1 min-w-[140px]">
+                <label class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Kurikulum</label>
+                <div class="ssd-wrap">
+                    <input type="hidden" name="curriculum" value="{{ $curriculum ?? '' }}">
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label truncate">{{ $curriculum ?: 'Semua' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option" data-value="">Semua</div>
+                            @foreach ($curriculums as $c)
+                                <div class="ssd-option{{ $curriculum === $c ? ' ssd-selected' : '' }}" data-value="{{ $c }}">{{ $c }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Subelemen --}}
+            <div class="flex flex-col gap-1 min-w-[180px]">
+                <label class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Subelemen</label>
+                <div class="ssd-wrap">
+                    <input type="hidden" name="subelement" value="{{ $subelement ?? '' }}">
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label truncate">{{ $subelement ? Str::limit($subelement, 26) : 'Semua' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari subelemen..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option" data-value="">Semua</div>
+                            @foreach ($subelements as $se)
+                                <div class="ssd-option{{ $subelement === $se ? ' ssd-selected' : '' }}" data-value="{{ $se }}">{{ $se }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Unit --}}
+            <div class="flex flex-col gap-1 min-w-[200px]">
+                <label class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Unit / Bab</label>
+                <div class="ssd-wrap">
+                    <input type="hidden" name="unit" value="{{ $unit ?? '' }}">
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label truncate">{{ $unit ? Str::limit($unit, 26) : 'Semua' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari unit..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option" data-value="">Semua</div>
+                            @foreach ($units as $u)
+                                <div class="ssd-option{{ $unit === $u ? ' ssd-selected' : '' }}" data-value="{{ $u }}">{{ $u }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Sub Unit --}}
+            <div class="flex flex-col gap-1 min-w-[220px]">
+                <label class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Sub Unit</label>
+                <div class="ssd-wrap">
+                    <input type="hidden" name="sub_unit" value="{{ $subUnit ?? '' }}">
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label truncate">{{ $subUnit ? Str::limit($subUnit, 26) : 'Semua' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari sub unit..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option" data-value="">Semua</div>
+                            @foreach ($subUnits as $su)
+                                <div class="ssd-option{{ $subUnit === $su ? ' ssd-selected' : '' }}" data-value="{{ $su }}">{{ $su }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Search --}}
+            <div class="flex flex-col gap-1 flex-1 min-w-[200px]">
+                <label class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Cari Materi</label>
+                <div class="relative flex items-center">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 text-muted text-xs pointer-events-none"></i>
+                    <input type="text" name="search" value="{{ $search }}"
+                           placeholder="Mapel, Subelemen, unit..."
+                           class="input pl-8 text-sm w-full">
+                    <button type="submit" class="ml-2 btn-primary px-4 py-2 text-sm whitespace-nowrap">
+                        Cari
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        {{-- ─── List ─── --}}
         <div class="grid grid-cols-1 gap-3">
             @if(count($materials) > 0)
             @foreach ($materials as $m)
@@ -77,6 +216,9 @@
                     <div>
                         <div class="flex items-center gap-2 mb-1">
                             <span class="badge-info text-[10px]">{{ $m->curriculum }}</span>
+                            @if($m->mapel)
+                                <span class="badge-primary bg-blue-100 text-blue-700 text-[10px]">{{ $m->mapel }}</span>
+                            @endif
                             @if($m->jenjang)
                                 <span class="badge-warning text-[10px]">{{ $m->jenjang }}</span>
                             @endif
@@ -84,7 +226,7 @@
                         </div>
                         <div class="font-bold text-slate-800 dark:text-slate-200">{{ $m->subelement }}</div>
                         <div class="mt-1 text-sm text-textSecondary dark:text-slate-400">
-                            <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $m->unit }} 
+                            <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $m->unit }}
                             <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $m->sub_unit }}
                         </div>
                     </div>
@@ -99,12 +241,23 @@
             @else
                 <div class="text-center py-20 border-2 border-dashed rounded-xl">
                     <i class="fa-solid fa-book-open text-5xl text-slate-100 mb-4 block"></i>
-                    <span class="text-muted italic">Belum ada kurikulum/materi yang diinput.</span>
+                    @if($activeFilterCount > 0)
+                        <span class="text-muted italic">Tidak ada materi yang cocok dengan filter yang dipilih.</span>
+                        <div class="mt-3">
+                            <a href="{{ route('superadmin.materials.index', array_filter(['jenjang' => $filter])) }}"
+                               class="btn-secondary text-sm">
+                                <i class="fa-solid fa-rotate-left"></i> Reset Filter
+                            </a>
+                        </div>
+                    @else
+                        <span class="text-muted italic">Belum ada kurikulum/materi yang diinput.</span>
+                    @endif
                 </div>
             @endif
         </div>
     </div>
 </div>
+
 
 <div id="material-import-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 p-4">
     <div class="w-full max-w-xl rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-modal">
@@ -133,7 +286,7 @@
                     @if ($contextJenjang)
                         Template dan import akan mengutamakan jenjang {{ $contextJenjang }}.
                     @else
-                        Gunakan kolom `jenjang` di file Excel untuk membedakan materi SD dan SMP.
+                        Gunakan kolom `jenjang` di file Excel untuk membedakan materi SD, SMP, dan SMA.
                     @endif
                 </p>
                 <a class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800" href="{{ route('superadmin.materials.template', array_filter(['jenjang' => $contextJenjang])) }}">
@@ -168,6 +321,7 @@
                     <option value="" @selected(! $contextJenjang)>Semua Jenjang</option>
                     <option value="SD" @selected($contextJenjang === 'SD')>SD</option>
                     <option value="SMP" @selected($contextJenjang === 'SMP')>SMP</option>
+                    <option value="SMA" @selected($contextJenjang === 'SMA')>SMA</option>
                 </select>
                 <p class="mt-1 text-[10px] text-muted italic">
                     @if ($contextJenjang)
@@ -186,8 +340,12 @@
                     </select>
                 </div>
                 <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mata Pelajaran</label>
+                    <input class="input mt-1" name="mapel" required placeholder="E.g: Bahasa Indonesia / Matematika">
+                </div>
+                <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Subelemen</label>
-                    <input class="input mt-1" name="subelement" required placeholder="E.g: Akidah Akhlak">
+                    <input class="input mt-1" name="subelement" required placeholder="E.g: Literasi">
                 </div>
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Unit / Bab</label>
@@ -213,43 +371,30 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // ── Modals ───────────────────────────────────────────────────────
     const modals = {
         import: document.getElementById('material-import-modal'),
         create: document.getElementById('material-create-modal'),
     };
 
-    const closeModal = (modal) => {
-        if (!modal) return;
-        modal.classList.add('hidden');
-    };
-
-    const openModal = (modal) => {
-        if (!modal) return;
-        modal.classList.remove('hidden');
-    };
+    const closeModal = (modal) => { if (!modal) return; modal.classList.add('hidden'); };
+    const openModal  = (modal) => { if (!modal) return; modal.classList.remove('hidden'); };
 
     document.querySelectorAll('[data-open-material-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            openModal(modals[button.dataset.openMaterialModal]);
-        });
+        button.addEventListener('click', () => openModal(modals[button.dataset.openMaterialModal]));
     });
 
     document.querySelectorAll('[data-close-material-modal]').forEach((button) => {
         button.addEventListener('click', () => {
-            const modal = button.closest('#material-import-modal, #material-create-modal');
-            closeModal(modal);
+            closeModal(button.closest('#material-import-modal, #material-create-modal'));
         });
     });
 
     Object.values(modals).forEach((modal) => {
         if (!modal) return;
-
-        modal.addEventListener('click', (event) => {
-            if (event.target === modal) {
-                closeModal(modal);
-            }
-        });
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(modal); });
     });
 });
 </script>
 @endsection
+

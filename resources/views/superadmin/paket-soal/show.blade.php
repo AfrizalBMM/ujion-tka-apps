@@ -26,31 +26,70 @@
                            class="btn-primary px-4 py-2 text-xs">
                             <i class="fa-solid fa-pen-to-square mr-1.5"></i>Buat Manual
                         </a>
-                        <a href="{{ route('superadmin.soal.bank-builder', [$paket, $mapel]) }}"
+                        @php
+                            $bankBuilderUrl = route('superadmin.soal.bank-builder', [$paket, $mapel])
+                                . '?' . http_build_query([
+                                    'jenjang_id'      => $paket->jenjang_id,
+                                    'material_mapel'  => str($mapel->nama_mapel)->headline()->toString(),
+                                ]);
+                        @endphp
+                        <a href="{{ $bankBuilderUrl }}"
                            class="btn-secondary px-4 py-2 text-xs">
                             <i class="fa-solid fa-layer-group mr-1.5"></i>Dari Bank Soal
                         </a>
                     </div>
                 </div>
-                <form class="grid gap-3 rounded-[24px] border border-slate-200/80 bg-slate-50/70 p-4 md:grid-cols-3 dark:border-slate-800 dark:bg-slate-900/60" method="POST" action="{{ route('superadmin.mapel.update', [$paket, $mapel]) }}">
-                    @csrf
-                    @method('PUT')
-                    <div class="input-group">
-                        <label class="text-[11px] font-bold uppercase tracking-[0.22em] text-textSecondary">Jumlah Soal</label>
-                        <input type="number" name="jumlah_soal" class="input" value="{{ old('jumlah_soal', $mapel->jumlah_soal) }}" min="1" max="200" required>
-                    </div>
-                    <div class="input-group">
-                        <label class="text-[11px] font-bold uppercase tracking-[0.22em] text-textSecondary">Durasi (menit)</label>
-                        <input type="number" name="durasi_menit" class="input" value="{{ old('durasi_menit', $mapel->durasi_menit) }}" min="1" max="600" required>
-                    </div>
-                    <div class="input-group">
-                        <label class="text-[11px] font-bold uppercase tracking-[0.22em] text-textSecondary">Urutan</label>
-                        <input type="number" name="urutan" class="input" value="{{ old('urutan', $mapel->urutan) }}" min="1" max="10" required>
-                    </div>
-                    <div class="md:col-span-3">
-                        <button class="btn-secondary px-4 py-2 text-xs" type="submit">Simpan Konfigurasi</button>
-                    </div>
-                </form>
+                {{-- Container tombol: flex row berisi submit konfigurasi + form hapus sejajar --}}
+                <div class="rounded-[24px] border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60 space-y-3">
+
+                    <form id="config-form-{{ $mapel->id }}"
+                          method="POST"
+                          action="{{ route('superadmin.mapel.update', [$paket, $mapel]) }}">
+                        @csrf
+                        @method('PUT')
+                        <div class="grid gap-3 md:grid-cols-3">
+                            <div class="input-group">
+                                <label class="text-[11px] font-bold uppercase tracking-[0.22em] text-textSecondary">Jumlah Soal</label>
+                                <input type="number" name="jumlah_soal" class="input" value="{{ old('jumlah_soal', $mapel->jumlah_soal) }}" min="1" max="200" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="text-[11px] font-bold uppercase tracking-[0.22em] text-textSecondary">Durasi (menit)</label>
+                                <input type="number" name="durasi_menit" class="input" value="{{ old('durasi_menit', $mapel->durasi_menit) }}" min="1" max="600" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="text-[11px] font-bold uppercase tracking-[0.22em] text-textSecondary">Urutan</label>
+                                <input type="number" name="urutan" class="input" value="{{ old('urutan', $mapel->urutan) }}" min="1" max="10" required>
+                            </div>
+                        </div>
+
+                        {{-- Baris aksi --}}
+                        <div class="mt-3 flex items-center gap-3">
+                            <button class="btn-secondary px-4 py-2 text-xs" type="submit">Simpan Konfigurasi</button>
+
+                            {{-- Form hapus di-inlined di sini secara visual lewat flex, tapi form-nya berdiri sendiri di bawah --}}
+                            @if($mapel->soals->count() > 0)
+                                {{-- Tombol ini punya form= agar terhubung ke form hapus di bawah --}}
+                                {{-- data-confirm langsung ada di sini karena ui.js cek trigger.closest('form') --}}
+                                {{-- Kita pakai js di @push scripts untuk handle ini --}}
+                                <span id="delete-trigger-wrap-{{ $mapel->id }}"></span>
+                            @endif
+                        </div>
+                    </form>
+
+                    {{-- Form hapus berdiri sendiri di luar form config --}}
+                    @if($mapel->soals->count() > 0)
+                        <form id="delete-form-{{ $mapel->id }}"
+                              method="POST"
+                              action="{{ route('superadmin.mapel.soal.destroy-all', [$paket, $mapel]) }}"
+                              class="hidden"
+                              data-confirm="Hapus semua {{ $mapel->soals->count() }} soal pada {{ $mapel->nama_label }}? Tindakan ini tidak bisa dibatalkan."
+                              data-confirm-title="Hapus Semua Soal">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                    @endif
+
+                </div>
                 <div class="space-y-3">
                     @forelse($mapel->soals->take(5) as $soal)
                         <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
@@ -170,6 +209,52 @@ function copyMapelTokenDetail(token, id) {
         }, 2000);
     });
 }
+
+// Inject tombol "Hapus Semua Soal" ke dalam span placeholder,
+// lalu hubungkan ke form hapus via data-confirm global ui.js
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[id^="delete-trigger-wrap-"]').forEach((wrap) => {
+        const mapelId = wrap.id.replace('delete-trigger-wrap-', '');
+        const deleteForm = document.getElementById('delete-form-' + mapelId);
+        if (!deleteForm) return;
+
+        // Buat tombol visible
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-danger px-4 py-2 text-xs flex items-center gap-1.5';
+        btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Hapus Semua Soal';
+
+        btn.addEventListener('click', () => {
+            // Ambil data konfirmasi dari form hapus
+            const title   = deleteForm.dataset.confirmTitle   || 'Hapus Semua Soal';
+            const message = deleteForm.dataset.confirm         || 'Yakin hapus semua soal?';
+
+            // Buka global confirm modal
+            const modal      = document.querySelector('[data-confirm-modal]');
+            const titleEl    = modal?.querySelector('[data-confirm-modal-title]');
+            const messageEl  = modal?.querySelector('[data-confirm-modal-message]');
+            const confirmBtn = modal?.querySelector('[data-confirm-modal-confirm]');
+
+            if (!modal) { deleteForm.submit(); return; }
+
+            if (titleEl)   titleEl.textContent   = title;
+            if (messageEl) messageEl.textContent  = message;
+
+            // Satu kali event: on confirm, submit form hapus
+            const handler = () => {
+                deleteForm.submit();
+                confirmBtn.removeEventListener('click', handler);
+            };
+            confirmBtn.addEventListener('click', handler);
+
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            confirmBtn?.focus?.();
+        });
+
+        wrap.appendChild(btn);
+    });
+});
 </script>
 @endpush
 @endsection

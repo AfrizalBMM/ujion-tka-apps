@@ -93,7 +93,7 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
 ### Jalur pendukung admin dan kompatibilitas
 
 - `global_questions` sebagai bank soal global resmi
-- `global_questions` sekarang menyimpan snapshot materi (`material_curriculum`, `material_subelement`, `material_unit`, `material_sub_unit`) selain `material_id`
+- `global_questions` sekarang menyimpan snapshot materi (`material_mapel`, `material_curriculum`, `material_subelement`, `material_unit`, `material_sub_unit`) selain `material_id`
 - `questions` sebagai snapshot soal builder ujian admin
 - `exam_question` sebagai pivot relasi ujian ke snapshot soal
 - `participants` dan `participant_answers` masih ada untuk kompatibilitas modul lama tertentu
@@ -112,7 +112,7 @@ Platform ujian terintegrasi berbasis Laravel untuk `superadmin`, `guru/operator`
     - **Teks Bacaan (Reading Passage)** opsional untuk soal Pilihan Ganda
     - **Dukungan Soal Menjodohkan (Matching)** dengan struktur pasangan kiri-kanan
     - **Split Import**: Pemisahan alur import dan template untuk Pilihan Ganda vs Menjodohkan
-    - Picker materi bertingkat dari `curriculum` sampai `sub_unit`
+    - Picker materi bertingkat dari `mapel`, `curriculum` sampai `sub_unit`
 - **Bank Builder Paket**: Integrasi langsung untuk memasukkan soal dari bank global ke paket ujian menggunakan UI seleksi terfilter
 - Builder ujian admin berbasis `exam_question`
 - Analisis ujian dengan ranking, distribusi nilai, export CSV, dan print
@@ -211,3 +211,70 @@ php artisan test
 
 - Tabel legacy belum dihapus karena masih dipakai sebagian flow admin
 - Titik refactor terbesar berikutnya adalah memutus ketergantungan builder/admin dari schema lama `questions`, `participants`, dan `participant_answers`
+
+---
+
+## Riwayat Perubahan
+
+### Sesi 2026-04-21 — Bank Builder, Paket Soal & UI Polish
+
+#### 1. Hapus Semua Soal per Mapel (Paket Soal Detail)
+
+- Tambah route `DELETE /paket-soal/{paket}/mapel/{mapel}/soal-all` → `superadmin.mapel.soal.destroy-all`
+- Tambah method `destroyAllSoals()` di `MapelPaketController` — menghapus semua soal beserta `pilihan_jawabans` dan `pasangan_menjodohkans` secara cascade
+- Tombol **Hapus Semua Soal** ditampilkan sejajar dengan **Simpan Konfigurasi** hanya jika mapel sudah punya soal
+- Konfirmasi menggunakan global confirm modal (bukan `window.confirm()` native)
+- Perbaikan nested form: form hapus dipisah secara DOM dari form konfigurasi agar tidak ter-intercept browser
+
+#### 2. Bank Builder — Quota Enforcement
+
+- Sisa slot dihitung di server: `$slotSisa = $mapel->jumlah_soal - $mapel->soals()->count()`
+- Variabel `SLOT_SISA` diteruskan ke JavaScript sebagai konstanta
+- Saat jumlah soal yang dipilih mencapai `SLOT_SISA`, semua checkbox yang belum dipilih otomatis **disabled** dan card menjadi semi-transparan (opacity 40%)
+- Unchecking salah satu soal langsung mengaktifkan kembali slot yang tersedia
+- Fitur **Pilih Semua** dibatasi hanya memilih sebanyak slot yang tersisa
+- Footer sticky menampilkan counter "sisa slot: X" yang diperbarui secara real-time
+
+#### 3. Bank Builder — Preview Modal (Checkout)
+
+- Tombol submit langsung diganti dengan **Preview & Masukkan**
+- Klik → modal preview terbuka (tidak langsung submit)
+- Modal menampilkan:
+  - Nama mapel dan paket
+  - Jumlah soal yang akan ditambahkan
+  - Peringatan amber jika jumlah melebihi kuota
+  - Daftar soal bernomor dengan badge tipe (Pilihan Ganda / Menjodohkan) dan cuplikan pertanyaan
+- Tombol **Kembali Pilih** menutup modal tanpa reset pilihan
+- Tombol **Konfirmasi & Import** menonaktifkan diri sendiri (loading state) lalu submit form
+
+#### 4. Tombol Hapus pada Halaman `paket-soal/show.blade.php`
+
+- Navigasi dari halaman paket-soal detail ke bank builder otomatis membawa filter `jenjang_id` dan `material_mapel` dari card mapel yang diklik
+- Implementasi **auto-filter**: URL bank builder dibangun dengan `http_build_query` sehingga filter langsung aktif saat halaman dibuka
+
+#### 5. Dropdown Kebab Menu — Paket Soal Index
+
+- Kolom Aksi yang sebelumnya memiliki 4 tombol flat (Detail, Edit, Toggle, Hapus) diganti dengan satu tombol ikon **⋮** (titik tiga vertikal)
+- Klik ikon → dropdown muncul dengan daftar aksi:
+  - **Detail** — navigasi ke halaman detail
+  - **Edit** — navigasi ke form edit
+  - **Aktifkan / Nonaktifkan** — submit PATCH, icon berubah sesuai status
+  - *separator*
+  - **Hapus** — submit DELETE dengan global confirm modal
+- Dropdown menutup otomatis saat: klik di luar, klik item lain, atau tekan `ESC`
+
+#### 6. Global Infrastructure
+
+- Tambah `@stack('scripts')` sebelum `</body>` pada `layouts/superadmin.blade.php` — sebelumnya semua `@push('scripts')` di child views tidak pernah dirender
+- JS inject pattern untuk tombol hapus: tombol dibuat secara DOM via JavaScript dan disisipkan ke elemen `<span>` placeholder di dalam Blade, menghindari kebutuhan nested form
+
+#### File yang diubah
+
+| File | Perubahan |
+|---|---|
+| `routes/web.php` | Tambah route `DELETE mapel.soal.destroy-all` |
+| `MapelPaketController.php` | Tambah method `destroyAllSoals()` |
+| `paket-soal/show.blade.php` | Form hapus semua soal, JS inject konfirmasi global |
+| `paket-soal/index.blade.php` | Dropdown kebab menu kolom aksi |
+| `soal/bank-builder.blade.php` | Quota enforcement, preview modal checkout |
+| `layouts/superadmin.blade.php` | Tambah `@stack('scripts')` |

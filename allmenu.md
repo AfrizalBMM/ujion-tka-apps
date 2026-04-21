@@ -221,6 +221,8 @@ Input filter:
 - `jenjang`
   - default: global + jenjang saya
   - `GLOBAL`
+- `mapel` select ( Mata Pelajaran )
+- `curriculum` select ( K-13 / Merdeka )
 
 Aksi kartu:
 
@@ -584,6 +586,7 @@ Isi:
 Input:
 
 - `jenjang`
+- `mapel` ( Mata Pelajaran )
 - `curriculum`
 - `subelement`
 - `unit`

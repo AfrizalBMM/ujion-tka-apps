@@ -72,20 +72,62 @@
                                 @endif
                             </td>
                             <td>{{ $paket->createdBy?->name ?? '-' }}</td>
-                            <td>
-                                <div class="flex flex-wrap gap-2">
-                                    <a href="{{ route('superadmin.paket-soal.show', $paket) }}" class="btn-secondary px-3 py-2 text-xs">Detail</a>
-                                    <a href="{{ route('superadmin.paket-soal.edit', $paket) }}" class="btn-secondary px-3 py-2 text-xs">Edit</a>
-                                    <form method="POST" action="{{ route('superadmin.paket-soal.toggle', $paket) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button class="btn-primary px-3 py-2 text-xs" type="submit">{{ $paket->is_active ? 'Nonaktifkan' : 'Aktifkan' }}</button>
-                                    </form>
-                                    <form method="POST" action="{{ route('superadmin.paket-soal.destroy', $paket) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn-danger px-3 py-2 text-xs" type="submit">Hapus</button>
-                                    </form>
+                            <td class="text-center">
+                                <div class="relative inline-block" data-dropdown>
+                                    <button type="button"
+                                            class="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-white text-textSecondary hover:border-primary/40 hover:text-primary transition dark:bg-slate-800"
+                                            data-dropdown-trigger
+                                            title="Aksi">
+                                        <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+                                    </button>
+
+                                    <div class="absolute right-0 top-full z-50 mt-1.5 hidden w-44 rounded-2xl border border-border bg-white shadow-xl dark:bg-slate-900"
+                                         data-dropdown-menu>
+                                        <div class="p-1.5 space-y-0.5">
+
+                                            <a href="{{ route('superadmin.paket-soal.show', $paket) }}"
+                                               class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition">
+                                                <i class="fa-solid fa-eye w-4 text-blue-500"></i>
+                                                Detail
+                                            </a>
+
+                                            <a href="{{ route('superadmin.paket-soal.edit', $paket) }}"
+                                               class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition">
+                                                <i class="fa-solid fa-pen-to-square w-4 text-amber-500"></i>
+                                                Edit
+                                            </a>
+
+                                            <form method="POST" action="{{ route('superadmin.paket-soal.toggle', $paket) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit"
+                                                        class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition">
+                                                    @if($paket->is_active)
+                                                        <i class="fa-solid fa-toggle-off w-4 text-slate-400"></i>
+                                                        Nonaktifkan
+                                                    @else
+                                                        <i class="fa-solid fa-toggle-on w-4 text-emerald-500"></i>
+                                                        Aktifkan
+                                                    @endif
+                                                </button>
+                                            </form>
+
+                                            <div class="my-1 border-t border-border"></div>
+
+                                            <form method="POST" action="{{ route('superadmin.paket-soal.destroy', $paket) }}">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        data-confirm="Hapus paket soal '{{ $paket->nama }}'? Semua soal dan mapel di dalamnya akan dihapus permanen."
+                                                        data-confirm-title="Hapus Paket Soal"
+                                                        class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                                                    <i class="fa-solid fa-trash-can w-4"></i>
+                                                    Hapus
+                                                </button>
+                                            </form>
+
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -100,3 +142,30 @@
     </section>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    // Toggle dropdown saat klik trigger
+    document.addEventListener('click', (e) => {
+        const trigger = e.target.closest('[data-dropdown-trigger]');
+        const outside = !e.target.closest('[data-dropdown]');
+
+        // Tutup semua dropdown dulu
+        document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.add('hidden'));
+
+        if (trigger) {
+            const menu = trigger.closest('[data-dropdown]')?.querySelector('[data-dropdown-menu]');
+            if (menu) menu.classList.remove('hidden');
+        }
+    });
+
+    // Tutup saat tekan ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.add('hidden'));
+        }
+    });
+})();
+</script>
+@endpush

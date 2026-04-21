@@ -66,7 +66,6 @@ class SiswaExamSessionTest extends TestCase
             'judul' => 'Ujian Paket',
             'tanggal_terbit' => now(),
             'max_peserta' => 50,
-            'token' => 'TOK123',
             'timer' => 75,
             'status' => 'terbit',
             'is_active' => true,

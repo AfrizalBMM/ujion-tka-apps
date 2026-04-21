@@ -17,13 +17,21 @@
             <div>
                 <label class="text-xs font-bold">Jenjang</label>
                 <select name="jenjang" class="input w-full" required>
-                    <option value="SD" @selected(old('jenjang', $user->jenjang) === 'SD')>SD</option>
-                    <option value="SMP" @selected(old('jenjang', $user->jenjang) === 'SMP')>SMP</option>
+                    @foreach(config('ujion.jenjangs') as $jnj)
+                        <option value="{{ $jnj }}" @selected(old('jenjang', $user->jenjang) === $jnj)>{{ $jnj }}</option>
+                    @endforeach
                 </select>
             </div>
             <div>
                 <label class="text-xs font-bold">Tingkat</label>
-                <input name="tingkat" class="input w-full" value="{{ old('tingkat', $user->tingkat) }}" required>
+                <select name="tingkat" class="input w-full" required>
+                    <option value="" disabled>Pilih Kelas</option>
+                    @foreach(config('ujion.tingkats') as $tingkat)
+                        <option value="{{ $tingkat }}" @selected(old('tingkat', $user->tingkat) == $tingkat)>
+                            Kelas {{ $tingkat }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
             <div>
                 <label class="text-xs font-bold">Satuan</label>

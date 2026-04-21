@@ -30,8 +30,8 @@ class RegisterGuruController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255'],
-            'jenjang' => 'required|in:SD,SMP',
-            'tingkat' => 'required|in:4,5,6,7,8,9',
+            'jenjang' => 'required|in:' . implode(',', config('ujion.jenjangs')),
+            'tingkat' => 'required|in:' . implode(',', config('ujion.tingkats')),
             'satuan_pendidikan' => 'required|string|max:255',
             'no_wa' => ['required', 'string', 'max:20'],
         ]);

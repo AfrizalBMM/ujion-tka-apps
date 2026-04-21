@@ -75,15 +75,16 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'no_wa' => '0812345',
         ]);
 
-        $exam = $this->createExamSuite($guru)['exam'];
+        $suite = $this->createExamSuite($guru);
+        $examMapelToken = $suite['examMapelToken'];
 
         $response = $this->actingAs($guru)->post(route('guru.exams.join'), [
-            'token' => $exam->token,
+            'token' => $examMapelToken->token,
         ]);
 
         $response->assertRedirect(route('siswa.petunjuk'));
         $this->assertDatabaseHas('ujian_sesis', [
-            'exam_id' => $exam->id,
+            'exam_id' => $suite['exam']->id,
             'nomor_wa' => $guru->no_wa,
             'status' => 'menunggu',
         ]);
@@ -268,12 +269,17 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'judul' => 'Ujian Analitik',
             'tanggal_terbit' => now(),
             'max_peserta' => 50,
-            'token' => strtoupper(substr(md5((string) now()->timestamp.$owner->id.rand()), 0, 6)),
             'timer' => 30,
             'status' => 'terbit',
             'is_active' => true,
         ]);
 
-        return compact('exam', 'paket', 'mapel', 'soal');
+        $examMapelToken = \App\Models\ExamMapelToken::create([
+            'exam_id' => $exam->id,
+            'mapel_paket_id' => $mapel->id,
+            'token' => strtoupper(substr(md5((string) now()->timestamp.$owner->id.rand()), 0, 6)),
+        ]);
+
+        return compact('exam', 'paket', 'mapel', 'soal', 'examMapelToken');
     }
 }

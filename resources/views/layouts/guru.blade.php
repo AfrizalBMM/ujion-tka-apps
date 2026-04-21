@@ -20,6 +20,7 @@
       throwOnError: false
   });"></script>
 
+  @include('partials.ssd-style')
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   <script>
   function updateClock() {
@@ -213,6 +214,7 @@
       </div>
     </main>
   </div>
+  @include('partials.ssd')
 </body>
 
 </html>

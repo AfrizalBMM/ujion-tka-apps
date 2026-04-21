@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSoalRequest;
 use App\Http\Requests\UpdateSoalRequest;
 use App\Models\GlobalQuestion;
+use App\Models\Jenjang;
 use App\Models\MapelPaket;
 use App\Models\PaketSoal;
 use App\Models\PasanganMenjodohkan;
@@ -114,6 +115,8 @@ class SoalController extends Controller
         $filters = [
             'search'              => trim((string) $request->query('search', '')),
             'question_type'       => trim((string) $request->query('question_type', '')),
+            'material_mapel'      => trim((string) $request->query('material_mapel', '')),
+            'jenjang_id'          => trim((string) $request->query('jenjang_id', '')),
             'material_curriculum' => trim((string) $request->query('material_curriculum', '')),
             'material_subelement' => trim((string) $request->query('material_subelement', '')),
             'material_unit'       => trim((string) $request->query('material_unit', '')),
@@ -130,6 +133,8 @@ class SoalController extends Controller
                 });
             })
             ->when(in_array($filters['question_type'], ['multiple_choice', 'matching', 'short_answer'], true), fn ($q) => $q->where('question_type', $filters['question_type']))
+            ->when($filters['material_mapel'] !== '', fn ($q) => $q->where('material_mapel', $filters['material_mapel']))
+            ->when($filters['jenjang_id'] !== '', fn ($q) => $q->where('jenjang_id', $filters['jenjang_id']))
             ->when($filters['material_curriculum'] !== '', fn ($q) => $q->where('material_curriculum', $filters['material_curriculum']))
             ->when($filters['material_subelement'] !== '', fn ($q) => $q->where('material_subelement', $filters['material_subelement']))
             ->when($filters['material_unit'] !== '', fn ($q) => $q->where('material_unit', $filters['material_unit']))
@@ -138,28 +143,31 @@ class SoalController extends Controller
             ->get();
 
         // Opsi filter dinamis
-
         $jenjangId = $paket->jenjang_id;
 
+        $jenjangs = Jenjang::orderBy('nama')->get();
+
+        $mapels = GlobalQuestion::where('is_active', true)
+            ->whereNotNull('material_mapel')
+            ->where('material_mapel', '!=', '')
+            ->distinct()->pluck('material_mapel');
+
         $curriculums = GlobalQuestion::where('is_active', true)
-            ->where('jenjang_id', $jenjangId)
             ->whereNotNull('material_curriculum')
             ->distinct()->pluck('material_curriculum');
         $subelements = GlobalQuestion::where('is_active', true)
-            ->where('jenjang_id', $jenjangId)
             ->whereNotNull('material_subelement')
             ->distinct()->pluck('material_subelement');
         $units = GlobalQuestion::where('is_active', true)
-            ->where('jenjang_id', $jenjangId)
             ->whereNotNull('material_unit')
             ->distinct()->pluck('material_unit');
         $subUnits = GlobalQuestion::where('is_active', true)
-            ->where('jenjang_id', $jenjangId)
             ->whereNotNull('material_sub_unit')
             ->distinct()->pluck('material_sub_unit');
 
         return view('superadmin.soal.bank-builder', compact(
             'paket', 'mapel', 'bankSoals', 'filters',
+            'jenjangs', 'mapels',
             'curriculums', 'subelements', 'units', 'subUnits',
             'existingGlobalIds'
         ));

@@ -5,6 +5,9 @@
 @section('content')
 @php
     $optionLabels = range('A', 'Z');
+    $soalCount    = $mapel->soals()->count();
+    $maxSoal      = $mapel->jumlah_soal;
+    $slotSisa     = max(0, $maxSoal - $soalCount);
 @endphp
 
 <div class="space-y-6">
@@ -30,9 +33,9 @@
     {{-- Filter bar --}}
     <section class="card">
         <form method="GET" action="{{ route('superadmin.soal.bank-builder', [$paket, $mapel]) }}"
-              class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
 
-            <div class="sm:col-span-2 lg:col-span-3">
+            <div class="sm:col-span-2 lg:col-span-5">
                 <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Cari Soal / Bacaan</label>
                 <input class="input mt-1" type="text" name="search"
                        value="{{ $filters['search'] }}"
@@ -41,35 +44,106 @@
 
             <div>
                 <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Tipe Soal</label>
-                <select class="input mt-1" name="question_type">
-                    <option value="">Semua Tipe</option>
-                    <option value="multiple_choice" @selected($filters['question_type'] === 'multiple_choice')>Pilihan Ganda</option>
-                    <option value="matching"        @selected($filters['question_type'] === 'matching')>Menjodohkan</option>
-                    <option value="short_answer"    @selected($filters['question_type'] === 'short_answer')>Jawaban Singkat</option>
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="question_type" value="{{ $filters['question_type'] }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ match($filters['question_type']) { 'multiple_choice' => 'Pilihan Ganda', 'matching' => 'Menjodohkan', 'short_answer' => 'Jawaban Singkat', default => 'Semua Tipe' } }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ $filters['question_type'] === '' ? ' ssd-selected' : '' }}" data-value="">Semua Tipe</div>
+                            <div class="ssd-option{{ $filters['question_type'] === 'multiple_choice' ? ' ssd-selected' : '' }}" data-value="multiple_choice">Pilihan Ganda</div>
+                            <div class="ssd-option{{ $filters['question_type'] === 'matching' ? ' ssd-selected' : '' }}" data-value="matching">Menjodohkan</div>
+                            <div class="ssd-option{{ $filters['question_type'] === 'short_answer' ? ' ssd-selected' : '' }}" data-value="short_answer">Jawaban Singkat</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div>
                 <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Kurikulum</label>
-                <select class="input mt-1" name="material_curriculum">
-                    <option value="">Semua Kurikulum</option>
-                    @foreach($curriculums as $c)
-                        <option value="{{ $c }}" @selected($filters['material_curriculum'] === $c)>{{ $c }}</option>
-                    @endforeach
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="material_curriculum" value="{{ $filters['material_curriculum'] }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ $filters['material_curriculum'] ?: 'Semua Kurikulum' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kurikulum..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ $filters['material_curriculum'] === '' ? ' ssd-selected' : '' }}" data-value="">Semua Kurikulum</div>
+                            @foreach($curriculums as $c)
+                                <div class="ssd-option{{ $filters['material_curriculum'] === $c ? ' ssd-selected' : '' }}" data-value="{{ $c }}">{{ $c }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div>
                 <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Sub Unit Materi</label>
-                <select class="input mt-1" name="material_sub_unit">
-                    <option value="">Semua Sub Unit</option>
-                    @foreach($subUnits as $su)
-                        <option value="{{ $su }}" @selected($filters['material_sub_unit'] === $su)>{{ $su }}</option>
-                    @endforeach
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="material_sub_unit" value="{{ $filters['material_sub_unit'] }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ $filters['material_sub_unit'] ? Str::limit($filters['material_sub_unit'], 26) : 'Semua Sub Unit' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari sub unit..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ $filters['material_sub_unit'] === '' ? ' ssd-selected' : '' }}" data-value="">Semua Sub Unit</div>
+                            @foreach($subUnits as $su)
+                                <div class="ssd-option{{ $filters['material_sub_unit'] === $su ? ' ssd-selected' : '' }}" data-value="{{ $su }}">{{ $su }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="flex flex-wrap items-end gap-3 sm:col-span-2 lg:col-span-3">
+            <div>
+                <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Mata Pelajaran</label>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="material_mapel" value="{{ $filters['material_mapel'] }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ $filters['material_mapel'] ?: 'Semua Mapel' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari mapel..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ $filters['material_mapel'] === '' ? ' ssd-selected' : '' }}" data-value="">Semua Mapel</div>
+                            @foreach($mapels as $m)
+                                <div class="ssd-option{{ $filters['material_mapel'] === $m ? ' ssd-selected' : '' }}" data-value="{{ $m }}">{{ $m }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Jenjang</label>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="jenjang_id" value="{{ $filters['jenjang_id'] }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        @php $selJenjang = $jenjangs->firstWhere('id', $filters['jenjang_id']) @endphp
+                        <span class="ssd-label">{{ $selJenjang ? $selJenjang->nama : 'Semua Jenjang' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ $filters['jenjang_id'] === '' ? ' ssd-selected' : '' }}" data-value="">Semua Jenjang</div>
+                            @foreach($jenjangs as $j)
+                                <div class="ssd-option{{ $filters['jenjang_id'] == $j->id ? ' ssd-selected' : '' }}" data-value="{{ $j->id }}">{{ $j->nama }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-end gap-3 sm:col-span-2 lg:col-span-5">
                 <button class="btn-primary" type="submit">
                     <i class="fa-solid fa-filter mr-2"></i> Terapkan Filter
                 </button>
@@ -250,66 +324,166 @@
             </div>
         </section>
 
-        {{-- Sticky Footer submit --}}
+        {{-- Sticky Footer --}}
         <div id="import-footer"
              class="sticky bottom-0 z-40 mt-4 hidden rounded-[20px] border border-blue-200 bg-blue-600 px-6 py-4 shadow-2xl">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="text-white">
                     <span class="text-lg font-bold" id="footer-count">0</span>
                     <span class="ml-1 text-blue-100">soal dipilih</span>
+                    <span class="ml-3 text-xs text-blue-200">(sisa slot: <span id="footer-slot">{{ $slotSisa }}</span>)</span>
                 </div>
                 <div class="flex gap-3">
                     <button type="button" id="deselect-all-btn"
                             class="rounded-xl border border-white/30 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">
                         Batalkan Pilihan
                     </button>
-                    <button type="submit"
+                    <button type="button" id="preview-btn"
                             class="rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-blue-700 shadow-md transition hover:bg-blue-50">
-                        <i class="fa-solid fa-file-import mr-2"></i>
-                        Masukkan ke Paket
+                        <i class="fa-solid fa-eye mr-2"></i>
+                        Preview & Masukkan
                     </button>
                 </div>
             </div>
         </div>
     </form>
+
+    {{-- ── Preview Modal (Checkout) ── --}}
+    <div id="preview-modal"
+         class="fixed inset-0 z-[500] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="w-full max-w-2xl rounded-[24px] bg-white dark:bg-slate-900 shadow-2xl flex flex-col max-h-[90vh]">
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+                <div>
+                    <h3 class="text-lg font-bold">Konfirmasi Import Soal</h3>
+                    <p class="text-xs text-textSecondary mt-0.5">
+                        Mapel: <strong>{{ $mapel->nama_label }}</strong> &middot;
+                        Paket: <strong>{{ $paket->nama }}</strong>
+                    </p>
+                </div>
+                <button type="button" id="close-preview-btn"
+                        class="text-muted hover:text-slate-800 dark:hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            {{-- Summary bar --}}
+            <div class="px-6 py-3 bg-blue-50 dark:bg-blue-900/20 border-b border-border flex items-center justify-between gap-4 text-sm">
+                <div class="flex items-center gap-4">
+                    <span class="font-semibold text-blue-700 dark:text-blue-300">
+                        <i class="fa-solid fa-list-check mr-1.5"></i>
+                        <span id="preview-count">0</span> soal akan ditambahkan
+                    </span>
+                    <span class="text-textSecondary">
+                        Slot tersisa sebelum import: <strong>{{ $slotSisa }}</strong>
+                    </span>
+                </div>
+                <span id="quota-warning"
+                      class="hidden text-xs font-semibold text-amber-600 dark:text-amber-400">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                    Melebihi kuota! Sebagian soal akan dilewati.
+                </span>
+            </div>
+
+            {{-- Daftar soal yang dipilih --}}
+            <div id="preview-list" class="overflow-y-auto flex-1 px-6 py-4 space-y-3">
+                {{-- diisi oleh JS --}}
+            </div>
+
+            {{-- Footer action --}}
+            <div class="px-6 py-4 border-t border-border flex items-center justify-end gap-3">
+                <button type="button" id="cancel-preview-btn"
+                        class="btn-secondary px-5 py-2.5 text-sm">
+                    Kembali Pilih
+                </button>
+                <button type="button" id="confirm-import-btn"
+                        class="btn-primary px-5 py-2.5 text-sm">
+                    <i class="fa-solid fa-file-import mr-2"></i>
+                    Konfirmasi & Import
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const checkboxes   = document.querySelectorAll('.soal-checkbox');
-    const selectAll    = document.getElementById('select-all-checkbox');
-    const footer       = document.getElementById('import-footer');
-    const selectedCountEl  = document.getElementById('selected-count');
-    const footerCountEl    = document.getElementById('footer-count');
-    const deselectBtn  = document.getElementById('deselect-all-btn');
+    const SLOT_SISA   = {{ $slotSisa }}; // sisa slot kosong di mapel ini
+    const form        = document.getElementById('import-bank-form');
+    const checkboxes  = document.querySelectorAll('.soal-checkbox');
+    const selectAll   = document.getElementById('select-all-checkbox');
+    const footer      = document.getElementById('import-footer');
+    const selectedCountEl = document.getElementById('selected-count');
+    const footerCountEl   = document.getElementById('footer-count');
+    const footerSlotEl    = document.getElementById('footer-slot');
+    const deselectBtn = document.getElementById('deselect-all-btn');
+    const previewBtn  = document.getElementById('preview-btn');
 
+    // ── Modal elements ──────────────────────────────────────────────
+    const modal          = document.getElementById('preview-modal');
+    const previewList    = document.getElementById('preview-list');
+    const previewCount   = document.getElementById('preview-count');
+    const quotaWarning   = document.getElementById('quota-warning');
+    const closePreviewBtn  = document.getElementById('close-preview-btn');
+    const cancelPreviewBtn = document.getElementById('cancel-preview-btn');
+    const confirmImportBtn = document.getElementById('confirm-import-btn');
+
+    // ── Helpers ─────────────────────────────────────────────────────
+    const getChecked = () => [...document.querySelectorAll('.soal-checkbox:checked')];
+
+    // ── Quota enforcement ───────────────────────────────────────────
     const updateUI = () => {
-        const checked = document.querySelectorAll('.soal-checkbox:checked').length;
+        const checked = getChecked().length;
         selectedCountEl.textContent = checked;
-        footerCountEl.textContent  = checked;
-
+        footerCountEl.textContent   = checked;
+        footerSlotEl.textContent    = Math.max(0, SLOT_SISA - checked);
         footer.classList.toggle('hidden', checked === 0);
 
-        // Highlight card yang dipilih
+        // Highlight cards
         checkboxes.forEach((cb) => {
             const card = cb.closest('.soal-card');
-            if (card) {
-                card.classList.toggle('ring-2',         cb.checked);
-                card.classList.toggle('ring-blue-500',  cb.checked);
-                card.classList.toggle('border-blue-400', cb.checked);
+            if (!card) return;
+            card.classList.toggle('ring-2',          cb.checked);
+            card.classList.toggle('ring-blue-500',   cb.checked);
+            card.classList.toggle('border-blue-400', cb.checked);
+        });
+
+        // Disable semua yang belum checked jika sudah capai SLOT_SISA
+        const full = checked >= SLOT_SISA;
+        checkboxes.forEach((cb) => {
+            if (!cb.checked) {
+                cb.disabled = full;
+                const card = cb.closest('.soal-card');
+                if (card) {
+                    card.classList.toggle('opacity-40', full);
+                    card.style.cursor = full ? 'not-allowed' : '';
+                }
+            } else {
+                cb.disabled = false;
+                const card = cb.closest('.soal-card');
+                if (card) { card.classList.remove('opacity-40'); card.style.cursor = ''; }
             }
         });
 
-        // Sesuaikan state select-all
-        const total = checkboxes.length;
-        selectAll.indeterminate = checked > 0 && checked < total;
-        selectAll.checked       = checked === total && total > 0;
+        // Select-all state
+        const enabledUnchecked = [...checkboxes].filter(cb => !cb.disabled && !cb.checked).length;
+        selectAll.indeterminate = checked > 0 && enabledUnchecked > 0;
+        selectAll.checked       = enabledUnchecked === 0 && checked > 0;
     };
 
     checkboxes.forEach((cb) => cb.addEventListener('change', updateUI));
 
     selectAll.addEventListener('change', () => {
-        checkboxes.forEach((cb) => { cb.checked = selectAll.checked; });
+        let remaining = SLOT_SISA;
+        checkboxes.forEach((cb) => {
+            if (selectAll.checked) {
+                if (remaining > 0) { cb.checked = true; remaining--; }
+                else               { cb.checked = false; }
+            } else {
+                cb.checked = false;
+            }
+        });
         updateUI();
     });
 
@@ -319,27 +493,63 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI();
     });
 
-    // Accordion teks bacaan
+    // ── Preview Modal ───────────────────────────────────────────────
+    const openModal  = () => modal.classList.replace('hidden', 'flex');
+    const closeModal = () => modal.classList.replace('flex', 'hidden');
+
+    previewBtn.addEventListener('click', () => {
+        const checked = getChecked();
+        if (checked.length === 0) { alert('Pilih minimal satu soal terlebih dahulu.'); return; }
+
+        previewCount.textContent = checked.length;
+        quotaWarning.classList.toggle('hidden', checked.length <= SLOT_SISA);
+
+        // Populate preview list
+        previewList.innerHTML = '';
+        checked.forEach((cb, idx) => {
+            const card      = cb.closest('.soal-card');
+            const badge     = card ? card.querySelector('[class*="badge-"]') : null;
+            const question  = card ? card.querySelector('p.font-medium') : null;
+            const badgeText = badge ? badge.textContent.trim() : '';
+            const badgeCls  = badge ? (badge.className.match(/badge-\w+/)?.[0] ?? 'badge-info') : 'badge-info';
+            const qText     = question ? question.textContent.trim() : 'Soal #' + cb.value;
+
+            const item = document.createElement('div');
+            item.className = 'flex items-start gap-3 rounded-2xl border border-border bg-slate-50/70 dark:bg-slate-800/60 p-3';
+            item.innerHTML = `
+                <span class="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">${idx + 1}</span>
+                <div class="min-w-0 flex-1">
+                    <span class="${badgeCls} mb-1 inline-block text-[10px] font-bold uppercase tracking-wider">${badgeText}</span>
+                    <p class="text-sm leading-snug text-slate-700 dark:text-slate-200">${qText.length > 150 ? qText.substring(0,150) + '…' : qText}</p>
+                </div>
+            `;
+            previewList.appendChild(item);
+        });
+
+        openModal();
+    });
+
+    closePreviewBtn.addEventListener('click', closeModal);
+    cancelPreviewBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    confirmImportBtn.addEventListener('click', () => {
+        confirmImportBtn.disabled = true;
+        confirmImportBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Memproses...';
+        form.submit();
+    });
+
+    // ── Accordion teks bacaan ────────────────────────────────────────
     document.querySelectorAll('.toggle-bacaan').forEach((btn) => {
         btn.addEventListener('click', () => {
-            const targetId = btn.dataset.target;
-            const content  = document.getElementById(targetId);
-            const chevron  = btn.querySelector('[data-chevron]');
-            if (content) {
-                content.classList.toggle('hidden');
-                chevron?.classList.toggle('rotate-180');
-            }
+            const content = document.getElementById(btn.dataset.target);
+            const chevron = btn.querySelector('[data-chevron]');
+            if (content) { content.classList.toggle('hidden'); chevron?.classList.toggle('rotate-180'); }
         });
     });
 
-    // Konfirmasi sebelum submit
-    document.getElementById('import-bank-form').addEventListener('submit', (e) => {
-        const checked = document.querySelectorAll('.soal-checkbox:checked').length;
-        if (checked === 0) {
-            e.preventDefault();
-            alert('Pilih minimal satu soal terlebih dahulu.');
-        }
-    });
+    // Init
+    updateUI();
 });
 </script>
 @endsection

@@ -159,9 +159,9 @@ Alur:
 Alur:
 
 1. Guru membuka `/guru/materials`.
-2. Sistem memfilter materi global dan materi sesuai jenjang guru.
+2. Sistem memfilter materi global dan materi sesuai jenjang guru. Guru dapat melakukan filter tambahan berdasarkan **Mata Pelajaran** dan **Kurikulum**.
 3. Di list, guru bisa buka detail, buka link, bookmark, dan unbookmark.
-4. Detail materi menampilkan ringkasan dan jumlah soal terikat dari tabel `questions`.
+4. Detail materi menampilkan ringkasan, nama Mapel, dan jumlah soal terikat dari tabel `questions`.
 
 ### 3.4 Bank soal pribadi
 
@@ -282,8 +282,8 @@ Alur:
 Alur:
 
 1. Buka `/superadmin/materials`.
-2. Superadmin dapat filter per jenjang.
-3. Superadmin dapat tambah dan hapus materi global.
+2. Superadmin dapat filter per **Mapel**, **Kurikulum**, dan **Jenjang**.
+3. Superadmin dapat tambah, import dari Excel, dan hapus materi. Form tambah materi sekarang mewajibkan pengisian **Mata Pelajaran**.
 
 ### 4.5 Bank soal global
 
