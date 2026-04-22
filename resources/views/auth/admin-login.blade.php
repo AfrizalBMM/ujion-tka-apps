@@ -1,5 +1,9 @@
 @extends('layouts.guest')
 
+@php
+    $hideShowcase = true;
+@endphp
+
 @section('title', 'Admin Login - Ujion TKA')
 
 @section('content')

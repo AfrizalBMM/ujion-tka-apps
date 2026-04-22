@@ -11,7 +11,6 @@ use App\Http\Controllers\Guru\MapelPaketGuruController;
 use App\Http\Controllers\Guru\PersonalQuestionController;
 use App\Http\Controllers\Guru\ExamController;
 use App\Http\Controllers\Guru\ChatController;
-use App\Http\Controllers\Guru\LogController;
 use App\Http\Controllers\Guru\SoalGuruController;
 use App\Http\Controllers\Guru\TeksBacaanGuruController;
 
@@ -47,7 +46,6 @@ Route::middleware(['auth','role:guru','guru.active'])->prefix('guru')->name('gur
 
     Route::get('/chat', [ChatController::class, 'index'])->name('chat');
     Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');
-    Route::get('/logs', [LogController::class, 'index'])->name('logs');
     Route::get('/paket-soal', [PaketSoalGuruController::class, 'index'])->name('paket-soal.index');
     Route::get('/paket-soal/{paket}', [PaketSoalGuruController::class, 'show'])->name('paket-soal.show');
     Route::middleware('guru.jenjang')->group(function () {

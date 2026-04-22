@@ -1,32 +1,50 @@
 <?php
+
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
-class ProfileController extends Controller {
-    public function show(): View {
+class ProfileController extends Controller
+{
+    public function show(): View
+    {
         $user = Auth::user();
 
         return view('guru.profile', compact('user'));
     }
 
-    public function update(Request $request) {
+    public function update(Request $request)
+    {
         $user = Auth::user();
-        $data = $request->validate([
+        abort_unless($user, 401);
+
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'jenjang' => 'required|in:' . implode(',', config('ujion.jenjangs')),
-            'tingkat' => 'required|in:' . implode(',', config('ujion.tingkats')),
-            'satuan_pendidikan' => 'required|string|max:255',
-            'no_wa' => ['required', 'string', 'max:20', Rule::unique('users', 'no_wa')->ignore($user->id)],
             'avatar' => 'nullable|image|max:2048',
-        ]);
+        ];
+
+        $jenjangs = (array) config('ujion.jenjangs', []);
+        if (Schema::hasColumn('users', 'jenjang') && ! empty($jenjangs)) {
+            $rules['jenjang'] = 'required|in:' . implode(',', $jenjangs);
+        }
+
+        if (Schema::hasColumn('users', 'satuan_pendidikan')) {
+            $rules['satuan_pendidikan'] = 'required|string|max:255';
+        }
+
+        if (Schema::hasColumn('users', 'no_wa')) {
+            $rules['no_wa'] = ['required', 'string', 'max:20', Rule::unique('users', 'no_wa')->ignore($user->id)];
+        }
+
+        $data = $request->validate($rules);
 
         if ($request->hasFile('avatar')) {
             $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
@@ -38,10 +56,11 @@ class ProfileController extends Controller {
 
         $user->update($data);
 
-        return back()->with('flash', ['type'=>'success','message'=>'Profil berhasil diperbarui.']);
+        return back()->with('flash', ['type' => 'success', 'message' => 'Profil berhasil diperbarui.']);
     }
 
-    public function password(Request $request) {
+    public function password(Request $request)
+    {
         $request->validate([
             'password' => 'required|confirmed|min:6',
         ]);
@@ -50,6 +69,6 @@ class ProfileController extends Controller {
         $user->password = Hash::make($request->password);
         $user->save();
 
-        return back()->with('flash', ['type'=>'success','message'=>'Password berhasil diganti.']);
+        return back()->with('flash', ['type' => 'success', 'message' => 'Password berhasil diganti.']);
     }
 }

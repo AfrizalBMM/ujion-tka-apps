@@ -291,7 +291,6 @@ class RemainingFlowsHardeningTest extends TestCase
         Question::create([
             'material_id' => $material->id,
             'jenjang' => 'SMP',
-            'tingkat' => '7',
             'kategori' => 'Sedang',
             'tipe' => 'PG',
             'pertanyaan' => 'Snapshot',

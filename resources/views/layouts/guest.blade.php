@@ -20,6 +20,7 @@
     });"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <style>
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%); }
     </style>
@@ -30,8 +31,8 @@
         $hideShowcase = true;
     }
 @endphp
-<body class="min-h-screen">
-    <div class="guest-shell mx-auto {{ isset($hideShowcase) && $hideShowcase ? 'max-w-xl' : '' }}">
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="guest-shell mx-auto {{ isset($hideShowcase) && $hideShowcase ? 'max-w-lg' : '' }}">
         <div class="guest-panel {{ isset($hideShowcase) && $hideShowcase ? '!grid-cols-1' : '' }}">
             @if(!isset($hideShowcase) || !$hideShowcase)
             <section class="guest-showcase">

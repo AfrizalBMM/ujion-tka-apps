@@ -552,7 +552,7 @@
     }
 
     .page-content-inner {
-        @apply flex w-full max-w-[1200px] flex-col gap-6;
+        @apply flex w-full flex-col gap-6;
     }
 
     .page-footer {

@@ -25,13 +25,13 @@ class PersonalQuestionController extends Controller {
         $user = Auth::user();
         $data = $request->validate([
             'jenjang' => 'nullable|string',
-            'kategori' => 'required',
-            'tipe' => 'required',
-            'pertanyaan' => 'required',
+            'kategori' => 'required|string|max:255',
+            'tipe' => 'required|in:PG,Checklist,Singkat',
+            'pertanyaan' => 'required|string',
             'options' => 'nullable|array',
             'options.*' => 'nullable|string|max:255',
             'options_raw' => 'nullable|string',
-            'jawaban_benar' => 'nullable|string',
+            'jawaban_benar' => 'nullable|string|max:255',
             'pembahasan' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
             'status' => 'required|in:draft,terbit',
@@ -75,19 +75,24 @@ class PersonalQuestionController extends Controller {
         $user = Auth::user();
         $data = $request->validate([
             'questions' => 'required|array',
-            'questions.*.pertanyaan' => 'required',
-            'questions.*.tipe' => 'required',
+            'questions.*.pertanyaan' => 'required|string',
+            'questions.*.tipe' => 'required|in:PG,Checklist,Singkat',
             'questions.*.opsi' => 'nullable|array',
             'questions.*.jawaban_benar' => 'nullable|string',
             'questions.*.pembahasan' => 'nullable|string',
             'questions.*.image' => 'nullable|string',
             'questions.*.jenjang' => 'nullable|string',
-            'questions.*.kategori' => 'required',
+            'questions.*.kategori' => 'required|string|max:255',
             'questions.*.status' => 'required|in:draft,terbit',
         ]);
 
         DB::transaction(function () use ($user, $data): void {
-            $existingQuestions = PersonalQuestion::where('user_id', $user->id)->get();
+            $existingQuery = PersonalQuestion::query()->where('user_id', $user->id);
+            if (filled($user->jenjang)) {
+                $existingQuery->where('jenjang', $user->jenjang);
+            }
+
+            $existingQuestions = $existingQuery->get();
 
             foreach ($existingQuestions as $existingQuestion) {
                 if ($existingQuestion->image_path) {
@@ -95,7 +100,7 @@ class PersonalQuestionController extends Controller {
                 }
             }
 
-            PersonalQuestion::where('user_id', $user->id)->delete();
+            $existingQuery->delete();
 
             foreach ($data['questions'] as $q) {
                 if (array_key_exists('image', $q)) {

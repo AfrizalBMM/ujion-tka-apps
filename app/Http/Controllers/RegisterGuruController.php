@@ -31,7 +31,6 @@ class RegisterGuruController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255'],
             'jenjang' => 'required|in:' . implode(',', config('ujion.jenjangs')),
-            'tingkat' => 'required|in:' . implode(',', config('ujion.tingkats')),
             'satuan_pendidikan' => 'required|string|max:255',
             'no_wa' => ['required', 'string', 'max:20'],
         ]);
@@ -82,7 +81,6 @@ class RegisterGuruController extends Controller
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_AWAITING,
             'jenjang' => $validated['jenjang'],
-            'tingkat' => $validated['tingkat'],
             'satuan_pendidikan' => $validated['satuan_pendidikan'],
             'no_wa' => $normalizedWa,
         ]);

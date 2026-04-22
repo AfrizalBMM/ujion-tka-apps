@@ -45,7 +45,6 @@ class User extends Authenticatable
         'payment_rejection_reason',
         'access_token',
         'jenjang',
-        'tingkat',
         'satuan_pendidikan',
         'no_wa',
         'avatar',

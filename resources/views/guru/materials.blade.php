@@ -8,7 +8,7 @@
             Anda melihat materi jenjang <strong>{{ $jenjangUser ?? '-' }}</strong>, termasuk materi global yang ditetapkan untuk jenjang yang sama.
         </div>
     </div>
-    <form method="GET" action="{{ route('guru.materials') }}" class="card p-4 space-y-4 sm:space-y-0 sm:flex sm:items-end sm:gap-4" data-ssd-autosubmit>
+    <form method="GET" action="{{ route('guru.materials') }}" class="card p-4 space-y-4 sm:space-y-0 sm:flex sm:items-end sm:gap-4" data-ssd-autosubmit data-materials-filter-form>
         <div class="flex-1 min-w-[150px]">
             <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mata Pelajaran</label>
             <div class="ssd-wrap mt-1">
@@ -47,10 +47,14 @@
                 </div>
             </div>
         </div>
+        <div class="flex-1 min-w-[200px]">
+            <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Cari Materi</label>
+            <input type="search" name="search" value="{{ $filters['search'] ?? '' }}" class="input mt-1 w-full" placeholder="Cari materi..." data-live-search>
+        </div>
         <a href="{{ route('guru.materials') }}" class="btn-secondary h-[42px] flex items-center justify-center">Reset</a>
     </form>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div id="materials-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         @foreach($materials as $material)
         <div class="card p-4 flex flex-col">
             <div class="flex items-start justify-between gap-3">
@@ -79,4 +83,84 @@
         @endforeach
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.querySelector('form[data-materials-filter-form]');
+    var input = document.querySelector('[data-live-search][name="search"]');
+    var grid = document.getElementById('materials-grid');
+    if (!form || !input || !grid) return;
+
+    var timer = null;
+    var abortController = null;
+    var lastValue = (input.value || '').trim();
+    var isComposing = false;
+
+    function buildUrl() {
+        var action = form.getAttribute('action') || window.location.pathname;
+        var url = new URL(action, window.location.origin);
+        var params = new URLSearchParams(new FormData(form));
+        url.search = params.toString();
+        return url;
+    }
+
+    function setLoading(isLoading) {
+        grid.classList.toggle('opacity-60', !!isLoading);
+        grid.classList.toggle('pointer-events-none', !!isLoading);
+    }
+
+    async function fetchAndReplace(force) {
+        var nextValue = (input.value || '').trim();
+        if (!force && nextValue === lastValue) return;
+        lastValue = nextValue;
+
+        var url = buildUrl();
+
+        if (abortController) abortController.abort();
+        abortController = new AbortController();
+
+        setLoading(true);
+        try {
+            var res = await fetch(url.toString(), {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: abortController.signal,
+            });
+            if (!res.ok) throw new Error('Request failed');
+
+            var html = await res.text();
+            var doc = new DOMParser().parseFromString(html, 'text/html');
+            var nextGrid = doc.getElementById('materials-grid');
+            if (nextGrid) {
+                grid.innerHTML = nextGrid.innerHTML;
+            }
+
+            history.replaceState({}, '', url.pathname + (url.search ? ('?' + url.searchParams.toString()) : ''));
+        } catch (e) {
+            // ignore abort/errors; user can still submit manual (enter) if needed
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function scheduleFetch() {
+        if (isComposing) return;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            fetchAndReplace();
+        }, 450);
+    }
+
+    form.addEventListener('submit', function (e) {
+        if (document.activeElement === input) {
+            e.preventDefault();
+            fetchAndReplace(true);
+        }
+    });
+
+    input.addEventListener('compositionstart', function () { isComposing = true; });
+    input.addEventListener('compositionend', function () { isComposing = false; scheduleFetch(); });
+    input.addEventListener('input', scheduleFetch);
+});
+</script>
 @endsection

@@ -102,10 +102,6 @@
         <i class="fa-solid fa-comments"></i>
         Chat
       </a>
-      <a href="{{ route('guru.logs') }}" class="mobile-nav-link {{ request()->routeIs('guru.logs') ? 'active' : '' }}">
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        Log
-      </a>
       <a href="{{ route('guru.materials') }}" class="mobile-nav-link {{ request()->routeIs('guru.materials') ? 'active' : '' }}">
         <i class="fa-solid fa-book"></i>
         Materi
@@ -153,10 +149,6 @@
         <a href="{{ route('guru.chat') }}" class="sidebar-link {{ request()->routeIs('guru.chat') ? 'active' : '' }}">
           <i class="fa-solid fa-comments w-5"></i>
           <span class="sidebar-link-label">Live Chat</span>
-        </a>
-        <a href="{{ route('guru.logs') }}" class="sidebar-link {{ request()->routeIs('guru.logs') ? 'active' : '' }}">
-          <i class="fa-solid fa-clock-rotate-left w-5"></i>
-          <span class="sidebar-link-label">Log Aktivitas</span>
         </a>
 
         <div class="sidebar-section-title">Konten</div>

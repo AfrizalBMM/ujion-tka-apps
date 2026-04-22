@@ -23,14 +23,17 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'string'],
+            'login_identifier' => ['required', 'string'],
             'access_token' => ['required', 'string'],
         ]);
 
-        $user = User::where('name', $request->name)
-                    ->where('access_token', $request->access_token)
-                    ->where('role', User::ROLE_GURU)
-                    ->first();
+        $user = User::where(function ($query) use ($request) {
+            $query->where('name', $request->login_identifier)
+                ->orWhere('no_wa', $request->login_identifier);
+        })
+            ->where('access_token', $request->access_token)
+            ->where('role', User::ROLE_GURU)
+            ->first();
 
         if ($user) {
             if ($user->account_status !== User::STATUS_ACTIVE) {
@@ -50,7 +53,7 @@ class AuthController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'access_token' => 'Nama atau Token Akses tidak sesuai.',
+            'access_token' => 'Nama/No. WA atau Token Akses tidak sesuai.',
         ]);
     }
 

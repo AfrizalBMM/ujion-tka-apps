@@ -15,32 +15,59 @@ class MaterialController extends Controller {
         $user = Auth::user();
         $jenjangUser = $user->jenjang ?? null;
 
+        $hasJenjang = Schema::hasColumn('materials', 'jenjang');
+        $hasMapel = Schema::hasColumn('materials', 'mapel');
+        $hasLink = Schema::hasColumn('materials', 'link');
+
         $filters = [
             'mapel'      => $request->query('mapel'),
             'curriculum' => $request->query('curriculum'),
+            'search'     => $request->query('search'),
         ];
 
         $materialsQuery = Material::query();
 
-        if (Schema::hasColumn('materials', 'jenjang')) {
+        if ($hasJenjang) {
             $materialsQuery->where('jenjang', $jenjangUser);
         }
 
         $materialsQuery
             ->when($filters['mapel'], fn($q) => $q->where('mapel', $filters['mapel']))
-            ->when($filters['curriculum'], fn($q) => $q->where('curriculum', $filters['curriculum']));
+            ->when($filters['curriculum'], fn($q) => $q->where('curriculum', $filters['curriculum']))
+            ->when($filters['search'], function ($q) use ($filters, $hasMapel, $hasLink) {
+                $term = trim((string) $filters['search']);
+                if ($term === '') {
+                    return;
+                }
+
+                $q->where(function ($qq) use ($term, $hasMapel, $hasLink) {
+                    $like = '%' . $term . '%';
+
+                    if ($hasMapel) {
+                        $qq->orWhere('mapel', 'like', $like);
+                    }
+                    $qq->orWhere('curriculum', 'like', $like)
+                        ->orWhere('subelement', 'like', $like)
+                        ->orWhere('unit', 'like', $like)
+                        ->orWhere('sub_unit', 'like', $like);
+
+                    if ($hasLink) {
+                        $qq->orWhere('link', 'like', $like);
+                    }
+                });
+            });
 
         $materials = $materialsQuery->orderBy('mapel')->orderBy('subelement')->orderBy('unit')->orderBy('sub_unit')->get();
 
         $mapels = Material::query()
-            ->when(Schema::hasColumn('materials', 'jenjang'), fn($q) => $q->where('jenjang', $jenjangUser))
+            ->when($hasJenjang, fn($q) => $q->where('jenjang', $jenjangUser))
             ->distinct()
             ->pluck('mapel')
             ->filter()
             ->values();
 
         $curriculums = Material::query()
-            ->when(Schema::hasColumn('materials', 'jenjang'), fn($q) => $q->where('jenjang', $jenjangUser))
+            ->when($hasJenjang, fn($q) => $q->where('jenjang', $jenjangUser))
             ->distinct()
             ->pluck('curriculum')
             ->filter()

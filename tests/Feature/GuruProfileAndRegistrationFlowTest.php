@@ -29,7 +29,6 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'name' => 'Guru Baru',
             'email' => 'guru.baru@example.com',
             'jenjang' => 'SMP',
-            'tingkat' => '7',
             'satuan_pendidikan' => 'SMPN 1 Contoh',
             'no_wa' => '0812-3456-789',
         ]);
@@ -82,7 +81,6 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'name' => 'Guru Baru',
             'email' => 'guru.persist@example.com',
             'jenjang' => 'SMP',
-            'tingkat' => '7',
             'satuan_pendidikan' => 'SMPN 1 Contoh',
             'no_wa' => '0812-7777-9999',
         ]);
@@ -117,7 +115,6 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'name' => 'Guru Daftar Ulang',
             'email' => 'guru.pending@example.com',
             'jenjang' => 'SMP',
-            'tingkat' => '7',
             'satuan_pendidikan' => 'SMPN 1 Contoh',
             'no_wa' => '0812-3456-789',
         ]);
@@ -145,7 +142,6 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'name' => 'Guru Baru',
             'email' => 'guru.aktif@example.com',
             'jenjang' => 'SMP',
-            'tingkat' => '7',
             'satuan_pendidikan' => 'SMPN 1 Contoh',
             'no_wa' => '0812-3456-789',
         ]);
@@ -178,7 +174,6 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_ACTIVE,
             'jenjang' => 'SD',
-            'tingkat' => '4',
             'satuan_pendidikan' => 'SD Lama',
             'no_wa' => '08111',
         ]);
@@ -187,7 +182,6 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'name' => 'Guru Update',
             'email' => 'guru-update@example.com',
             'jenjang' => 'SMP',
-            'tingkat' => '8',
             'satuan_pendidikan' => 'SMP Baru',
             'no_wa' => '089999',
         ]);
@@ -198,7 +192,6 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'name' => 'Guru Update',
             'email' => 'guru-update@example.com',
             'jenjang' => 'SMP',
-            'tingkat' => '8',
             'satuan_pendidikan' => 'SMP Baru',
             'no_wa' => '089999',
         ]);

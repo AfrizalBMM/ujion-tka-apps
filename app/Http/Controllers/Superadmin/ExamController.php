@@ -251,7 +251,6 @@ class ExamController extends Controller {
         return [
             'material_id' => (int) ($source['material_id'] ?? $fallbackMaterialId),
             'jenjang' => $paketSoal?->jenjang?->kode ?? 'GENERAL',
-            'tingkat' => $paketSoal?->tahun_ajaran ?? 'UMUM',
             'kategori' => 'Sedang',
             'tipe' => $source['tipe'],
             'pertanyaan' => $source['pertanyaan'],

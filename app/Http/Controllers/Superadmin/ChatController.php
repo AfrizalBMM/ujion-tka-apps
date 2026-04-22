@@ -5,7 +5,6 @@ use App\Models\Chat;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller {
     public function destroyAllGuru(Request $request) {
@@ -22,15 +21,10 @@ class ChatController extends Controller {
             })
             ->get();
 
-        // Hapus semua gambar
+        // Hapus semua chat (cleanup gambar ditangani oleh model event)
         foreach ($chats as $chat) {
-            if ($chat->image_path) {
-                Storage::disk('public')->delete($chat->image_path);
-            }
+            $chat->delete();
         }
-
-        // Hapus semua chat
-        Chat::whereIn('id', $chats->pluck('id'))->delete();
 
         return back()->with('flash', [
             'type' => 'success',
@@ -51,15 +45,10 @@ class ChatController extends Controller {
             })
             ->get();
 
-        // Hapus semua gambar
+        // Hapus semua chat (cleanup gambar ditangani oleh model event)
         foreach ($chats as $chat) {
-            if ($chat->image_path) {
-                Storage::disk('public')->delete($chat->image_path);
-            }
+            $chat->delete();
         }
-
-        // Hapus semua chat
-        Chat::whereIn('id', $chats->pluck('id'))->delete();
 
         return back()->with('flash', [
             'type' => 'success',
@@ -132,7 +121,6 @@ class ChatController extends Controller {
         return back()->with('flash', ['type' => 'success', 'message' => 'Pesan terkirim.']);
     }
     public function destroy(Chat $chat) {
-        if ($chat->image_path) Storage::disk('public')->delete($chat->image_path);
         $chat->delete();
         return back()->with('flash', ['type' => 'success', 'message' => 'Pesan dihapus.']);
     }

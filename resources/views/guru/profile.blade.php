@@ -23,17 +23,6 @@
                 </select>
             </div>
             <div>
-                <label class="text-xs font-bold">Tingkat</label>
-                <select name="tingkat" class="input w-full" required>
-                    <option value="" disabled>Pilih Kelas</option>
-                    @foreach(config('ujion.tingkats') as $tingkat)
-                        <option value="{{ $tingkat }}" @selected(old('tingkat', $user->tingkat) == $tingkat)>
-                            Kelas {{ $tingkat }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
                 <label class="text-xs font-bold">Satuan</label>
                 <input name="satuan_pendidikan" class="input w-full" value="{{ old('satuan_pendidikan', $user->satuan_pendidikan) }}" required>
             </div>

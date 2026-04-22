@@ -156,10 +156,6 @@
                     <span class="text-slate-900 dark:text-slate-100">{{ $selectedUser->jenjang ?? '-' }}</span>
                 </div>
                 <div class="flex justify-between py-1 border-b">
-                    <span class="text-gray-500">Tingkat</span>
-                    <span class="text-slate-900 dark:text-slate-100">{{ $selectedUser->tingkat ?? '-' }}</span>
-                </div>
-                <div class="flex justify-between py-1 border-b">
                     <span class="text-gray-500">Satuan Pendidikan</span>
                     <span class="text-slate-900 dark:text-slate-100">{{ $selectedUser->satuan_pendidikan ?? '-' }}</span>
                 </div>

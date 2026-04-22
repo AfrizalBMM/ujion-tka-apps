@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Superadmin') - Ujion</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    
+
     {{-- KaTeX Math Rendering --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -34,8 +34,8 @@
 
 <body class="app-shell flex flex-col" data-dashboard-shell="superadmin">
     @php
-        $materialFilter = request()->query('jenjang');
-        $globalQuestionFilter = request()->query('jenjang_id');
+    $materialFilter = request()->query('jenjang');
+    $globalQuestionFilter = request()->query('jenjang_id');
     @endphp
     <header class="app-topbar">
         <div class="app-topbar-panel">
@@ -80,7 +80,8 @@
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="app-dropdown-link w-full text-left" data-confirm data-confirm-title="Konfirmasi Logout" data-confirm="Apakah Anda yakin ingin logout?">
+                            <button type="submit" class="app-dropdown-link w-full text-left" data-confirm
+                                data-confirm-title="Konfirmasi Logout" data-confirm="Apakah Anda yakin ingin logout?">
                                 <i class="fa-solid fa-right-from-bracket w-4"></i>
                                 Keluar
                             </button>
@@ -146,14 +147,8 @@
             <nav class="sidebar-nav">
                 <div class="sidebar-section-row">
                     <div class="sidebar-section-title sidebar-section-title-static">Utama</div>
-                    <button
-                        type="button"
-                        class="sidebar-toggle"
-                        data-sidebar-toggle
-                        aria-label="Toggle sidebar"
-                        aria-expanded="true"
-                        title="Ciutkan sidebar"
-                    >
+                    <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-label="Toggle sidebar"
+                        aria-expanded="true" title="Ciutkan sidebar">
                         <i class="fa-solid fa-angles-left" data-sidebar-toggle-icon></i>
                     </button>
                 </div>
@@ -180,7 +175,9 @@
                     <span class="sidebar-link-label">Daftar Guru</span>
                 </a>
                 <details class="sidebar-submenu" data-sidebar-submenu>
-                    <summary class="sidebar-link sidebar-submenu-trigger {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}" data-sidebar-submenu-trigger>
+                    <summary
+                        class="sidebar-link sidebar-submenu-trigger {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}"
+                        data-sidebar-submenu-trigger>
                         <span class="flex items-center gap-3.5">
                             <i class="fa-solid fa-book w-5"></i>
                             <span class="sidebar-link-label">Master Materi</span>
@@ -211,7 +208,9 @@
                     </div>
                 </details>
                 <details class="sidebar-submenu" data-sidebar-submenu>
-                    <summary class="sidebar-link sidebar-submenu-trigger {{ request()->routeIs('superadmin.global-questions.index') ? 'active' : '' }}" data-sidebar-submenu-trigger>
+                    <summary
+                        class="sidebar-link sidebar-submenu-trigger {{ request()->routeIs('superadmin.global-questions.index') ? 'active' : '' }}"
+                        data-sidebar-submenu-trigger>
                         <span class="flex items-center gap-3.5">
                             <i class="fa-solid fa-database w-5"></i>
                             <span class="sidebar-link-label">Bank Soal Global</span>
