@@ -11,23 +11,25 @@
         'SMA' => 'Materi SMA',
         default => 'Semua Jenjang',
     };
+    $contextAssessment = config('ujion.assessment_types.' . ($assessmentType ?? '') . '.label', 'Semua Bagian Paket');
     $templateLabel = $contextJenjang ? "Download Template {$contextJenjang}" : 'Download Template Excel';
     $importTitle = $contextJenjang ? "Import Materi {$contextJenjang}" : 'Import Materi';
     $importCopy = $contextJenjang
         ? "Semua baris tanpa kolom jenjang akan otomatis dibaca sebagai materi {$contextJenjang}."
         : 'Upload file Excel atau CSV untuk menambahkan banyak materi sekaligus.';
+    $assessmentTypes = config('ujion.assessment_types', []);
 @endphp
 <div class="space-y-6">
     <div>
         <h1 class="text-2xl font-bold">Data Kurikulum & Materi</h1>
-        <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola hierarki kurikulum, subelemen, unit, dan sub unit materi global.</p>
+        <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola referensi materi per jenjang untuk 4 bagian paket: Bahasa Indonesia, Matematika, Survey Karakter, dan Sulingjar.</p>
     </div>
 
     <div class="card border-primary/15 bg-primary/5">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <div class="text-xs font-bold uppercase tracking-[0.22em] text-primary">Konteks Input</div>
-                <div class="mt-2 text-lg font-bold text-slate-900 dark:text-white">{{ $contextTitle }}</div>
+                <div class="mt-2 text-lg font-bold text-slate-900 dark:text-white">{{ $contextTitle }} &middot; {{ $contextAssessment }}</div>
                 <p class="mt-1 text-sm text-textSecondary dark:text-slate-300">
                     @if ($contextJenjang)
                         Form tambah data, template, dan import di halaman ini diselaraskan ke jenjang {{ $contextJenjang }} agar tidak mudah tertukar.
@@ -38,6 +40,9 @@
             </div>
             <div class="flex items-center gap-2">
                 <span class="badge-info">{{ $contextTitle }}</span>
+                @if(!empty($assessmentType))
+                    <span class="badge-primary bg-sky-100 text-sky-700">{{ $contextAssessment }}</span>
+                @endif
                 @if (($filter ?? null) === 'GLOBAL')
                     <span class="badge-warning">Global</span>
                 @endif
@@ -88,9 +93,29 @@
                 <input type="hidden" name="jenjang" value="{{ $filter }}">
             @endif
 
-            {{-- Mata Pelajaran --}}
+            <div class="flex flex-col gap-1 min-w-[180px]">
+                <label class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Bagian Paket</label>
+                <div class="ssd-wrap">
+                    <input type="hidden" name="assessment_type" value="{{ $assessmentType ?? '' }}">
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label truncate">{{ $contextAssessment }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($assessmentType ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua Bagian Paket</div>
+                            @foreach ($assessmentTypes as $key => $meta)
+                                <div class="ssd-option{{ ($assessmentType ?? '') === $key ? ' ssd-selected' : '' }}" data-value="{{ $key }}">{{ $meta['label'] }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Bagian / Mapel --}}
             <div class="flex flex-col gap-1 min-w-[160px]">
-                <label class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Mata Pelajaran</label>
+                <label class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Mapel / Bagian</label>
                 <div class="ssd-wrap">
                     <input type="hidden" name="mapel" value="{{ $mapel ?? '' }}">
                     <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
@@ -219,6 +244,7 @@
                             @if($m->mapel)
                                 <span class="badge-primary bg-blue-100 text-blue-700 text-[10px]">{{ $m->mapel }}</span>
                             @endif
+                            <span class="badge-info text-[10px]">{{ $m->assessment_label }}</span>
                             @if($m->jenjang)
                                 <span class="badge-warning text-[10px]">{{ $m->jenjang }}</span>
                             @endif
@@ -277,6 +303,14 @@
                 <input type="hidden" name="default_jenjang" value="{{ $contextJenjang }}">
             @endif
             <div>
+                <label class="text-xs font-bold text-textSecondary">Bagian Paket</label>
+                <select class="input mt-1" name="assessment_type">
+                    @foreach ($assessmentTypes as $key => $meta)
+                        <option value="{{ $key }}" @selected(($assessmentType ?? 'tka') === $key)>{{ $meta['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="text-xs font-bold text-textSecondary">File Excel / CSV</label>
                 <input class="input mt-1" type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
             </div>
@@ -289,7 +323,10 @@
                         Gunakan kolom `jenjang` di file Excel untuk membedakan materi SD, SMP, dan SMA.
                     @endif
                 </p>
-                <a class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800" href="{{ route('superadmin.materials.template', array_filter(['jenjang' => $contextJenjang])) }}">
+                <p class="mt-1 text-xs">
+                    Template bagian: <strong>{{ config('ujion.assessment_types.' . ($assessmentType ?? 'tka') . '.label', 'TKA') }}</strong>
+                </p>
+                <a class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800" href="{{ route('superadmin.materials.template', array_filter(['jenjang' => $contextJenjang, 'assessment_type' => ($assessmentType ?? 'tka')])) }}">
                     <i class="fa-solid fa-file-excel"></i> {{ $templateLabel }}
                 </a>
             </div>
@@ -307,7 +344,7 @@
             <div>
                 <div class="text-xs font-bold uppercase tracking-[0.22em] text-primary">Tambah Data</div>
                 <div class="mt-2 text-xl font-bold">Tambah Materi Baru</div>
-                <p class="mt-2 text-sm text-textSecondary">Tambahkan materi baru sesuai jenjang yang sedang aktif agar referensinya tetap rapi.</p>
+                <p class="mt-2 text-sm text-textSecondary">Tambahkan materi baru sesuai jenjang dan bagian paket agar referensinya tetap rapi.</p>
             </div>
             <button type="button" class="icon-button" data-close-material-modal>
                 <i class="fa-solid fa-xmark"></i>
@@ -331,6 +368,14 @@
                     @endif
                 </p>
             </div>
+            <div>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Bagian Paket</label>
+                <select class="input mt-1" name="assessment_type" required>
+                    @foreach ($assessmentTypes as $key => $meta)
+                        <option value="{{ $key }}" @selected(($assessmentType ?? 'tka') === $key)>{{ $meta['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Kurikulum</label>
@@ -340,8 +385,13 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mata Pelajaran</label>
-                    <input class="input mt-1" name="mapel" required placeholder="E.g: Bahasa Indonesia / Matematika">
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mapel / Nama Bagian</label>
+                    <select class="input mt-1" name="mapel" required>
+                        <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                        <option value="Matematika">Matematika</option>
+                        <option value="Survey Karakter">Survey Karakter</option>
+                        <option value="Sulingjar">Sulingjar</option>
+                    </select>
                 </div>
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Subelemen</label>
@@ -397,4 +447,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @endsection
-

@@ -12,20 +12,29 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamResultController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = trim((string) $request->query('search', ''));
         $exams = Exam::where(function($q) {
             $q->where('user_id', Auth::id())
               ->orWhereHas('creator', function($query) {
                   $query->where('role', 'superadmin');
               });
         })
+        ->when($search !== '', function ($query) use ($search) {
+            $query->where(function ($inner) use ($search) {
+                $inner->where('judul', 'like', '%' . $search . '%')
+                    ->orWhereHas('paketSoal', fn ($paketQuery) => $paketQuery
+                        ->where('nama', 'like', '%' . $search . '%')
+                        ->orWhere('tahun_ajaran', 'like', '%' . $search . '%'));
+            });
+        })
         ->withCount(['ujianSesis as total_peserta'])
         ->with(['paketSoal', 'creator'])
         ->latest()
         ->get();
 
-        return view('guru.results.index', compact('exams'));
+        return view('guru.results.index', compact('exams', 'search'));
     }
 
     public function show(Exam $exam)
@@ -40,6 +49,7 @@ class ExamResultController extends Controller
     public function mapel(Exam $exam, MapelPaket $mapel)
     {
         $this->authorizeOwner($exam);
+        $isSurvey = $mapel->isSurvey();
 
         $sessions = UjianSesi::where('exam_id', $exam->id)
             ->where('mapel_paket_id', $mapel->id)
@@ -52,32 +62,31 @@ class ExamResultController extends Controller
             'avg'     => round($sessions->avg('skor') ?? 0, 2),
             'max'     => round($sessions->max('skor') ?? 0, 2),
             'min'     => round($sessions->min('skor') ?? 0, 2),
-            'pass'    => $sessions->where('skor', '>=', 70)->count(), // Example threshold
+            'pass'    => $sessions->where('skor', '>=', $isSurvey ? 100 : 70)->count(),
         ];
 
         // Question Analysis (Heatmap)
         $mapel->load('soals.jawabanSiswas');
         $questionStats = $mapel->soals->map(function ($soal) use ($sessions) {
             $sessionIds = $sessions->pluck('id');
-            $correctCount = $soal->jawabanSiswas()
+            $answeredCount = $soal->jawabanSiswas()
                 ->whereIn('ujian_sesi_id', $sessionIds)
                 ->get()
                 ->filter(function ($j) use ($soal) {
                     if ($soal->tipe_soal === 'pilihan_ganda') {
-                        return $j->jawaban_pg === $soal->pilihanJawabans->where('is_benar', true)->first()?->kode;
+                        return filled($j->jawaban_pg);
                     }
-                    // Simplified for now, can add matching logic if needed
-                    return false;
+                    return filled($j->jawaban_menjodohkan);
                 })->count();
 
             return [
                 'nomor'   => $soal->nomor_soal,
-                'correct' => $correctCount,
-                'percent' => $sessions->count() > 0 ? round(($correctCount / $sessions->count()) * 100, 1) : 0,
+                'correct' => $answeredCount,
+                'percent' => $sessions->count() > 0 ? round(($answeredCount / $sessions->count()) * 100, 1) : 0,
             ];
         });
 
-        return view('guru.results.mapel', compact('exam', 'mapel', 'sessions', 'stats', 'questionStats'));
+        return view('guru.results.mapel', compact('exam', 'mapel', 'sessions', 'stats', 'questionStats', 'isSurvey'));
     }
 
     public function studentDetail(UjianSesi $session)
@@ -88,7 +97,8 @@ class ExamResultController extends Controller
         $session->load([
             'mapelPaket.soals.pilihanJawabans',
             'mapelPaket.soals.pasanganMenjodohkans',
-            'jawabanSiswas'
+            'jawabanSiswas',
+            'exam',
         ]);
 
         $answers = $session->jawabanSiswas->keyBy('soal_id');
@@ -106,7 +116,7 @@ class ExamResultController extends Controller
             ->orderBy('skor', 'desc')
             ->get();
 
-        $fileName = "Hasil_{$exam->nama}_{$mapel->nama_label}.csv";
+        $fileName = "Hasil_{$exam->judul}_{$mapel->nama_label}.csv";
 
         $headers = [
             "Content-type"        => "text/csv",
@@ -116,7 +126,7 @@ class ExamResultController extends Controller
             "Expires"             => "0"
         ];
 
-        $columns = ['Peringkat', 'Nama Siswa', 'Nomor WA', 'Waktu Mulai', 'Waktu Selesai', 'Skor'];
+        $columns = ['Peringkat', 'Nama Siswa', 'Nomor WA', 'Waktu Mulai', 'Waktu Selesai', $mapel->isSurvey() ? 'Kelengkapan' : 'Skor'];
 
         $callback = function() use($sessions, $columns) {
             $file = fopen('php://output', 'w');

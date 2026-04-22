@@ -20,6 +20,7 @@ class MaterialController extends Controller {
         $hasLink = Schema::hasColumn('materials', 'link');
 
         $filters = [
+            'assessment_type' => $request->query('assessment_type'),
             'mapel'      => $request->query('mapel'),
             'curriculum' => $request->query('curriculum'),
             'search'     => $request->query('search'),
@@ -32,6 +33,7 @@ class MaterialController extends Controller {
         }
 
         $materialsQuery
+            ->when(in_array($filters['assessment_type'], ['tka', 'survey_karakter', 'sulingjar'], true), fn($q) => $q->where('assessment_type', $filters['assessment_type']))
             ->when($filters['mapel'], fn($q) => $q->where('mapel', $filters['mapel']))
             ->when($filters['curriculum'], fn($q) => $q->where('curriculum', $filters['curriculum']))
             ->when($filters['search'], function ($q) use ($filters, $hasMapel, $hasLink) {
@@ -61,6 +63,7 @@ class MaterialController extends Controller {
 
         $mapels = Material::query()
             ->when($hasJenjang, fn($q) => $q->where('jenjang', $jenjangUser))
+            ->when(in_array($filters['assessment_type'], ['tka', 'survey_karakter', 'sulingjar'], true), fn($q) => $q->where('assessment_type', $filters['assessment_type']))
             ->distinct()
             ->pluck('mapel')
             ->filter()
@@ -68,6 +71,7 @@ class MaterialController extends Controller {
 
         $curriculums = Material::query()
             ->when($hasJenjang, fn($q) => $q->where('jenjang', $jenjangUser))
+            ->when(in_array($filters['assessment_type'], ['tka', 'survey_karakter', 'sulingjar'], true), fn($q) => $q->where('assessment_type', $filters['assessment_type']))
             ->distinct()
             ->pluck('curriculum')
             ->filter()

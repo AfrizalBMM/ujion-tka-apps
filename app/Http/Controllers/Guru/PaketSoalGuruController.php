@@ -13,14 +13,21 @@ class PaketSoalGuruController extends Controller
     {
         $user = $request->user();
         $this->authorize('viewAny', PaketSoal::class);
+        $search = trim((string) $request->query('search', ''));
 
         $paketSoals = PaketSoal::query()
             ->with(['jenjang', 'mapelPakets'])
             ->whereHas('jenjang', fn ($query) => $query->where('kode', $user->jenjang))
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('nama', 'like', '%' . $search . '%')
+                        ->orWhere('tahun_ajaran', 'like', '%' . $search . '%');
+                });
+            })
             ->latest()
             ->get();
 
-        return view('guru.paket-soal.index', compact('paketSoals'));
+        return view('guru.paket-soal.index', compact('paketSoals', 'search'));
     }
 
     public function show(PaketSoal $paket): View

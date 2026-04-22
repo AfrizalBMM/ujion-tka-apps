@@ -18,42 +18,48 @@ class MaterialController extends Controller
     public function template(Request $request): StreamedResponse
     {
         $defaultJenjang = $this->normalizeJenjang($request->input('jenjang'));
+        $assessmentType = $this->normalizeAssessmentType($request->input('assessment_type')) ?? 'tka';
 
-        $examples = match ($defaultJenjang) {
+        $examples = $assessmentType === 'survey_karakter'
+            ? $this->surveyKarakterExamples($defaultJenjang)
+            : ($assessmentType === 'sulingjar'
+                ? $this->sulingjarExamples($defaultJenjang)
+                : match ($defaultJenjang) {
             'SD' => [
-                ['SD', 'Matematika',       'Merdeka', 'Numerasi',  'Bilangan',     'Bilangan Cacah',                    'https://contoh-materi.test/bilangan-cacah'],
-                ['SD', 'Matematika',       'K-13',    'Numerasi',  'Bilangan',     'Operasi hitung dasar',              ''],
-                ['SD', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Narasi',  'Mengidentifikasi ide pokok',        'https://contoh-materi.test/ide-pokok'],
-                ['SD', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Narasi',  'Menentukan gagasan utama',          ''],
+                ['SD', 'tka', 'Matematika',       'Merdeka', 'Numerasi',  'Bilangan',     'Bilangan Cacah',                    'https://contoh-materi.test/bilangan-cacah'],
+                ['SD', 'tka', 'Matematika',       'K-13',    'Numerasi',  'Bilangan',     'Operasi hitung dasar',              ''],
+                ['SD', 'tka', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Narasi',  'Mengidentifikasi ide pokok',        'https://contoh-materi.test/ide-pokok'],
+                ['SD', 'tka', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Narasi',  'Menentukan gagasan utama',          ''],
             ],
             'SMP' => [
-                ['SMP', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan', 'Skala dan rasio',                  'https://contoh-materi.test/skala-rasio'],
-                ['SMP', 'Matematika',       'K-13',    'Numerasi',  'Aljabar',      'Persamaan linear satu variabel',   ''],
-                ['SMP', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Informasi','Menentukan gagasan utama',        'https://contoh-materi.test/gagasan-utama'],
-                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Deskripsi','Mengidentifikasi informasi tersurat',''],
+                ['SMP', 'tka', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan', 'Skala dan rasio',                  'https://contoh-materi.test/skala-rasio'],
+                ['SMP', 'tka', 'Matematika',       'K-13',    'Numerasi',  'Aljabar',      'Persamaan linear satu variabel',   ''],
+                ['SMP', 'tka', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Informasi','Menentukan gagasan utama',        'https://contoh-materi.test/gagasan-utama'],
+                ['SMP', 'tka', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Deskripsi','Mengidentifikasi informasi tersurat',''],
             ],
             'SMA' => [
-                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat','Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
-                ['SMA', 'Matematika',       'K-13',    'Numerasi',  'Trigonometri',  'Nilai trigonometri sudut istimewa',''],
-                ['SMA', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   'https://contoh-materi.test/argumen-kompleks'],
-                ['SMA', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Eksposisi','Menentukan tesis dan argumen',    ''],
+                ['SMA', 'tka', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat','Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
+                ['SMA', 'tka', 'Matematika',       'K-13',    'Numerasi',  'Trigonometri',  'Nilai trigonometri sudut istimewa',''],
+                ['SMA', 'tka', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   'https://contoh-materi.test/argumen-kompleks'],
+                ['SMA', 'tka', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Eksposisi','Menentukan tesis dan argumen',    ''],
             ],
             default => [
-                ['SD',  'Matematika',       'Merdeka', 'Numerasi',  'Bilangan',      'Bilangan Cacah',                  'https://contoh-materi.test/bilangan-cacah'],
-                ['SD',  'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Narasi',   'Mengidentifikasi ide pokok',      ''],
-                ['SMP', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan',  'Skala dan rasio',                 'https://contoh-materi.test/skala-rasio'],
-                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Informasi','Menentukan gagasan utama',        ''],
-                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat','Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
-                ['SMA', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   ''],
+                ['SD',  'tka', 'Matematika',       'Merdeka', 'Numerasi',  'Bilangan',      'Bilangan Cacah',                  'https://contoh-materi.test/bilangan-cacah'],
+                ['SD',  'tka', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Narasi',   'Mengidentifikasi ide pokok',      ''],
+                ['SMP', 'tka', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan',  'Skala dan rasio',                 'https://contoh-materi.test/skala-rasio'],
+                ['SMP', 'tka', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Informasi','Menentukan gagasan utama',        ''],
+                ['SMA', 'tka', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat','Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
+                ['SMA', 'tka', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   ''],
             ],
-        };
+        });
 
         $filename = $defaultJenjang
-            ? 'template-materi-' . strtolower($defaultJenjang) . '.xls'
-            : 'template-materi.xls';
+            ? 'template-materi-' . $assessmentType . '-' . strtolower($defaultJenjang) . '.xls'
+            : 'template-materi-' . $assessmentType . '.xls';
 
         return SpreadsheetTemplateExporter::download($filename, [
             'jenjang',
+            'assessment_type',
             'mapel',
             'curriculum',
             'subelement',
@@ -78,6 +84,7 @@ class MaterialController extends Controller
         $validated = $request->validate([
             'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
             'default_jenjang' => ['nullable', 'in:SD,SMP,SMA'],
+            'assessment_type' => ['nullable', 'in:tka,survey_karakter,sulingjar'],
         ]);
 
         try {
@@ -95,6 +102,7 @@ class MaterialController extends Controller
         foreach ($rows as $row) {
             $payload = [
                 'jenjang' => $this->normalizeJenjang($row['jenjang'] ?? null) ?? $defaultJenjang,
+                'assessment_type' => trim((string) ($row['assessment_type'] ?? $validated['assessment_type'] ?? 'tka')),
                 'mapel' => trim((string) ($row['mapel'] ?? '')),
                 'curriculum' => $this->normalizeCurriculum($row['curriculum'] ?? null),
                 'subelement' => trim((string) ($row['subelement'] ?? '')),
@@ -124,6 +132,7 @@ class MaterialController extends Controller
             $matchKeys = [
                 'jenjang'    => $payload['jenjang'] ?? null,
                 'mapel'      => $payload['mapel'],
+                'assessment_type' => $payload['assessment_type'],
                 'curriculum' => $payload['curriculum'],
                 'subelement' => $payload['subelement'],
                 'unit'       => $payload['unit'],
@@ -151,6 +160,7 @@ class MaterialController extends Controller
     {
         $validated = $request->validate([
             'jenjang' => ['nullable', 'in:SD,SMP,SMA'],
+            'assessment_type' => ['required', 'in:tka,survey_karakter,sulingjar'],
             'mapel' => ['required', 'string', 'max:120'],
             'curriculum' => ['required', 'in:K-13,Merdeka'],
             'subelement' => ['required', 'string', 'max:120'],
@@ -180,6 +190,7 @@ class MaterialController extends Controller
 
     public function index(Request $request): View {
         $filter     = $request->query('jenjang');
+        $assessmentType = $request->query('assessment_type');
         $mapel      = $request->query('mapel');
         $curriculum = $request->query('curriculum');
         $subelement = $request->query('subelement');
@@ -196,6 +207,10 @@ class MaterialController extends Controller
             } else {
                 $materialsQuery->where('jenjang', $filter);
             }
+        }
+
+        if (in_array($assessmentType, ['tka', 'survey_karakter', 'sulingjar'], true)) {
+            $materialsQuery->where('assessment_type', $assessmentType);
         }
 
         // Dropdown filters
@@ -241,6 +256,9 @@ class MaterialController extends Controller
                 $baseQuery->where('jenjang', $filter);
             }
         }
+        if (in_array($assessmentType, ['tka', 'survey_karakter', 'sulingjar'], true)) {
+            $baseQuery->where('assessment_type', $assessmentType);
+        }
         $mapels      = $baseQuery->clone()->distinct()->whereNotNull('mapel')->where('mapel', '!=', '')->pluck('mapel')->sort()->values();
         $curriculums = $baseQuery->clone()->distinct()->pluck('curriculum')->sort()->values();
         $subelements = $baseQuery->clone()->distinct()->pluck('subelement')->sort()->values();
@@ -249,7 +267,7 @@ class MaterialController extends Controller
 
         return view('superadmin.materials', compact(
             'materials', 'filter',
-            'mapel', 'curriculum', 'subelement', 'unit', 'subUnit', 'search',
+            'assessmentType', 'mapel', 'curriculum', 'subelement', 'unit', 'subUnit', 'search',
             'mapels', 'curriculums', 'subelements', 'units', 'subUnits'
         ));
     }
@@ -269,6 +287,43 @@ class MaterialController extends Controller
             'MERDEKA', 'KURIKULUMMERDEKA' => 'Merdeka',
             'K13', 'K-13', 'KURIKULUM2013' => 'K-13',
             default => null,
+        };
+    }
+
+    private function normalizeAssessmentType(?string $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        return in_array($normalized, ['tka', 'survey_karakter', 'sulingjar'], true) ? $normalized : null;
+    }
+
+    private function surveyKarakterExamples(?string $jenjang): array
+    {
+        return match ($jenjang) {
+            'SD' => [
+                ['SD', 'survey_karakter', 'Survey Karakter', 'Merdeka', 'Integritas', 'Disiplin Diri', 'Datang tepat waktu', 'https://contoh-materi.test/disiplin-sd'],
+                ['SD', 'survey_karakter', 'Survey Karakter', 'Merdeka', 'Gotong Royong', 'Kepedulian', 'Membantu teman belajar', ''],
+            ],
+            default => [
+                ['SMP', 'survey_karakter', 'Survey Karakter', 'Merdeka', 'Integritas', 'Tanggung Jawab', 'Menuntaskan tugas tanpa diingatkan', 'https://contoh-materi.test/tanggung-jawab'],
+                ['SMP', 'survey_karakter', 'Survey Karakter', 'Merdeka', 'Kolaborasi', 'Empati', 'Menghargai pendapat teman', ''],
+                ['SMA', 'survey_karakter', 'Survey Karakter', 'Merdeka', 'Kemandirian', 'Refleksi Diri', 'Mengevaluasi perilaku belajar', ''],
+            ],
+        };
+    }
+
+    private function sulingjarExamples(?string $jenjang): array
+    {
+        return match ($jenjang) {
+            'SD' => [
+                ['SD', 'sulingjar', 'Sulingjar', 'Merdeka', 'Keamanan', 'Rasa Aman', 'Kenyamanan di kelas', 'https://contoh-materi.test/rasa-aman-sd'],
+                ['SD', 'sulingjar', 'Sulingjar', 'Merdeka', 'Interaksi', 'Relasi Positif', 'Sikap saling menghargai', ''],
+            ],
+            default => [
+                ['SMP', 'sulingjar', 'Sulingjar', 'Merdeka', 'Fasilitas', 'Dukungan Belajar', 'Ketersediaan ruang belajar', 'https://contoh-materi.test/fasilitas-belajar'],
+                ['SMP', 'sulingjar', 'Sulingjar', 'Merdeka', 'Kebinekaan', 'Inklusivitas', 'Penerimaan terhadap perbedaan', ''],
+                ['SMA', 'sulingjar', 'Sulingjar', 'Merdeka', 'Partisipasi', 'Keterlibatan Siswa', 'Kesempatan menyampaikan pendapat', ''],
+            ],
         };
     }
 }

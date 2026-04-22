@@ -122,8 +122,10 @@ class SoalController extends Controller
             'material_unit'       => trim((string) $request->query('material_unit', '')),
             'material_sub_unit'   => trim((string) $request->query('material_sub_unit', '')),
         ];
+        $assessmentType = $mapel->assessment_type;
 
         $bankSoals = GlobalQuestion::where('is_active', true)
+            ->where('assessment_type', $assessmentType)
             ->when($filters['search'] !== '', function ($query) use ($filters) {
                 $query->where(function ($inner) use ($filters) {
                     $inner->where('question_text', 'like', '%' . $filters['search'] . '%')
@@ -187,7 +189,10 @@ class SoalController extends Controller
         ]);
 
         $selectedIds = array_values(array_unique($data['global_question_ids']));
-        $bankSoals   = GlobalQuestion::whereIn('id', $selectedIds)->get()->keyBy('id');
+        $bankSoals   = GlobalQuestion::where('assessment_type', $mapel->assessment_type)
+            ->whereIn('id', $selectedIds)
+            ->get()
+            ->keyBy('id');
 
         $nextNomor = ((int) $mapel->soals()->max('nomor_soal'));
         $imported  = 0;

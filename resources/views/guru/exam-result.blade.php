@@ -4,14 +4,14 @@
 <div class="max-w-3xl space-y-6">
     <h1 class="text-2xl font-bold mb-4">Hasil Simulasi: {{ $exam->judul }}</h1>
     <div class="card p-4 mb-4">
-        <div class="font-bold">Skor simulasi Anda:</div>
+        <div class="font-bold">Hasil simulasi Anda:</div>
         <div class="text-3xl text-blue-700 font-bold">{{ $result ? $result['skor'] : '-' }}</div>
         @if($result['waktu_selesai'] ?? null)
             <div class="mt-2 text-sm text-gray-500">Selesai pada {{ $result['waktu_selesai']->format('d M Y H:i') }}</div>
         @endif
     </div>
     <div class="card p-4">
-        <h2 class="font-semibold mb-2">Pembahasan untuk Evaluasi Guru</h2>
+        <h2 class="font-semibold mb-2">Ringkasan Respons untuk Evaluasi</h2>
         <ul class="space-y-2">
             @forelse ($pembahasan as $p)
                 <li class="border-b pb-2">

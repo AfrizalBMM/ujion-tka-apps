@@ -36,6 +36,10 @@
     @php
     $materialFilter = request()->query('jenjang');
     $globalQuestionFilter = request()->query('jenjang_id');
+    $jenjangSidebar = \App\Models\Jenjang::orderBy('urutan')->get()->keyBy('kode');
+    $sdJenjangId = $jenjangSidebar->get('SD')?->id;
+    $smpJenjangId = $jenjangSidebar->get('SMP')?->id;
+    $smaJenjangId = $jenjangSidebar->get('SMA')?->id;
     @endphp
     <header class="app-topbar">
         <div class="app-topbar-panel">
@@ -127,7 +131,7 @@
             <a href="{{ route('superadmin.paket-soal.index') }}"
                 class="mobile-nav-link {{ request()->routeIs('superadmin.paket-soal.*') || request()->routeIs('superadmin.soal.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-database"></i>
-                Paket Soal
+                Assessment
             </a>
             <a href="{{ route('superadmin.exams.index') }}"
                 class="mobile-nav-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
@@ -188,7 +192,7 @@
                         <a href="{{ route('superadmin.materials.index') }}"
                             class="sidebar-sublink {{ empty($materialFilter) ? 'active' : '' }}">
                             <span class="sidebar-sublink-badge">ALL</span>
-                            <span class="sidebar-sublink-label">Semua jenjang</span>
+                            <span class="sidebar-sublink-label">Semua Jenjang</span>
                         </a>
                         <a href="{{ route('superadmin.materials.index', ['jenjang' => 'SD']) }}"
                             class="sidebar-sublink {{ $materialFilter === 'SD' ? 'active' : '' }}">
@@ -221,20 +225,20 @@
                         <a href="{{ route('superadmin.global-questions.index') }}"
                             class="sidebar-sublink {{ empty($globalQuestionFilter) ? 'active' : '' }}">
                             <span class="sidebar-sublink-badge">ALL</span>
-                            <span class="sidebar-sublink-label">Semua jenjang</span>
+                            <span class="sidebar-sublink-label">Semua Jenjang</span>
                         </a>
-                        <a href="{{ route('superadmin.global-questions.index', ['jenjang_id' => 1]) }}"
-                            class="sidebar-sublink {{ $globalQuestionFilter == '1' ? 'active' : '' }}">
+                        <a href="{{ route('superadmin.global-questions.index', ['jenjang_id' => $sdJenjangId]) }}"
+                            class="sidebar-sublink {{ (string) $globalQuestionFilter === (string) $sdJenjangId ? 'active' : '' }}">
                             <span class="sidebar-sublink-badge">SD</span>
                             <span class="sidebar-sublink-label">Bank Soal SD</span>
                         </a>
-                        <a href="{{ route('superadmin.global-questions.index', ['jenjang_id' => 2]) }}"
-                            class="sidebar-sublink {{ $globalQuestionFilter == '2' ? 'active' : '' }}">
+                        <a href="{{ route('superadmin.global-questions.index', ['jenjang_id' => $smpJenjangId]) }}"
+                            class="sidebar-sublink {{ (string) $globalQuestionFilter === (string) $smpJenjangId ? 'active' : '' }}">
                             <span class="sidebar-sublink-badge">SMP</span>
                             <span class="sidebar-sublink-label">Bank Soal SMP</span>
                         </a>
-                        <a href="{{ route('superadmin.global-questions.index', ['jenjang_id' => 3]) }}"
-                            class="sidebar-sublink {{ $globalQuestionFilter == '3' ? 'active' : '' }}">
+                        <a href="{{ route('superadmin.global-questions.index', ['jenjang_id' => $smaJenjangId]) }}"
+                            class="sidebar-sublink {{ (string) $globalQuestionFilter === (string) $smaJenjangId ? 'active' : '' }}">
                             <span class="sidebar-sublink-badge">SMA</span>
                             <span class="sidebar-sublink-label">Bank Soal SMA</span>
                         </a>
@@ -243,12 +247,12 @@
                 <a href="{{ route('superadmin.paket-soal.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.paket-soal.*') || request()->routeIs('superadmin.soal.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-database w-5"></i>
-                    <span class="sidebar-link-label">Paket Soal TKA</span>
+                    <span class="sidebar-link-label">Paket Assessment</span>
                 </a>
                 <a href="{{ route('superadmin.exams.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-file-lines w-5"></i>
-                    <span class="sidebar-link-label">Manajemen Ujian</span>
+                    <span class="sidebar-link-label">Manajemen Ujian & Survey</span>
                 </a>
 
                 <div class="sidebar-section-title">Sistem</div>
@@ -276,7 +280,7 @@
                     </div>
                 </div>
                 <footer class="page-footer">
-                    2026 Ujion TKA by Reditech
+                    2026 Ujion Assessment by Reditech
                 </footer>
             </div>
         </main>

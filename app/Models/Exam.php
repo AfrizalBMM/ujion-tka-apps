@@ -9,6 +9,18 @@ class Exam extends Model {
         'is_active'      => 'boolean',
     ];
 
+    public function getAssessmentLabelAttribute(): string
+    {
+        $assessmentType = $this->assessment_type ?: ($this->paketSoal?->assessment_type ?: 'paket_lengkap');
+
+        return config('ujion.assessment_types.' . $assessmentType . '.label', strtoupper((string) $assessmentType));
+    }
+
+    public function isSurvey(): bool
+    {
+        return in_array($this->assessment_type, ['survey_karakter', 'sulingjar'], true);
+    }
+
     public function questions() {
         return $this->belongsToMany(Question::class, 'exam_question')->withTimestamps()->withPivot('order');
     }

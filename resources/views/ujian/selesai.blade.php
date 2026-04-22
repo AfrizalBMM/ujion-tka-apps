@@ -23,7 +23,7 @@
             ✅
         </div>
 
-        <h1 class="text-2xl font-bold text-slate-900">Ujian Selesai!</h1>
+        <h1 class="text-2xl font-bold text-slate-900">{{ $session?->mapelPaket?->isSurvey() ? 'Survey Selesai!' : 'Ujian Selesai!' }}</h1>
         <p class="mt-2 text-sm text-textSecondary">
             {{ (isset($session) && $session->nama) ? 'Terima kasih, ' . $session->nama . '.' : 'Terima kasih.' }}
             Jawaban Anda sudah berhasil disimpan.
@@ -31,7 +31,7 @@
 
         @if(isset($session) && $session->skor !== null)
             <div class="mt-6">
-                <div class="text-xs font-bold uppercase tracking-widest text-textSecondary">Estimasi Skor Mapel</div>
+                <div class="text-xs font-bold uppercase tracking-widest text-textSecondary">{{ $session?->mapelPaket?->isSurvey() ? 'Kelengkapan Respons' : 'Estimasi Skor Mapel' }}</div>
                 <div class="mt-2 text-5xl font-black text-indigo-600">
                     {{ number_format((float) $session->skor, 1) }}
                 </div>
@@ -53,13 +53,13 @@
         @endif
 
         <div class="mt-6 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-left text-xs text-amber-800">
-            <p class="font-semibold">Jika ada mapel berikutnya:</p>
-            <p class="mt-1">Tunggu token mapel berikutnya dari guru/pengawas, kemudian masukkan token tersebut di halaman masuk ujian.</p>
+            <p class="font-semibold">Jika ada bagian berikutnya:</p>
+            <p class="mt-1">Tunggu token berikutnya dari guru/pengawas, kemudian masukkan token tersebut di halaman masuk ujian.</p>
         </div>
 
         <div class="mt-6">
             <a href="{{ route('siswa.login') }}" class="btn-primary inline-flex px-8 py-3">
-                Masuk Mapel Berikutnya
+                Masuk Bagian Berikutnya
             </a>
         </div>
         <div class="mt-3">

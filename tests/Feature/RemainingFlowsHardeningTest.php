@@ -115,6 +115,7 @@ class RemainingFlowsHardeningTest extends TestCase
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.global-questions.store'), [
             'jenjang_id' => $jenjang->id,
+            'assessment_type' => 'tka',
             'question_type' => 'multiple_choice',
             'question_text' => 'Ibu kota Indonesia adalah?',
             'options' => ['Jakarta', 'Bandung', 'Surabaya', ''],
@@ -220,14 +221,14 @@ class RemainingFlowsHardeningTest extends TestCase
     {
         $superadmin = $this->createSuperadmin();
 
-        $materialsTemplate = $this->actingAs($superadmin)->get(route('superadmin.materials.template'));
+        $materialsTemplate = $this->actingAs($superadmin)->get(route('superadmin.materials.template', ['assessment_type' => 'sulingjar']));
         $materialsTemplate->assertOk();
-        $this->assertStringContainsString('template-materi.xls', $materialsTemplate->headers->get('content-disposition', ''));
+        $this->assertStringContainsString('template-materi-sulingjar.xls', $materialsTemplate->headers->get('content-disposition', ''));
         $this->assertStringContainsString('<Workbook', $materialsTemplate->streamedContent());
 
-        $questionsTemplate = $this->actingAs($superadmin)->get(route('superadmin.global-questions.template'));
+        $questionsTemplate = $this->actingAs($superadmin)->get(route('superadmin.global-questions.template', ['assessment_type' => 'survey_karakter']));
         $questionsTemplate->assertOk();
-        $this->assertStringContainsString('template-soal-pg.xls', $questionsTemplate->headers->get('content-disposition', ''));
+        $this->assertStringContainsString('template-soal-pg-survey_karakter.xls', $questionsTemplate->headers->get('content-disposition', ''));
 
         $examsTemplate = $this->actingAs($superadmin)->get(route('superadmin.exams.template'));
         $examsTemplate->assertOk();

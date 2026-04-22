@@ -112,7 +112,7 @@
       </a>
       <a href="{{ route('guru.paket-soal.index') }}" class="mobile-nav-link {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
         <i class="fa-solid fa-database"></i>
-        Paket Soal
+        Paket
       </a>
       <a href="{{ route('guru.exams') }}" class="mobile-nav-link {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
         <i class="fa-solid fa-file-lines"></i>
@@ -165,12 +165,12 @@
         <a href="{{ route('guru.paket-soal.index') }}"
           class="sidebar-link {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
           <i class="fa-solid fa-database w-5"></i>
-          <span class="sidebar-link-label">Paket Soal TKA</span>
+          <span class="sidebar-link-label">Paket Lengkap</span>
         </a>
         <a href="{{ route('guru.exams') }}"
           class="sidebar-link {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
           <i class="fa-solid fa-file-lines w-5"></i>
-          <span class="sidebar-link-label">Simulasi Ujian</span>
+          <span class="sidebar-link-label">Simulasi Paket</span>
         </a>
         <a href="{{ route('guru.results.index') }}"
           class="sidebar-link {{ request()->routeIs('guru.results.*') ? 'active' : '' }}">

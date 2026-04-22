@@ -5,9 +5,9 @@
 @section('content')
 <div class="space-y-6">
     <section class="page-hero">
-        <span class="page-kicker">{{ $paket->jenjang?->kode }} &middot; {{ $paket->tahun_ajaran }}</span>
+        <span class="page-kicker">Paket Lengkap &middot; {{ $paket->jenjang?->kode }} &middot; {{ $paket->tahun_ajaran }}</span>
         <h1 class="page-title">{{ $paket->nama }}</h1>
-        <p class="page-description">Akses tiap mapel untuk menyusun soal, bacaan, dan struktur paket ujian siswa.</p>
+        <p class="page-description">Kelola 4 bagian baku dalam paket ini: Bahasa Indonesia, Matematika, Survey Karakter, dan Sulingjar.</p>
         <div class="page-actions">
             <a href="{{ route('superadmin.paket-soal.edit', $paket) }}" class="btn-secondary border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white">Edit Metadata</a>
         </div>
@@ -19,7 +19,7 @@
                 <div class="section-heading mb-5">
                     <div>
                         <h2 class="section-title">{{ $mapel->nama_label }}</h2>
-                        <p class="section-description">{{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} soal &middot; {{ $mapel->durasi_menit }} menit</p>
+                        <p class="section-description">{{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} soal &middot; {{ $mapel->durasi_menit }} menit &middot; {{ $mapel->isSurvey() ? 'Bagian survey' : 'Bagian akademik' }}</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <a href="{{ route('superadmin.soal.create', [$paket, $mapel]) }}"
@@ -100,7 +100,7 @@
                             <p class="mt-2 text-sm text-textSecondary">{{ \Illuminate\Support\Str::limit(strip_tags($soal->pertanyaan), 120) }}</p>
                         </div>
                     @empty
-                        <div class="empty-state">Belum ada soal pada mapel ini.</div>
+                        <div class="empty-state">Belum ada soal pada bagian ini.</div>
                     @endforelse
                 </div>
             </article>
@@ -116,7 +116,7 @@
                     Token Akses Ujian
                 </h2>
                 <p class="section-description">
-                    Daftar sesi ujian yang menggunakan paket ini. Bagikan token kepada guru agar bisa melakukan simulasi.
+                    Daftar ujian yang memakai paket lengkap ini. Setiap ujian akan otomatis memiliki token terpisah untuk 4 bagian paket.
                 </p>
             </div>
             <a href="{{ route('superadmin.exams.index') }}" class="btn-secondary px-4 py-2 text-xs">

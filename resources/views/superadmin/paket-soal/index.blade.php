@@ -6,15 +6,35 @@
 <div class="space-y-6">
     <section class="page-hero">
         <span class="page-kicker">Paket Soal Per Jenjang</span>
-        <h1 class="page-title">Kelola paket TKA yang terdiri dari dua mapel dan struktur soal baru.</h1>
-        <p class="page-description">Paket aktif per jenjang menjadi sumber utama konten untuk ujian siswa.</p>
+        <h1 class="page-title">Kelola paket lengkap per jenjang.</h1>
+        <p class="page-description">Setiap paket aktif menjadi sumber utama ujian dan otomatis memuat Bahasa Indonesia, Matematika, Survey Karakter, dan Sulingjar.</p>
         <div class="page-actions">
             <a href="{{ route('superadmin.paket-soal.create') }}" class="btn-primary">Paket Baru</a>
         </div>
     </section>
 
     <section class="card">
-        <form class="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+        @php
+            $activeFilterCount = collect([
+                ($search ?? '') !== '' ? $search : null,
+                request('jenjang_id'),
+                request('tahun_ajaran'),
+            ])->filter()->count();
+        @endphp
+        <div class="mb-5 flex items-center gap-3">
+            <div class="font-bold text-lg">Filter Paket</div>
+            @if ($activeFilterCount > 0)
+                <span class="badge-info text-xs">{{ $activeFilterCount }} filter aktif</span>
+                <a href="{{ route('superadmin.paket-soal.index') }}" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1">
+                    <i class="fa-solid fa-xmark"></i> Reset
+                </a>
+            @endif
+        </div>
+        <form method="GET" action="{{ route('superadmin.paket-soal.index') }}" class="grid gap-4 lg:grid-cols-[minmax(0,2fr)_1fr_1fr_auto]">
+            <div class="input-group">
+                <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Cari Paket</label>
+                <input type="text" name="search" class="input" value="{{ $search ?? '' }}" placeholder="Nama paket, tahun ajaran, jenjang, atau pembuat">
+            </div>
             <div class="input-group">
                 <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Filter Jenjang</label>
                 <select name="jenjang_id" class="input">
@@ -28,8 +48,11 @@
                 <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Filter Tahun Ajaran</label>
                 <input type="text" name="tahun_ajaran" class="input" value="{{ request('tahun_ajaran') }}" placeholder="2025/2026">
             </div>
-            <div class="flex items-end">
-                <button class="btn-secondary w-full" type="submit">Terapkan</button>
+            <div class="flex items-end gap-3">
+                <button class="btn-primary w-full lg:w-auto" type="submit">
+                    <i class="fa-solid fa-magnifying-glass mr-2"></i>Cari
+                </button>
+                <a href="{{ route('superadmin.paket-soal.index') }}" class="btn-secondary w-full lg:w-auto text-center">Reset</a>
             </div>
         </form>
     </section>
@@ -42,7 +65,7 @@
                         <th>Paket</th>
                         <th>Jenjang</th>
                         <th>Tahun</th>
-                        <th>Mapel</th>
+                        <th>Bagian Paket</th>
                         <th>Status</th>
                         <th>Dibuat Oleh</th>
                         <th>Aksi</th>

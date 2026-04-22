@@ -6,11 +6,11 @@
 @php($canManage = $paket->isManagedByGuru(auth()->user()))
 <div class="space-y-6">
     <section class="page-hero">
-        <span class="page-kicker">{{ $paket->jenjang?->kode }} &middot; {{ $paket->tahun_ajaran }}</span>
+        <span class="page-kicker">Paket Lengkap &middot; {{ $paket->jenjang?->kode }} &middot; {{ $paket->tahun_ajaran }}</span>
         <h1 class="page-title">{{ $paket->nama }}</h1>
         <p class="page-description">
             {{ $canManage
-                ? 'Anda dapat meninjau dan mengelola butir soal pada mapel yang sesuai dengan jenjang Anda.'
+                ? 'Anda dapat meninjau dan mengelola 4 bagian baku paket sesuai jenjang Anda.'
                 : 'Paket ini dibuat oleh superadmin, sehingga di akun guru hanya dapat dilihat sebagai referensi.' }}
         </p>
     </section>
@@ -23,6 +23,7 @@
                     <h2 class="section-title">{{ $mapel->nama_label }}</h2>
                     <p class="section-description">{{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} soal &middot;
                         {{ $mapel->durasi_menit }} menit
+                        &middot; {{ $mapel->isSurvey() ? 'Bagian survey' : 'Bagian akademik' }}
                     </p>
                 </div>
                 <a href="{{ route('guru.soal.index', [$paket, $mapel]) }}"
@@ -71,7 +72,7 @@
                     </p>
                 </div>
                 @empty
-                <div class="empty-state">Belum ada soal pada mapel ini.</div>
+                <div class="empty-state">Belum ada soal pada bagian ini.</div>
                 @endforelse
             </div>
         </article>
@@ -87,7 +88,7 @@
                     Token Ujian Aktif
                 </h2>
                 <p class="section-description">
-                    Ujian yang sedang aktif dari paket ini. Salin token lalu masukkan di halaman
+                    Ujian aktif dari paket lengkap ini. Salin token per bagian lalu masukkan di halaman
                     <a href="{{ route('guru.exams') }}" class="font-semibold text-primary underline underline-offset-2">Simulasi
                         Ujian</a>
                     untuk memulai simulasi.

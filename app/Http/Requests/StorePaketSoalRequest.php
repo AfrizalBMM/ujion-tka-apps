@@ -15,6 +15,7 @@ class StorePaketSoalRequest extends FormRequest
     {
         return [
             'jenjang_id' => 'required|exists:jenjangs,id',
+            'assessment_type' => 'nullable|in:paket_lengkap,tka,survey_karakter,sulingjar',
             'nama' => 'required|string|max:255',
             'tahun_ajaran' => ['required', 'string', 'regex:/^\d{4}\/\d{4}$/'],
             'is_active' => 'nullable|boolean',

@@ -104,4 +104,96 @@ class SiswaExamSessionTest extends TestCase
             'jawaban_pg' => 'B',
         ]);
     }
+
+    public function test_survey_exam_completion_is_scored_by_answered_percentage(): void
+    {
+        $user = User::factory()->create([
+            'role' => User::ROLE_SUPERADMIN,
+            'account_status' => User::STATUS_ACTIVE,
+        ]);
+
+        $jenjang = Jenjang::where('kode', 'SMP')->firstOrFail();
+        $paket = PaketSoal::create([
+            'jenjang_id' => $jenjang->id,
+            'assessment_type' => 'survey_karakter',
+            'nama' => 'Survey Karakter SMP',
+            'tahun_ajaran' => '2025/2026',
+            'is_active' => true,
+            'created_by' => $user->id,
+        ]);
+
+        $mapel = MapelPaket::create([
+            'paket_soal_id' => $paket->id,
+            'nama_mapel' => 'karakter_pribadi',
+            'jumlah_soal' => 2,
+            'durasi_menit' => 30,
+            'urutan' => 1,
+        ]);
+
+        foreach ([1, 2] as $nomor) {
+            $soal = Soal::create([
+                'mapel_paket_id' => $mapel->id,
+                'nomor_soal' => $nomor,
+                'tipe_soal' => 'pilihan_ganda',
+                'indikator' => 'Contoh indikator',
+                'pertanyaan' => 'Pertanyaan survey ' . $nomor,
+                'bobot' => 1,
+            ]);
+
+            foreach (['A', 'B', 'C', 'D'] as $kode) {
+                PilihanJawaban::create([
+                    'soal_id' => $soal->id,
+                    'kode' => $kode,
+                    'teks' => 'Pilihan ' . $kode,
+                    'is_benar' => false,
+                ]);
+            }
+        }
+
+        $exam = Exam::create([
+            'user_id' => $user->id,
+            'paket_soal_id' => $paket->id,
+            'assessment_type' => 'survey_karakter',
+            'judul' => 'Survey Karakter',
+            'tanggal_terbit' => now(),
+            'max_peserta' => 50,
+            'timer' => 30,
+            'status' => 'terbit',
+            'is_active' => true,
+        ]);
+
+        $sesi = UjianSesi::create([
+            'exam_id' => $exam->id,
+            'paket_soal_id' => $paket->id,
+            'mapel_paket_id' => $mapel->id,
+            'nama' => 'Peserta Survey',
+            'session_token' => Str::random(40),
+            'status' => 'mengerjakan',
+            'timer_state' => [
+                $mapel->id => [
+                    'duration_seconds' => 1800,
+                    'remaining_seconds' => 1700,
+                    'started_at' => now()->toIso8601String(),
+                    'finished_at' => null,
+                ],
+            ],
+        ]);
+
+        $this->withSession(['participant_token' => $sesi->session_token])
+            ->postJson(route('siswa.api.save_answer'), [
+                'question_id' => $mapel->soals()->firstOrFail()->id,
+                'mapel_paket_id' => $mapel->id,
+                'tipe_soal' => 'pilihan_ganda',
+                'jawaban_pg' => 'C',
+                'is_ragu' => false,
+                'remaining_seconds' => 1600,
+            ])->assertOk();
+
+        $this->withSession(['participant_token' => $sesi->session_token])
+            ->get(route('siswa.selesai'))
+            ->assertOk();
+
+        $sesi->refresh();
+        $this->assertSame('50.00', $sesi->skor);
+    }
 }

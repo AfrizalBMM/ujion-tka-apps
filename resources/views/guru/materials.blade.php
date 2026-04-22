@@ -5,12 +5,35 @@
     <h1 class="text-2xl font-bold">Materi</h1>
     <div class="card p-4">
         <div class="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-            Anda melihat materi jenjang <strong>{{ $jenjangUser ?? '-' }}</strong>, termasuk materi global yang ditetapkan untuk jenjang yang sama.
+            Anda melihat materi jenjang <strong>{{ $jenjangUser ?? '-' }}</strong> untuk bagian paket yang relevan di jenjang yang sama.
         </div>
     </div>
     <form method="GET" action="{{ route('guru.materials') }}" class="card p-4 space-y-4 sm:space-y-0 sm:flex sm:items-end sm:gap-4" data-ssd-autosubmit data-materials-filter-form>
+        <div class="flex-1 min-w-[170px]">
+            <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Bagian Paket</label>
+            <div class="ssd-wrap mt-1">
+                @php
+                    $assessmentTypes = config('ujion.assessment_types', []);
+                    $currentAssessmentLabel = $assessmentTypes[$filters['assessment_type'] ?? '']['label'] ?? 'Semua Bagian Paket';
+                @endphp
+                <input type="hidden" name="assessment_type" value="{{ $filters['assessment_type'] ?? '' }}">
+                <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                    <span class="ssd-label">{{ $currentAssessmentLabel }}</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                </button>
+                <div class="ssd-panel">
+                    <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                    <div class="ssd-list">
+                        <div class="ssd-option{{ ($filters['assessment_type'] ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua Bagian Paket</div>
+                        @foreach($assessmentTypes as $key => $meta)
+                            <div class="ssd-option{{ ($filters['assessment_type'] ?? '') === $key ? ' ssd-selected' : '' }}" data-value="{{ $key }}">{{ $meta['label'] }}</div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="flex-1 min-w-[150px]">
-            <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mata Pelajaran</label>
+            <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mapel / Bagian</label>
             <div class="ssd-wrap mt-1">
                 <input type="hidden" name="mapel" value="{{ $filters['mapel'] ?? '' }}">
                 <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
@@ -62,7 +85,7 @@
                     <div class="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">{{ $material->mapel }}</div>
                     <div class="font-bold">{{ $material->subelement }}</div>
                 </div>
-                <span class="badge-info shrink-0">Materi dari Ujion</span>
+                <span class="badge-info shrink-0">{{ $material->assessment_label }}</span>
             </div>
             <div class="mt-1 text-sm text-textSecondary">
                 <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $material->unit }}

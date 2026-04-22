@@ -31,7 +31,7 @@
                     <div class="mt-2 font-semibold">{{ $material->jenjang ?? 'Semua' }}</div>
                 </div>
                 <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
-                    <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Mata Pelajaran</div>
+                    <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Mapel / Bagian</div>
                     <div class="mt-2 font-semibold">{{ $material->mapel }}</div>
                 </div>
                 <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">

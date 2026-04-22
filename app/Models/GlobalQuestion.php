@@ -21,6 +21,11 @@ class GlobalQuestion extends Model
         'reading_passage' => 'string',
     ];
 
+    public function getAssessmentLabelAttribute(): string
+    {
+        return config('ujion.assessment_types.' . $this->assessment_type . '.label', strtoupper((string) $this->assessment_type));
+    }
+
     public function jenjang()
     {
         return $this->belongsTo(Jenjang::class, 'jenjang_id');

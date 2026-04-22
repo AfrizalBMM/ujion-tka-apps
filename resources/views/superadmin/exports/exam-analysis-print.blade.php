@@ -16,11 +16,11 @@
 <body>
     <button class="no-print" onclick="window.print()">Cetak</button>
     <h1>Analisis Ujian</h1>
-    <p>{{ $exam->judul }} · dibuat {{ now()->format('d M Y H:i') }}</p>
+    <p>{{ $exam->judul }} - dibuat {{ now()->format('d M Y H:i') }}</p>
 
     <div class="grid">
         <div class="card"><strong>Peserta Selesai</strong><div>{{ $participantsCount }}</div></div>
-        <div class="card"><strong>Rata-rata Skor</strong><div>{{ number_format($averageScore, 2) }}</div></div>
+        <div class="card"><strong>{{ $scoreMetricLabel }}</strong><div>{{ number_format($averageScore, 2) }}</div></div>
     </div>
 
     <h2>Ranking Peserta</h2>
@@ -29,7 +29,8 @@
             <tr>
                 <th>Peringkat</th>
                 <th>Nama</th>
-                <th>Skor</th>
+                <th>Bagian</th>
+                <th>Nilai / Kelengkapan</th>
             </tr>
         </thead>
         <tbody>
@@ -37,17 +38,18 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $row['name'] }}</td>
+                    <td>{{ $row['mapel'] }}</td>
                     <td>{{ $row['score'] }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3">Belum ada peserta selesai.</td>
+                    <td colspan="4">Belum ada peserta selesai.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 
-    <h2>Distribusi Nilai</h2>
+    <h2>{{ $distributionTitle }}</h2>
     <table>
         <thead>
             <tr>

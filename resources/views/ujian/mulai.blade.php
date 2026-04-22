@@ -9,7 +9,7 @@
         <div class="mb-6 flex items-start gap-4">
             <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-lg font-black text-white shadow">U</div>
             <div>
-                <p class="text-xs font-bold uppercase tracking-widest text-indigo-600">{{ $exam->judul }}</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-indigo-600">{{ $exam->assessment_label }} &middot; {{ $exam->judul }}</p>
                 <h1 class="mt-1 text-xl font-bold text-slate-900">{{ $mapel->nama_label }}</h1>
                 <p class="mt-1 text-sm text-textSecondary">Peserta: <strong>{{ $session->nama }}</strong></p>
             </div>
@@ -36,6 +36,9 @@
                 <li>• Waktu berjalan terus, tidak bisa dijeda.</li>
                 <li>• Tandai ragu-ragu jika belum yakin, tinjau kembali sebelum selesai.</li>
                 <li>• Saat waktu habis, ujian akan otomatis diselesaikan.</li>
+                @if($mapel->isSurvey())
+                    <li>Jawab survey dengan jujur sesuai kondisi yang sebenarnya.</li>
+                @endif
             </ul>
         </div>
 

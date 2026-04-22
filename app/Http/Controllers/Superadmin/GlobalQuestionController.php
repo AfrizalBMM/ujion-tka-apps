@@ -20,6 +20,7 @@ class GlobalQuestionController extends Controller
     {
         $filters = [
             'search'              => trim((string) $request->query('search', '')),
+            'assessment_type'     => trim((string) $request->query('assessment_type', '')),
             'question_type'       => trim((string) $request->query('question_type', '')),
             'status'              => trim((string) $request->query('status', '')),
             'material_mapel'      => trim((string) $request->query('material_mapel', '')),
@@ -28,6 +29,7 @@ class GlobalQuestionController extends Controller
         ];
 
         $globalQuestions = GlobalQuestion::with('material')
+            ->when(in_array($filters['assessment_type'], ['tka', 'survey_karakter', 'sulingjar'], true), fn ($query) => $query->where('assessment_type', $filters['assessment_type']))
             ->when($filters['search'] !== '', function ($query) use ($filters) {
                 $query->where(function ($inner) use ($filters) {
                     $inner->where('question_text', 'like', '%' . $filters['search'] . '%')
@@ -57,6 +59,7 @@ class GlobalQuestionController extends Controller
     {
         $validated = $request->validate([
             'jenjang_id'          => ['required', 'integer', 'exists:jenjangs,id'],
+            'assessment_type'     => ['nullable', 'in:tka,survey_karakter,sulingjar'],
             'question_type'       => ['required', 'string', 'max:40'],
             'reading_passage'     => ['nullable', 'string'],
             'question_text'       => ['required', 'string'],
@@ -77,6 +80,7 @@ class GlobalQuestionController extends Controller
 
         GlobalQuestion::create([
             'jenjang_id'          => $validated['jenjang_id'],
+            'assessment_type'     => $validated['assessment_type'] ?? 'tka',
             'material_id'         => $this->resolveMaterialIdFromAttributes($validated),
             'question_type'       => $validated['question_type'],
             'reading_passage'     => $this->normalizeNullableString($validated['reading_passage'] ?? null),
@@ -118,6 +122,7 @@ class GlobalQuestionController extends Controller
     {
         $validated = $request->validate([
             'jenjang_id'          => ['required', 'integer', 'exists:jenjangs,id'],
+            'assessment_type'     => ['nullable', 'in:tka,survey_karakter,sulingjar'],
             'question_type'       => ['required', 'string', 'max:40'],
             'reading_passage'     => ['nullable', 'string'],
             'question_text'       => ['required', 'string'],
@@ -138,6 +143,7 @@ class GlobalQuestionController extends Controller
 
         $globalQuestion->update([
             'jenjang_id'          => $validated['jenjang_id'],
+            'assessment_type'     => $validated['assessment_type'] ?? $globalQuestion->assessment_type ?? 'tka',
             'material_id'         => $this->resolveMaterialIdFromAttributes($validated),
             'question_type'       => $validated['question_type'],
             'reading_passage'     => $this->normalizeNullableString($validated['reading_passage'] ?? null),
@@ -158,15 +164,18 @@ class GlobalQuestionController extends Controller
 
     // ─── Templates ──────────────────────────────────────────────────────────────
 
-    public function template(): StreamedResponse
+    public function template(Request $request): StreamedResponse
     {
-        return $this->templatePG();
+        return $this->templatePG($request);
     }
 
-    public function templatePG(): StreamedResponse
+    public function templatePG(Request $request): StreamedResponse
     {
-        return SpreadsheetTemplateExporter::download('template-soal-pg.xls', [
+        $assessmentType = $this->normalizeAssessmentType($request->query('assessment_type')) ?? 'tka';
+
+        return SpreadsheetTemplateExporter::download('template-soal-pg-' . $assessmentType . '.xls', [
             'jenjang_id',
+            'assessment_type',
             'question_type',
             'reading_passage',
             'question_text',
@@ -183,16 +192,16 @@ class GlobalQuestionController extends Controller
             'answer_key',
             'explanation',
             'is_active',
-        ], [
-            ['1', 'multiple_choice', 'Bacaan opsional, boleh dikosongkan.', 'Contoh pertanyaan pilihan ganda?', 'Matematika', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'Jakarta', 'Bandung', 'Surabaya', 'Medan', '', 'A', 'Pembahasan singkat...', '1'],
-            ['2', 'multiple_choice', '', 'Ibu kota Indonesia adalah...?', 'Bahasa Indonesia', 'K-13', 'Literasi', 'Teks Deskripsi', 'Menentukan informasi tersurat', 'Jakarta', 'Bandung', 'Surabaya', 'Bali', '', 'A', '', '1'],
-        ]);
+        ], $this->templatePGExamples($assessmentType));
     }
 
-    public function templateMenjodohkan(): StreamedResponse
+    public function templateMenjodohkan(Request $request): StreamedResponse
     {
-        return SpreadsheetTemplateExporter::download('template-soal-menjodohkan.xls', [
+        $assessmentType = $this->normalizeAssessmentType($request->query('assessment_type')) ?? 'tka';
+
+        return SpreadsheetTemplateExporter::download('template-soal-menjodohkan-' . $assessmentType . '.xls', [
             'jenjang_id',
+            'assessment_type',
             'question_type',
             'question_text',
             'material_mapel',
@@ -210,10 +219,7 @@ class GlobalQuestionController extends Controller
             'pair_4_right',
             'explanation',
             'is_active',
-        ], [
-            ['1', 'matching', 'Jodohkan kata dengan artinya!', 'Bahasa Indonesia', 'Merdeka', 'Literasi', 'Kosakata', 'Makna kata', 'Dinamis', 'Bergerak', 'Statis', 'Diam', 'Eksplisit', 'Jelas/Tersurat', 'Implisit', 'Tersirat', '', '1'],
-            ['2', 'matching', 'Pasangkan bilangan dengan hasil kuadratnya!', 'Matematika', 'K-13', 'Numerasi', 'Bilangan', 'Operasi hitung', '2', '4', '3', '9', '4', '16', '5', '25', '', '1'],
-        ]);
+        ], $this->templateMatchingExamples($assessmentType));
     }
 
     // ─── Imports ─────────────────────────────────────────────────────────────────
@@ -227,6 +233,7 @@ class GlobalQuestionController extends Controller
     {
         $validated = $request->validate([
             'jenjang_id' => ['nullable', 'integer', 'exists:jenjangs,id'],
+            'assessment_type' => ['nullable', 'in:tka,survey_karakter,sulingjar'],
             'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
         ]);
 
@@ -273,6 +280,7 @@ class GlobalQuestionController extends Controller
 
                 GlobalQuestion::create([
                     'jenjang_id'          => $jenjangId,
+                    'assessment_type'     => trim((string) ($row['assessment_type'] ?? $validated['assessment_type'] ?? 'tka')),
                     'material_id'         => $this->resolveMaterialIdFromRow($row),
                     'question_type'       => $questionType,
                     'reading_passage'     => $readingPassage,
@@ -303,6 +311,7 @@ class GlobalQuestionController extends Controller
     {
         $validated = $request->validate([
             'jenjang_id' => ['required', 'integer', 'exists:jenjangs,id'],
+            'assessment_type' => ['nullable', 'in:tka,survey_karakter,sulingjar'],
             'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
         ]);
 
@@ -340,6 +349,7 @@ class GlobalQuestionController extends Controller
 
                 GlobalQuestion::create([
                     'jenjang_id'          => $validated['jenjang_id'],
+                    'assessment_type'     => trim((string) ($row['assessment_type'] ?? $validated['assessment_type'] ?? 'tka')),
                     'material_id'         => $this->resolveMaterialIdFromRow($row),
                     'question_type'       => 'matching',
                     'reading_passage'     => null,
@@ -461,6 +471,7 @@ class GlobalQuestionController extends Controller
         }
 
         return Material::query()
+            ->when(isset($row['assessment_type']), fn ($query) => $query->where('assessment_type', trim((string) $row['assessment_type'])))
             ->where('curriculum', $curriculum)
             ->where('mapel', $mapel)
             ->where('subelement', $subelement)
@@ -486,6 +497,7 @@ class GlobalQuestionController extends Controller
         }
 
         return Material::query()
+            ->when(isset($attributes['assessment_type']), fn ($query) => $query->where('assessment_type', trim((string) $attributes['assessment_type'])))
             ->where('curriculum', $curriculum)
             ->where('mapel', $mapel)
             ->where('subelement', $subelement)
@@ -506,5 +518,46 @@ class GlobalQuestionController extends Controller
         $normalized = trim((string) $value);
 
         return $normalized !== '' ? $normalized : null;
+    }
+
+    private function normalizeAssessmentType(?string $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        return in_array($normalized, ['tka', 'survey_karakter', 'sulingjar'], true) ? $normalized : null;
+    }
+
+    private function templatePGExamples(string $assessmentType): array
+    {
+        return match ($assessmentType) {
+            'survey_karakter' => [
+                ['2', 'survey_karakter', 'multiple_choice', '', 'Saya tetap mengerjakan tugas walau tidak diawasi.', 'Survey Karakter', 'Merdeka', 'Integritas', 'Tanggung Jawab', 'Konsistensi', 'Selalu', 'Sering', 'Kadang-kadang', 'Tidak Pernah', '', 'A', 'Respons paling positif menunjukkan konsistensi perilaku.', '1'],
+                ['2', 'survey_karakter', 'multiple_choice', '', 'Saya menghargai pendapat teman saat diskusi.', 'Survey Karakter', 'Merdeka', 'Kolaborasi', 'Empati', 'Diskusi Kelompok', 'Selalu', 'Sering', 'Kadang-kadang', 'Tidak Pernah', '', 'A', '', '1'],
+            ],
+            'sulingjar' => [
+                ['2', 'sulingjar', 'multiple_choice', '', 'Ruang kelas saya mendukung untuk belajar dengan nyaman.', 'Sulingjar', 'Merdeka', 'Fasilitas', 'Kenyamanan', 'Ruang Belajar', 'Sangat Setuju', 'Setuju', 'Tidak Setuju', 'Sangat Tidak Setuju', '', 'A', 'Gunakan skala persepsi yang konsisten.', '1'],
+                ['2', 'sulingjar', 'multiple_choice', '', 'Guru memberi kesempatan siswa menyampaikan pendapat.', 'Sulingjar', 'Merdeka', 'Partisipasi', 'Keterlibatan', 'Suara Siswa', 'Sangat Setuju', 'Setuju', 'Tidak Setuju', 'Sangat Tidak Setuju', '', 'A', '', '1'],
+            ],
+            default => [
+                ['1', 'tka', 'multiple_choice', 'Bacaan opsional, boleh dikosongkan.', 'Contoh pertanyaan pilihan ganda?', 'Matematika', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'Jakarta', 'Bandung', 'Surabaya', 'Medan', '', 'A', 'Pembahasan singkat...', '1'],
+                ['2', 'tka', 'multiple_choice', '', 'Ibu kota Indonesia adalah...?', 'Bahasa Indonesia', 'K-13', 'Literasi', 'Teks Deskripsi', 'Menentukan informasi tersurat', 'Jakarta', 'Bandung', 'Surabaya', 'Bali', '', 'A', '', '1'],
+            ],
+        };
+    }
+
+    private function templateMatchingExamples(string $assessmentType): array
+    {
+        return match ($assessmentType) {
+            'survey_karakter' => [
+                ['2', 'survey_karakter', 'matching', 'Pasangkan perilaku dengan nilai karakter yang paling sesuai.', 'Survey Karakter', 'Merdeka', 'Kolaborasi', 'Nilai Sosial', 'Perilaku dan Nilai', 'Mendengarkan teman', 'Empati', 'Menyelesaikan tugas kelompok', 'Tanggung Jawab', 'Menghargai perbedaan', 'Toleransi', 'Membantu teman kesulitan', 'Peduli', '', '1'],
+            ],
+            'sulingjar' => [
+                ['2', 'sulingjar', 'matching', 'Pasangkan aspek lingkungan belajar dengan contoh kondisinya.', 'Sulingjar', 'Merdeka', 'Fasilitas', 'Dukungan Belajar', 'Aspek dan Contoh', 'Kebersihan kelas', 'Ruang rapi dan nyaman', 'Keamanan', 'Tidak ada perundungan', 'Partisipasi', 'Siswa boleh bertanya', 'Relasi guru-siswa', 'Komunikasi terbuka', '', '1'],
+            ],
+            default => [
+                ['1', 'tka', 'matching', 'Jodohkan kata dengan artinya!', 'Bahasa Indonesia', 'Merdeka', 'Literasi', 'Kosakata', 'Makna kata', 'Dinamis', 'Bergerak', 'Statis', 'Diam', 'Eksplisit', 'Jelas/Tersurat', 'Implisit', 'Tersirat', '', '1'],
+                ['2', 'tka', 'matching', 'Pasangkan bilangan dengan hasil kuadratnya!', 'Matematika', 'K-13', 'Numerasi', 'Bilangan', 'Operasi hitung', '2', '4', '3', '9', '4', '16', '5', '25', '', '1'],
+            ],
+        };
     }
 }

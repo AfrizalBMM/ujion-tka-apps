@@ -8,6 +8,12 @@
         @method($method)
     @endif
 
+    <input type="hidden" name="assessment_type" value="paket_lengkap">
+
+    <div class="rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 text-sm text-indigo-900">
+        Paket dibuat dengan struktur baku per jenjang: <strong>Bahasa Indonesia</strong>, <strong>Matematika</strong>, <strong>Survey Karakter</strong>, dan <strong>Sulingjar</strong>.
+    </div>
+
     <div class="grid gap-4 md:grid-cols-2">
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Jenjang</label>
@@ -21,7 +27,6 @@
             </select>
             @error('jenjang_id') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
         </div>
-
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Tahun Ajaran</label>
             <input type="text" name="tahun_ajaran" class="input" value="{{ old('tahun_ajaran', $paket->tahun_ajaran ?? '') }}" placeholder="2025/2026" required>
@@ -31,7 +36,7 @@
 
     <div class="input-group">
         <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Nama Paket Soal</label>
-        <input type="text" name="nama" class="input" value="{{ old('nama', $paket->nama ?? '') }}" placeholder="Paket TKA SMP Gelombang 1" required>
+        <input type="text" name="nama" class="input" value="{{ old('nama', $paket->nama ?? '') }}" placeholder="Paket Lengkap SMP Gelombang 1" required>
         @error('nama') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
     </div>
 

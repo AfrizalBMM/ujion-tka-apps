@@ -3,7 +3,10 @@
 @section('content')
 <div id="builder-app" class="fixed inset-0 z-50 flex flex-col bg-gray-900/90">
     <div class="flex flex-col gap-3 bg-white p-4 shadow sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="font-bold text-lg sm:text-xl">Builder Soal Ujian: {{ $exam->judul }}</h2>
+        <div>
+            <h2 class="font-bold text-lg sm:text-xl">Builder Soal Snapshot: {{ $exam->judul }}</h2>
+            <p class="mt-1 text-sm text-textSecondary">Snapshot ini opsional dan terpisah dari 4 bagian utama paket lengkap.</p>
+        </div>
         <a href="{{ route('superadmin.exams.index') }}" class="btn-secondary w-full sm:w-auto">Keluar</a>
     </div>
     <div class="flex flex-1 flex-col overflow-hidden lg:flex-row">

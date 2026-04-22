@@ -281,6 +281,10 @@ class ExamController extends Controller
 
     private function calculateScore(UjianSesi $sesi): float
     {
+        if ($sesi->mapelPaket?->isSurvey()) {
+            return $this->calculateSurveyCompletionScore($sesi);
+        }
+
         $mapel           = $sesi->mapelPaket;
         $soals           = $mapel?->soals ?? collect();
         $jawabanBySoal   = $sesi->jawabanSiswas->keyBy('soal_id');
@@ -321,5 +325,31 @@ class ExamController extends Controller
         }
 
         return round(($earnedScore / $maxScore) * 100, 2);
+    }
+
+    private function calculateSurveyCompletionScore(UjianSesi $sesi): float
+    {
+        $soals = $sesi->mapelPaket?->soals ?? collect();
+        $jawabanBySoal = $sesi->jawabanSiswas->keyBy('soal_id');
+
+        if ($soals->isEmpty()) {
+            return 0.0;
+        }
+
+        $answered = $soals->filter(function (Soal $soal) use ($jawabanBySoal) {
+            $jawaban = $jawabanBySoal->get($soal->id);
+
+            if (! $jawaban) {
+                return false;
+            }
+
+            if ($soal->isPilihanGanda()) {
+                return filled($jawaban->jawaban_pg);
+            }
+
+            return filled($jawaban->jawaban_menjodohkan) && count($jawaban->jawaban_menjodohkan) > 0;
+        })->count();
+
+        return round(($answered / $soals->count()) * 100, 2);
     }
 }

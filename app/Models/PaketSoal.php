@@ -9,11 +9,32 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PaketSoal extends Model
 {
-    protected $fillable = ['jenjang_id', 'nama', 'tahun_ajaran', 'is_active', 'created_by'];
+    protected $fillable = ['jenjang_id', 'assessment_type', 'nama', 'tahun_ajaran', 'is_active', 'created_by'];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $paket): void {
+            if (blank($paket->assessment_type)) {
+                $paket->assessment_type = 'paket_lengkap';
+            }
+        });
+    }
+
+    public function getAssessmentLabelAttribute(): string
+    {
+        $assessmentType = $this->assessment_type ?: 'paket_lengkap';
+
+        return config('ujion.assessment_types.' . $assessmentType . '.label', strtoupper((string) $assessmentType));
+    }
+
+    public function isSurvey(): bool
+    {
+        return in_array($this->assessment_type, ['survey_karakter', 'sulingjar'], true);
+    }
 
     public function jenjang(): BelongsTo
     {

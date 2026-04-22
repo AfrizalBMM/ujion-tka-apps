@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamMapelToken;
 use App\Models\GlobalQuestion;
+use App\Models\Jenjang;
 use App\Models\Material;
 use App\Models\PaketSoal;
 use App\Models\Question;
@@ -19,10 +20,31 @@ use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamController extends Controller {
-    public function index(): View {
-        $exams = Exam::with(['paketSoal.jenjang', 'examMapelTokens.mapelPaket'])->latest()->get();
+    public function index(Request $request): View {
+        $search = trim((string) $request->query('search', ''));
+        $status = trim((string) $request->query('status', ''));
+        $jenjangId = $request->query('jenjang_id');
+
+        $exams = Exam::with(['paketSoal.jenjang', 'examMapelTokens.mapelPaket'])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('judul', 'like', '%' . $search . '%')
+                        ->orWhereHas('paketSoal', fn ($paketQuery) => $paketQuery
+                            ->where('nama', 'like', '%' . $search . '%')
+                            ->orWhere('tahun_ajaran', 'like', '%' . $search . '%')
+                            ->orWhereHas('jenjang', fn ($jenjangQuery) => $jenjangQuery
+                                ->where('kode', 'like', '%' . $search . '%')
+                                ->orWhere('nama', 'like', '%' . $search . '%')));
+                });
+            })
+            ->when(in_array($status, ['draft', 'terbit'], true), fn ($query) => $query->where('status', $status))
+            ->when($jenjangId, fn ($query) => $query->whereHas('paketSoal', fn ($paketQuery) => $paketQuery->where('jenjang_id', $jenjangId)))
+            ->latest()
+            ->get();
         $paketSoals = PaketSoal::with('jenjang')->latest()->get();
-        return view('superadmin.exams', compact('exams', 'paketSoals'));
+        $jenjangs = Jenjang::orderBy('urutan')->get();
+
+        return view('superadmin.exams', compact('exams', 'paketSoals', 'search', 'status', 'jenjangId', 'jenjangs'));
     }
 
     public function store(Request $request): RedirectResponse {
@@ -41,6 +63,7 @@ class ExamController extends Controller {
             $data['timer'] = $paket->mapelPakets->sum('durasi_menit') ?? 150;
         }
         $data['user_id'] = $request->user()->id;
+        $data['assessment_type'] = $paket->assessment_type;
 
         $exam = Exam::create($data);
 
@@ -105,6 +128,7 @@ class ExamController extends Controller {
             $exam = Exam::create([
                 'user_id'       => $request->user()->id,
                 'paket_soal_id' => $paketSoalId,
+                'assessment_type' => PaketSoal::query()->whereKey($paketSoalId)->value('assessment_type') ?? 'tka',
                 'judul'         => $judul,
                 'tanggal_terbit'=> $tanggalTerbit,
                 'max_peserta'   => $this->normalizeNullableInteger($row['max_peserta'] ?? null) ?? 50,
@@ -147,6 +171,7 @@ class ExamController extends Controller {
     public function builder(Exam $exam): View {
         $bankQuestions = GlobalQuestion::with('material')
             ->where('is_active', true)
+            ->when(($exam->assessment_type ?? 'tka') !== 'paket_lengkap', fn ($query) => $query->where('assessment_type', $exam->assessment_type ?? 'tka'))
             ->latest()
             ->get();
         $questions = $exam->questions()->orderBy('exam_question.order')->get();
@@ -241,6 +266,7 @@ class ExamController extends Controller {
     }
 
     public function show(Exam $exam): View {
+        $exam->load(['paketSoal', 'examMapelTokens.mapelPaket']);
         return view('superadmin.exam-detail', compact('exam'));
     }
 

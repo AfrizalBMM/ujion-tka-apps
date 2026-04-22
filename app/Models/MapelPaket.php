@@ -10,6 +10,16 @@ class MapelPaket extends Model
 {
     protected $fillable = ['paket_soal_id', 'nama_mapel', 'jumlah_soal', 'durasi_menit', 'urutan'];
 
+    public function getAssessmentTypeAttribute(): string
+    {
+        return config('ujion.mapel_assessment_types.' . $this->nama_mapel, 'tka');
+    }
+
+    public function isSurvey(): bool
+    {
+        return in_array($this->assessment_type, ['survey_karakter', 'sulingjar'], true);
+    }
+
     public function paketSoal(): BelongsTo
     {
         return $this->belongsTo(PaketSoal::class);
@@ -27,10 +37,7 @@ class MapelPaket extends Model
 
     public function getNamaLabelAttribute(): string
     {
-        return match ($this->nama_mapel) {
-            'matematika' => 'Matematika',
-            'bahasa_indonesia' => 'Bahasa Indonesia',
-            default => str($this->nama_mapel)->headline()->toString(),
-        };
+        return config('ujion.mapel_labels.' . $this->nama_mapel)
+            ?? str($this->nama_mapel)->replace('_', ' ')->headline()->toString();
     }
 }

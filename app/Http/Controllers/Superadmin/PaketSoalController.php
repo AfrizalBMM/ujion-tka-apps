@@ -19,15 +19,26 @@ class PaketSoalController extends Controller
     {
         $this->authorize('viewAny', PaketSoal::class);
 
+        $search = trim((string) $request->query('search', ''));
         $jenjangs = Jenjang::orderBy('urutan')->get();
         $paketSoals = PaketSoal::query()
             ->with(['jenjang', 'createdBy', 'mapelPakets'])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('nama', 'like', '%' . $search . '%')
+                        ->orWhere('tahun_ajaran', 'like', '%' . $search . '%')
+                        ->orWhereHas('jenjang', fn ($jenjangQuery) => $jenjangQuery
+                            ->where('kode', 'like', '%' . $search . '%')
+                            ->orWhere('nama', 'like', '%' . $search . '%'))
+                        ->orWhereHas('createdBy', fn ($userQuery) => $userQuery->where('name', 'like', '%' . $search . '%'));
+                });
+            })
             ->when($request->filled('jenjang_id'), fn ($query) => $query->where('jenjang_id', $request->integer('jenjang_id')))
             ->when($request->filled('tahun_ajaran'), fn ($query) => $query->where('tahun_ajaran', $request->string('tahun_ajaran')))
             ->latest()
             ->get();
 
-        return view('superadmin.paket-soal.index', compact('paketSoals', 'jenjangs'));
+        return view('superadmin.paket-soal.index', compact('paketSoals', 'jenjangs', 'search'));
     }
 
     public function create(): View
@@ -44,23 +55,24 @@ class PaketSoalController extends Controller
         $this->authorize('create', PaketSoal::class);
 
         $paket = DB::transaction(function () use ($request) {
+            $assessmentType = 'paket_lengkap';
             $paket = PaketSoal::create([
                 'jenjang_id' => $request->integer('jenjang_id'),
+                'assessment_type' => $assessmentType,
                 'nama' => $request->string('nama')->toString(),
                 'tahun_ajaran' => $request->string('tahun_ajaran')->toString(),
                 'is_active' => $request->boolean('is_active'),
                 'created_by' => $request->user()->id,
             ]);
 
-            collect([
-                ['nama_mapel' => 'matematika', 'urutan' => 1],
-                ['nama_mapel' => 'bahasa_indonesia', 'urutan' => 2],
-            ])->each(fn (array $item) => MapelPaket::create([
+            collect(config('ujion.assessment_types.' . $assessmentType . '.default_mapels', []))
+                ->values()
+                ->each(fn (string $namaMapel, int $index) => MapelPaket::create([
                 'paket_soal_id' => $paket->id,
-                'nama_mapel' => $item['nama_mapel'],
+                'nama_mapel' => $namaMapel,
                 'jumlah_soal' => 30,
                 'durasi_menit' => 75,
-                'urutan' => $item['urutan'],
+                'urutan' => $index + 1,
             ]));
 
             return $paket;
@@ -101,6 +113,7 @@ class PaketSoalController extends Controller
 
         $paket->update([
             'jenjang_id' => $request->integer('jenjang_id'),
+            'assessment_type' => 'paket_lengkap',
             'nama' => $request->string('nama')->toString(),
             'tahun_ajaran' => $request->string('tahun_ajaran')->toString(),
             'is_active' => $request->boolean('is_active'),

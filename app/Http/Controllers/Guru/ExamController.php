@@ -15,14 +15,23 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ExamController extends Controller {
-    public function index(): View {
+    public function index(Request $request): View {
         $user = Auth::user();
+        $search = trim((string) $request->query('search', ''));
 
         $available = Exam::query()
             ->with(['paketSoal.jenjang', 'examMapelTokens.mapelPaket'])
             ->where('status', 'terbit')
             ->where('is_active', true)
             ->whereHas('paketSoal.jenjang', fn ($query) => $query->where('kode', $user->jenjang))
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('judul', 'like', '%' . $search . '%')
+                        ->orWhereHas('paketSoal', fn ($paketQuery) => $paketQuery
+                            ->where('nama', 'like', '%' . $search . '%')
+                            ->orWhere('tahun_ajaran', 'like', '%' . $search . '%'));
+                });
+            })
             ->orderByDesc('tanggal_terbit')
             ->get();
 
@@ -41,13 +50,22 @@ class ExamController extends Controller {
             ->where('status', 'selesai')
             ->map(fn (UjianSesi $session) => [
                 'judul' => $session->exam?->judul ?? 'Ujian',
+                'paket' => $session->exam?->paketSoal?->nama ?? '-',
                 'skor' => $session->skor !== null ? number_format((float) $session->skor, 2) : '-',
                 'status' => $session->status,
                 'exam_id' => $session->exam_id,
             ])
+            ->filter(function (array $item) use ($search) {
+                if ($search === '') {
+                    return true;
+                }
+
+                return str_contains(strtolower($item['judul']), strtolower($search))
+                    || str_contains(strtolower($item['paket']), strtolower($search));
+            })
             ->values();
 
-        return view('guru.exams', compact('available','joined','history'));
+        return view('guru.exams', compact('available','joined','history', 'search'));
     }
 
     public function join(Request $request): RedirectResponse {

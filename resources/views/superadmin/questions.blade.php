@@ -3,9 +3,11 @@
 @section('title', 'Global Bank Soal')
 
 @section('content')
-@php
+    @php
     $optionLabels = range('A', 'Z');
+    $assessmentTypes = config('ujion.assessment_types', []);
     $materialOptions = $materials->map(fn ($material) => [
+        'assessment_type' => $material->assessment_type,
         'mapel' => $material->mapel,
         'curriculum' => $material->curriculum,
         'subelement' => $material->subelement,
@@ -14,12 +16,13 @@
     ])->values();
     $curriculumFilters = $materials->pluck('curriculum')->filter()->unique()->values();
     $mapelFilters = $materials->pluck('mapel')->filter()->unique()->values();
+    $currentAssessmentLabel = $assessmentTypes[$filters['assessment_type'] ?? '']['label'] ?? 'Semua Bagian Paket';
 @endphp
 <div class="space-y-6">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
             <h1 class="text-2xl font-bold">Bank Soal Global</h1>
-            <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola kumpulan soal yang dapat diakses oleh seluruh guru di platform Ujion.</p>
+            <p class="mt-2 text-textSecondary dark:text-slate-300">Kelola bank soal resmi per jenjang untuk 4 bagian paket: Bahasa Indonesia, Matematika, Survey Karakter, dan Sulingjar.</p>
         </div>
         <div class="flex flex-wrap gap-3">
             @if (empty($filters['jenjang_id']))
@@ -48,10 +51,34 @@
     </div>
 
     <div class="card">
+        @if (! empty($filters['assessment_type']))
+            <div class="mb-4 rounded-2xl border border-sky-200/70 bg-sky-50/70 px-4 py-3 text-sm text-sky-900">
+                Filter bagian paket aktif: <strong>{{ $currentAssessmentLabel }}</strong>. Gunakan template dan import yang sesuai agar bank soal tiap bagian tidak tercampur.
+            </div>
+        @endif
         <form method="GET" action="{{ route('superadmin.global-questions.index') }}" class="grid grid-cols-1 gap-3 lg:grid-cols-6">
             <div class="lg:col-span-2">
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Cari Soal</label>
                 <input class="input mt-1" type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari pertanyaan, kunci, pembahasan, atau materi...">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Bagian Paket</label>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="assessment_type" value="{{ $filters['assessment_type'] ?? '' }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ $currentAssessmentLabel }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($filters['assessment_type'] ?? '') === '' ? ' ssd-selected' : '' }}" data-value="">Semua Bagian Paket</div>
+                            @foreach ($assessmentTypes as $key => $meta)
+                                <div class="ssd-option{{ ($filters['assessment_type'] ?? '') === $key ? ' ssd-selected' : '' }}" data-value="{{ $key }}">{{ $meta['label'] }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
             <div>
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenis Soal</label>
@@ -190,6 +217,9 @@
                                 <span class="badge-info text-[10px] font-bold uppercase tracking-wider">
                                     {{ $q->question_type === 'matching' ? 'Menjodohkan' : str_replace('_', ' ', $q->question_type) }}
                                 </span>
+                                <span class="badge-primary bg-sky-100 text-sky-700 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                                    {{ $q->assessment_label }}
+                                </span>
                                 @if ($q->jenjang)
                                     <span class="badge-primary bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
                                         {{ $q->jenjang->nama }}
@@ -295,6 +325,7 @@
                                     'explanation'         => $q->explanation,
                                     'is_active'           => $q->is_active ? '1' : '0',
                                     'jenjang_id'          => $q->jenjang_id,
+                                    'assessment_type'     => $q->assessment_type,
                                 ];
                             @endphp
 
@@ -340,6 +371,14 @@
                         <option value="" disabled selected>Pilih Jenjang</option>
                         @foreach($jenjangs as $jenjang)
                             <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Bagian Paket</label>
+                    <select class="input mt-1" name="assessment_type" required>
+                        @foreach($assessmentTypes as $key => $meta)
+                            <option value="{{ $key }}">{{ $meta['label'] }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -506,6 +545,14 @@
                 </select>
             </div>
             <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Bagian Paket</label>
+                    <select class="input mt-1" name="assessment_type">
+                    @foreach($assessmentTypes as $key => $meta)
+                        <option value="{{ $key }}" @selected(($filters['assessment_type'] ?? 'tka') === $key)>{{ $meta['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="text-xs font-bold text-textSecondary">File Import</label>
                 <input class="input mt-1 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2"
                        type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
@@ -517,7 +564,7 @@
                 <button class="btn-primary" type="submit">
                     <i class="fa-solid fa-file-import mr-2"></i> Import Sekarang
                 </button>
-                <a class="btn-secondary" href="{{ route('superadmin.global-questions.template-pg') }}">
+                <a class="btn-secondary" href="{{ route('superadmin.global-questions.template-pg', ['assessment_type' => $filters['assessment_type'] ?? 'tka']) }}">
                     <i class="fa-solid fa-file-excel mr-2"></i> Template PG
                 </a>
                 <button class="btn-secondary" type="button" data-close-modal="import-pg-modal">Batal</button>
@@ -554,6 +601,14 @@
                 </select>
             </div>
             <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Bagian Paket</label>
+                    <select class="input mt-1" name="assessment_type">
+                    @foreach($assessmentTypes as $key => $meta)
+                        <option value="{{ $key }}" @selected(($filters['assessment_type'] ?? 'tka') === $key)>{{ $meta['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="text-xs font-bold text-textSecondary">File Import</label>
                 <input class="input mt-1 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2"
                        type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
@@ -565,7 +620,7 @@
                 <button class="btn-primary" type="submit">
                     <i class="fa-solid fa-file-import mr-2"></i> Import Sekarang
                 </button>
-                <a class="btn-secondary" href="{{ route('superadmin.global-questions.template-menjodohkan') }}">
+                <a class="btn-secondary" href="{{ route('superadmin.global-questions.template-menjodohkan', ['assessment_type' => $filters['assessment_type'] ?? 'tka']) }}">
                     <i class="fa-solid fa-file-excel mr-2"></i> Template Menjodohkan
                 </a>
                 <button class="btn-secondary" type="button" data-close-modal="import-menjodohkan-modal">Batal</button>
@@ -593,6 +648,14 @@
                         <option value="" disabled selected>Pilih Jenjang</option>
                         @foreach($jenjangs as $jenjang)
                             <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Bagian Paket</label>
+                    <select class="input mt-1" name="assessment_type" id="edit-assessment-type" required>
+                        @foreach($assessmentTypes as $key => $meta)
+                            <option value="{{ $key }}">{{ $meta['label'] }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -742,6 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const materialPickers = new Map();
     const fields = {
         questionType: document.getElementById('edit-question-type'),
+        assessmentType: document.getElementById('edit-assessment-type'),
         materialMapel: document.getElementById('edit-material-mapel'),
         materialCurriculum: document.getElementById('edit-material-curriculum'),
         materialSubelement: document.getElementById('edit-material-subelement'),
@@ -1014,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
             form.action = "{{ route('superadmin.global-questions.update', ['globalQuestion' => '__ID__']) }}".replace('__ID__', data.id);
             const jenjangInput = document.getElementById('edit-jenjang-id');
             if (jenjangInput) jenjangInput.value = data.jenjang_id ?? '';
+            if (fields.assessmentType) fields.assessmentType.value = data.assessment_type ?? 'tka';
             fields.questionType.value = data.question_type ?? 'multiple_choice';
             materialPickers.get('edit')?.setValues({
                 mapel: data.material_mapel ?? '',
