@@ -20,6 +20,7 @@ class UjianSesi extends Model
         'waktu_mulai',
         'waktu_selesai',
         'skor',
+        'profil_ringkasan',
     ];
 
     protected $casts = [
@@ -27,6 +28,7 @@ class UjianSesi extends Model
         'waktu_mulai'   => 'datetime',
         'waktu_selesai' => 'datetime',
         'skor'          => 'decimal:2',
+        'profil_ringkasan' => 'array',
     ];
 
     public function exam(): BelongsTo

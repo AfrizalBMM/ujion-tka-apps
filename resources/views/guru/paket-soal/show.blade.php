@@ -10,7 +10,7 @@
         <h1 class="page-title">{{ $paket->nama }}</h1>
         <p class="page-description">
             {{ $canManage
-                ? 'Anda dapat meninjau dan mengelola butir soal pada mapel yang sesuai dengan jenjang Anda.'
+                ? 'Anda dapat meninjau dan mengelola komponen akademik maupun survey sesuai jenjang Anda.'
                 : 'Paket ini dibuat oleh superadmin, sehingga di akun guru hanya dapat dilihat sebagai referensi.' }}
         </p>
     </section>
@@ -21,8 +21,8 @@
             <div class="section-heading mb-4">
                 <div>
                     <h2 class="section-title">{{ $mapel->nama_label }}</h2>
-                    <p class="section-description">{{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} soal &middot;
-                        {{ $mapel->durasi_menit }} menit
+                    <p class="section-description">{{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} butir &middot;
+                        {{ $mapel->durasi_menit }} menit &middot; {{ $mapel->isSurvey() ? 'Survey Profiling' : 'Akademik' }}
                     </p>
                 </div>
                 <a href="{{ route('guru.soal.index', [$paket, $mapel]) }}"
@@ -69,6 +69,9 @@
                     <p class="mt-2 text-sm text-textSecondary">
                         {{ \Illuminate\Support\Str::limit(strip_tags($soal->pertanyaan), 120) }}
                     </p>
+                    @if($mapel->isSurvey() && $soal->dimensi)
+                        <p class="mt-2 text-xs font-medium text-slate-500">{{ $soal->dimensi }}{{ $soal->subdimensi ? ' · ' . $soal->subdimensi : '' }}</p>
+                    @endif
                 </div>
                 @empty
                 <div class="empty-state">Belum ada soal pada mapel ini.</div>

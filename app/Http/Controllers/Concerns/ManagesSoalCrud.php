@@ -16,7 +16,7 @@ trait ManagesSoalCrud
     {
         $nomorSoal = (int) $request->integer('nomor_soal');
         $bobot = (int) ($request->integer('bobot') ?: 1);
-        $tipeSoal = $request->string('tipe_soal')->toString();
+        $tipeSoal = $mapel->isSurvey() ? 'pilihan_ganda' : $request->string('tipe_soal')->toString();
 
         $exists = Soal::query()
             ->where('mapel_paket_id', $mapel->id)
@@ -42,7 +42,12 @@ trait ManagesSoalCrud
                 'teks_bacaan_id' => $request->filled('teks_bacaan_id') ? $request->integer('teks_bacaan_id') : null,
                 'nomor_soal' => $nomorSoal,
                 'tipe_soal' => $tipeSoal,
+                'jenis_instrumen' => $mapel->isSurvey() ? $mapel->nama_mapel : 'akademik',
                 'indikator' => $request->string('indikator')->toString(),
+                'dimensi' => $request->string('dimensi')->toString() ?: null,
+                'subdimensi' => $request->string('subdimensi')->toString() ?: null,
+                'kategori_profil' => $request->string('kategori_profil')->toString() ?: null,
+                'arah_skor' => $request->string('arah_skor')->toString() ?: 'positif',
                 'pertanyaan' => $request->string('pertanyaan')->toString(),
                 'bobot' => $bobot,
             ];
@@ -107,8 +112,9 @@ trait ManagesSoalCrud
         }
 
         $jawabanBenar = $request->string('jawaban_benar')->toString();
+        $isSurvey = $soal->isSurvey();
 
-        foreach ($pilihan as $item) {
+        foreach ($pilihan as $index => $item) {
             $image = $request->file("pilihan_gambar.{$item['kode']}");
             $record = PilihanJawaban::firstOrNew([
                 'soal_id' => $soal->id,
@@ -124,7 +130,9 @@ trait ManagesSoalCrud
             }
 
             $record->teks = $item['teks'];
-            $record->is_benar = $item['kode'] === $jawabanBenar;
+            $record->is_benar = $isSurvey ? false : $item['kode'] === $jawabanBenar;
+            $record->nilai_survey = $isSurvey ? (int) ($request->input("pilihan.{$index}.nilai_survey") ?? 0) : null;
+            $record->profil_label = $isSurvey ? ($request->input("pilihan.{$index}.profil_label") ?: $item['teks']) : null;
             $record->save();
         }
     }

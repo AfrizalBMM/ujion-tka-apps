@@ -23,7 +23,7 @@
             ✅
         </div>
 
-        <h1 class="text-2xl font-bold text-slate-900">Ujian Selesai!</h1>
+        <h1 class="text-2xl font-bold text-slate-900">{{ isset($session) && $session->mapelPaket?->isSurvey() ? 'Survey Selesai!' : 'Ujian Selesai!' }}</h1>
         <p class="mt-2 text-sm text-textSecondary">
             {{ (isset($session) && $session->nama) ? 'Terima kasih, ' . $session->nama . '.' : 'Terima kasih.' }}
             Jawaban Anda sudah berhasil disimpan.
@@ -31,11 +31,11 @@
 
         @if(isset($session) && $session->skor !== null)
             <div class="mt-6">
-                <div class="text-xs font-bold uppercase tracking-widest text-textSecondary">Estimasi Skor Mapel</div>
+                <div class="text-xs font-bold uppercase tracking-widest text-textSecondary">{{ isset($session) && $session->mapelPaket?->isSurvey() ? 'Indeks Respons' : 'Estimasi Skor Mapel' }}</div>
                 <div class="mt-2 text-5xl font-black text-indigo-600">
                     {{ number_format((float) $session->skor, 1) }}
                 </div>
-                <div class="text-sm text-textSecondary">/ 100</div>
+                <div class="text-sm text-textSecondary">{{ isset($session) && $session->mapelPaket?->isSurvey() ? 'Profil tersimpan untuk analisis guru.' : '/ 100' }}</div>
             </div>
         @endif
 

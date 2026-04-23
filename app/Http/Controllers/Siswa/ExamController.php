@@ -8,6 +8,7 @@ use App\Models\JawabanSiswa;
 use App\Models\MapelPaket;
 use App\Models\Soal;
 use App\Models\UjianSesi;
+use App\Support\SurveyAnalytics;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -151,7 +152,10 @@ class ExamController extends Controller
                     'id'                  => $soal->id,
                     'nomor_soal'          => $soal->nomor_soal,
                     'tipe_soal'           => $soal->tipe_soal,
+                    'jenis_instrumen'     => $soal->jenis_instrumen,
                     'indikator'           => $soal->indikator,
+                    'dimensi'             => $soal->dimensi,
+                    'subdimensi'          => $soal->subdimensi,
                     'pertanyaan'          => $soal->pertanyaan,
                     'gambar_url'          => $soal->gambar_url,
                     'teks_bacaan'         => $soal->teksBacaan ? [
@@ -255,10 +259,15 @@ class ExamController extends Controller
                 'jawabanSiswas',
             ]);
 
+            $profilRingkasan = $sesi->mapelPaket?->usesProfiling()
+                ? SurveyAnalytics::sessionProfile($sesi)
+                : null;
+
             $sesi->update([
                 'status'        => 'selesai',
                 'waktu_selesai' => now(),
                 'skor'          => $this->calculateScore($sesi),
+                'profil_ringkasan' => $profilRingkasan,
             ]);
 
             session()->forget(['siswa_mapel_token', 'siswa_exam_id', 'siswa_mapel_id', 'participant_token']);
@@ -282,6 +291,11 @@ class ExamController extends Controller
     private function calculateScore(UjianSesi $sesi): float
     {
         $mapel           = $sesi->mapelPaket;
+
+        if ($mapel?->usesProfiling()) {
+            return SurveyAnalytics::sessionProfile($sesi)['score_percent'];
+        }
+
         $soals           = $mapel?->soals ?? collect();
         $jawabanBySoal   = $sesi->jawabanSiswas->keyBy('soal_id');
 

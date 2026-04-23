@@ -44,7 +44,7 @@ class SoalController extends Controller
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('create', [Soal::class, $mapel]);
 
-        $tipeSoal    = $request->string('tipe_soal')->toString() ?: 'pilihan_ganda';
+        $tipeSoal    = $mapel->isSurvey() ? 'pilihan_ganda' : ($request->string('tipe_soal')->toString() ?: 'pilihan_ganda');
         $teksBacaans = $mapel->teksBacaans()->latest()->get();
         $nextNomor   = ((int) $mapel->soals()->max('nomor_soal')) + 1;
 
@@ -105,6 +105,7 @@ class SoalController extends Controller
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('create', [Soal::class, $mapel]);
+        abort_if($mapel->isSurvey(), 404);
 
         $paket->load('jenjang');
         $mapel->load('paketSoal');
@@ -180,6 +181,7 @@ class SoalController extends Controller
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('create', [Soal::class, $mapel]);
+        abort_if($mapel->isSurvey(), 404);
 
         $data = $request->validate([
             'global_question_ids'   => ['required', 'array', 'min:1'],
@@ -214,6 +216,11 @@ class SoalController extends Controller
                 $currentCount++;
 
                 // Tentukan tipe soal yang kompatibel dengan tabel soals
+                if ($mapel->isSurvey()) {
+                    $skipped++;
+                    continue;
+                }
+
                 $tipeSoal = match ($gq->question_type) {
                     'multiple_choice', 'short_answer' => 'pilihan_ganda',
                     'matching'                         => 'menjodohkan',

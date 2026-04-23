@@ -19,7 +19,7 @@ Route::post('/register/guru', [RegisterGuruController::class, 'register'])->name
 Route::get('/register/guru/pending', [RegisterGuruController::class, 'showPending'])->name('register.guru.pending');
 Route::post('/register/guru/pending/payment-proof', [RegisterGuruController::class, 'uploadPaymentProof'])->name('register.guru.payment-proof');
 
-Route::middleware(['auth','role:guru','guru.active'])->prefix('guru')->name('guru.')->scopeBindings()->group(function() {
+Route::middleware(['auth', 'role:guru', 'guru.active'])->prefix('guru')->name('guru.')->scopeBindings()->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -48,8 +48,11 @@ Route::middleware(['auth','role:guru','guru.active'])->prefix('guru')->name('gur
     Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');
     Route::get('/paket-soal', [PaketSoalGuruController::class, 'index'])->name('paket-soal.index');
     Route::get('/paket-soal/{paket}', [PaketSoalGuruController::class, 'show'])->name('paket-soal.show');
+    Route::get('/soal-ujion', [\App\Http\Controllers\Guru\SoalUjionController::class, 'index'])->name('soal-ujion.index');
+    Route::get('/soal-ujion/{question}', [\App\Http\Controllers\Guru\SoalUjionController::class, 'show'])->name('soal-ujion.show');
     Route::middleware('guru.jenjang')->group(function () {
         Route::get('/paket-soal/{paket}/mapel/{mapel}/soal', [SoalGuruController::class, 'index'])->name('soal.index');
+        Route::post('/paket-soal/{paket}/mapel/{mapel}/soal/import-ujion', [SoalGuruController::class, 'importFromUjion'])->name('soal.import-ujion');
         Route::get('/paket-soal/{paket}/mapel/{mapel}/soal/create', [SoalGuruController::class, 'create'])->name('soal.create');
         Route::post('/paket-soal/{paket}/mapel/{mapel}/soal', [SoalGuruController::class, 'store'])->name('soal.store');
         Route::get('/paket-soal/{paket}/mapel/{mapel}/soal/{soal}/edit', [SoalGuruController::class, 'edit'])->name('soal.edit');
@@ -62,5 +65,7 @@ Route::middleware(['auth','role:guru','guru.active'])->prefix('guru')->name('gur
         Route::delete('/paket-soal/{paket}/mapel/{mapel}/teks-bacaan/{bacaan}', [TeksBacaanGuruController::class, 'destroy'])->name('teks-bacaan.destroy');
         Route::put('/paket-soal/{paket}/mapel/{mapel}', [MapelPaketGuruController::class, 'update'])->name('mapel.update');
     });
-    Route::get('/guide', function() { return view('guru.guide'); })->name('guide');
+    Route::get('/guide', function () {
+        return view('guru.guide');
+    })->name('guide');
 });

@@ -14,7 +14,12 @@ class Soal extends Model
         'teks_bacaan_id',
         'nomor_soal',
         'tipe_soal',
+        'jenis_instrumen',
         'indikator',
+        'dimensi',
+        'subdimensi',
+        'kategori_profil',
+        'arah_skor',
         'pertanyaan',
         'gambar',
         'bobot',
@@ -53,6 +58,11 @@ class Soal extends Model
     public function isMenjodohkan(): bool
     {
         return $this->tipe_soal === 'menjodohkan';
+    }
+
+    public function isSurvey(): bool
+    {
+        return $this->jenis_instrumen !== 'akademik';
     }
 
     public function getGambarUrlAttribute(): ?string

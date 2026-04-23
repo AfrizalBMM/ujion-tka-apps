@@ -7,10 +7,15 @@
     <section class="page-hero">
         <span class="page-kicker">{{ $paket->nama }}</span>
         <h1 class="page-title">{{ $mapel->nama_label }}</h1>
-        <p class="page-description">{{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} soal terisi, durasi {{ $mapel->durasi_menit }} menit.</p>
+        <p class="page-description">
+            {{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} butir terisi, durasi {{ $mapel->durasi_menit }} menit.
+            {{ $mapel->isSurvey() ? 'Komponen ini hanya memakai teks bacaan, teks soal, dan pilihan ganda profil.' : '' }}
+        </p>
         <div class="page-actions">
             <a href="{{ route('superadmin.soal.create', [$paket, $mapel, 'tipe_soal' => 'pilihan_ganda']) }}" class="btn-primary">Tambah PG</a>
-            <a href="{{ route('superadmin.soal.create', [$paket, $mapel, 'tipe_soal' => 'menjodohkan']) }}" class="btn-secondary">Tambah Menjodohkan</a>
+            @unless($mapel->isSurvey())
+                <a href="{{ route('superadmin.soal.create', [$paket, $mapel, 'tipe_soal' => 'menjodohkan']) }}" class="btn-secondary">Tambah Menjodohkan</a>
+            @endunless
             <a href="{{ route('superadmin.teks-bacaan.index', [$paket, $mapel]) }}" class="btn-secondary">Teks Bacaan</a>
         </div>
     </section>
@@ -33,7 +38,12 @@
                         <tr>
                             <td>{{ $soal->nomor_soal }}</td>
                             <td>{{ str($soal->tipe_soal)->replace('_', ' ')->headline() }}</td>
-                            <td>{{ \Illuminate\Support\Str::limit($soal->indikator, 100) }}</td>
+                            <td>
+                                <div>{{ \Illuminate\Support\Str::limit($soal->indikator, 100) }}</div>
+                                @if($mapel->isSurvey() && $soal->dimensi)
+                                    <div class="mt-1 text-xs text-textSecondary">{{ $soal->dimensi }}{{ $soal->subdimensi ? ' · ' . $soal->subdimensi : '' }}</div>
+                                @endif
+                            </td>
                             <td>{{ $soal->teksBacaan?->judul ?? '-' }}</td>
                             <td>{{ $soal->isPilihanGanda() ? $soal->pilihanJawabans->count().' pilihan' : $soal->pasanganMenjodohkans->count().' pasangan' }}</td>
                             <td>

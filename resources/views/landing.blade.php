@@ -121,6 +121,8 @@
                             ujian lebih mudah dianalisis</span>
                         <span class="landing-proof-chip"><i class="fa-solid fa-circle-check text-success"></i> Flow
                             siswa sederhana dan fokus</span>
+                        <span class="landing-proof-chip"><i class="fa-solid fa-circle-check text-success"></i> Token
+                            ujian tanpa akun siswa</span>
                     </div>
                 </div>
 
@@ -364,15 +366,6 @@
         </section>
 
         <section id="flow" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
-            <div class="section-heading">
-                <div>
-                    <div class="landing-section-kicker">Flow produk</div>
-                    <h2 class="landing-section-title">Alur guru dan siswa ditampilkan lebih jelas agar calon user cepat
-                        paham.</h2>
-                    <p class="landing-section-copy">Section ini dibuat langsung berdasarkan flow yang memang hidup di
-                        codebase saat ini.</p>
-                </div>
-            </div>
 
             <div class="mt-8 grid gap-6 xl:grid-cols-2">
                 <div class="landing-flow-panel">
@@ -389,8 +382,7 @@
                             <div class="landing-step-number">1</div>
                             <div>
                                 <div class="landing-step-title">Daftar dan tunggu aktivasi</div>
-                                <p class="landing-step-copy">Guru mendaftar, upload bukti pembayaran, lalu akun direview
-                                    superadmin sampai aktif.</p>
+                                <p class="landing-step-copy">Guru / operator melakukan pendaftaran, lalu akun direview sampai aktif.</p>
                             </div>
                         </div>
                         <div class="landing-step">
@@ -491,7 +483,7 @@
             <div class="section-heading">
                 <div>
                     <div class="landing-section-kicker">FAQ</div>
-                    <h2 class="landing-section-title">Pertanyaan yang biasanya muncul sebelum orang mencoba.</h2>
+                    <h2 class="landing-section-title">Pertanyaan yang biasanya muncul.</h2>
                 </div>
             </div>
 
@@ -515,6 +507,16 @@
                     <h3 class="landing-faq-title">Apakah tetap relevan dengan arah resmi TKA?</h3>
                     <p class="landing-faq-copy">Ya. Platform ini dapat diposisikan selaras dengan semangat TKA karena
                         membantu sekolah membaca capaian akademik siswa secara lebih terstruktur.</p>
+                </div>
+                <div class="landing-faq-card">
+                    <h3 class="landing-faq-title">Apakah bisa dipakai di HP siswa?</h3>
+                    <p class="landing-faq-copy">Bisa. Tampilan dibuat responsif sehingga siswa tetap nyaman mengerjakan
+                        dari perangkat mobile, sementara guru tetap mengelola dari dashboard.</p>
+                </div>
+                <div class="landing-faq-card">
+                    <h3 class="landing-faq-title">Bagaimana jika koneksi internet tidak stabil?</h3>
+                    <p class="landing-faq-copy">Sistem membantu meminimalkan risiko kehilangan jawaban dengan autosave,
+                        sehingga progres siswa tetap tercatat meski koneksi naik turun.</p>
                 </div>
             </div>
         </section>

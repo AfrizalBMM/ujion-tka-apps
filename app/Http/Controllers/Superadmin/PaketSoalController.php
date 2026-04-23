@@ -53,11 +53,46 @@ class PaketSoalController extends Controller
             ]);
 
             collect([
-                ['nama_mapel' => 'matematika', 'urutan' => 1],
-                ['nama_mapel' => 'bahasa_indonesia', 'urutan' => 2],
+                [
+                    'nama_mapel' => MapelPaket::NAMA_MATEMATIKA,
+                    'kategori_komponen' => 'akademik',
+                    'mode_penilaian' => 'score',
+                    'kode_komponen' => 'MAT',
+                    'petunjuk_khusus' => 'Kerjakan soal numerasi dengan teliti dan manfaatkan waktu secara efektif.',
+                    'urutan' => 1,
+                ],
+                [
+                    'nama_mapel' => MapelPaket::NAMA_BAHASA_INDONESIA,
+                    'kategori_komponen' => 'akademik',
+                    'mode_penilaian' => 'score',
+                    'kode_komponen' => 'BIND',
+                    'petunjuk_khusus' => 'Baca teks dan pertanyaan dengan cermat sebelum memilih jawaban.',
+                    'urutan' => 2,
+                ],
+                [
+                    'nama_mapel' => MapelPaket::NAMA_SURVEY_KARAKTER,
+                    'kategori_komponen' => 'survey',
+                    'mode_penilaian' => 'profiling',
+                    'kode_komponen' => 'SK',
+                    'petunjuk_khusus' => 'Pilih jawaban yang paling menggambarkan kebiasaan dan sikap Anda sehari-hari.',
+                    'urutan' => 3,
+                ],
+                [
+                    'nama_mapel' => MapelPaket::NAMA_SURVEY_LINGKUNGAN,
+                    'kategori_komponen' => 'survey',
+                    'mode_penilaian' => 'profiling',
+                    'kode_komponen' => 'SLB',
+                    'petunjuk_khusus' => 'Jawab sesuai kondisi belajar yang Anda rasakan, bukan berdasarkan jawaban yang dianggap ideal.',
+                    'urutan' => 4,
+                ],
             ])->each(fn (array $item) => MapelPaket::create([
                 'paket_soal_id' => $paket->id,
                 'nama_mapel' => $item['nama_mapel'],
+                'kategori_komponen' => $item['kategori_komponen'],
+                'mode_penilaian' => $item['mode_penilaian'],
+                'kode_komponen' => $item['kode_komponen'],
+                'is_wajib' => true,
+                'petunjuk_khusus' => $item['petunjuk_khusus'],
                 'jumlah_soal' => 30,
                 'durasi_menit' => 75,
                 'urutan' => $item['urutan'],

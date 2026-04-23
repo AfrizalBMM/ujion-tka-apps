@@ -216,6 +216,66 @@ php artisan test
 
 ## Riwayat Perubahan
 
+### Sesi 2026-04-23 — Survey Expansion & Schema Refinement
+
+#### 1. Survey & Komponen Karakter
+
+- Ekspansi tabel `mapel_pakets` untuk mendukung tipe komponen baru: **Survey Karakter** dan **Survey Lingkungan Belajar**.
+- Penambahan kolom metadata pada mapel:
+  - `kategori_komponen`: Membedakan antara 'akademik' dan 'non-akademik'.
+  - `mode_penilaian`: Mendukung 'score' (angka) dan 'survey' (kualitatif).
+  - `kode_komponen`: Kode singkat (misal: MAT, BIND).
+  - `is_wajib`: Status kewajiban pengerjaan.
+  - `petunjuk_khusus`: Instruksi spesifik per mapel/komponen.
+
+#### 2. Metadata Soal & Sesi
+
+- Penambahan metadata survey pada tabel `soals` dan `ujian_sesis` untuk tracking progres pengerjaan survey secara terpisah dari ujian akademik.
+
+#### 3. Database Cleanup (Continued)
+
+- Migrasi: Penghapusan kolom `tingkat` dari tabel legacy `questions` (`drop_tingkat_from_questions_table`) sebagai kelanjutan dari pembersihan schema legacy.
+
+#### File yang diubah
+
+| File | Perubahan |
+|---|---|
+| `database/migrations/*expand_mapel_pakets*` | Support survey components & metadata |
+| `database/migrations/*survey_metadata*` | Survey tracking in soals & sessions |
+| `database/migrations/*drop_tingkat_from_questions*` | Cleanup legacy `tingkat` column |
+
+### Sesi 2026-04-22 — Authentication, Registration & Landing Refactor
+
+#### 1. Registrasi Guru Polish
+
+- Perubahan layout form registrasi guru (`register-guru.blade.php`) dari format grid dua kolom menjadi **single column layout** untuk meningkatkan fokus dan readability.
+- Penambahan informasi harga aktif dari `PricingPlan` dan QR pembayaran dari `PaymentQr` secara dinamis di halaman registrasi dan pending aktivasi.
+- Validasi nomor WhatsApp yang dinormalisasi (hanya angka).
+- Penanganan pendaftaran ganda: jika guru mencoba mendaftar lagi dengan data yang sama saat status masih `pending`, sistem otomatis mengarahkan kembali ke halaman upload bukti bayar.
+
+#### 2. Landing Page & Authentication Modernization
+
+- **Landing Page**: Redesain total dengan estetika premium, menggunakan Google Fonts (Outfit & Inter), glassmorphism, dan animasi mikro.
+- **Dynamic Stats**: Penambahan section statistik real-time untuk jumlah materi dan soal yang tersedia.
+- **Login Experience**:
+  - Redesain halaman login guru dan admin dengan layout card terpusat.
+  - Penyesuaian tema default ke **Light Mode** untuk kejelasan visual.
+  - Konsolidasi input login: Guru sekarang login menggunakan Nama dan Access Token dalam satu form yang ringkas.
+
+#### 3. Database Cleanup
+
+- Migrasi: Penghapusan kolom `tingkat` dari tabel `users` (`drop_tingkat_from_users_table`). Data level pendidikan sekarang sepenuhnya dikelola melalui kolom `jenjang`.
+
+#### File yang diubah
+
+| File | Perubahan |
+|---|---|
+| `resources/views/register-guru.blade.php` | Single column layout, dynamic pricing info |
+| `resources/views/landing.blade.php` | Redesain total, dynamic stats |
+| `resources/views/auth/login.blade.php` | UI modernization, light mode default |
+| `app/Http/Controllers/RegisterGuruController.php` | Logic pendaftaran ganda & dynamic data |
+| `database/migrations/*drop_tingkat*` | Hapus kolom legacy `tingkat` |
+
 ### Sesi 2026-04-21 — Bank Builder, Paket Soal & UI Polish
 
 #### 1. Hapus Semua Soal per Mapel (Paket Soal Detail)

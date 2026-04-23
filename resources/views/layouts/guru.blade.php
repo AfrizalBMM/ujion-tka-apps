@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>@yield('title', 'Guru/Operator') - Ujion</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  
+
   {{-- KaTeX Math Rendering --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -23,12 +23,12 @@
   @include('partials.ssd-style')
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   <script>
-  function updateClock() {
-    const now = new Date();
-    document.getElementById('live-clock').textContent = now.toLocaleTimeString('id-ID');
-  }
-  setInterval(updateClock, 1000);
-  window.onload = updateClock;
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('live-clock').textContent = now.toLocaleTimeString('id-ID');
+    }
+    setInterval(updateClock, 1000);
+    window.onload = updateClock;
   </script>
 </head>
 
@@ -106,6 +106,10 @@
         <i class="fa-solid fa-book"></i>
         Materi
       </a>
+      <a href="{{ route('guru.soal-ujion.index') }}" class="mobile-nav-link {{ request()->routeIs('guru.soal-ujion*') ? 'active' : '' }}">
+        <i class="fa-solid fa-layer-group"></i>
+        Soal dari Ujion
+      </a>
       <a href="{{ route('guru.personal-questions') }}" class="mobile-nav-link {{ request()->routeIs('guru.personal-questions*') ? 'active' : '' }}">
         <i class="fa-solid fa-database"></i>
         Bank Soal
@@ -136,8 +140,7 @@
             data-sidebar-toggle
             aria-label="Toggle sidebar"
             aria-expanded="true"
-            title="Ciutkan sidebar"
-          >
+            title="Ciutkan sidebar">
             <i class="fa-solid fa-angles-left" data-sidebar-toggle-icon></i>
           </button>
         </div>
@@ -156,6 +159,11 @@
           class="sidebar-link {{ request()->routeIs('guru.materials') ? 'active' : '' }}">
           <i class="fa-solid fa-book w-5"></i>
           <span class="sidebar-link-label">Materi</span>
+        </a>
+        <a href="{{ route('guru.soal-ujion.index') }}"
+          class="sidebar-link {{ request()->routeIs('guru.soal-ujion*') ? 'active' : '' }}">
+          <i class="fa-solid fa-layer-group w-5"></i>
+          <span class="sidebar-link-label">Soal dari Ujion</span>
         </a>
         <a href="{{ route('guru.personal-questions') }}"
           class="sidebar-link {{ request()->routeIs('guru.personal-questions*') ? 'active' : '' }}">

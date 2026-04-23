@@ -1,11 +1,23 @@
 @php
     $question = $soal ?? null;
+    $isSurvey = $mapel->isSurvey();
     $currentType = old('tipe_soal', $question->tipe_soal ?? $tipeSoal ?? 'pilihan_ganda');
     $pilihanValues = old('pilihan', $question ? $question->pilihanJawabans->map(fn ($item) => ['kode' => $item->kode, 'teks' => $item->teks])->values()->all() : [
         ['kode' => 'A', 'teks' => ''],
         ['kode' => 'B', 'teks' => ''],
         ['kode' => 'C', 'teks' => ''],
         ['kode' => 'D', 'teks' => ''],
+    ]);
+    $pilihanSurveyValues = old('pilihan', $question ? $question->pilihanJawabans->map(fn ($item) => [
+        'kode' => $item->kode,
+        'teks' => $item->teks,
+        'nilai_survey' => $item->nilai_survey,
+        'profil_label' => $item->profil_label,
+    ])->values()->all() : [
+        ['kode' => 'A', 'teks' => '', 'nilai_survey' => 4, 'profil_label' => 'Sangat Sesuai'],
+        ['kode' => 'B', 'teks' => '', 'nilai_survey' => 3, 'profil_label' => 'Sesuai'],
+        ['kode' => 'C', 'teks' => '', 'nilai_survey' => 2, 'profil_label' => 'Tidak Sesuai'],
+        ['kode' => 'D', 'teks' => '', 'nilai_survey' => 1, 'profil_label' => 'Sangat Tidak Sesuai'],
     ]);
     $jawabanBenar = old('jawaban_benar', $question?->pilihanJawabans->firstWhere('is_benar', true)?->kode);
     $pasanganValues = old('pasangan', $question ? $question->pasanganMenjodohkans->map(fn ($item) => ['teks_kiri' => $item->teks_kiri, 'teks_kanan' => $item->teks_kanan])->values()->all() : [
@@ -28,10 +40,15 @@
         </div>
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Tipe Soal</label>
-            <select name="tipe_soal" class="input" data-soal-type required>
+            <select name="tipe_soal" class="input" data-soal-type required @disabled($isSurvey)>
                 <option value="pilihan_ganda" @selected($currentType === 'pilihan_ganda')>Pilihan Ganda</option>
-                <option value="menjodohkan" @selected($currentType === 'menjodohkan')>Menjodohkan</option>
+                @unless($isSurvey)
+                    <option value="menjodohkan" @selected($currentType === 'menjodohkan')>Menjodohkan</option>
+                @endunless
             </select>
+            @if($isSurvey)
+                <input type="hidden" name="tipe_soal" value="pilihan_ganda">
+            @endif
         </div>
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Teks Bacaan</label>
@@ -44,17 +61,44 @@
         </div>
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Bobot</label>
-            <input type="number" name="bobot" min="1" class="input" value="{{ old('bobot', $question->bobot ?? 1) }}">
+            <input type="number" name="bobot" min="1" class="input" value="{{ old('bobot', $question->bobot ?? 1) }}" @disabled($isSurvey)>
+            @if($isSurvey)
+                <input type="hidden" name="bobot" value="{{ old('bobot', $question->bobot ?? 1) }}">
+            @endif
+        </div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="input-group xl:col-span-2">
+            <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">{{ $isSurvey ? 'Indikator / Tujuan Butir' : 'Indikator' }}</label>
+            <textarea name="indikator" class="input min-h-28" required>{{ old('indikator', $question->indikator ?? '') }}</textarea>
+        </div>
+        <div class="input-group">
+            <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">{{ $isSurvey ? 'Dimensi Survey' : 'Dimensi' }}</label>
+            <input type="text" name="dimensi" class="input" value="{{ old('dimensi', $question->dimensi ?? '') }}" {{ $isSurvey ? 'required' : '' }}>
+        </div>
+        <div class="input-group">
+            <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Subdimensi</label>
+            <input type="text" name="subdimensi" class="input" value="{{ old('subdimensi', $question->subdimensi ?? '') }}">
+        </div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+        <div class="input-group">
+            <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Kategori Profil</label>
+            <input type="text" name="kategori_profil" class="input" value="{{ old('kategori_profil', $question->kategori_profil ?? '') }}" placeholder="{{ $isSurvey ? 'Contoh: Disiplin diri' : 'Opsional' }}">
+        </div>
+        <div class="input-group">
+            <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Arah Skor</label>
+            <select name="arah_skor" class="input">
+                <option value="positif" @selected(old('arah_skor', $question->arah_skor ?? 'positif') === 'positif')>Positif</option>
+                <option value="negatif" @selected(old('arah_skor', $question->arah_skor ?? 'positif') === 'negatif')>Negatif</option>
+            </select>
         </div>
     </div>
 
     <div class="input-group">
-        <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Indikator</label>
-        <textarea name="indikator" class="input min-h-28" required>{{ old('indikator', $question->indikator ?? '') }}</textarea>
-    </div>
-
-    <div class="input-group">
-        <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Pertanyaan</label>
+        <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">{{ $isSurvey ? 'Teks Soal / Pernyataan' : 'Pertanyaan' }}</label>
         <textarea name="pertanyaan" class="input min-h-36" required>{{ old('pertanyaan', $question->pertanyaan ?? '') }}</textarea>
     </div>
 
@@ -73,14 +117,14 @@
         <div class="section-heading mb-4">
             <div>
                 <h3 class="section-title">Pilihan Jawaban</h3>
-                <p class="section-description">Isi empat opsi dan tentukan satu jawaban benar.</p>
+                <p class="section-description">{{ $isSurvey ? 'Isi empat opsi respons dan atur skor tiap pilihan untuk analisis profil.' : 'Isi empat opsi dan tentukan satu jawaban benar.' }}</p>
             </div>
         </div>
         <div class="space-y-4">
-            @foreach($pilihanValues as $index => $pilihan)
+            @foreach(($isSurvey ? $pilihanSurveyValues : $pilihanValues) as $index => $pilihan)
                 @php $kode = $pilihan['kode'] ?? chr(65 + $index); @endphp
                 <div class="rounded-[24px] border border-slate-200/80 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-900/60">
-                    <div class="grid gap-4 lg:grid-cols-[auto_1fr_220px]">
+                    <div class="grid gap-4 lg:grid-cols-[auto_1fr_220px] {{ $isSurvey ? 'xl:grid-cols-[auto_1fr_180px_180px]' : '' }}">
                         <div class="input-group lg:max-w-24">
                             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Kode</label>
                             <input type="text" readonly name="pilihan[{{ $index }}][kode]" class="input bg-slate-100 dark:bg-slate-800" value="{{ $kode }}">
@@ -89,11 +133,23 @@
                             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Teks Pilihan {{ $kode }}</label>
                             <textarea name="pilihan[{{ $index }}][teks]" class="input min-h-24">{{ $pilihan['teks'] ?? '' }}</textarea>
                         </div>
+                        @if($isSurvey)
+                            <div class="input-group">
+                                <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Nilai Survey</label>
+                                <input type="number" name="pilihan[{{ $index }}][nilai_survey]" min="1" max="4" class="input" value="{{ $pilihan['nilai_survey'] ?? '' }}" required>
+                            </div>
+                            <div class="input-group">
+                                <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Label Profil</label>
+                                <input type="text" name="pilihan[{{ $index }}][profil_label]" class="input" value="{{ $pilihan['profil_label'] ?? '' }}" placeholder="Contoh: Sangat sesuai">
+                            </div>
+                        @endif
                         <div class="space-y-3">
-                            <label class="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950/70">
-                                <input type="radio" name="jawaban_benar" value="{{ $kode }}" class="h-4 w-4 text-primary" @checked($jawabanBenar === $kode)>
-                                <span>Jawaban benar</span>
-                            </label>
+                            @unless($isSurvey)
+                                <label class="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950/70">
+                                    <input type="radio" name="jawaban_benar" value="{{ $kode }}" class="h-4 w-4 text-primary" @checked($jawabanBenar === $kode)>
+                                    <span>Jawaban benar</span>
+                                </label>
+                            @endunless
                             <input type="file" name="pilihan_gambar[{{ $kode }}]" accept="image/*" class="input" data-image-input="pilihan-{{ $kode }}">
                             <img src="{{ optional($question?->pilihanJawabans->firstWhere('kode', $kode))->gambar_url }}" alt="Preview pilihan {{ $kode }}" class="max-h-24 rounded-xl {{ optional($question?->pilihanJawabans->firstWhere('kode', $kode))->gambar_url ? '' : 'hidden' }}" data-image-preview="pilihan-{{ $kode }}">
                         </div>
@@ -103,7 +159,7 @@
         </div>
     </section>
 
-    <section class="{{ $currentType === 'menjodohkan' ? '' : 'hidden' }}" data-type-panel="menjodohkan">
+    <section class="{{ $currentType === 'menjodohkan' && ! $isSurvey ? '' : 'hidden' }}" data-type-panel="menjodohkan">
         <div class="section-heading mb-4">
             <div>
                 <h3 class="section-title">Pasangan Menjodohkan</h3>

@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Support\SurveyAnalytics;
 use Illuminate\Contracts\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -49,30 +50,56 @@ class ExamAnalysisController extends Controller {
     private function buildAnalysis(Exam $exam): array
     {
         $sessions = $exam->ujianSesis()
+            ->with('mapelPaket')
             ->where('status', 'selesai')
             ->orderByDesc('skor')
             ->orderBy('waktu_selesai')
             ->get();
 
-        $ranking = $sessions->values()->map(fn ($session) => [
+        $academicSessions = $sessions->filter(fn ($session) => $session->mapelPaket?->isAkademik())->values();
+        $surveySessions = $sessions->filter(fn ($session) => $session->mapelPaket?->isSurvey())->values();
+
+        $ranking = $academicSessions->values()->map(fn ($session) => [
             'name' => $session->nama,
             'score' => number_format((float) $session->skor, 2),
             'waktu_selesai' => $session->waktu_selesai,
         ]);
 
         $distribution = [
-            '90-100' => $sessions->filter(fn ($session) => $session->skor >= 90)->count(),
-            '80-89' => $sessions->filter(fn ($session) => $session->skor >= 80 && $session->skor < 90)->count(),
-            '70-79' => $sessions->filter(fn ($session) => $session->skor >= 70 && $session->skor < 80)->count(),
-            '0-69' => $sessions->filter(fn ($session) => $session->skor < 70)->count(),
+            '90-100' => $academicSessions->filter(fn ($session) => $session->skor >= 90)->count(),
+            '80-89' => $academicSessions->filter(fn ($session) => $session->skor >= 80 && $session->skor < 90)->count(),
+            '70-79' => $academicSessions->filter(fn ($session) => $session->skor >= 70 && $session->skor < 80)->count(),
+            '0-69' => $academicSessions->filter(fn ($session) => $session->skor < 70)->count(),
         ];
+
+        $surveyComponents = $surveySessions
+            ->groupBy('mapel_paket_id')
+            ->map(function ($items) {
+                $mapel = $items->first()?->mapelPaket;
+                $categoryDistribution = [];
+
+                foreach ($items as $session) {
+                    $profile = $session->profil_ringkasan ?: SurveyAnalytics::sessionProfile($session);
+                    $label = $profile['overall_category'] ?? 'Belum cukup data';
+                    $categoryDistribution[$label] = ($categoryDistribution[$label] ?? 0) + 1;
+                }
+
+                return [
+                    'mapel' => $mapel,
+                    'participants' => $items->count(),
+                    'average_score' => round($items->avg('skor') ?? 0, 2),
+                    'category_distribution' => $categoryDistribution,
+                ];
+            })
+            ->values();
 
         return [
             'exam' => $exam,
             'ranking' => $ranking,
             'distribution' => $distribution,
-            'participantsCount' => $sessions->count(),
-            'averageScore' => round((float) ($sessions->avg('skor') ?? 0), 2),
+            'participantsCount' => $academicSessions->count(),
+            'averageScore' => round((float) ($academicSessions->avg('skor') ?? 0), 2),
+            'surveyComponents' => $surveyComponents,
         ];
     }
 }

@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Storage;
 
 class PilihanJawaban extends Model
 {
-    protected $fillable = ['soal_id', 'kode', 'teks', 'gambar', 'is_benar'];
+    protected $fillable = ['soal_id', 'kode', 'teks', 'gambar', 'is_benar', 'nilai_survey', 'profil_label'];
 
     protected $casts = [
         'is_benar' => 'boolean',
+        'nilai_survey' => 'integer',
     ];
 
     public function soal(): BelongsTo

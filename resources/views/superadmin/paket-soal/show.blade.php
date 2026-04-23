@@ -7,7 +7,7 @@
     <section class="page-hero">
         <span class="page-kicker">{{ $paket->jenjang?->kode }} &middot; {{ $paket->tahun_ajaran }}</span>
         <h1 class="page-title">{{ $paket->nama }}</h1>
-        <p class="page-description">Akses tiap mapel untuk menyusun soal, bacaan, dan struktur paket ujian siswa.</p>
+        <p class="page-description">Kelola komponen akademik dan survey untuk menyusun soal, bacaan, serta struktur paket ujian siswa.</p>
         <div class="page-actions">
             <a href="{{ route('superadmin.paket-soal.edit', $paket) }}" class="btn-secondary border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white">Edit Metadata</a>
         </div>
@@ -19,24 +19,29 @@
                 <div class="section-heading mb-5">
                     <div>
                         <h2 class="section-title">{{ $mapel->nama_label }}</h2>
-                        <p class="section-description">{{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} soal &middot; {{ $mapel->durasi_menit }} menit</p>
+                        <p class="section-description">
+                            {{ $mapel->soals->count() }}/{{ $mapel->jumlah_soal }} butir &middot; {{ $mapel->durasi_menit }} menit
+                            &middot; {{ $mapel->isSurvey() ? 'Survey Profiling' : 'Akademik' }}
+                        </p>
                     </div>
                     <div class="flex items-center gap-2">
                         <a href="{{ route('superadmin.soal.create', [$paket, $mapel]) }}"
                            class="btn-primary px-4 py-2 text-xs">
                             <i class="fa-solid fa-pen-to-square mr-1.5"></i>Buat Manual
                         </a>
-                        @php
-                            $bankBuilderUrl = route('superadmin.soal.bank-builder', [$paket, $mapel])
-                                . '?' . http_build_query([
-                                    'jenjang_id'      => $paket->jenjang_id,
-                                    'material_mapel'  => str($mapel->nama_mapel)->headline()->toString(),
-                                ]);
-                        @endphp
-                        <a href="{{ $bankBuilderUrl }}"
-                           class="btn-secondary px-4 py-2 text-xs">
-                            <i class="fa-solid fa-layer-group mr-1.5"></i>Dari Bank Soal
-                        </a>
+                        @unless($mapel->isSurvey())
+                            @php
+                                $bankBuilderUrl = route('superadmin.soal.bank-builder', [$paket, $mapel])
+                                    . '?' . http_build_query([
+                                        'jenjang_id'      => $paket->jenjang_id,
+                                        'material_mapel'  => str($mapel->nama_mapel)->headline()->toString(),
+                                    ]);
+                            @endphp
+                            <a href="{{ $bankBuilderUrl }}"
+                               class="btn-secondary px-4 py-2 text-xs">
+                                <i class="fa-solid fa-layer-group mr-1.5"></i>Dari Bank Soal
+                            </a>
+                        @endunless
                     </div>
                 </div>
                 {{-- Container tombol: flex row berisi submit konfigurasi + form hapus sejajar --}}
@@ -93,12 +98,15 @@
                 <div class="space-y-3">
                     @forelse($mapel->soals->take(5) as $soal)
                         <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
-                            <div class="flex items-center justify-between gap-3">
-                                <div class="font-semibold">Soal {{ $soal->nomor_soal }}</div>
-                                <span class="badge-info">{{ str($soal->tipe_soal)->replace('_', ' ')->headline() }}</span>
-                            </div>
-                            <p class="mt-2 text-sm text-textSecondary">{{ \Illuminate\Support\Str::limit(strip_tags($soal->pertanyaan), 120) }}</p>
-                        </div>
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="font-semibold">Soal {{ $soal->nomor_soal }}</div>
+                        <span class="badge-info">{{ str($soal->tipe_soal)->replace('_', ' ')->headline() }}</span>
+                    </div>
+                    <p class="mt-2 text-sm text-textSecondary">{{ \Illuminate\Support\Str::limit(strip_tags($soal->pertanyaan), 120) }}</p>
+                    @if($mapel->isSurvey() && $soal->dimensi)
+                        <p class="mt-2 text-xs font-medium text-slate-500">{{ $soal->dimensi }}{{ $soal->subdimensi ? ' · ' . $soal->subdimensi : '' }}</p>
+                    @endif
+                </div>
                     @empty
                         <div class="empty-state">Belum ada soal pada mapel ini.</div>
                     @endforelse

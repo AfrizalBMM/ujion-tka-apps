@@ -6,8 +6,8 @@
 <div class="space-y-6">
     <section class="page-hero">
         <span class="page-kicker">Paket Baru</span>
-        <h1 class="page-title">Buat paket soal dan inisialisasi dua mapel otomatis.</h1>
-        <p class="page-description">Matematika dan Bahasa Indonesia akan langsung disiapkan dengan konfigurasi default 30 soal dan 75 menit.</p>
+        <h1 class="page-title">Buat paket soal dan inisialisasi empat komponen otomatis.</h1>
+        <p class="page-description">Matematika, Bahasa Indonesia, Survey Karakter, dan Survey Lingkungan Belajar akan langsung disiapkan dengan konfigurasi awal.</p>
     </section>
 
     <section class="card">

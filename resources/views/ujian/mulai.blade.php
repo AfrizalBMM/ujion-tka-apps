@@ -32,10 +32,16 @@
             <p class="mb-2 text-xs font-bold uppercase tracking-wider text-amber-700">Petunjuk Pengerjaan</p>
             <ul class="space-y-1.5 text-sm text-amber-900">
                 <li>• Kerjakan soal sesuai perintah pada tiap butir.</li>
+                @if($mapel->isSurvey())
+                    <li>• Pilih jawaban yang paling menggambarkan kondisi atau kebiasaan Anda.</li>
+                @endif
                 <li>• Jawaban tersimpan otomatis setiap 30 detik.</li>
                 <li>• Waktu berjalan terus, tidak bisa dijeda.</li>
                 <li>• Tandai ragu-ragu jika belum yakin, tinjau kembali sebelum selesai.</li>
                 <li>• Saat waktu habis, ujian akan otomatis diselesaikan.</li>
+                @if($mapel->petunjuk_khusus)
+                    <li>• {{ $mapel->petunjuk_khusus }}</li>
+                @endif
             </ul>
         </div>
 
