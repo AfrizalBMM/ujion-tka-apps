@@ -24,16 +24,33 @@
       </div>
     </div>
     <div class="page-actions">
-      <a href="{{ route('guru.personal-questions') }}"
-        class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
-        <i class="fa-solid fa-database"></i>
-        Bank Soal Pribadi
-      </a>
+      <div class="flex flex-wrap items-center gap-2">
+        <a href="{{ route('guru.personal-questions') }}"
+          class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
+          <i class="fa-solid fa-database"></i>
+          Bank Soal Pribadi
+        </a>
+        @php
+          $nextBookmarked = request()->boolean('bookmarked') ? null : 1;
+          $bookmarkUrl = route('guru.materials', array_filter(array_merge(request()->query(), [
+            'bookmarked' => $nextBookmarked,
+          ]), fn ($v) => $v !== null && $v !== ''));
+        @endphp
+        <a href="{{ $bookmarkUrl }}"
+          class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
+          <i class="{{ request()->boolean('bookmarked') ? 'fa-solid' : 'fa-regular' }} fa-bookmark"></i>
+          {{ request()->boolean('bookmarked') ? 'Bookmark Saya' : 'Tampilkan Bookmark' }}
+          <span class="badge-info">{{ is_array($bookmarks ?? null) ? count($bookmarks) : 0 }}</span>
+        </a>
+      </div>
     </div>
   </section>
   <form method="GET" action="{{ route('guru.materials') }}"
     class="card p-4 space-y-4 sm:space-y-0 sm:flex sm:items-end sm:gap-4" data-ssd-autosubmit
     data-materials-filter-form>
+    @if(request()->boolean('bookmarked'))
+      <input type="hidden" name="bookmarked" value="1">
+    @endif
     <div class="flex-1 min-w-[150px]">
       <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mata Pelajaran</label>
       <div class="ssd-wrap mt-1">
@@ -124,90 +141,4 @@
   </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  var form = document.querySelector('form[data-materials-filter-form]');
-  var input = document.querySelector('[data-live-search][name="search"]');
-  var grid = document.getElementById('materials-grid');
-  if (!form || !input || !grid) return;
-
-  var timer = null;
-  var abortController = null;
-  var lastValue = (input.value || '').trim();
-  var isComposing = false;
-
-  function buildUrl() {
-    var action = form.getAttribute('action') || window.location.pathname;
-    var url = new URL(action, window.location.origin);
-    var params = new URLSearchParams(new FormData(form));
-    url.search = params.toString();
-    return url;
-  }
-
-  function setLoading(isLoading) {
-    grid.classList.toggle('opacity-60', !!isLoading);
-    grid.classList.toggle('pointer-events-none', !!isLoading);
-  }
-
-  async function fetchAndReplace(force) {
-    var nextValue = (input.value || '').trim();
-    if (!force && nextValue === lastValue) return;
-    lastValue = nextValue;
-
-    var url = buildUrl();
-
-    if (abortController) abortController.abort();
-    abortController = new AbortController();
-
-    setLoading(true);
-    try {
-      var res = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        signal: abortController.signal,
-      });
-      if (!res.ok) throw new Error('Request failed');
-
-      var html = await res.text();
-      var doc = new DOMParser().parseFromString(html, 'text/html');
-      var nextGrid = doc.getElementById('materials-grid');
-      if (nextGrid) {
-        grid.innerHTML = nextGrid.innerHTML;
-      }
-
-      history.replaceState({}, '', url.pathname + (url.search ? ('?' + url.searchParams.toString()) : ''));
-    } catch (e) {
-      // ignore abort/errors; user can still submit manual (enter) if needed
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function scheduleFetch() {
-    if (isComposing) return;
-    clearTimeout(timer);
-    timer = setTimeout(function() {
-      fetchAndReplace();
-    }, 450);
-  }
-
-  form.addEventListener('submit', function(e) {
-    if (document.activeElement === input) {
-      e.preventDefault();
-      fetchAndReplace(true);
-    }
-  });
-
-  input.addEventListener('compositionstart', function() {
-    isComposing = true;
-  });
-  input.addEventListener('compositionend', function() {
-    isComposing = false;
-    scheduleFetch();
-  });
-  input.addEventListener('input', scheduleFetch);
-});
-</script>
 @endsection

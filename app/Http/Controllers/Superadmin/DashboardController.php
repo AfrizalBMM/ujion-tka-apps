@@ -84,12 +84,25 @@ class DashboardController extends Controller
             ->where('status', 'mengerjakan')
             ->count();
 
-        $activePlan = PricingPlan::query()
+        $activePlans = PricingPlan::query()
             ->where('is_active', true)
-            ->orderBy('sort_order')
+            ->get()
+            ->keyBy('jenjang');
+        $fallbackPlan = PricingPlan::query()
+            ->where('is_active', true)
             ->first();
 
-        $totalRevenue = $activeTeachersCount * $this->normalizeCurrency($activePlan?->price);
+        $activeTeachersByJenjang = User::query()
+            ->where('role', User::ROLE_GURU)
+            ->where('account_status', User::STATUS_ACTIVE)
+            ->selectRaw('jenjang, COUNT(*) as total')
+            ->groupBy('jenjang')
+            ->pluck('total', 'jenjang');
+
+        $totalRevenue = 0;
+        foreach ($activeTeachersByJenjang as $jenjang => $count) {
+            $totalRevenue += (int) $count * $this->normalizeCurrency(($activePlans->get($jenjang) ?? $fallbackPlan)?->price);
+        }
 
         $topTeacher = User::query()
             ->where('role', User::ROLE_GURU)

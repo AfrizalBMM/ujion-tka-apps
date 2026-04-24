@@ -71,6 +71,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'bookmarks' => 'array',
+            'global_question_bookmarks' => 'array',
             'payment_submitted_at' => 'datetime',
             'payment_verified_at' => 'datetime',
         ];
@@ -79,6 +80,11 @@ class User extends Authenticatable
     public function paymentReviewer()
     {
         return $this->belongsTo(self::class, 'payment_reviewed_by');
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
     }
 
     public function isSuperadmin(): bool

@@ -6,12 +6,13 @@ use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\GlobalQuestionController;
 use App\Http\Controllers\Superadmin\MaterialController;
 use App\Http\Controllers\Superadmin\MapelPaketController as SuperadminMapelPaketController;
-use App\Http\Controllers\Superadmin\PaymentQrController;
 use App\Http\Controllers\Superadmin\PaketSoalController;
 use App\Http\Controllers\Superadmin\PricingPlanController;
+use App\Http\Controllers\Superadmin\PaymentConfirmationController;
 use App\Http\Controllers\Superadmin\SoalController as SuperadminSoalController;
 use App\Http\Controllers\Superadmin\TeksBacaanController as SuperadminTeksBacaanController;
 use App\Http\Controllers\Superadmin\TeacherController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,7 @@ use App\Http\Controllers\Siswa\ExamController;
 use App\Http\Controllers\AuthController as GeneralAuthController;
 
 Route::get('/', [LandingController::class , 'index'])->name('landing');
+Route::get('/payments/{referenceCode}', [PaymentController::class, 'show'])->name('payments.show');
 
 // Auth routes for Guru
 Route::get('/login', [GeneralAuthController::class, 'showLoginForm'])->name('login');
@@ -52,16 +54,17 @@ Route::prefix('superadmin')
 	    Route::get('/', [DashboardController::class , 'index'])->name('dashboard');
 
 	    Route::get('/finance', [\App\Http\Controllers\Superadmin\FinanceController::class , 'index'])->name('finance.index');
-	    Route::post('/payment-qrs', [PaymentQrController::class , 'store'])->name('payment-qrs.store');
-	    Route::post('/payment-qrs/{paymentQr}', [PaymentQrController::class , 'update'])->name('payment-qrs.update');
-	    Route::post('/payment-qrs/{paymentQr}/toggle', [PaymentQrController::class , 'toggle'])->name('payment-qrs.toggle');
-	    Route::post('/payment-qrs/{paymentQr}/delete', [PaymentQrController::class , 'destroy'])->name('payment-qrs.destroy');
+	    Route::post('/finance/admin-whatsapp', [\App\Http\Controllers\Superadmin\FinanceController::class , 'saveAdminWhatsapp'])->name('finance.admin-whatsapp');
+	    Route::get('/payment-confirmations', [PaymentConfirmationController::class, 'index'])->name('payment-confirmations.index');
+	    Route::post('/payment-confirmations/{transaction}/approve', [PaymentConfirmationController::class, 'approve'])->name('payment-confirmations.approve');
+	    Route::post('/payment-confirmations/{transaction}/reject', [PaymentConfirmationController::class, 'reject'])->name('payment-confirmations.reject');
 
-	    Route::post('/pricing-plans', [PricingPlanController::class , 'store'])->name('pricing-plans.store');
-	    Route::post('/pricing-plans/{pricingPlan}', [PricingPlanController::class , 'update'])->name('pricing-plans.update');
-	    Route::post('/pricing-plans/{pricingPlan}/toggle-active', [PricingPlanController::class , 'toggleActive'])->name('pricing-plans.toggle-active');
-	    Route::post('/pricing-plans/{pricingPlan}/toggle-promo', [PricingPlanController::class , 'togglePromo'])->name('pricing-plans.toggle-promo');
-	    Route::post('/pricing-plans/{pricingPlan}/delete', [PricingPlanController::class , 'destroy'])->name('pricing-plans.destroy');
+	    Route::post('/tarif-jenjang', [PricingPlanController::class , 'store'])->name('tarif-jenjang.store');
+	    Route::post('/tarif-jenjang/{pricingPlan}', [PricingPlanController::class , 'update'])->name('tarif-jenjang.update');
+	    Route::post('/tarif-jenjang/{pricingPlan}/toggle-active', [PricingPlanController::class , 'toggleActive'])->name('tarif-jenjang.toggle-active');
+	    Route::get('/tarif-jenjang/{pricingPlan}/print', [PricingPlanController::class , 'printLabel'])->name('tarif-jenjang.print');
+	    Route::get('/tarif-jenjang/{pricingPlan}/image', [PricingPlanController::class , 'image'])->name('tarif-jenjang.image');
+	    Route::post('/tarif-jenjang/{pricingPlan}/delete', [PricingPlanController::class , 'destroy'])->name('tarif-jenjang.destroy');
 
 	    Route::post('/teachers/{teacher}/activate', [TeacherController::class , 'activate'])->name('teachers.activate');
 	    Route::post('/teachers/{teacher}/suspend', [TeacherController::class , 'suspend'])->name('teachers.suspend');
@@ -91,12 +94,13 @@ Route::prefix('superadmin')
         Route::get('/dashboard/export/csv', [DashboardController::class, 'exportCsv'])->name('dashboard.export-csv');
         Route::get('/dashboard/print', [DashboardController::class, 'print'])->name('dashboard.print');
 
-	    Route::get('/chat', [\App\Http\Controllers\Superadmin\ChatController::class , 'index'])->name('chat.index');
-	    Route::post('/chat', [\App\Http\Controllers\Superadmin\ChatController::class , 'store'])->name('chat.store');
+ 	    Route::get('/chat', [\App\Http\Controllers\Superadmin\ChatController::class , 'index'])->name('chat.index');
+ 	    Route::post('/chat', [\App\Http\Controllers\Superadmin\ChatController::class , 'store'])->name('chat.store');
+	    Route::get('/chat/{chat}/image', [\App\Http\Controllers\ChatImageController::class, 'show'])->name('chat.image');
 		Route::post('/chat/{chat}/destroy', [\App\Http\Controllers\Superadmin\ChatController::class , 'destroy'])->name('chat.destroy');
 		Route::post('/chat/{user}/destroy-all', [\App\Http\Controllers\Superadmin\ChatController::class , 'destroyAll'])->name('chat.destroyAll');
 		Route::post('/chat/destroy-all-guru', [\App\Http\Controllers\Superadmin\ChatController::class , 'destroyAllGuru'])->name('chat.destroyAllGuru');
-	    Route::post('/chat/{chat}/read', [\App\Http\Controllers\Superadmin\ChatController::class , 'markRead'])->name('chat.read');
+ 	    Route::post('/chat/{chat}/read', [\App\Http\Controllers\Superadmin\ChatController::class , 'markRead'])->name('chat.read');
 
 	    Route::get('/teachers', [TeacherController::class , 'index'])->name('teachers.index');
 	    Route::get('/materials', [MaterialController::class , 'index'])->name('materials.index');

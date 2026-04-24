@@ -85,7 +85,7 @@
             </div>
             <button type="button" class="icon-button" data-close-modal><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <form id="edit-form" method="POST" class="mt-5 space-y-4">
+        <form id="edit-form" method="POST" class="mt-5 space-y-4" data-action-template="{{ route('guru.teks-bacaan.update', [$paket, $mapel, 'bacaan' => '__ID__']) }}">
             @csrf
             @method('PUT')
             <div class="input-group">
@@ -104,29 +104,5 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('edit-modal');
-    const form = document.getElementById('edit-form');
-    const judul = document.getElementById('edit-judul');
-    const konten = document.getElementById('edit-konten');
-    const closeButtons = document.querySelectorAll('[data-close-modal]');
-
-    const close = () => modal.classList.add('hidden');
-    closeButtons.forEach((btn) => btn.addEventListener('click', close));
-    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-
-    document.querySelectorAll('[data-edit-bacaan]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const data = JSON.parse(button.dataset.editBacaan);
-            form.action = "{{ route('guru.teks-bacaan.update', [$paket, $mapel, 'bacaan' => '__ID__']) }}".replace('__ID__', data.id);
-            judul.value = data.judul ?? '';
-            konten.value = data.konten ?? '';
-            modal.classList.remove('hidden');
-            judul.focus();
-        });
-    });
-});
-</script>
 @endif
 @endsection

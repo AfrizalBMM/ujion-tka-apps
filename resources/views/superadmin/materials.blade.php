@@ -368,33 +368,4 @@
         </form>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // ── Modals ───────────────────────────────────────────────────────
-    const modals = {
-        import: document.getElementById('material-import-modal'),
-        create: document.getElementById('material-create-modal'),
-    };
-
-    const closeModal = (modal) => { if (!modal) return; modal.classList.add('hidden'); };
-    const openModal  = (modal) => { if (!modal) return; modal.classList.remove('hidden'); };
-
-    document.querySelectorAll('[data-open-material-modal]').forEach((button) => {
-        button.addEventListener('click', () => openModal(modals[button.dataset.openMaterialModal]));
-    });
-
-    document.querySelectorAll('[data-close-material-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            closeModal(button.closest('#material-import-modal, #material-create-modal'));
-        });
-    });
-
-    Object.values(modals).forEach((modal) => {
-        if (!modal) return;
-        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(modal); });
-    });
-});
-</script>
 @endsection
-

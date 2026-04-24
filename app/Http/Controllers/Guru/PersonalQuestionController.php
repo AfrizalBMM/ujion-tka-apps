@@ -8,17 +8,43 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\View\View;
 
 class PersonalQuestionController extends Controller {
     public function index(Request $request): View {
         $user = Auth::user();
-        $questions = PersonalQuestion::where('user_id', $user->id)
-            ->where('jenjang', $user->jenjang)
-            ->when($request->kategori, fn($q)=>$q->where('kategori',$request->kategori))
-            ->get();
+        $baseQuery = PersonalQuestion::query()
+            ->where('user_id', $user->id)
+            ->where('jenjang', $user->jenjang);
 
-        return view('guru.personal-questions', compact('questions', 'user'));
+        $questions = (clone $baseQuery)
+            ->when($request->filled('q'), function ($query) use ($request) {
+                $term = trim((string) $request->query('q'));
+                $like = '%' . $term . '%';
+
+                $query->where(function ($inner) use ($like) {
+                    $inner->where('pertanyaan', 'like', $like)
+                        ->orWhere('kategori', 'like', $like)
+                        ->orWhere('jawaban_benar', 'like', $like)
+                        ->orWhere('pembahasan', 'like', $like);
+                });
+            })
+            ->when($request->filled('kategori'), fn($q) => $q->where('kategori', $request->query('kategori')))
+            ->when($request->filled('tipe'), fn($q) => $q->where('tipe', $request->query('tipe')))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $categories = (clone $baseQuery)
+            ->select('kategori')
+            ->distinct()
+            ->pluck('kategori')
+            ->filter()
+            ->values();
+
+        return view('guru.personal-questions', compact('questions', 'user', 'categories'));
     }
 
     public function store(Request $request): RedirectResponse {
@@ -62,6 +88,60 @@ class PersonalQuestionController extends Controller {
         return back()->with('flash', ['type'=>'success','message'=>'Soal dihapus.']);
     }
 
+    public function update(Request $request, PersonalQuestion $question): RedirectResponse
+    {
+        $question = $this->ownedQuestion($question);
+        $user = Auth::user();
+
+        $data = $request->validate([
+            'kategori' => 'required|string|max:255',
+            'tipe' => 'required|in:PG,Checklist,Singkat',
+            'pertanyaan' => 'required|string',
+            'options' => 'nullable|array',
+            'options.*' => 'nullable|string|max:255',
+            'options_raw' => 'nullable|string',
+            'jawaban_benar' => 'nullable|string|max:255',
+            'pembahasan' => 'nullable|string',
+            'image' => 'nullable|image|max:2048',
+            'remove_image' => 'nullable|boolean',
+            'status' => 'required|in:draft,terbit',
+        ], [
+            'image.max' => 'Ukuran gambar maksimal 2 MB.',
+            'image.image' => 'File harus berupa gambar.',
+        ]);
+
+        if ($request->boolean('remove_image') && $question->image_path) {
+            Storage::disk('public')->delete($question->image_path);
+            $question->image_path = null;
+        }
+
+        if ($request->hasFile('image')) {
+            if ($question->image_path) {
+                Storage::disk('public')->delete($question->image_path);
+            }
+            $question->image_path = $request->file('image')->store('personal-question-images', 'public');
+        }
+
+        $question->fill([
+            'jenjang' => $user->jenjang,
+            'kategori' => $data['kategori'],
+            'tipe' => $data['tipe'],
+            'pertanyaan' => $data['pertanyaan'],
+            'opsi' => $data['tipe'] === 'Singkat' ? null : $this->normalizeOptions($request->input('options'), $request->input('options_raw')),
+            'jawaban_benar' => $this->normalizeCorrectAnswer(
+                $data['tipe'],
+                $request->input('jawaban_benar'),
+                $data['tipe'] === 'Singkat' ? null : $this->normalizeOptions($request->input('options'), $request->input('options_raw'))
+            ),
+            'pembahasan' => $data['pembahasan'] ?? null,
+            'status' => $data['status'],
+        ]);
+
+        $question->save();
+
+        return back()->with('flash', ['type' => 'success', 'message' => 'Soal berhasil diperbarui.']);
+    }
+
     public function builder(): View {
         $user = Auth::user();
         $questions = PersonalQuestion::where('user_id', $user->id)
@@ -71,7 +151,7 @@ class PersonalQuestionController extends Controller {
         return view('guru.personal-question-builder', compact('questions', 'user'));
     }
 
-    public function saveBuilder(Request $request): RedirectResponse {
+    public function saveBuilder(Request $request): JsonResponse|RedirectResponse {
         $user = Auth::user();
         $data = $request->validate([
             'questions' => 'required|array',
@@ -80,7 +160,8 @@ class PersonalQuestionController extends Controller {
             'questions.*.opsi' => 'nullable|array',
             'questions.*.jawaban_benar' => 'nullable|string',
             'questions.*.pembahasan' => 'nullable|string',
-            'questions.*.image' => 'nullable|string',
+            'questions.*.image' => 'nullable|string', // legacy field name from old builder
+            'questions.*.image_path' => 'nullable|string',
             'questions.*.jenjang' => 'nullable|string',
             'questions.*.kategori' => 'required|string|max:255',
             'questions.*.status' => 'required|in:draft,terbit',
@@ -94,27 +175,99 @@ class PersonalQuestionController extends Controller {
 
             $existingQuestions = $existingQuery->get();
 
+            $incomingImagePaths = collect($data['questions'])
+                ->map(function (array $q): ?string {
+                    $candidate = $q['image_path'] ?? ($q['image'] ?? null);
+                    $candidate = is_string($candidate) ? trim($candidate) : null;
+                    if ($candidate === '') {
+                        return null;
+                    }
+
+                    // Keep only stored relative paths. External URLs should not be deleted via Storage.
+                    if (str_contains($candidate, '://') || str_starts_with($candidate, '/')) {
+                        return null;
+                    }
+
+                    return $candidate;
+                })
+                ->filter()
+                ->values()
+                ->all();
+
             foreach ($existingQuestions as $existingQuestion) {
-                if ($existingQuestion->image_path) {
-                    Storage::disk('public')->delete($existingQuestion->image_path);
+                if ($existingQuestion->image_path && ! in_array($existingQuestion->image_path, $incomingImagePaths, true)) {
+                    // Only delete images that are no longer referenced by the incoming payload.
+                    if (! str_contains($existingQuestion->image_path, '://') && ! str_starts_with($existingQuestion->image_path, '/')) {
+                        Storage::disk('public')->delete($existingQuestion->image_path);
+                    }
                 }
             }
 
             $existingQuery->delete();
 
             foreach ($data['questions'] as $q) {
-                if (array_key_exists('image', $q)) {
-                    $q['image_path'] = $q['image'];
-                    unset($q['image']);
+                $imagePath = $q['image_path'] ?? ($q['image'] ?? null);
+                $imagePath = is_string($imagePath) ? trim($imagePath) : null;
+                if ($imagePath !== '') {
+                    $q['image_path'] = $imagePath;
+                } else {
+                    $q['image_path'] = null;
                 }
+                unset($q['image']);
 
                 $q['user_id'] = $user->id;
                 $q['jenjang'] = $user->jenjang ?: ($q['jenjang'] ?? null);
+
+                $q['opsi'] = $this->normalizeOptions($q['opsi'] ?? null, null);
+                $q['jawaban_benar'] = $this->normalizeCorrectAnswer((string) $q['tipe'], $q['jawaban_benar'] ?? null, $q['opsi']);
+                if ($q['tipe'] === 'Singkat') {
+                    $q['opsi'] = null;
+                }
                 PersonalQuestion::create($q);
             }
         });
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => 'Soal berhasil disimpan.',
+            ]);
+        }
+
         return back()->with('flash', ['type'=>'success','message'=>'Soal berhasil disimpan.']);
+    }
+
+    public function uploadBuilderImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|image|max:2048',
+        ], [
+            'image.image' => 'File harus berupa gambar.',
+            'image.max' => 'Ukuran gambar maksimal 2 MB.',
+        ]);
+
+        $path = $request->file('image')->store('personal-question-images', 'public');
+
+        return response()->json([
+            'path' => $path,
+            'url' => route('guru.personal-questions.builder.image', ['path' => $path]),
+        ]);
+    }
+
+    public function builderImage(Request $request): BinaryFileResponse
+    {
+        $path = trim((string) $request->query('path'));
+
+        abort_if($path === '' || ! str_starts_with($path, 'personal-question-images/'), 404);
+
+        $disk = Storage::disk('public');
+        abort_unless($disk->exists($path), 404);
+
+        return response()->file($disk->path($path), [
+            'Content-Type' => $disk->mimeType($path) ?? 'application/octet-stream',
+            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+            'Cache-Control' => 'private, max-age=86400',
+        ]);
     }
 
     private function ownedQuestion(PersonalQuestion $question): PersonalQuestion

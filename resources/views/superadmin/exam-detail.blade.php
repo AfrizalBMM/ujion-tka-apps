@@ -6,7 +6,7 @@
         <div class="text-lg font-bold mb-2">Token Ujian</div>
         <div class="flex flex-col items-center gap-3 sm:flex-row">
             <span id="token-text" class="break-all text-center font-mono text-2xl tracking-widest bg-gray-100 px-4 py-2 rounded sm:text-3xl">{{ $exam->token }}</span>
-            <button onclick="copyToken()" class="btn-secondary w-full sm:w-auto">Copy Token</button>
+            <button type="button" data-copy-exam-token-single class="btn-secondary w-full sm:w-auto">Copy Token</button>
         </div>
         <div id="copy-success" class="text-green-600 mt-2 hidden">Token berhasil disalin!</div>
     </div>
@@ -30,15 +30,4 @@
         <a href="{{ route('superadmin.exams.builder', $exam) }}" class="btn-primary">Builder Soal</a>
     </div>
 </div>
-<script>
-function copyToken() {
-    const token = document.getElementById('token-text').innerText;
-    navigator.clipboard.writeText(token).then(function() {
-        document.getElementById('copy-success').classList.remove('hidden');
-        setTimeout(()=>{
-            document.getElementById('copy-success').classList.add('hidden');
-        }, 1500);
-    });
-}
-</script>
 @endsection

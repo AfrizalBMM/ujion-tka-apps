@@ -38,19 +38,46 @@
         @endif
     </div>
 
-    <div class="mb-6">
-        <div class="flex flex-col items-center rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 sm:p-6">
-            <img src="{{ $qr_url ?? asset('img/qr-placeholder.png') }}" alt="QR Pembayaran" class="mb-4 h-40 w-40 object-contain shadow-sm sm:h-48 sm:w-48">
-            <div class="text-2xl font-bold text-slate-800">Rp{{ number_format($harga ?? 0, 0, ',', '.') }}</div>
-            <div class="text-sm text-slate-500 mt-1 uppercase tracking-wider">Total Pembayaran</div>
+    <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-left">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                @if (! empty($selectedTarifJenjang?->name))
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tarif Jenjang</p>
+                    <div class="mt-1 text-lg font-bold text-slate-900">{{ $selectedTarifJenjang->name }}</div>
+                    @if ($selectedTarifJenjang->description)
+                        <div class="mt-1 max-w-lg text-sm text-slate-600">{{ $selectedTarifJenjang->description }}</div>
+                    @elseif ($selectedTarifJenjang->subtitle)
+                        <div class="mt-1 max-w-lg text-sm text-slate-600">{{ $selectedTarifJenjang->subtitle }}</div>
+                    @endif
+                @endif
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nominal Aktivasi</p>
+                <div class="mt-2 text-2xl font-bold text-slate-900">Rp{{ number_format($harga ?? 0, 0, ',', '.') }}</div>
+            </div>
+            @if ($latestTransaction)
+                <div class="text-right">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Referensi Terakhir</p>
+                    <div class="mt-2 text-sm font-bold text-slate-900">{{ $latestTransaction->reference_code }}</div>
+                </div>
+            @endif
+        </div>
+
+        <div class="mt-4">
+            <button type="button" class="btn-primary w-full" data-open-payment-modal>Bayar Sekarang</button>
+            <noscript>
+                <form action="{{ route('register.guru.create-payment') }}" method="POST" class="mt-3">
+                    @csrf
+                    <button type="submit" class="btn-secondary w-full">Buka Halaman Pembayaran</button>
+                </form>
+            </noscript>
         </div>
     </div>
+
     <div class="mb-4 rounded-xl border border-amber-100 bg-amber-50 p-4 text-left text-sm text-amber-900">
         <p class="font-semibold">Panduan singkat pembayaran:</p>
         <ul class="mt-2 list-disc space-y-1 pl-5">
-            <li>Scan QR di atas menggunakan aplikasi pembayaran Anda.</li>
-            <li>Pastikan nominal yang dibayarkan sesuai dengan total yang tertera.</li>
-            <li>Simpan bukti pembayaran sampai akun Anda aktif.</li>
+            <li>Klik <strong>Bayar Sekarang</strong> untuk membuka halaman QRIS dengan nominal tetap.</li>
+            <li>Scan QR menggunakan aplikasi bank atau e-wallet, lalu pastikan nominal muncul otomatis.</li>
+            <li>Setelah transfer berhasil, kembali ke halaman ini untuk upload bukti pembayaran.</li>
         </ul>
     </div>
     <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl text-blue-800 text-sm text-left">
@@ -63,7 +90,7 @@
 
     <div class="mb-6 rounded-xl border border-slate-200 bg-white p-4 text-left">
         <h3 class="text-base font-semibold text-slate-900">Upload Bukti Pembayaran</h3>
-        <p class="mt-1 text-sm text-slate-600">Unggah screenshot atau foto bukti transfer yang jelas agar admin bisa memverifikasi lebih cepat.</p>
+        <p class="mt-1 text-sm text-slate-600">Unggah screenshot atau foto bukti transfer yang jelas. Setelah berhasil, sistem akan otomatis membuka WhatsApp admin dengan format pesan berisi data Anda.</p>
 
         <form action="{{ route('register.guru.payment-proof') }}" method="POST" enctype="multipart/form-data" class="mt-4 space-y-3">
             @csrf
@@ -83,4 +110,125 @@
 
     <a href="/" class="btn-secondary w-full">Kembali ke Beranda</a>
 </div>
+
+<div id="payment-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 px-4">
+    <div class="w-full max-w-3xl rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900">
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <div class="text-sm font-semibold text-muted">Pembayaran QRIS</div>
+                <div class="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">Scan QR untuk bayar</div>
+                <div id="payment-modal-subtitle" class="mt-1 text-sm text-textSecondary dark:text-slate-300"></div>
+            </div>
+            <button type="button" class="btn-secondary" data-payment-modal-close>Tutup</button>
+        </div>
+
+        <div class="mt-5 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm dark:border-slate-800 dark:bg-slate-950/40">
+                <div class="mx-auto flex max-w-[360px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
+                    <div id="payment-modal-qr"></div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nominal</div>
+                    <div id="payment-modal-amount" class="mt-2 text-xl font-bold text-slate-900 dark:text-slate-100">-</div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kode Referensi</div>
+                    <div id="payment-modal-ref" class="mt-2 break-all text-sm font-bold text-slate-900 dark:text-slate-100">-</div>
+                </div>
+
+                <div class="rounded-2xl border border-amber-100 bg-amber-50/80 p-4 text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-100">
+                    <div class="font-semibold">Instruksi</div>
+                    <ol class="mt-2 list-decimal space-y-1 pl-5">
+                        <li>Scan QR menggunakan aplikasi bank atau e-wallet yang mendukung QRIS.</li>
+                        <li>Pastikan nominal muncul otomatis sesuai yang tertera.</li>
+                        <li>Setelah bayar berhasil, lanjutkan upload bukti pembayaran di halaman ini.</li>
+                    </ol>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <a id="payment-modal-wa" href="#" target="_blank" rel="noopener noreferrer" class="btn-secondary hidden text-center">Konfirmasi via WhatsApp</a>
+                    <button type="button" class="btn-primary" data-payment-modal-close>Saya Sudah Scan, Lanjut Upload Bukti</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const paymentModal = document.getElementById('payment-modal');
+    const paymentQr = document.getElementById('payment-modal-qr');
+    const paymentAmount = document.getElementById('payment-modal-amount');
+    const paymentRef = document.getElementById('payment-modal-ref');
+    const paymentSubtitle = document.getElementById('payment-modal-subtitle');
+    const paymentWa = document.getElementById('payment-modal-wa');
+
+    const openPaymentModal = () => {
+        paymentModal?.classList.remove('hidden');
+        paymentModal?.classList.add('flex');
+    };
+
+    const closePaymentModal = () => {
+        paymentModal?.classList.add('hidden');
+        paymentModal?.classList.remove('flex');
+    };
+
+    document.querySelectorAll('[data-payment-modal-close]').forEach((btn) => {
+        btn.addEventListener('click', () => closePaymentModal());
+    });
+
+    paymentModal?.addEventListener('click', (event) => {
+        if (event.target === paymentModal) {
+            closePaymentModal();
+        }
+    });
+
+    document.querySelectorAll('[data-open-payment-modal]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            try {
+                btn.disabled = true;
+                btn.classList.add('opacity-80');
+                btn.textContent = 'Memuat QRIS...';
+
+                const res = await fetch("{{ route('register.guru.payment-data') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({}),
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data?.message || 'Gagal memuat QRIS.');
+                }
+
+                paymentQr.innerHTML = data.qr_svg || '';
+                paymentAmount.textContent = data.amount || '-';
+                paymentRef.textContent = data.reference_code || '-';
+                paymentSubtitle.textContent = (data.plan_name ? ('Paket: ' + data.plan_name) : '');
+
+                if (data.wa_url) {
+                    paymentWa.href = data.wa_url;
+                    paymentWa.classList.remove('hidden');
+                } else {
+                    paymentWa.href = '#';
+                    paymentWa.classList.add('hidden');
+                }
+
+                openPaymentModal();
+            } catch (e) {
+                alert(e?.message || 'Gagal memuat QRIS.');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-80');
+                btn.textContent = 'Bayar Sekarang';
+            }
+        });
+    });
+</script>
 @endsection

@@ -14,6 +14,7 @@ class MaterialController extends Controller {
     public function index(Request $request): View {
         $user = Auth::user();
         $jenjangUser = $user->jenjang ?? null;
+        $bookmarks = $user->bookmarks ?? [];
 
         $hasJenjang = Schema::hasColumn('materials', 'jenjang');
         $hasMapel = Schema::hasColumn('materials', 'mapel');
@@ -29,6 +30,11 @@ class MaterialController extends Controller {
 
         if ($hasJenjang) {
             $materialsQuery->where('jenjang', $jenjangUser);
+        }
+
+        if ($request->boolean('bookmarked')) {
+            // When empty, force no results.
+            $materialsQuery->whereIn('id', !empty($bookmarks) ? $bookmarks : [-1]);
         }
 
         $materialsQuery
@@ -73,7 +79,6 @@ class MaterialController extends Controller {
             ->filter()
             ->values();
 
-        $bookmarks = $user->bookmarks ?? [];
         return view('guru.materials', compact('materials', 'bookmarks', 'jenjangUser', 'filters', 'mapels', 'curriculums'));
     }
 

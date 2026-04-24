@@ -27,6 +27,18 @@
         <div class="flex min-h-0 flex-1 flex-row gap-0">
             <div class="min-w-0 flex-1 overflow-y-auto bg-white/92 p-4 sm:p-6 lg:p-7">
                 <form @submit.prevent="save">
+                    <div v-if="saveError" class="mb-4 rounded-2xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                            <div class="flex-1 min-w-0">@{{ saveError }}</div>
+                        </div>
+                    </div>
+                    <div v-if="saveSuccess" class="mb-4 rounded-2xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-check mt-0.5"></i>
+                            <div class="flex-1 min-w-0">@{{ saveSuccess }}</div>
+                        </div>
+                    </div>
                     <div v-if="questions.length" class="space-y-6">
                         <div class="flex flex-col gap-3 rounded-[24px] border border-slate-200/80 bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                             <div>
@@ -68,29 +80,44 @@
                                     <div class="mb-3 flex items-center justify-between gap-3">
                                         <div>
                                             <div class="text-sm font-semibold text-slate-900">Opsi Jawaban</div>
-                                            <div class="text-xs text-slate-500">Susun pilihan jawaban untuk tipe soal objektif.</div>
+                                            <div class="text-xs text-slate-500">Susun pilihan jawaban objektif dengan label A sampai E.</div>
                                         </div>
-                                        <button type="button" class="btn-secondary w-full sm:w-auto" @click="addOpsi">+ Opsi</button>
+                                        <button type="button" class="btn-secondary w-full sm:w-auto" @click="addOpsi" :disabled="questions[current].opsi.length >= 5">+ Opsi</button>
                                     </div>
                                     <div class="space-y-2">
                                         <div v-for="(opsi, i) in questions[current].opsi" :key="i" class="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center">
                                             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-sm font-semibold text-cyan-700">
-                                                @{{ i + 1 }}
+                                                @{{ String.fromCharCode(65 + i) }}
                                             </div>
                                             <input v-model="questions[current].opsi[i]" class="input flex-1">
                                             <button type="button" class="btn-danger w-full sm:w-auto" @click="removeOpsi(i)">Hapus</button>
                                         </div>
                                     </div>
+                                    <div class="mt-3 text-[11px] text-slate-500">Maksimal 5 opsi.</div>
                                 </div>
 
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div>
                                         <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Jawaban Benar</label>
-                                        <input v-model="questions[current].jawaban_benar" class="input w-full">
+                                        <select v-if="['PG','Checklist'].includes(questions[current].tipe)" v-model="questions[current].jawaban_benar" class="input w-full">
+                                            <option value="">Pilih jawaban benar</option>
+                                            <option
+                                                v-for="(opsi, i) in (questions[current].opsi || []).slice(0, 5)"
+                                                :key="`answer-${i}`"
+                                                :value="String.fromCharCode(65 + i)">
+                                                @{{ String.fromCharCode(65 + i) }} - @{{ opsi || `Opsi ${String.fromCharCode(65 + i)}` }}
+                                            </option>
+                                        </select>
+                                        <input v-else v-model="questions[current].jawaban_benar" class="input w-full" placeholder="Tulis jawaban singkat yang benar">
+                                        <div class="mt-1 text-[11px] text-slate-500">
+                                            <span v-if="['PG','Checklist'].includes(questions[current].tipe)">Pilih huruf jawaban yang benar sesuai opsi aktif.</span>
+                                            <span v-else>Isi jawaban teks singkat yang dianggap benar.</span>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Kategori</label>
                                         <input v-model="questions[current].kategori" class="input w-full">
+                                        <div class="mt-1 text-[11px] text-slate-500">Kategori dipakai untuk mengelompokkan soal agar lebih mudah difilter di halaman Bank Soal Pribadi, misalnya Aljabar, Pecahan, atau Literasi.</div>
                                     </div>
                                 </div>
 
@@ -100,10 +127,15 @@
                                 </div>
 
                                 <div>
-                                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Gambar (URL)</label>
-                                    <input v-model="questions[current].image" class="input w-full" placeholder="https://...">
-                                    <div v-if="questions[current].image" class="mt-3 overflow-hidden rounded-[24px] border border-slate-200 bg-white p-3">
-                                        <img :src="questions[current].image" class="max-h-52 rounded-2xl object-contain">
+                                    <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Gambar (opsional)</label>
+                                    <input type="file" accept="image/*" class="input w-full" @change="pickImage($event)" :disabled="isSaving || isUploadingImage">
+                                    <div class="mt-1 text-[11px] text-slate-500">Maksimal 2 MB. Jika file lebih besar dari 2 MB, sistem akan menolak dan menampilkan pesan error.</div>
+
+                                    <div v-if="questions[current].temp_preview_url || questions[current].image_url" class="mt-3 overflow-hidden rounded-[24px] border border-slate-200 bg-white p-3">
+                                        <img :src="questions[current].temp_preview_url || questions[current].image_url" class="max-h-52 rounded-2xl object-contain">
+                                        <button type="button" class="btn-danger mt-3 w-full sm:w-auto" @click="clearImage" :disabled="isSaving || isUploadingImage">
+                                            Hapus Gambar
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -134,9 +166,9 @@
 
                         <div class="flex flex-col gap-2 border-t border-slate-200/70 pt-5 sm:flex-row sm:justify-between">
                             <button type="button" class="btn-danger w-full sm:w-auto" @click="remove(current)" v-if="questions.length>1">Hapus Soal Ini</button>
-                            <button type="submit" class="btn-primary w-full sm:w-auto">
+                            <button type="submit" class="btn-primary w-full sm:w-auto" :disabled="isSaving">
                                 <i class="fa-solid fa-floppy-disk"></i>
-                                Simpan Semua Soal
+                                @{{ isSaving ? 'Menyimpan...' : 'Simpan Semua Soal' }}
                             </button>
                         </div>
                     </div>
@@ -205,7 +237,9 @@
             'opsi' => $q->opsi ?? [],
             'jawaban_benar' => $q->jawaban_benar,
             'pembahasan' => $q->pembahasan,
-            'image' => $q->image_path,
+            'image_path' => $q->image_path,
+            'image_url' => $q->image_path ? route('guru.personal-questions.builder.image', ['path' => $q->image_path]) : null,
+            'temp_preview_url' => null,
             'kategori' => $q->kategori,
             'status' => $q->status,
         ];
@@ -214,45 +248,12 @@
 <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script>
-const initialQuestions = @json($initialQuestions);
-
-new Vue({
-    el: '#builder-app',
-    data: {
-        questions: initialQuestions,
-        current: 0,
-    },
-    methods: {
-        go(idx){ this.current=idx; },
-        next(){ if(this.current<this.questions.length-1) this.current++; },
-        prev(){ if(this.current>0) this.current--; },
-        add(){ this.questions.push({tipe:'PG',pertanyaan:'',opsi:[''],jawaban_benar:'',pembahasan:'',image:'',kategori:'',status:'draft'}); this.current=this.questions.length-1; },
-        remove(idx){ this.questions.splice(idx,1); if(this.current>=this.questions.length) this.current=this.questions.length-1; },
-        addOpsi(){ this.questions[this.current].opsi.push(''); },
-        removeOpsi(i){ this.questions[this.current].opsi.splice(i,1); },
-        previewSoal(q){
-            let html = `<b>${q.pertanyaan}</b><br>`;
-            if(['PG','Checklist'].includes(q.tipe)){
-                html += '<ul>' + (q.opsi||[]).map(o=>`<li>${o}</li>`).join('') + '</ul>';
-            }
-            if(q.image){ html += `<img src='${q.image}' class='max-h-32'>`; }
-            // KaTeX preview
-            setTimeout(()=>{
-                document.querySelectorAll('.katex-math').forEach(el=>{
-                    try { katex.render(el.textContent, el, {throwOnError:false}); } catch(e){}
-                });
-            }, 10);
-            return html.replace(/\$\$(.*?)\$\$/g, '<span class="katex-math">$1</span>');
-        },
-        save(){
-            fetch("{{ route('guru.personal-questions.builder.save') }}",{
-                method:'POST',
-                headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
-                body:JSON.stringify({questions:this.questions})
-            }).then(()=>location.reload());
-        }
-    }
-});
+<script id="personal-question-builder-config" type="application/json">
+    @json([
+        'initialQuestions' => $initialQuestions,
+        'saveUrl' => route('guru.personal-questions.builder.save'),
+        'uploadImageUrl' => route('guru.personal-questions.builder.upload-image'),
+        'csrfToken' => csrf_token(),
+    ])
 </script>
 @endsection

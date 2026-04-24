@@ -1,7 +1,7 @@
 @extends('layouts.guru')
 @section('title', 'Profil Guru')
 @section('content')
-<div class="max-w-3xl space-y-6">
+<div class="w-full space-y-6">
     <h1 class="text-2xl font-bold">Profil</h1>
     <form method="POST" action="{{ route('guru.profile.update') }}" enctype="multipart/form-data" class="card p-6 space-y-4">
         @csrf

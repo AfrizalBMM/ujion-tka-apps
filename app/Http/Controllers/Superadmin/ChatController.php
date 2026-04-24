@@ -111,6 +111,9 @@ class ChatController extends Controller {
             'to_user_id' => 'required|exists:users,id',
             'message' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
+        ], [
+            'image.image' => 'File lampiran harus berupa gambar.',
+            'image.max' => 'Ukuran gambar maksimal 2 MB.',
         ]);
         $data['from_user_id'] = auth()->id();
         if ($request->hasFile('image')) {

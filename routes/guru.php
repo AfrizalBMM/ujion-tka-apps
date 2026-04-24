@@ -12,11 +12,15 @@ use App\Http\Controllers\Guru\PersonalQuestionController;
 use App\Http\Controllers\Guru\ExamController;
 use App\Http\Controllers\Guru\ChatController;
 use App\Http\Controllers\Guru\SoalGuruController;
+use App\Http\Controllers\Guru\SoalUjionController;
 use App\Http\Controllers\Guru\TeksBacaanGuruController;
+use App\Http\Controllers\ChatImageController as SharedChatImageController;
 
 Route::get('/register/guru', [RegisterGuruController::class, 'showForm'])->name('register.guru.form');
 Route::post('/register/guru', [RegisterGuruController::class, 'register'])->name('register.guru');
 Route::get('/register/guru/pending', [RegisterGuruController::class, 'showPending'])->name('register.guru.pending');
+Route::post('/register/guru/pending/payment', [RegisterGuruController::class, 'createPayment'])->name('register.guru.create-payment');
+Route::post('/register/guru/pending/payment-data', [RegisterGuruController::class, 'paymentData'])->name('register.guru.payment-data');
 Route::post('/register/guru/pending/payment-proof', [RegisterGuruController::class, 'uploadPaymentProof'])->name('register.guru.payment-proof');
 
 Route::middleware(['auth', 'role:guru', 'guru.active'])->prefix('guru')->name('guru.')->scopeBindings()->group(function () {
@@ -30,9 +34,12 @@ Route::middleware(['auth', 'role:guru', 'guru.active'])->prefix('guru')->name('g
     Route::post('/materials/{material}/unbookmark', [MaterialController::class, 'unbookmark'])->name('materials.unbookmark');
     Route::get('/personal-questions', [PersonalQuestionController::class, 'index'])->name('personal-questions');
     Route::post('/personal-questions', [PersonalQuestionController::class, 'store'])->name('personal-questions.store');
+    Route::post('/personal-questions/{question}', [PersonalQuestionController::class, 'update'])->name('personal-questions.update');
     Route::post('/personal-questions/{question}/destroy', [PersonalQuestionController::class, 'destroy'])->name('personal-questions.destroy');
     Route::get('/personal-questions/builder', [PersonalQuestionController::class, 'builder'])->name('personal-questions.builder');
     Route::post('/personal-questions/builder/save', [PersonalQuestionController::class, 'saveBuilder'])->name('personal-questions.builder.save');
+    Route::post('/personal-questions/builder/upload-image', [PersonalQuestionController::class, 'uploadBuilderImage'])->name('personal-questions.builder.upload-image');
+    Route::get('/personal-questions/builder/image', [PersonalQuestionController::class, 'builderImage'])->name('personal-questions.builder.image');
     Route::get('/exams', [ExamController::class, 'index'])->name('exams');
     Route::post('/exams/join', [ExamController::class, 'join'])->name('exams.join');
     Route::get('/exams/{exam}/result', [ExamController::class, 'result'])->name('exams.result');
@@ -46,10 +53,13 @@ Route::middleware(['auth', 'role:guru', 'guru.active'])->prefix('guru')->name('g
 
     Route::get('/chat', [ChatController::class, 'index'])->name('chat');
     Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');
+    Route::get('/chat/{chat}/image', [SharedChatImageController::class, 'show'])->name('chat.image');
     Route::get('/paket-soal', [PaketSoalGuruController::class, 'index'])->name('paket-soal.index');
     Route::get('/paket-soal/{paket}', [PaketSoalGuruController::class, 'show'])->name('paket-soal.show');
-    Route::get('/soal-ujion', [\App\Http\Controllers\Guru\SoalUjionController::class, 'index'])->name('soal-ujion.index');
-    Route::get('/soal-ujion/{question}', [\App\Http\Controllers\Guru\SoalUjionController::class, 'show'])->name('soal-ujion.show');
+    Route::get('/soal-ujion', [SoalUjionController::class, 'index'])->name('soal-ujion.index');
+    Route::get('/soal-ujion/{question}', [SoalUjionController::class, 'show'])->name('soal-ujion.show');
+    Route::post('/soal-ujion/{question}/bookmark', [SoalUjionController::class, 'bookmark'])->name('soal-ujion.bookmark');
+    Route::post('/soal-ujion/{question}/unbookmark', [SoalUjionController::class, 'unbookmark'])->name('soal-ujion.unbookmark');
     Route::middleware('guru.jenjang')->group(function () {
         Route::get('/paket-soal/{paket}/mapel/{mapel}/soal', [SoalGuruController::class, 'index'])->name('soal.index');
         Route::post('/paket-soal/{paket}/mapel/{mapel}/soal/import-ujion', [SoalGuruController::class, 'importFromUjion'])->name('soal.import-ujion');

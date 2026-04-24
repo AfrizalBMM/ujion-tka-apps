@@ -13,22 +13,23 @@ class LandingController extends Controller
 {
     public function index(): View
     {
-        $pricingPlans = config('landing.pricing', []);
+        $tarifJenjangs = config('landing.pricing', []);
 
         if (Schema::hasTable('pricing_plans')) {
-            $hasPromoActive = Schema::hasColumn('pricing_plans', 'promo_active');
+            $tarifQuery = PricingPlan::query()->where('is_active', true);
 
-            $pricingPlans = PricingPlan::query()
-                ->where('is_active', true)
-                ->orderBy('sort_order')
-                ->limit(3)
-                ->get()
+            if (Schema::hasColumn('pricing_plans', 'jenjang')) {
+                $tarifQuery->orderByRaw("case when jenjang = 'SD' then 1 when jenjang = 'SMP' then 2 when jenjang = 'SMA' then 3 else 4 end");
+            }
+
+            $tarifJenjangs = $tarifQuery->get()
                 ->map(fn ($plan) => [
+                    'id' => $plan->id,
+                    'jenjang' => $plan->jenjang ?? null,
                     'name' => $plan->name,
                     'subtitle' => $plan->subtitle,
+                    'description' => $plan->description,
                     'price' => $plan->price,
-                    'original_price' => ($hasPromoActive && ! $plan->promo_active) ? null : $plan->original_price,
-                    'period' => $plan->period,
                 ])
                 ->all();
         }
@@ -60,7 +61,7 @@ class LandingController extends Controller
         }
 
         return view('landing', [
-            'pricingPlans' => $pricingPlans,
+            'tarifJenjangs' => $tarifJenjangs,
             'stats' => $stats,
         ]);
     }

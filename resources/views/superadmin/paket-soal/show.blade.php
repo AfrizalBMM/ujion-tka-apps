@@ -185,7 +185,7 @@
                                                     <button
                                                         type="button"
                                                         id="copy-sa-detail-{{ $mt->id }}"
-                                                        onclick="copyMapelTokenDetail('{{ $mt->token }}', {{ $mt->id }})"
+                                                        data-copy-paket-detail-token="{{ $mt->token }}"
                                                         class="btn-secondary px-2 py-1 text-[10px]">
                                                         <i class="fa-solid fa-copy"></i>
                                                     </button>
@@ -203,66 +203,4 @@
     </section>
 </div>
 
-@push('scripts')
-<script>
-function copyMapelTokenDetail(token, id) {
-    navigator.clipboard.writeText(token).then(() => {
-        const btn = document.getElementById('copy-sa-detail-' + id);
-        const original = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-        btn.classList.add('text-emerald-600');
-        setTimeout(() => {
-            btn.innerHTML = original;
-            btn.classList.remove('text-emerald-600');
-        }, 2000);
-    });
-}
-
-// Inject tombol "Hapus Semua Soal" ke dalam span placeholder,
-// lalu hubungkan ke form hapus via data-confirm global ui.js
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[id^="delete-trigger-wrap-"]').forEach((wrap) => {
-        const mapelId = wrap.id.replace('delete-trigger-wrap-', '');
-        const deleteForm = document.getElementById('delete-form-' + mapelId);
-        if (!deleteForm) return;
-
-        // Buat tombol visible
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn-danger px-4 py-2 text-xs flex items-center gap-1.5';
-        btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Hapus Semua Soal';
-
-        btn.addEventListener('click', () => {
-            // Ambil data konfirmasi dari form hapus
-            const title   = deleteForm.dataset.confirmTitle   || 'Hapus Semua Soal';
-            const message = deleteForm.dataset.confirm         || 'Yakin hapus semua soal?';
-
-            // Buka global confirm modal
-            const modal      = document.querySelector('[data-confirm-modal]');
-            const titleEl    = modal?.querySelector('[data-confirm-modal-title]');
-            const messageEl  = modal?.querySelector('[data-confirm-modal-message]');
-            const confirmBtn = modal?.querySelector('[data-confirm-modal-confirm]');
-
-            if (!modal) { deleteForm.submit(); return; }
-
-            if (titleEl)   titleEl.textContent   = title;
-            if (messageEl) messageEl.textContent  = message;
-
-            // Satu kali event: on confirm, submit form hapus
-            const handler = () => {
-                deleteForm.submit();
-                confirmBtn.removeEventListener('click', handler);
-            };
-            confirmBtn.addEventListener('click', handler);
-
-            modal.classList.remove('hidden');
-            modal.setAttribute('aria-hidden', 'false');
-            confirmBtn?.focus?.();
-        });
-
-        wrap.appendChild(btn);
-    });
-});
-</script>
-@endpush
 @endsection

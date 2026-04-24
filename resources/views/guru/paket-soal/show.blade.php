@@ -137,7 +137,7 @@
                             </div>
                         </div>
                         <button type="button" id="copy-guru-paket-{{ $mt->id }}"
-                            onclick="guruPaketCopyMapelToken('{{ $mt->token }}', {{ $mt->id }})" title="Salin token"
+                            data-copy-paket-token="{{ $mt->token }}" title="Salin token"
                             class="btn-secondary h-8 w-8 flex items-center justify-center rounded-lg px-0 transition-all text-xs">
                             <i class="fa-solid fa-copy"></i>
                         </button>
@@ -156,40 +156,4 @@
     </section>
 </div>
 
-@push('scripts')
-<script>
-    function guruPaketCopyMapelToken(token, id) {
-        const doCopy = () => {
-            const btn = document.getElementById('copy-guru-paket-' + id);
-            const original = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-            btn.classList.add('text-emerald-600');
-            setTimeout(() => {
-                btn.innerHTML = original;
-                btn.classList.remove('text-emerald-600');
-            }, 2000);
-        };
-
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(token).then(doCopy);
-        } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = token;
-            textArea.style.position = "fixed";
-            textArea.style.left = "-999999px";
-            textArea.style.top = "-999999px";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                doCopy();
-            } catch (err) {
-                console.error('Fallback copy failed', err);
-            }
-            document.body.removeChild(textArea);
-        }
-    }
-</script>
-@endpush
 @endsection

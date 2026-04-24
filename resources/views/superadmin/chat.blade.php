@@ -51,7 +51,7 @@
                     </div>
                     <div class="flex items-center gap-2 ml-2">
                         <!-- Info Button -->
-                        <button type="button" class="icon-button btn-info btn-xs" title="Detail Akun" onclick="document.getElementById('modal-detail-akun').classList.remove('hidden')">
+                        <button type="button" class="icon-button btn-info btn-xs" title="Detail Akun" data-open-account-detail>
                             <i class="fa-solid fa-circle-info"></i>
                         </button>
                         <!-- Delete All Button -->
@@ -76,13 +76,13 @@
                                 <div class="rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm {{ $chat->from_user_id == auth()->id() ? 'bg-blue-100 text-slate-800 dark:bg-blue-500/20 dark:text-slate-100' : 'bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100' }}">
                                     @if($chat->message)
                                         <div class="whitespace-pre-wrap">{{ $chat->message }}</div>
-                                    @endif
-                                    @if($chat->image_path)
-                                        <a href="{{ Storage::url($chat->image_path) }}" target="_blank" class="mt-3 block">
-                                            <img src="{{ Storage::url($chat->image_path) }}" class="max-h-56 rounded-2xl border border-slate-200 max-w-full object-cover dark:border-slate-700">
+                                     @endif
+                                     @if($chat->image_path)
+                                        <a href="{{ route('superadmin.chat.image', $chat) }}" target="_blank" class="mt-3 block">
+                                            <img src="{{ route('superadmin.chat.image', $chat) }}" class="max-h-56 rounded-2xl border border-slate-200 max-w-full object-cover dark:border-slate-700">
                                         </a>
-                                    @endif
-                                </div>
+                                     @endif
+                                 </div>
                                 <div class="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-slate-500 {{ $chat->from_user_id == auth()->id() ? 'justify-end' : 'justify-start' }}">
                                     <span>{{ $chat->created_at->format('d M H:i') }}</span>
                                     @if($chat->from_user_id == auth()->id())
@@ -109,21 +109,38 @@
                 </div>
             @endif
             <!-- Form kirim pesan dalam card -->
-            <div class="mt-4">
-                <div class="card p-4">
-                    <form method="POST" action="{{ route('superadmin.chat.store') }}" enctype="multipart/form-data" class="flex gap-2 items-end">
+                <div class="mt-4">
+                    <div class="card p-4">
+                    <form method="POST" action="{{ route('superadmin.chat.store') }}" enctype="multipart/form-data" class="space-y-2" id="chat-send-form">
                         @csrf
                         <!-- Dropdown guru dihapus, karena sudah dipilih di area percakapan -->
                         <input type="hidden" name="to_user_id" value="{{ $selectedUser ? $selectedUser->id : '' }}">
-                        <label class="flex items-center cursor-pointer mb-0">
-                            <input type="file" name="image" accept="image/*" class="hidden">
-                            <span class="icon-button" title="Lampirkan Media"><i class="fa-solid fa-photo-film"></i></span>
-                        </label>
-                        <textarea name="message" class="input flex-1 min-h-10" rows="1" placeholder="Tulis pesan..."></textarea>
-                        <button class="btn-primary px-5" type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+
+                        <div id="chat-image-preview" class="hidden">
+                            <div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900/40">
+                                <img id="chat-image-preview-img" alt="Preview gambar" class="h-16 w-16 rounded-lg border border-slate-200 object-cover dark:border-slate-700">
+                                <div class="flex-1 min-w-0">
+                                    <div id="chat-image-preview-meta" class="truncate text-xs font-semibold text-slate-700 dark:text-slate-200"></div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Preview lampiran, akan terkirim saat Anda klik kirim.</div>
+                                </div>
+                                <button type="button" class="icon-button btn-danger btn-xs" id="chat-image-preview-clear" title="Hapus gambar">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 items-end">
+                            <label class="flex items-center cursor-pointer mb-0">
+                                <input type="file" name="image" accept="image/*" class="hidden" id="chat-image-input">
+                                <span class="icon-button" title="Lampirkan Media (maks 2 MB)"><i class="fa-solid fa-photo-film"></i></span>
+                            </label>
+                            <textarea name="message" class="input flex-1 min-h-10" rows="1" placeholder="Tulis pesan..."></textarea>
+                            <button class="btn-primary px-5" type="submit"><i class="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400">Lampiran gambar maksimal 2 MB.</div>
                     </form>
+                    </div>
                 </div>
-            </div>
         </div>
     </div>
 </div>
@@ -131,7 +148,7 @@
 @if($selectedUser)
 <div id="modal-detail-akun" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 w-full max-w-md relative">
-        <button class="absolute top-2 right-2 text-gray-400 hover:text-red-500" onclick="document.getElementById('modal-detail-akun').classList.add('hidden')">
+        <button class="absolute top-2 right-2 text-gray-400 hover:text-red-500" type="button" data-close-account-detail>
             <i class="fa-solid fa-xmark fa-lg"></i>
         </button>
         <div class="flex flex-col items-center gap-3">

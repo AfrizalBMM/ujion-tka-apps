@@ -3,6 +3,25 @@
 @section('content')
 @php
 $optionLabels = range('A', 'Z');
+$imageUrl = static fn ($path) => $path ? route('guru.personal-questions.builder.image', ['path' => $path]) : null;
+$resolveAnswerLabel = static function ($question) use ($optionLabels) {
+    if ($question->tipe === 'Singkat') {
+        return '';
+    }
+
+    $raw = strtoupper(trim((string) $question->jawaban_benar));
+    if (in_array($raw, array_slice($optionLabels, 0, 5), true)) {
+        return $raw;
+    }
+
+    foreach (($question->opsi ?? []) as $index => $option) {
+        if (trim((string) $option) === trim((string) $question->jawaban_benar)) {
+            return $optionLabels[$index] ?? '';
+        }
+    }
+
+    return '';
+};
 @endphp
 <div class="space-y-6">
     <section class="page-hero">
@@ -32,16 +51,16 @@ $optionLabels = range('A', 'Z');
             </a>
         </div>
     </section>
-    <form method="GET" class="card p-4 space-y-4 sm:space-y-0 sm:flex sm:items-end sm:gap-4 mb-4">
+    <form method="GET" action="{{ route('guru.personal-questions') }}" class="card p-4 space-y-4 sm:space-y-0 sm:flex sm:items-end sm:gap-4 mb-4" data-personal-questions-filter-form>
         <div class="flex-1 min-w-[150px]">
             <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Cari Pertanyaan</label>
-            <input type="text" name="q" value="{{ request('q') }}" class="input mt-1 w-full" placeholder="Cari pertanyaan...">
+            <input type="text" name="q" value="{{ request('q') }}" class="input mt-1 w-full" placeholder="Cari pertanyaan..." data-live-search>
         </div>
         <div class="flex-1 min-w-[150px]">
             <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Kategori</label>
             <select name="kategori" class="input mt-1 w-full">
                 <option value="">Semua Kategori</option>
-                @foreach($questions->pluck('kategori')->unique()->filter()->values() as $kategori)
+                @foreach(($categories ?? collect()) as $kategori)
                 <option value="{{ $kategori }}" @selected(request('kategori')==$kategori)> {{ $kategori }} </option>
                 @endforeach
             </select>
@@ -55,13 +74,12 @@ $optionLabels = range('A', 'Z');
                 <option value="Singkat" @selected(request('tipe')=='Singkat' )>Jawaban Singkat</option>
             </select>
         </div>
-        <button class="btn-secondary h-[42px] flex items-center justify-center" type="submit">Filter</button>
         <a href="{{ route('guru.personal-questions') }}"
             class="btn-secondary h-[42px] flex items-center justify-center">Reset</a>
         <a href="{{ route('guru.personal-questions.builder') }}"
             class="btn-primary h-[42px] flex items-center justify-center">Builder Soal Fullscreen</a>
         <button class="btn-primary h-[42px] flex items-center justify-center" type="button"
-            onclick="document.getElementById('modal-tambah-soal').classList.remove('hidden')">
+            data-modal-open="modal-tambah-soal">
             <i class="fa-solid fa-plus mr-2"></i>Tambah Soal
         </button>
     </form>
@@ -72,76 +90,29 @@ $optionLabels = range('A', 'Z');
             <div class="bg-white rounded-lg shadow-lg p-6">
                 <div class="flex items-center justify-between mb-4">
                     <div class="font-bold text-lg">Tambah Soal Pribadi</div>
-                    <button class="text-gray-500 hover:text-gray-700"
-                        onclick="document.getElementById('modal-tambah-soal').classList.add('hidden')">
+                    <button class="text-gray-500 hover:text-gray-700" type="button" data-modal-close="modal-tambah-soal">
                         <i class="fa-solid fa-times"></i>
                     </button>
                 </div>
                 <form method="POST" action="{{ route('guru.personal-questions.store') }}" enctype="multipart/form-data">
                     @csrf
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                        <div>
-                            <label class="text-xs font-bold">Jenjang</label>
-                            <input class="input w-full bg-slate-100" value="{{ $user->jenjang }}" readonly>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Kategori</label>
-                            <input name="kategori" class="input w-full" required>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Tipe Soal</label>
-                            <select name="tipe" class="input w-full" id="guru-personal-question-type" required>
-                                <option value="PG">Pilihan Ganda</option>
-                                <option value="Checklist">Checklist</option>
-                                <option value="Singkat">Jawaban Singkat</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Pertanyaan</label>
-                            <textarea name="pertanyaan" class="input w-full" required></textarea>
-                        </div>
-                        <div class="md:col-span-2" data-objective-options>
-                            <div class="flex items-center justify-between gap-3">
-                                <label class="text-xs font-bold">Opsi Jawaban</label>
-                                <button type="button" class="btn-secondary px-3 py-2 text-xs" data-option-add="guru-personal">
-                                    <i class="fa-solid fa-plus mr-2"></i> Tambah Jawaban
-                                </button>
-                            </div>
-                            <div class="mt-2 grid grid-cols-1 gap-2" data-option-list="guru-personal">
-                                @foreach (range(0, 3) as $index)
-                                <div
-                                    class="flex items-center gap-3 rounded-2xl border border-border bg-slate-50/80 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80">
-                                    <span
-                                        class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">{{ $optionLabels[$index] }}</span>
-                                    <input name="options[]" class="input border-0 bg-transparent px-0"
-                                        placeholder="Tulis jawaban {{ $optionLabels[$index] }}">
-                                </div>
-                                @endforeach
-                            </div>
-                            <p class="mt-1 text-[10px] text-muted italic">Gunakan untuk tipe `PG` atau `Checklist`. Kunci jawaban bisa
-                                diisi huruf seperti `A` atau isi jawabannya langsung.</p>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Jawaban Benar</label>
-                            <input name="jawaban_benar" class="input w-full" id="guru-personal-answer-key"
-                                placeholder="A atau isi jawaban benar">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Pembahasan</label>
-                            <textarea name="pembahasan" class="input w-full"></textarea>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Gambar (opsional)</label>
-                            <input type="file" name="image" accept="image/*" class="input w-full">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Status</label>
-                            <select name="status" class="input w-full" required>
-                                <option value="draft">Draft</option>
-                                <option value="terbit">Terbit</option>
-                            </select>
-                        </div>
-                    </div>
+                    @include('guru.partials.personal-question-form-fields', [
+                        'user' => $user,
+                        'optionLabels' => $optionLabels,
+                        'modeKey' => 'create',
+                        'isEditMode' => false,
+                        'questionData' => [
+                            'tipe' => 'PG',
+                            'kategori' => '',
+                            'pertanyaan' => '',
+                            'opsi' => ['', '', '', ''],
+                            'jawaban_benar' => '',
+                            'pembahasan' => '',
+                            'status' => 'draft',
+                            'image_path' => null,
+                        ],
+                        'imagePreviewUrl' => null,
+                    ])
                     <button class="btn-primary mt-3 w-full sm:w-auto" type="submit">Tambah Soal</button>
                 </form>
             </div>
@@ -150,11 +121,11 @@ $optionLabels = range('A', 'Z');
     <div class="card p-4">
         <a href="{{ route('guru.personal-questions.builder') }}" class="btn-primary mb-4 w-full sm:w-auto">Builder Soal
             Fullscreen</a>
-        <div class="table-container">
+        <div id="personal-questions-table-wrap" class="table-container">
             <table class="table-ujion w-full min-w-[620px]">
                 <thead>
                     <tr>
-                        <th>Jenjang</th>
+                        <th>Soal</th>
                         <th>Kategori</th>
                         <th>Tipe</th>
                         <th>Status</th>
@@ -164,11 +135,31 @@ $optionLabels = range('A', 'Z');
                 <tbody>
                     @foreach($questions as $question)
                     <tr>
-                        <td>{{ $question->jenjang }}</td>
-                        <td>{{ $question->kategori }}</td>
-                        <td>{{ $question->tipe }}</td>
-                        <td>{{ $question->status }}</td>
+                        <td class="min-w-[260px]">
+                            <div class="space-y-2">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="badge-info">Soal Pribadi</span>
+                                    <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{{ $question->jenjang }}</span>
+                                </div>
+                                <div class="text-sm font-semibold leading-6 text-slate-900 dark:text-slate-100">
+                                    {{ \Illuminate\Support\Str::limit(strip_tags($question->pertanyaan), 110) }}
+                                </div>
+                                @if($question->image_path)
+                                <div class="text-[11px] text-slate-500">Memiliki lampiran gambar</div>
+                                @endif
+                            </div>
+                        </td>
                         <td>
+                            <span class="badge">{{ $question->kategori }}</span>
+                        </td>
+                        <td>
+                            <span class="badge-warning">{{ $question->tipe }}</span>
+                        </td>
+                        <td>
+                            <span class="{{ $question->status === 'terbit' ? 'badge-success' : 'badge-warning' }}">{{ $question->status }}</span>
+                        </td>
+                        <td class="flex flex-wrap gap-2">
+                            <button type="button" class="btn-secondary" data-modal-open="modal-edit-soal-{{ $question->id }}">Edit</button>
                             <form method="POST" action="{{ route('guru.personal-questions.destroy', $question) }}">@csrf<button
                                     class="btn-danger">Hapus</button></form>
                         </td>
@@ -176,62 +167,50 @@ $optionLabels = range('A', 'Z');
                     @endforeach
                 </tbody>
             </table>
+
+            @if($questions->hasPages())
+            <div class="mt-4">
+                {{ $questions->links() }}
+            </div>
+            @endif
         </div>
     </div>
 </div>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const optionLabels = @json($optionLabels);
-        const optionList = document.querySelector('[data-option-list="guru-personal"]');
-        const addButton = document.querySelector('[data-option-add="guru-personal"]');
-        const questionType = document.getElementById('guru-personal-question-type');
-        const objectiveOptions = document.querySelector('[data-objective-options]');
-        const answerKey = document.getElementById('guru-personal-answer-key');
 
-        if (!optionList || !addButton || !questionType || !objectiveOptions || !answerKey) {
-            return;
-        }
-
-        const renderOptionFields = (values) => {
-            optionList.innerHTML = '';
-
-            values.forEach((value, index) => {
-                const label = optionLabels[index] ?? `O${index + 1}`;
-                const row = document.createElement('div');
-                row.className =
-                    'flex items-center gap-3 rounded-2xl border border-border bg-slate-50/80 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/80';
-                row.innerHTML = `
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">${label}</span>
-                <input name="options[]" class="input border-0 bg-transparent px-0" placeholder="Tulis jawaban ${label}" value="${String(value ?? '').replace(/"/g, '&quot;')}">
-            `;
-                optionList.appendChild(row);
-            });
-        };
-
-        addButton.addEventListener('click', () => {
-            const values = Array.from(optionList.querySelectorAll('input[name="options[]"]')).map((input) => input
-                .value);
-            values.push('');
-            renderOptionFields(values);
-        });
-
-        const syncQuestionTypeState = () => {
-            const isObjective = ['PG', 'Checklist'].includes(questionType.value);
-
-            objectiveOptions.classList.toggle('hidden', !isObjective);
-            addButton.disabled = !isObjective;
-
-            optionList.querySelectorAll('input[name="options[]"]').forEach((input) => {
-                input.disabled = !isObjective;
-            });
-
-            answerKey.placeholder = isObjective ?
-                'A atau isi jawaban benar' :
-                'Tulis jawaban singkat yang benar';
-        };
-
-        questionType.addEventListener('change', syncQuestionTypeState);
-        syncQuestionTypeState();
-    });
-</script>
+@foreach($questions as $question)
+<div id="modal-edit-soal-{{ $question->id }}" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
+    <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="font-bold text-lg">Edit Soal Pribadi</div>
+                <button class="text-gray-500 hover:text-gray-700" type="button" data-modal-close="modal-edit-soal-{{ $question->id }}">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('guru.personal-questions.update', $question) }}" enctype="multipart/form-data" data-edit-personal-form>
+                @csrf
+                @include('guru.partials.personal-question-form-fields', [
+                    'user' => $user,
+                    'optionLabels' => $optionLabels,
+                    'modeKey' => 'edit-' . $question->id,
+                    'isEditMode' => true,
+                    'questionData' => [
+                        'tipe' => $question->tipe,
+                        'kategori' => $question->kategori,
+                        'pertanyaan' => $question->pertanyaan,
+                        'opsi' => $question->opsi ?? [],
+                        'jawaban_benar' => $resolveAnswerLabel($question),
+                        'pembahasan' => $question->pembahasan,
+                        'status' => $question->status,
+                        'image_path' => $question->image_path,
+                    ],
+                    'imagePreviewUrl' => $imageUrl($question->image_path),
+                ])
+                <button class="btn-primary mt-3 w-full sm:w-auto" type="submit">Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+<script id="personal-questions-config" type="application/json">@json(['optionLabels' => $optionLabels])</script>
 @endsection

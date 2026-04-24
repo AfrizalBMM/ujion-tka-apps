@@ -10,26 +10,10 @@
     {{-- KaTeX Math Rendering --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
-        delimiters: [
-            {left: '$$', right: '$$', display: true},
-            {left: '$', right: '$', display: false},
-            {left: '\\(', right: '\\)', display: false},
-            {left: '\\[', right: '\\]', display: true}
-        ],
-        throwOnError: false
-    });"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
     @include('partials.ssd-style')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script>
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('live-clock').textContent = now.toLocaleTimeString('id-ID');
-        }
-        setInterval(updateClock, 1000);
-        window.onload = updateClock;
-    </script>
 </head>
 
 <body class="app-shell flex flex-col" data-dashboard-shell="superadmin">
@@ -54,13 +38,13 @@
                     <span class="font-semibold uppercase tracking-[0.24em] text-[11px]">Realtime</span>
                     <span id="live-clock" class="app-clock"></span>
                 </div>
-                <button class="icon-button" title="Perbesar Font" onclick="document.body.style.fontSize='1.05em'">
+                <button class="icon-button hidden md:inline-flex" title="Perbesar Font" data-font-size="increase">
                     <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </button>
-                <button class="icon-button" title="Perkecil Font" onclick="document.body.style.fontSize='0.97em'">
+                <button class="icon-button hidden md:inline-flex" title="Perkecil Font" data-font-size="decrease">
                     <i class="fa-solid fa-magnifying-glass-minus"></i>
                 </button>
-                <button class="icon-button" title="Ganti Tema" data-theme-toggle>
+                <button class="icon-button hidden md:inline-flex" title="Ganti Tema" data-theme-toggle>
                     <i class="fa-solid fa-moon"></i>
                 </button>
                 <div class="app-user-menu">
@@ -74,15 +58,30 @@
                         <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
                     </button>
                     <div class="app-dropdown">
+                        <div class="md:hidden">
+                            <button type="button" class="app-dropdown-link w-full text-left" data-font-size="increase">
+                                <i class="fa-solid fa-magnifying-glass-plus fa-fw shrink-0"></i>
+                                Perbesar tampilan
+                            </button>
+                            <button type="button" class="app-dropdown-link w-full text-left" data-font-size="decrease">
+                                <i class="fa-solid fa-magnifying-glass-minus fa-fw shrink-0"></i>
+                                Perkecil tampilan
+                            </button>
+                            <button type="button" class="app-dropdown-link w-full text-left" data-theme-toggle>
+                                <i class="fa-solid fa-moon fa-fw shrink-0"></i>
+                                Dark mode
+                            </button>
+                            <div class="my-1 border-t border-slate-200/70 dark:border-slate-700/60"></div>
+                        </div>
                         <a href="{{ route('superadmin.guide') }}" class="app-dropdown-link">
-                            <i class="fa-solid fa-circle-info w-4"></i>
+                            <i class="fa-solid fa-circle-info fa-fw shrink-0"></i>
                             Panduan
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="app-dropdown-link w-full text-left" data-confirm
                                 data-confirm-title="Konfirmasi Logout" data-confirm="Apakah Anda yakin ingin logout?">
-                                <i class="fa-solid fa-right-from-bracket w-4"></i>
+                                <i class="fa-solid fa-right-from-bracket fa-fw shrink-0"></i>
                                 Keluar
                             </button>
                         </form>
@@ -103,6 +102,11 @@
                 class="mobile-nav-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-credit-card"></i>
                 Keuangan
+            </a>
+            <a href="{{ route('superadmin.payment-confirmations.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.payment-confirmations.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-money-check-dollar"></i>
+                Konfirmasi
             </a>
             <a href="{{ route('superadmin.chat.index') }}"
                 class="mobile-nav-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
@@ -161,6 +165,11 @@
                     class="sidebar-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-credit-card w-5"></i>
                     <span class="sidebar-link-label">Keuangan & QR</span>
+                </a>
+                <a href="{{ route('superadmin.payment-confirmations.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.payment-confirmations.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-money-check-dollar w-5"></i>
+                    <span class="sidebar-link-label">Konfirmasi Pembayaran</span>
                 </a>
                 <a href="{{ route('superadmin.chat.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">

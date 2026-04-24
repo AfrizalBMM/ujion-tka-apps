@@ -60,7 +60,7 @@
                                         <button
                                             type="button"
                                             id="copy-guru-{{ $mt->id }}"
-                                            onclick="guruCopyMapelToken('{{ $mt->token }}', {{ $mt->id }})"
+                                            data-copy-exam-token="{{ $mt->token }}"
                                             title="Salin token"
                                             class="btn-secondary px-2 py-1 text-[11px] transition-all">
                                             <i class="fa-solid fa-copy"></i>
@@ -110,40 +110,4 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-function guruCopyMapelToken(token, id) {
-    const doCopy = () => {
-        const btn = document.getElementById('copy-guru-' + id);
-        const original = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-        btn.classList.add('text-emerald-600');
-        setTimeout(() => {
-            btn.innerHTML = original;
-            btn.classList.remove('text-emerald-600');
-        }, 2000);
-    };
-
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(token).then(doCopy);
-    } else {
-        const textArea = document.createElement("textarea");
-        textArea.value = token;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            doCopy();
-        } catch (err) {
-            console.error('Fallback copy failed', err);
-        }
-        document.body.removeChild(textArea);
-    }
-}
-</script>
-@endpush
 @endsection

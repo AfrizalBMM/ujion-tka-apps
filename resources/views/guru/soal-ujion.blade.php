@@ -3,15 +3,35 @@
 @section('content')
 <div class="space-y-6">
   <section class="page-hero">
-    <span class="page-kicker">Soal dari Ujion</span>
-    <h1 class="page-title">Bank Soal Global Ujion</h1>
-    <p class="page-description">Soal-soal ini disusun oleh tim Ujion dan hanya dapat dilihat. Pilih soal dari sini saat membuat paket soal.</p>
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <span class="page-kicker">Soal dari Ujion</span>
+        <h1 class="page-title">Bank Soal Global Ujion</h1>
+        <p class="page-description">Soal-soal ini disusun oleh tim Ujion dan hanya dapat dilihat. Pilih soal dari sini saat membuat paket soal.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        @php
+          $nextBookmarked = request()->boolean('bookmarked') ? null : 1;
+          $bookmarkUrl = route('guru.soal-ujion.index', array_filter(array_merge(request()->query(), [
+            'bookmarked' => $nextBookmarked,
+          ]), fn ($v) => $v !== null && $v !== ''));
+        @endphp
+        <a href="{{ $bookmarkUrl }}" class="btn-secondary inline-flex items-center gap-2 bg-white/95">
+          <i class="{{ request()->boolean('bookmarked') ? 'fa-solid' : 'fa-regular' }} fa-bookmark"></i>
+          {{ request()->boolean('bookmarked') ? 'Bookmark Saya' : 'Tampilkan Bookmark' }}
+          <span class="badge-info">{{ is_array($bookmarks ?? null) ? count($bookmarks) : 0 }}</span>
+        </a>
+      </div>
+    </div>
   </section>
   <div class="card p-4">
-    <form method="GET" class="flex flex-wrap gap-3 items-end mb-4">
+    <form method="GET" action="{{ route('guru.soal-ujion.index') }}" class="flex flex-wrap gap-3 items-end mb-4" data-soal-ujion-filter-form>
+      @if(request()->boolean('bookmarked'))
+        <input type="hidden" name="bookmarked" value="1">
+      @endif
       <div class="flex-1 min-w-[150px]">
         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Cari Soal</label>
-        <input type="text" name="search" value="{{ request('search') }}" class="input mt-1 w-full" placeholder="Kata kunci pertanyaan...">
+        <input type="text" name="search" value="{{ request('search') }}" class="input mt-1 w-full" placeholder="Kata kunci pertanyaan..." data-live-search>
       </div>
       <div class="flex-1 min-w-[150px]">
         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mata Pelajaran</label>
@@ -31,9 +51,9 @@
           @endforeach
         </select>
       </div>
-      <button class="btn-secondary h-[42px] flex items-center justify-center" type="submit">Filter</button>
+      <div class="w-full text-[11px] text-textSecondary dark:text-slate-400">Filter otomatis: ketik untuk mencari, atau pilih dropdown untuk menyaring.</div>
     </form>
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div id="questions-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       @forelse($questions as $question)
       <div class="card p-4 flex flex-col">
         <div class="flex items-start justify-between gap-3">
@@ -41,7 +61,25 @@
             <div class="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">{{ $question->material_mapel }}</div>
             <div class="font-bold">{{ $question->material_subelement }}</div>
           </div>
-          <span class="badge-info shrink-0">Soal Ujion</span>
+          <div class="flex items-center gap-2 shrink-0">
+            @php $isBookmarked = in_array($question->id, $bookmarks ?? []); @endphp
+            @if($isBookmarked)
+              <form method="POST" action="{{ route('guru.soal-ujion.unbookmark', $question) }}">
+                @csrf
+                <button type="submit" class="icon-button h-9 w-9 rounded-2xl border-danger/30 bg-danger/10 text-danger" title="Hapus Bookmark">
+                  <i class="fa-solid fa-bookmark"></i>
+                </button>
+              </form>
+            @else
+              <form method="POST" action="{{ route('guru.soal-ujion.bookmark', $question) }}">
+                @csrf
+                <button type="submit" class="icon-button h-9 w-9 rounded-2xl" title="Bookmark Soal">
+                  <i class="fa-regular fa-bookmark"></i>
+                </button>
+              </form>
+            @endif
+            <span class="badge-info shrink-0">Soal Ujion</span>
+          </div>
         </div>
         <div class="mt-1 text-sm text-textSecondary">{!! Str::limit(strip_tags($question->question_text), 120) !!}</div>
         <div class="mt-2 text-xs text-textSecondary mb-3 flex flex-wrap gap-x-3 gap-y-1">
@@ -57,4 +95,5 @@
     </div>
   </div>
 </div>
+
 @endsection

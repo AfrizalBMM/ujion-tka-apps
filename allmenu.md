@@ -1,153 +1,175 @@
-# Inventaris Menu dan Isi Halaman
+# Inventaris Menu, Halaman, dan Flow Aktif
 
-Dokumen ini merangkum semua menu yang terlihat di UI per role, isi utama tiap halaman, aksi yang tersedia, dan bentuk input berdasarkan route, controller, dan view yang ada saat ini.
+Dokumen ini merangkum menu yang terlihat di UI, isi utama tiap halaman, aksi yang tersedia, serta flow penting yang saat ini aktif di aplikasi untuk role `guest`, `guru/operator`, `superadmin`, dan `siswa`.
 
 ## 1. Guest / Public
 
 ### Landing `/`
 
-Isi halaman:
+Isi:
 
-- hero landing dan branding Ujion TKA
-- ringkasan fitur siswa dan guru
-- section alur masuk guru
-- preview pricing plan aktif
+- hero landing Ujion
+- ringkasan fitur
+- alur registrasi guru
+- CTA login
 
 Aksi:
 
-- toggle tema
-- CTA ke login guru
-- CTA pricing ke section alur guru
-
-Catatan:
-
-- tombol "Mulai Free Trial" saat ini salah route
+- buka login guru
+- buka login superadmin
+- lanjut ke registrasi guru
 
 ### Register Guru `/register/guru`
 
-Isi halaman:
+Isi:
 
 - form registrasi guru/operator
 
 Input:
 
-- `name` text
-- `jenjang` select: `SD`, `SMP`
-- `tingkat` select: `4,5,6,7,8,9`
-- `no_wa` text
-- `satuan_pendidikan` text
+- `name`
+- `email`
+- `jenjang`
+- `no_wa`
+- `satuan_pendidikan`
 
 Aksi:
 
 - submit registrasi
 
-Halaman lanjutan:
+Flow:
 
-- `pending-aktivasi` menampilkan QR pembayaran dan nominal
+1. Calon guru mendaftar
+2. Sistem membuat akun dengan status pending
+3. Pengguna diarahkan ke halaman pending aktivasi
+
+### Pending Aktivasi `/register/guru/pending`
+
+Isi:
+
+- ringkasan data pendaftaran
+- nominal aktivasi sesuai jenjang
+- tombol `Bayar Sekarang`
+- modal QR pembayaran
+- form upload bukti pembayaran
+
+Aksi:
+
+- buka modal QR
+- upload bukti pembayaran
+- lanjut ke WhatsApp admin
+
+Flow:
+
+1. Guru klik `Bayar Sekarang`
+2. Modal menampilkan QR dan nominal
+3. Guru upload bukti pembayaran
+4. Sistem membuka WhatsApp admin dengan pesan otomatis berisi nama, email, nomor HP/WA, dan jenjang
+
+Catatan:
+
+- nomor WhatsApp admin diambil dari pengaturan finance superadmin
 
 ### Login Guru `/login`
 
 Input:
 
-- `name` text
-- `access_token` text
-- `remember` checkbox
+- `name`
+- `access_token`
+- `remember`
 
 Aksi:
 
-- submit login
-- link ke registrasi guru
+- login guru/operator
 
 ### Login Superadmin `/ngadimin/login`
 
 Input:
 
-- `email` email
-- `password` password
+- `email`
+- `password`
 
 Aksi:
 
-- submit login
-- link kembali ke landing
+- login superadmin
 
 ### Login Siswa `/siswa/login`
 
 Input:
 
-- `token` text
+- `token`
 
 Aksi:
 
-- masuk ke identitas jika token valid
+- validasi token ujian
+- lanjut ke identitas siswa
+
+## 2. Siswa
 
 ### Identitas Siswa `/siswa/identitas`
 
 Input:
 
-- `nama` text wajib
-- `wa` text opsional
+- `nama`
+- `wa` opsional
 
 Aksi:
 
-- lanjut membuat sesi ujian
+- mulai sesi ujian
 
 ### Petunjuk Ujian `/siswa/petunjuk`
 
 Isi:
 
-- judul ujian
-- nama peserta
-- daftar mapel dalam paket
-- jumlah soal dan durasi per mapel
-- catatan timer per mapel
+- identitas peserta
+- daftar mapel
+- jumlah soal
+- durasi
+- informasi alur pengerjaan
 
 Aksi:
 
-- mulai mengerjakan
-- batal ke login siswa
+- mulai ujian
+- batal
 
 ### Pengerjaan Ujian `/siswa/ujian`
 
 Isi:
 
 - header ujian
-- tab mapel
 - timer
-- indikator soal
-- pertanyaan
-- gambar soal jika ada
-- panel teks bacaan jika ada
+- navigasi soal
+- tab mapel
+- soal, gambar, dan teks bacaan
 - body jawaban
-- grid navigasi soal
-- tombol selesai ujian
 
 Model input:
 
-- `pilihan_ganda`: tombol pilihan A-D
-- `menjodohkan`: select dropdown per pasangan kiri
+- pilihan ganda
+- menjodohkan
 
 Aksi:
 
 - pilih jawaban
-- tandai ragu
 - pindah soal
 - pindah mapel
+- tandai ragu
 - selesai ujian
-- autosave tiap 30 detik
+
+Catatan:
+
+- autosave berjalan berkala
+- KaTeX aktif untuk soal yang mengandung rumus
 
 ### Selesai Ujian `/siswa/selesai`
 
 Isi:
 
 - status selesai
-- nama peserta
-- estimasi skor bila tersedia
+- identitas peserta
+- ringkasan hasil bila tersedia
 
-Aksi:
-
-- kembali ke beranda
-
-## 2. Menu Guru / Operator
+## 3. Guru / Operator
 
 Sumber menu utama:
 
@@ -156,310 +178,298 @@ Sumber menu utama:
 Menu sidebar/mobile:
 
 - Dashboard
-- Live Chat
-- Log Aktivitas
+- Chat
 - Materi
-- Bank Soal Pribadi
-- Paket Soal TKA
-- Ujian
-- Cara Menggunakan
+- Soal dari Ujion
+- Bank Soal
+- Paket Soal
+- Simulasi
 - Profil
+- Panduan
 
 ### Dashboard `/guru/dashboard`
 
 Isi:
 
 - hero dashboard
-- metrik ujian dibuat, rata-rata skor kelas, total peserta
+- metrik ringkas
 - aktivitas terbaru
-- pengumuman penting
+- shortcut ke fitur penting
 
-Aksi:
-
-- shortcut ke materi
-- shortcut ke ujian
-
-### Live Chat `/guru/chat`
+### Chat `/guru/chat`
 
 Isi:
 
-- daftar percakapan guru dengan superadmin
-- bubble pesan dan gambar
-- waktu kirim
+- percakapan dengan superadmin
+- bubble chat teks dan gambar
+- modal info/tutorial chat
 
 Input:
 
-- `message` text
-- `image` file image
+- `message`
+- `image`
 
 Aksi:
 
-- kirim chat ke superadmin
+- kirim pesan
+- kirim gambar
+- preview gambar sebelum kirim
 
-### Log Aktivitas `/guru/logs`
+Catatan:
 
-Isi:
-
-- tabel log aktivitas pribadi
-
-Kolom:
-
-- waktu
-- IP
-- device / user agent
-- route
+- maksimal lampiran gambar 2 MB
+- gambar chat dibuka via route Laravel agar tidak 403
 
 ### Materi `/guru/materials`
 
 Isi:
 
-- filter materi
-- grid kartu materi
+- hero materi
+- live search
+- live filter mapel
+- live filter kurikulum
+- kartu materi
+- tombol bookmark
+- mode `Bookmark Saya`
 
-Input filter:
+Aksi:
 
-- `jenjang`
-  - default: global + jenjang saya
-  - `GLOBAL`
-- `mapel` select ( Mata Pelajaran )
-- `curriculum` select ( K-13 / Merdeka )
-
-Aksi kartu:
-
-- detail materi
-- buka link eksternal
-- bookmark
-- hapus bookmark
+- buka detail materi
+- buka link materi
+- bookmark / unbookmark
+- filter materi secara live
 
 #### Detail Materi `/guru/materials/{material}`
 
 Isi:
 
-- ringkasan jenjang
+- ringkasan materi
+- mapel
 - kurikulum
+- jenjang
 - unit dan sub unit
-- statistik jumlah soal terikat
 
 Aksi:
 
+- bookmark
+- buka link
 - kembali
-- buka link materi
+
+### Soal dari Ujion `/guru/soal-ujion`
+
+Isi:
+
+- bank soal global Ujion
+- live search
+- live filter mapel
+- live filter kurikulum
+- tombol bookmark
+- mode `Bookmark Saya`
+
+Aksi:
+
+- buka detail soal
 - bookmark / unbookmark
+- filter soal secara live
+
+#### Detail Soal Ujion `/guru/soal-ujion/{question}`
+
+Isi:
+
+- header soal modern
+- badge status, tipe, mapel, jenjang
+- pertanyaan
+- opsi jawaban
+- ringkasan
+- kunci jawaban
+- pembahasan
+
+Aksi:
+
+- bookmark / unbookmark
+- kembali ke list
 
 ### Bank Soal Pribadi `/guru/personal-questions`
 
 Isi:
 
-- form tambah soal cepat
-- tabel daftar soal personal
-- tombol builder fullscreen
+- filter live
+- tabel daftar soal pribadi
+- modal tambah soal
+- modal edit soal
+- tombol ke builder fullscreen
 
-Input form cepat:
+Input soal:
 
-- `jenjang` text
-- `kategori` text
-- `tipe` select: `PG`, `Checklist`, `Singkat`
-- `pertanyaan` textarea
-- `opsi[]` input
-- `jawaban_benar` text
-- `pembahasan` textarea
-- `image` file
-- `status` select: `draft`, `terbit`
+- `kategori`
+- `tipe`
+- `pertanyaan`
+- `opsi[]`
+- `jawaban_benar`
+- `pembahasan`
+- `image`
+- `status`
 
 Aksi:
 
 - tambah soal
+- edit soal
 - hapus soal
-- buka builder
+- live search/filter
+- buka builder fullscreen
+
+Catatan:
+
+- opsi objektif memakai `A-E`
+- gambar bisa dipreview sebelum submit
+- maksimal gambar 2 MB
 
 #### Builder Soal Pribadi `/guru/personal-questions/builder`
 
 Isi:
 
+- editor fullscreen
 - sidebar daftar soal
-- editor fullscreen per soal
 - preview soal
+- upload gambar
 
-Input per item:
+Input per soal:
 
 - `tipe`
 - `pertanyaan`
 - `opsi[]`
 - `jawaban_benar`
 - `pembahasan`
-- `image` string URL
-- `jenjang`
 - `kategori`
 - `status`
+- `image`
 
 Aksi:
 
 - tambah soal
 - hapus soal
 - prev/next
+- upload gambar
 - simpan semua soal
+
+Catatan:
+
+- maksimal 5 opsi
+- `PG/Checklist` memakai jawaban benar `A-E`
+- `Singkat` memakai input teks biasa
 
 ### Paket Soal TKA `/guru/paket-soal`
 
 Isi:
 
-- daftar paket sesuai jenjang guru
-- badge mapel dalam paket
+- daftar paket soal sesuai jenjang guru
 
 Aksi:
 
-- lihat detail paket
+- buka detail paket
 
 #### Detail Paket `/guru/paket-soal/{paket}`
 
 Isi:
 
 - kartu per mapel
-- ringkasan jumlah soal / target
-- durasi
-- preview 5 soal pertama
-- form konfigurasi mapel
+- preview soal
+- konfigurasi mapel
+- token ujian aktif per mapel
 
-Input form mapel:
+Input konfigurasi:
 
-- `jumlah_soal` number
-- `durasi_menit` number
-- `urutan` number
+- `jumlah_soal`
+- `durasi_menit`
+- `urutan`
 
 Aksi:
 
 - simpan konfigurasi
-- kelola mapel
+- buka kelola soal
+- copy token mapel
 
-#### Kelola Soal per Mapel `/guru/paket-soal/{paket}/mapel/{mapel}/soal`
+#### Kelola Soal per Mapel `/guru/.../soal`
 
 Isi:
 
-- tabel daftar soal per mapel
-
-Kolom:
-
-- nomor
-- tipe
-- indikator
-- teks bacaan
-- isi jawaban
-- aksi
+- daftar soal per mapel
+- akses ke teks bacaan
 
 Aksi:
 
-- tambah PG
-- tambah menjodohkan
-- buka teks bacaan
+- tambah soal
 - edit soal
 - hapus soal
-
-#### Tambah/Edit Soal `/guru/.../soal/create|edit`
-
-Input umum:
-
-- `nomor_soal`
-- `tipe_soal`
-- `teks_bacaan_id`
-- `bobot`
-- `indikator`
-- `pertanyaan`
-- `gambar`
-
-Input tambahan PG:
-
-- `pilihan[0..3][kode]` readonly A-D
-- `pilihan[0..3][teks]`
-- `jawaban_benar` radio A-D
-- `pilihan_gambar[A-D]`
-
-Input tambahan menjodohkan:
-
-- `pasangan[n][teks_kiri]`
-- `pasangan[n][teks_kanan]`
-
-Aksi:
-
-- simpan/perbarui soal
-- kembali
-- tambah pasangan
-- hapus pasangan
+- buka teks bacaan
 
 #### Teks Bacaan `/guru/.../teks-bacaan`
 
 Isi:
 
-- form tambah teks bacaan
-- daftar teks bacaan
-- modal edit teks
+- form tambah bacaan
+- daftar bacaan
+- modal edit bacaan
 
 Input:
 
-- `judul` text opsional
-- `konten` textarea wajib
+- `judul`
+- `konten`
 
 Aksi:
 
-- simpan
+- tambah
 - edit
 - hapus
-- kembali ke soal
 
-### Ujian `/guru/exams`
+### Simulasi Ujian `/guru/exams`
 
 Isi:
 
-- form join ujian
-- tabel ujian tersedia
-- tabel histori ujian
+- form join simulasi via token
+- daftar ujian yang bisa dicoba
+- riwayat simulasi
 
 Input:
 
-- `token` text
+- `token`
 
 Aksi:
 
 - join ujian
-
-Catatan:
-
-- histori dan hasil masih placeholder
-
-### Cara Menggunakan `/guru/guide`
-
-Isi:
-
-- daftar menu
-- tips penggunaan
+- copy token mapel
+- lihat hasil simulasi
 
 ### Profil `/guru/profile`
 
 Isi:
 
-- form edit profil
-- form ganti password
+- edit profil
+- ganti password
 
-Input profil:
+Input:
 
 - `name`
 - `email`
 - `jenjang`
-- `tingkat`
 - `satuan_pendidikan`
 - `no_wa`
 - `avatar`
-
-Input password:
-
 - `password`
 - `password_confirmation`
 
 Aksi:
 
 - simpan profil
-- ganti password
+- ubah password
 
-## 3. Menu Superadmin
+### Panduan `/guru/guide`
+
+Isi:
+
+- card panduan penggunaan fitur guru
+
+## 4. Superadmin
 
 Sumber menu utama:
 
@@ -468,14 +478,15 @@ Sumber menu utama:
 Menu sidebar/mobile:
 
 - Dashboard
-- Keuangan / QR
-- Live Chat
-- Daftar Guru
-- Master Materi
-- Bank Soal Global
-- Paket Soal TKA
-- Manajemen Ujian
-- Log Aktivitas
+- Keuangan
+- Konfirmasi
+- Chat
+- Guru
+- Materi
+- Bank Soal
+- Paket Soal
+- Ujian
+- Audit
 - Panduan
 
 ### Dashboard `/superadmin`
@@ -483,97 +494,80 @@ Menu sidebar/mobile:
 Isi:
 
 - hero analytics
-- kartu metrik
-- grafik aktivitas sistem
-- aksi terbaru
-- quick action card
+- kartu statistik
+- grafik aktivitas
+- quick action
 
 Aksi:
 
-- ke audit logs
-- ke guru
-- ke finance
-- ke bank soal
-- ke chat
+- navigasi ke modul utama
 
-### Keuangan `/superadmin/finance`
+### Keuangan & QR `/superadmin/finance`
 
 Isi:
 
-- blok QR pembayaran
-- blok pricing plan
+- pengelolaan QR per jenjang
+- nominal aktivasi per jenjang
+- nomor WhatsApp admin
+- tabel daftar QR yang sudah dibuat
 
-#### QR pembayaran
+Input:
 
-Input tambah/edit:
+- `judul`
+- `jenjang`
+- `nominal`
+- `keterangan`
+- `subtitle`
+- `image`
+- `no_whatsapp_admin`
 
-- `label`
-- `sort_order`
+Aksi:
+
+- add QR via modal
+- edit data
+- hapus data
+
+Flow penting:
+
+- data di halaman ini dipakai langsung oleh flow registrasi guru
+
+### Chat `/superadmin/chat`
+
+Isi:
+
+- daftar guru di panel kiri
+- unread badge
+- area percakapan
+- form kirim chat
+- modal detail akun guru
+
+Input:
+
+- `to_user_id`
+- `message`
 - `image`
 
 Aksi:
 
-- tambah QR
-- edit detail
-- toggle status
-- hapus
-
-#### Paket harga
-
-Input tambah/edit:
-
-- `name`
-- `subtitle`
-- `price`
-- `original_price`
-- `period`
-- `sort_order`
-
-Aksi:
-
-- tambah paket
-- edit paket
-- toggle aktif
-- toggle promo
-- hapus
-
-### Live Chat `/superadmin/chat`
-
-Isi:
-
-- form kirim pesan ke guru
-- daftar seluruh chat
-
-Input:
-
-- `to_user_id` select guru
-- `message` textarea
-- `image` file
-
-Aksi:
-
 - kirim pesan
-- hapus pesan
+- kirim gambar
+- preview gambar sebelum kirim
+- hapus semua pesan satu guru
+- hapus semua pesan semua guru
 
 ### Daftar Guru `/superadmin/teachers`
 
 Isi:
 
-- tabel data guru
-
-Kolom:
-
-- nama
-- email
+- daftar guru/operator
 - status akun
 - token akses
-- aksi
 
 Aksi:
 
-- aktivasi
+- aktivasi akun
 - refresh token
-- suspend
+- suspend/nonaktifkan
 
 ### Master Materi `/superadmin/materials`
 
@@ -586,7 +580,7 @@ Isi:
 Input:
 
 - `jenjang`
-- `mapel` ( Mata Pelajaran )
+- `mapel`
 - `curriculum`
 - `subelement`
 - `unit`
@@ -595,80 +589,63 @@ Input:
 
 Aksi:
 
-- terapkan filter
 - tambah materi
 - hapus materi
+- filter materi
 
 ### Bank Soal Global `/superadmin/global-questions`
 
 Isi:
 
-- form input soal global
-- panel import CSV
+- form tambah soal global
+- import bank soal
 - daftar soal global
 
-Input:
+Input utama:
 
 - `question_type`
 - `material_id`
 - `question_text`
 - `options_raw`
 - `answer_key`
-- `is_active`
 - `explanation`
+- `is_active`
 
 Aksi:
 
-- simpan soal
-- import CSV
+- tambah soal
+- import
 - download template
 - hapus soal
 
 Catatan:
 
-- tombol edit masih coming soon
+- menjadi sumber halaman `Soal dari Ujion` di sisi guru
 
 ### Paket Soal TKA `/superadmin/paket-soal`
 
 Isi:
 
 - filter paket
-- tabel daftar paket
-- tombol paket baru
-
-Input filter:
-
-- `jenjang_id`
-- `tahun_ajaran`
-
-Aksi tabel:
-
-- detail
-- edit
-- aktif/nonaktifkan
-- hapus
-
-#### Buat/Edit Paket `/superadmin/paket-soal/create|{paket}/edit`
-
-Input:
-
-- `jenjang_id`
-- `tahun_ajaran`
-- `nama`
-- `is_active`
+- daftar paket
+- tombol buat paket
 
 Aksi:
 
-- simpan/perbarui paket
-- batal
+- buat paket
+- edit paket
+- toggle aktif
+- hapus paket
+- buka detail paket
 
 #### Detail Paket `/superadmin/paket-soal/{paket}`
 
 Isi:
 
-- kartu per mapel
-- preview 5 soal
-- form konfigurasi mapel
+- konfigurasi mapel
+- preview soal
+- token ujian per mapel
+- tombol hapus semua soal per mapel
 
 Input konfigurasi:
 
@@ -679,37 +656,29 @@ Input konfigurasi:
 Aksi:
 
 - simpan konfigurasi
-- kelola soal
+- copy token mapel
+- buka kelola soal
+- hapus semua soal mapel
 
 #### Kelola Soal per Mapel `/superadmin/.../soal`
 
 Isi:
 
-- tabel daftar soal per mapel
+- daftar soal per mapel
 
 Aksi:
 
-- tambah PG
-- tambah menjodohkan
-- teks bacaan
-- edit
-- hapus
-
-#### Tambah/Edit Soal `/superadmin/.../soal/create|edit`
-
-Isi dan model input:
-
-- sama dengan modul guru karena memakai partial `partials.soal-form`
+- tambah soal
+- edit soal
+- hapus soal
+- buka teks bacaan
 
 #### Teks Bacaan `/superadmin/.../teks-bacaan`
 
-Isi dan input:
+Isi:
 
-- sama dengan modul guru
-
-Aksi:
-
-- tambah
+- tambah teks bacaan
+- daftar teks bacaan
 - edit
 - hapus
 
@@ -718,9 +687,11 @@ Aksi:
 Isi:
 
 - form buat ujian
-- tabel daftar ujian
+- modal import ujian
+- tabel ujian
+- token per mapel
 
-Input form:
+Input:
 
 - `paket_soal_id`
 - `judul`
@@ -729,12 +700,15 @@ Input form:
 - `timer`
 - `status`
 
-Aksi tabel:
+Aksi:
 
-- copy token
-- detail
+- buat ujian
+- import ujian
+- download template import
+- copy token mapel
 - toggle aktif
 - hapus
+- buka detail
 
 #### Detail Ujian `/superadmin/exams/{exam}`
 
@@ -750,56 +724,28 @@ Isi:
 Aksi:
 
 - copy token
-- builder soal
+- buka builder soal
 
 #### Builder Ujian `/superadmin/exams/{exam}/builder`
 
 Isi:
 
-- daftar soal ujian
-- editor fullscreen
-- import dari bank soal lama
-
-Input builder:
-
-- `tipe`
-- `pertanyaan`
-- `opsi`
-- `jawaban_benar`
-- `pembahasan`
-- `image`
+- editor fullscreen soal ujian
 
 Aksi:
 
 - tambah soal
 - hapus soal
-- prev/next
-- simpan semua soal
-- import dari bank soal
+- simpan
+- import dari bank soal lama
 
-Catatan:
-
-- builder ini masih memakai model `Question` lama, bukan `Soal` schema baru
-
-#### Analisis Ujian `/superadmin/exams/{exam}/analysis`
+### Audit Log `/superadmin/audit-logs`
 
 Isi:
 
-- tabel ranking peserta
-- tabel distribusi nilai
-- tombol export Excel/PDF
+- tabel aktivitas sistem
 
-Catatan:
-
-- isi masih dummy
-
-### Log Aktivitas `/superadmin/audit-logs`
-
-Isi:
-
-- tabel audit log
-
-Kolom:
+Kolom umum:
 
 - waktu
 - method
@@ -812,12 +758,26 @@ Kolom:
 
 Isi:
 
-- ringkasan menu
-- tips penggunaan
+- ringkasan penggunaan menu superadmin
 
-## 4. Halaman legacy yang masih ada di repo
+## 5. UX Global dan Teknis
 
-Masih ada file lama yang tidak menjadi flow utama aktif:
+Berlaku lintas role:
+
+- jam realtime di header
+- light/dark mode
+- kontrol font size
+- dropdown profil mobile
+- sidebar desktop collapse
+- `KaTeX` auto-render via helper JS global
+- pemisahan script mulai dipindah ke:
+  - `resources/js/core`
+  - `resources/js/utils`
+  - `resources/js/pages`
+
+## 6. Halaman Legacy / Catatan Repo
+
+Masih ada file lama yang bukan flow utama aktif:
 
 - `resources/views/siswa/ujian.blade.php`
 - `resources/views/siswa/petunjuk.blade.php`
@@ -827,5 +787,4 @@ Masih ada file lama yang tidak menjadi flow utama aktif:
 Catatan:
 
 - flow siswa aktif sekarang memakai `resources/views/ujian/*`
-- file lama berpotensi membingungkan developer saat maintenance
-
+- beberapa halaman besar superadmin masih layak diaudit lebih lanjut dari sisi JS dan UX internal

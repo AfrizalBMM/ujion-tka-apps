@@ -13,4 +13,9 @@ class PricingPlan extends Model
         'promo_active' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }

@@ -1,6 +1,25 @@
 import './bootstrap';
 
 import 'flowbite';
+import './core/katex-render';
+import './core/layout-controls';
+import './pages/guru-chat';
+import './pages/guru-exams';
+import './pages/guru-paket-soal-show';
+import './pages/guru-teks-bacaan';
+import './pages/materials';
+import './pages/personal-question-builder';
+import './pages/personal-questions';
+import './pages/soal-ujion';
+import './pages/superadmin-chat';
+import './pages/superadmin-bank-builder';
+import './pages/superadmin-exam-detail';
+import './pages/superadmin-exams-page';
+import './pages/superadmin-finance';
+import './pages/superadmin-materials';
+import './pages/superadmin-paket-soal-show';
+import './pages/superadmin-teachers';
+import './pages/superadmin-questions';
 import './superadmin';
 import './ui';
 
@@ -13,10 +32,10 @@ function applyTheme(theme) {
 		root.classList.remove('dark');
 	}
 
-	const icon = document.querySelector('[data-theme-toggle] i');
-	if (icon) {
-		icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-	}
+	document.querySelectorAll('[data-theme-toggle] i').forEach((icon) => {
+		icon.classList.remove('fa-sun', 'fa-moon');
+		icon.classList.add('fa-solid', theme === 'dark' ? 'fa-sun' : 'fa-moon');
+	});
 }
 
 function getInitialTheme() {
@@ -109,13 +128,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	applyTheme(getInitialTheme());
 	initDesktopSidebarCollapse();
 
-	const toggle = document.querySelector('[data-theme-toggle]');
-	if (!toggle) return;
-
-	toggle.addEventListener('click', () => {
-		const isDark = document.documentElement.classList.contains('dark');
-		const next = isDark ? 'light' : 'dark';
-		localStorage.setItem('theme', next);
-		applyTheme(next);
+	const toggles = Array.from(document.querySelectorAll('[data-theme-toggle]'));
+	toggles.forEach((toggle) => {
+		toggle.addEventListener('click', () => {
+			const isDark = document.documentElement.classList.contains('dark');
+			const next = isDark ? 'light' : 'dark';
+			localStorage.setItem('theme', next);
+			applyTheme(next);
+		});
 	});
 });

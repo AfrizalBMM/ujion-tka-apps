@@ -46,7 +46,7 @@
           <button class="btn-primary mt-3 w-full sm:w-auto" type="submit">Buat Ujian</button>
         </form>
         <button class="btn-primary mt-3 md:mt-0 w-full md:w-auto" type="button"
-          onclick="document.getElementById('modal-import').classList.remove('hidden')">
+          data-open-import-modal>
           <i class="fa-solid fa-upload mr-2"></i>Import
         </button>
       </div>
@@ -58,8 +58,7 @@
         <div class="bg-white rounded-lg shadow-lg p-6">
           <div class="flex items-center justify-between mb-4">
             <div class="font-bold text-lg">Import Ujian</div>
-            <button class="text-gray-500 hover:text-gray-700"
-              onclick="document.getElementById('modal-import').classList.add('hidden')">
+            <button class="text-gray-500 hover:text-gray-700" type="button" data-close-import-modal>
               <i class="fa-solid fa-times"></i>
             </button>
           </div>
@@ -118,7 +117,7 @@
                     {{ $mt->token }}
                   </span>
                   <button type="button" id="copy-sa-{{ $mt->id }}"
-                    onclick="copyMapelToken('{{ $mt->token }}', {{ $mt->id }})"
+                    data-copy-exam-mapel-token="{{ $mt->token }}"
                     class="btn-secondary px-2 py-1 text-[11px]">
                     <i class="fa-solid fa-copy"></i>
                   </button>
@@ -151,40 +150,4 @@
   </div>
 </div>
 
-@push('scripts')
-<script>
-function copyMapelToken(token, id) {
-  const doCopy = () => {
-    const btn = document.getElementById('copy-sa-' + id);
-    const orig = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-    btn.classList.add('text-emerald-600');
-    setTimeout(() => {
-      btn.innerHTML = orig;
-      btn.classList.remove('text-emerald-600');
-    }, 2000);
-  };
-
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(token).then(doCopy);
-  } else {
-    const textArea = document.createElement("textarea");
-    textArea.value = token;
-    textArea.style.position = "fixed";
-    textArea.style.left = "-999999px";
-    textArea.style.top = "-999999px";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      doCopy();
-    } catch (err) {
-      console.error('Fallback copy failed', err);
-    }
-    document.body.removeChild(textArea);
-  }
-}
-</script>
-@endpush
 @endsection

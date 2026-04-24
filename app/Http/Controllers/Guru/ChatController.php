@@ -28,6 +28,9 @@ class ChatController extends Controller {
         $data = $request->validate([
             'message' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
+        ], [
+            'image.image' => 'File lampiran harus berupa gambar.',
+            'image.max' => 'Ukuran gambar maksimal 2 MB.',
         ]);
 
         if (! $request->filled('message') && ! $request->hasFile('image')) {

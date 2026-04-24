@@ -365,6 +365,46 @@
             </div>
         </section>
 
+        @if (! empty($tarifJenjangs))
+        <section class="mx-auto max-w-7xl px-4 py-12">
+            <div class="section-heading">
+                <div>
+                    <div class="landing-section-kicker">Biaya Aktivasi</div>
+                    <h2 class="landing-section-title">Pilih jenjang, lalu lanjutkan ke flow daftar guru dan pembayaran QRIS sesuai nominalnya.</h2>
+                    <p class="landing-section-copy">Nominal aktivasi sekarang mengikuti jenjang SD, SMP, atau SMA agar alurnya tetap satu dan mudah dipahami admin maupun guru.</p>
+                </div>
+            </div>
+
+            <div class="mt-8 grid gap-5 lg:grid-cols-3">
+                @foreach ($tarifJenjangs as $tarifJenjang)
+                    <article class="landing-solution-card">
+                        <div class="flex items-start justify-between gap-3">
+                            <h3 class="landing-solution-title">{{ $tarifJenjang['name'] }}</h3>
+                            <span class="badge-info">{{ $tarifJenjang['jenjang'] ?: 'Jenjang' }}</span>
+                        </div>
+                        @if (! empty($tarifJenjang['description']))
+                            <p class="landing-solution-copy">{{ $tarifJenjang['description'] }}</p>
+                        @elseif (! empty($tarifJenjang['subtitle']))
+                            <p class="landing-solution-copy">{{ $tarifJenjang['subtitle'] }}</p>
+                        @endif
+
+                        <div class="mt-5">
+                            <div class="text-3xl font-bold text-slate-900">Rp{{ number_format((int) $tarifJenjang['price'], 0, ',', '.') }}</div>
+                            <div class="mt-1 text-sm text-textSecondary dark:text-slate-400">Aktivasi {{ $tarifJenjang['jenjang'] ?: 'guru' }}</div>
+                        </div>
+
+                        <div class="mt-6">
+                            <a href="{{ route('register.guru.form', ['jenjang' => $tarifJenjang['jenjang']]) }}" class="btn-primary w-full justify-center">
+                                Daftar {{ $tarifJenjang['jenjang'] ?: 'Sekarang' }}
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+        @endif
+
         <section id="flow" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
 
             <div class="mt-8 grid gap-6 xl:grid-cols-2">

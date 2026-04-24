@@ -1,7 +1,7 @@
 @extends('layouts.guru')
 @section('title', 'Panduan Guru')
 @section('content')
-<div class="max-w-3xl space-y-8">
+<div class="w-full space-y-8">
     <h1 class="text-2xl font-bold mb-4">Panduan Penggunaan Guru</h1>
     <div class="card p-6 space-y-4">
         <h2 class="font-semibold">Menu & Fitur</h2>

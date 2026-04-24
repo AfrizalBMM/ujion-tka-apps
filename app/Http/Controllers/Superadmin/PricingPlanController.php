@@ -4,64 +4,106 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PricingPlan;
+use App\Services\QrisService;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PricingPlanController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:80'],
             'subtitle' => ['nullable', 'string', 'max:120'],
+            'description' => ['nullable', 'string', 'max:500'],
             'price' => ['required', 'string', 'max:40'],
-            'original_price' => ['nullable', 'string', 'max:40'],
-            'period' => ['nullable', 'string', 'max:20'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'image' => ['nullable', 'image', 'max:4096'],
+        ];
+
+        if (Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang')) {
+            $rules['jenjang'] = ['required', 'string', 'in:' . implode(',', config('ujion.jenjangs'))];
+        }
+
+        $validated = $request->validate($rules);
+
+        $pricingPlan = PricingPlan::query()->firstOrNew(
+            Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang') && isset($validated['jenjang'])
+                ? ['jenjang' => $validated['jenjang']]
+                : []
+        );
+
+        $pricingPlan->fill([
+            'name' => $validated['name'],
+            'jenjang' => $validated['jenjang'] ?? null,
+            'subtitle' => $validated['subtitle'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'price' => $validated['price'],
+            'is_active' => true,
         ]);
 
-        PricingPlan::create([
-            'name' => $validated['name'],
-            'subtitle' => $validated['subtitle'] ?? null,
-            'price' => $validated['price'],
-            'original_price' => $validated['original_price'] ?? null,
-            'promo_active' => true,
-            'period' => $validated['period'] ?? '/bulan',
-            'is_active' => true,
-            'sort_order' => (int) ($validated['sort_order'] ?? 0),
-        ]);
+        if ($request->hasFile('image')) {
+            $newPath = $request->file('image')->store('qris-jenjang', 'public');
+
+            if (! blank($pricingPlan->qris_image_path)) {
+                Storage::disk('public')->delete($pricingPlan->qris_image_path);
+            }
+
+            $pricingPlan->qris_image_path = $newPath;
+        }
+
+        $pricingPlan->save();
 
         return back()->with('flash', [
             'type' => 'success',
-            'title' => 'Paket harga ditambahkan',
-            'message' => 'Paket baru sudah tersedia dan bisa diatur status aktif atau promonya.',
+            'title' => 'Tarif jenjang disimpan',
+            'message' => 'Nominal untuk jenjang ini sudah siap dipakai di flow pendaftaran guru.',
         ]);
     }
 
     public function update(Request $request, PricingPlan $pricingPlan): RedirectResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:80'],
             'subtitle' => ['nullable', 'string', 'max:120'],
+            'description' => ['nullable', 'string', 'max:500'],
             'price' => ['required', 'string', 'max:40'],
-            'original_price' => ['nullable', 'string', 'max:40'],
-            'period' => ['nullable', 'string', 'max:20'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'image' => ['nullable', 'image', 'max:4096'],
+        ];
+
+        if (Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang')) {
+            $rules['jenjang'] = ['required', 'string', 'in:' . implode(',', config('ujion.jenjangs'))];
+        }
+
+        $validated = $request->validate($rules);
+
+        $pricingPlan->fill([
+            'name' => $validated['name'],
+            'jenjang' => $validated['jenjang'] ?? $pricingPlan->jenjang,
+            'subtitle' => $validated['subtitle'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'price' => $validated['price'],
+            'is_active' => true,
         ]);
 
-        $pricingPlan->update([
-            'name' => $validated['name'],
-            'subtitle' => $validated['subtitle'] ?? null,
-            'price' => $validated['price'],
-            'original_price' => $validated['original_price'] ?? null,
-            'period' => $validated['period'] ?? $pricingPlan->period,
-            'sort_order' => (int) ($validated['sort_order'] ?? $pricingPlan->sort_order),
-        ]);
+        if ($request->hasFile('image')) {
+            $newPath = $request->file('image')->store('qris-jenjang', 'public');
+            if (! blank($pricingPlan->qris_image_path)) {
+                Storage::disk('public')->delete($pricingPlan->qris_image_path);
+            }
+            $pricingPlan->qris_image_path = $newPath;
+        }
+
+        $pricingPlan->save();
 
         return back()->with('flash', [
             'type' => 'success',
-            'title' => 'Paket harga diperbarui',
-            'message' => 'Informasi harga dan detail paket berhasil disimpan.',
+            'title' => 'Tarif jenjang diperbarui',
+            'message' => 'Informasi judul, jenjang, dan nominal berhasil disimpan.',
         ]);
     }
 
@@ -73,36 +115,59 @@ class PricingPlanController extends Controller
 
         return back()->with('flash', [
             'type' => 'success',
-            'title' => 'Status paket harga diperbarui',
+            'title' => 'Status tarif jenjang diperbarui',
             'message' => $pricingPlan->is_active
-                ? 'Paket ini sekarang aktif dan dapat dipakai sebagai harga berjalan.'
-                : 'Paket ini sekarang nonaktif dan tidak dipakai sebagai harga berjalan.',
-        ]);
-    }
-
-    public function togglePromo(PricingPlan $pricingPlan): RedirectResponse
-    {
-        $pricingPlan->update([
-            'promo_active' => ! $pricingPlan->promo_active,
-        ]);
-
-        return back()->with('flash', [
-            'type' => 'success',
-            'title' => 'Status promo diperbarui',
-            'message' => $pricingPlan->promo_active
-                ? 'Label promo untuk paket ini sekarang aktif.'
-                : 'Label promo untuk paket ini sekarang dimatikan.',
+                ? 'Tarif ini sekarang aktif dan dapat dipakai sebagai nominal berjalan.'
+                : 'Tarif ini sekarang nonaktif dan tidak dipakai sebagai nominal berjalan.',
         ]);
     }
 
     public function destroy(PricingPlan $pricingPlan): RedirectResponse
     {
+        if (! blank($pricingPlan->qris_image_path)) {
+            Storage::disk('public')->delete($pricingPlan->qris_image_path);
+        }
+
         $pricingPlan->delete();
 
         return back()->with('flash', [
             'type' => 'success',
-            'title' => 'Paket harga dihapus',
-            'message' => 'Paket ini tidak lagi tersedia untuk alur pendaftaran baru.',
+            'title' => 'Tarif jenjang dihapus',
+            'message' => 'Tarif ini tidak lagi tersedia untuk alur pendaftaran baru.',
         ]);
+    }
+
+    public function printLabel(PricingPlan $pricingPlan, QrisService $qrisService): View
+    {
+        $amount = $this->sanitizeAmount($pricingPlan->price);
+        $qrisPayload = $qrisService->generateFixedAmountPayload($amount);
+
+        $qrisImageUrl = null;
+        if (! blank($pricingPlan->qris_image_path)) {
+            $qrisImageUrl = route('superadmin.tarif-jenjang.image', $pricingPlan);
+        }
+
+        return view('superadmin.pricing-plans.print', [
+            'tarifJenjang' => $pricingPlan,
+            'formattedPrice' => number_format((int) $amount, 0, ',', '.'),
+            'qrCodeSvg' => QrCode::format('svg')->size(250)->margin(1)->generate($qrisPayload),
+            'qrisImageUrl' => $qrisImageUrl,
+        ]);
+    }
+
+    public function image(PricingPlan $pricingPlan): StreamedResponse
+    {
+        if (blank($pricingPlan->qris_image_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response($pricingPlan->qris_image_path);
+    }
+
+    private function sanitizeAmount(string|int|float|null $amount): string
+    {
+        $normalized = preg_replace('/\D+/', '', (string) $amount) ?? '0';
+
+        return $normalized !== '' ? $normalized : '0';
     }
 }
