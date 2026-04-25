@@ -38,20 +38,40 @@
                     </div>
                     <div class="mb-4">
                         <label class="text-xs font-bold">Materi</label>
-                        <select v-model="questions[current].material_id" class="input w-full">
-                            <option value="">Pilih materi</option>
-                            @foreach($materials as $material)
-                                <option value="{{ $material->id }}">{{ $material->curriculum }} - {{ $material->sub_unit }}</option>
-                            @endforeach
-                        </select>
+                        <div class="ssd-wrap mt-1">
+                            <input type="hidden" :value="questions[current].material_id" @change="questions[current].material_id = $event.target.value">
+                            <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                                <span class="ssd-label">@{{ materials.find(m => m.id == questions[current].material_id)?.sub_unit || 'Pilih materi' }}</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                            </button>
+                            <div class="ssd-panel">
+                                <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari materi..."></div>
+                                <div class="ssd-list">
+                                    <div class="ssd-option" :class="{'ssd-selected': !questions[current].material_id}" data-value="">Pilih materi</div>
+                                    @foreach($materials as $material)
+                                        <div class="ssd-option" :class="{'ssd-selected': questions[current].material_id == '{{ $material->id }}'}" data-value="{{ $material->id }}">{{ $material->curriculum }} - {{ $material->sub_unit }}</div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-4">
                         <label class="text-xs font-bold">Tipe Soal</label>
-                        <select v-model="questions[current].tipe" class="input w-full">
-                            <option value="PG">Pilihan Ganda</option>
-                            <option value="Checklist">Checklist</option>
-                            <option value="Singkat">Jawaban Singkat</option>
-                        </select>
+                        <div class="ssd-wrap mt-1">
+                            <input type="hidden" :value="questions[current].tipe" @change="questions[current].tipe = $event.target.value">
+                            <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                                <span class="ssd-label">@{{ {PG: 'Pilihan Ganda', Checklist: 'Checklist', Singkat: 'Jawaban Singkat'}[questions[current].tipe] || 'PG' }}</span>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                            </button>
+                            <div class="ssd-panel">
+                                <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+                                <div class="ssd-list">
+                                    <div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'PG'}" data-value="PG">Pilihan Ganda</div>
+                                    <div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'Checklist'}" data-value="Checklist">Checklist</div>
+                                    <div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'Singkat'}" data-value="Singkat">Jawaban Singkat</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-4">
                         <label class="text-xs font-bold">Pertanyaan</label>
@@ -111,6 +131,24 @@ new Vue({
             'image'=>$q->image_path,
         ])),
         current: 0,
+        materials: @json($materials->map(fn($m)=>['id'=>$m->id,'sub_unit'=>$m->sub_unit]))
+    },
+    watch: {
+        current() {
+            this.$nextTick(() => {
+                document.querySelectorAll('.ssd-wrap input[type="hidden"]').forEach((input) => {
+                    if (window.syncSSD) window.syncSSD(input);
+                });
+            });
+        },
+        questions: {
+            deep: true,
+            handler() {
+                this.$nextTick(() => {
+                    if (window.initSSD) window.initSSD();
+                });
+            }
+        }
     },
     methods: {
         go(idx){ this.current=idx; },

@@ -56,18 +56,38 @@
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div>
                                         <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Tipe Soal</label>
-                                        <select v-model="questions[current].tipe" class="input w-full">
-                                            <option value="PG">Pilihan Ganda</option>
-                                            <option value="Checklist">Checklist</option>
-                                            <option value="Singkat">Jawaban Singkat</option>
-                                        </select>
+                                        <div class="ssd-wrap mt-1">
+                                            <input type="hidden" :value="questions[current].tipe" @change="questions[current].tipe = $event.target.value">
+                                            <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                                                <span class="ssd-label">@{{ {PG: 'Pilihan Ganda', Checklist: 'Checklist', Singkat: 'Jawaban Singkat'}[questions[current].tipe] || 'Pilih Tipe' }}</span>
+                                                <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                                            </button>
+                                            <div class="ssd-panel">
+                                                <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+                                                <div class="ssd-list">
+                                                    <div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'PG'}" data-value="PG">Pilihan Ganda</div>
+                                                    <div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'Checklist'}" data-value="Checklist">Checklist</div>
+                                                    <div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'Singkat'}" data-value="Singkat">Jawaban Singkat</div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Status</label>
-                                        <select v-model="questions[current].status" class="input w-full">
-                                            <option value="draft">Draft</option>
-                                            <option value="terbit">Terbit</option>
-                                        </select>
+                                        <div class="ssd-wrap mt-1">
+                                            <input type="hidden" :value="questions[current].status" @change="questions[current].status = $event.target.value">
+                                            <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                                                <span class="ssd-label">@{{ questions[current].status === 'terbit' ? 'Terbit' : 'Draft' }}</span>
+                                                <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                                            </button>
+                                            <div class="ssd-panel">
+                                                <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari status..."></div>
+                                                <div class="ssd-list">
+                                                    <div class="ssd-option" :class="{'ssd-selected': questions[current].status === 'draft'}" data-value="draft">Draft</div>
+                                                    <div class="ssd-option" :class="{'ssd-selected': questions[current].status === 'terbit'}" data-value="terbit">Terbit</div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -99,15 +119,27 @@
                                 <div class="grid gap-4 md:grid-cols-2">
                                     <div>
                                         <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Jawaban Benar</label>
-                                        <select v-if="['PG','Checklist'].includes(questions[current].tipe)" v-model="questions[current].jawaban_benar" class="input w-full">
-                                            <option value="">Pilih jawaban benar</option>
-                                            <option
-                                                v-for="(opsi, i) in (questions[current].opsi || []).slice(0, 5)"
-                                                :key="`answer-${i}`"
-                                                :value="String.fromCharCode(65 + i)">
-                                                @{{ String.fromCharCode(65 + i) }} - @{{ opsi || `Opsi ${String.fromCharCode(65 + i)}` }}
-                                            </option>
-                                        </select>
+                                        <div v-if="['PG','Checklist'].includes(questions[current].tipe)" class="ssd-wrap mt-1" data-ssd-dynamic>
+                                            <input type="hidden" :value="questions[current].jawaban_benar" @change="questions[current].jawaban_benar = $event.target.value">
+                                            <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                                                <span class="ssd-label">@{{ questions[current].jawaban_benar || 'Pilih jawaban benar' }}</span>
+                                                <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                                            </button>
+                                            <div class="ssd-panel">
+                                                <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jawaban..."></div>
+                                                <div class="ssd-list">
+                                                    <div class="ssd-option" :class="{'ssd-selected': !questions[current].jawaban_benar}" data-value="">Pilih jawaban benar</div>
+                                                    <div
+                                                        v-for="(opsi, i) in (questions[current].opsi || []).slice(0, 5)"
+                                                        :key="`answer-${i}`"
+                                                        class="ssd-option"
+                                                        :class="{'ssd-selected': questions[current].jawaban_benar === String.fromCharCode(65 + i)}"
+                                                        :data-value="String.fromCharCode(65 + i)">
+                                                        @{{ String.fromCharCode(65 + i) }} - @{{ opsi || `Opsi ${String.fromCharCode(65 + i)}` }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <input v-else v-model="questions[current].jawaban_benar" class="input w-full" placeholder="Tulis jawaban singkat yang benar">
                                         <div class="mt-1 text-[11px] text-slate-500">
                                             <span v-if="['PG','Checklist'].includes(questions[current].tipe)">Pilih huruf jawaban yang benar sesuai opsi aktif.</span>

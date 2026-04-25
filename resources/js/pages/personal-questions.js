@@ -50,6 +50,29 @@ function initPersonalQuestionsPage() {
 
 			if (previous && Array.from(answerSelect.options).some((option) => option.value === previous)) {
 				answerSelect.value = previous;
+			} else if (!answerSelect.value) {
+				answerSelect.value = "";
+			}
+
+			// Sync with SSD if present
+			const ssdWrap = answerSelect.closest('.ssd-wrap');
+			if (ssdWrap) {
+				const ssdList = ssdWrap.querySelector('.ssd-list');
+				if (ssdList) {
+					const currentValue = answerSelect.value;
+					let html = `<div class="ssd-option${!currentValue ? ' ssd-selected' : ''}" data-value="">Pilih jawaban benar</div>`;
+					Array.from({ length: Math.min(values.length, 5) }, (_, i) => optionLabels[i]).forEach((label, i) => {
+						const isSelected = currentValue === label;
+						const text = values[i] ? `${label} - ${values[i]}` : label;
+						html += `<div class="ssd-option${isSelected ? ' ssd-selected' : ''}" data-value="${label}">${text}</div>`;
+					});
+					ssdList.innerHTML = html;
+
+					// Re-init SSD logic for this specific wrap
+					delete ssdWrap.dataset.ssdInit;
+					if (window.initSSD) window.initSSD(ssdWrap);
+					if (window.syncSSD) window.syncSSD(answerSelect);
+				}
 			}
 		};
 
@@ -57,7 +80,14 @@ function initPersonalQuestionsPage() {
 			const isObjective = ['PG', 'Checklist'].includes(questionType.value);
 			objectiveOptions.classList.toggle('hidden', !isObjective);
 			addButton.disabled = !isObjective;
-			answerSelect.classList.toggle('hidden', !isObjective);
+
+			const ssdWrap = answerSelect.closest('.ssd-wrap');
+			if (ssdWrap) {
+				ssdWrap.classList.toggle('hidden', !isObjective);
+			} else {
+				answerSelect.classList.toggle('hidden', !isObjective);
+			}
+
 			answerText.classList.toggle('hidden', isObjective);
 			answerSelect.disabled = !isObjective;
 			answerText.disabled = isObjective;
@@ -161,8 +191,8 @@ function initPersonalQuestionsPage() {
 			scheduleFetch(150);
 		});
 		filterInput.addEventListener('input', () => scheduleFetch(350));
-		filterForm.querySelectorAll('select').forEach((select) => {
-			select.addEventListener('change', () => scheduleFetch(0));
+		filterForm.querySelectorAll('select, .ssd-wrap input[type="hidden"]').forEach((input) => {
+			input.addEventListener('change', () => scheduleFetch(0));
 		});
 		filterForm.addEventListener('submit', (event) => {
 			event.preventDefault();

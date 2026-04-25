@@ -250,6 +250,24 @@ function initPersonalQuestionBuilder() {
 					});
 			},
 		},
+		watch: {
+			current() {
+				this.$nextTick(() => {
+					document.querySelectorAll('.ssd-wrap input[type="hidden"]').forEach((input) => {
+						if (window.syncSSD) window.syncSSD(input);
+					});
+				});
+			},
+			// Watch questions array for any change (like adding options)
+			questions: {
+				deep: true,
+				handler() {
+					this.$nextTick(() => {
+						if (window.initSSD) window.initSSD();
+					});
+				}
+			}
+		},
 	});
 }
 

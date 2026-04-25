@@ -104,10 +104,6 @@
                         found = true;
                     }
                 });
-                if (!found && label) {
-                   // Fallback if value not in options
-                   // label.textContent = '...'; 
-                }
             };
 
             hidden.addEventListener('change', syncUI);
@@ -124,6 +120,24 @@
                     if (autoSubmitForm) autoSubmitForm.submit();
                 });
             });
+        });
+    }
+
+    function syncSSD(hiddenInput) {
+        if (!hiddenInput) return;
+        var wrap = hiddenInput.closest('.ssd-wrap');
+        if (!wrap) return;
+
+        var val = hiddenInput.value;
+        var opts = wrap.querySelectorAll('.ssd-option');
+        var label = wrap.querySelector('.ssd-label');
+
+        opts.forEach(function(o) {
+            var isMatch = String(o.dataset.value || '') === String(val);
+            o.classList.toggle('ssd-selected', isMatch);
+            if (isMatch && label) {
+                label.textContent = o.textContent.trim();
+            }
         });
     }
 
@@ -146,5 +160,6 @@
     });
 
     window.initSSD = initSSD;
+    window.syncSSD = syncSSD;
 })();
 </script>

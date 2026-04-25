@@ -88,22 +88,37 @@
     </div>
     <div>
         <label class="text-xs font-bold">Jawaban Benar</label>
-        <select
-            name="jawaban_benar"
-            class="input w-full"
+        <div
+            class="ssd-wrap mt-1 {{ $typeValue === 'Singkat' ? 'hidden' : '' }}"
             @if($isEditMode)
-                data-edit-answer-select
-                data-current-answer="{{ $answerValue }}"
+                data-edit-answer-select-ssd
             @else
-                id="guru-personal-answer-key-select"
+                id="guru-personal-answer-key-select-ssd"
             @endif>
-            <option value="">Pilih jawaban benar</option>
-            @unless($isEditMode)
-                @foreach (range(0, min(count($optionsValue), 5) - 1) as $index)
-                <option value="{{ $optionLabels[$index] }}">{{ $optionLabels[$index] }}</option>
-                @endforeach
-            @endunless
-        </select>
+            <input
+                type="hidden"
+                name="jawaban_benar"
+                value="{{ $typeValue !== 'Singkat' ? $answerValue : '' }}"
+                @if($isEditMode)
+                    data-edit-answer-select
+                    data-current-answer="{{ $answerValue }}"
+                @else
+                    id="guru-personal-answer-key-select"
+                @endif>
+            <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                <span class="ssd-label">{{ $answerValue ?: 'Pilih jawaban benar' }}</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+            </button>
+            <div class="ssd-panel">
+                <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jawaban..."></div>
+                <div class="ssd-list">
+                    <div class="ssd-option{{ !$answerValue ? ' ssd-selected' : '' }}" data-value="">Pilih jawaban benar</div>
+                    @foreach (range(0, min(count($optionsValue), 5) - 1) as $index)
+                        <div class="ssd-option{{ $answerValue === $optionLabels[$index] ? ' ssd-selected' : '' }}" data-value="{{ $optionLabels[$index] }}">{{ $optionLabels[$index] }}</div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
         <input
             name="jawaban_benar"
             class="input w-full {{ $isEditMode ? 'hidden' : 'hidden' }}"
