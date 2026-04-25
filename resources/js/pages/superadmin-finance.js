@@ -1,4 +1,7 @@
+import { closeAllActionMenus } from '../core/action-menus';
+
 function initSuperadminFinance() {
+
 	const modal = document.getElementById('qris-modal');
 	const form = document.getElementById('qris-form');
 	const formTitle = document.getElementById('qris-form-title');
@@ -68,6 +71,7 @@ function initSuperadminFinance() {
 		inputName.value = '';
 		if (inputJenjang && !inputJenjang.disabled) {
 			inputJenjang.value = '';
+			inputJenjang.dispatchEvent(new Event('change'));
 		}
 		inputPrice.value = '';
 		inputSubtitle.value = '';
@@ -83,6 +87,7 @@ function initSuperadminFinance() {
 
 	document.querySelectorAll('[data-qris-form-open]').forEach((button) => {
 		button.addEventListener('click', () => {
+			closeAllActionMenus();
 			resetForm();
 			openModal();
 			inputName.focus();
@@ -99,6 +104,7 @@ function initSuperadminFinance() {
 
 	document.querySelectorAll('[data-qris-edit]').forEach((button) => {
 		button.addEventListener('click', () => {
+			closeAllActionMenus();
 			resetForm();
 			openModal();
 
@@ -113,6 +119,7 @@ function initSuperadminFinance() {
 			inputName.value = button.getAttribute('data-qris-name') || '';
 			if (inputJenjang && !inputJenjang.disabled) {
 				inputJenjang.value = button.getAttribute('data-qris-jenjang') || '';
+				inputJenjang.dispatchEvent(new Event('change'));
 			}
 			inputPrice.value = button.getAttribute('data-qris-price') || '';
 			inputSubtitle.value = button.getAttribute('data-qris-subtitle') || '';

@@ -249,11 +249,11 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script id="personal-question-builder-config" type="application/json">
-    @json([
+    {!! json_encode([
         'initialQuestions' => $initialQuestions,
         'saveUrl' => route('guru.personal-questions.builder.save'),
         'uploadImageUrl' => route('guru.personal-questions.builder.upload-image'),
         'csrfToken' => csrf_token(),
-    ])
+    ]) !!}
 </script>
 @endsection

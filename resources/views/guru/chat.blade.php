@@ -1,18 +1,23 @@
 @extends('layouts.guru')
 @section('title', 'Live Chat')
 @section('content')
+@php
+    $chatPartnerName = $superadmin?->name ?? 'Superadmin';
+    $chatPartnerAvatarUrl = $superadmin?->avatar_url
+        ?? 'https://ui-avatars.com/api/?name=Superadmin&background=4F6EF7&color=fff';
+@endphp
 <div class="w-full space-y-6">
     <div>
-        <h1 class="text-2xl font-bold">Live Chat dengan Superadmin</h1>
+        <h1 class="text-2xl font-bold">Live Chat dengan Admin Ujion</h1>
         <p class="mt-2 text-textSecondary dark:text-slate-300">Gunakan chat ini untuk koordinasi aktivasi akun, token akses, dan kebutuhan operasional lainnya.</p>
     </div>
 
     <div class="card p-4 sm:p-5">
         <div class="mb-4 flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-card">
-            <img src="https://ui-avatars.com/api/?name=Superadmin&background=22C1C3&color=fff" class="w-10 h-10 rounded-full border border-white shadow" alt="avatar">
+            <img src="{{ $chatPartnerAvatarUrl }}" class="w-10 h-10 rounded-full border border-white object-cover shadow" alt="Avatar {{ $chatPartnerName }}">
             <div class="flex-1 min-w-0">
-                <div class="font-bold text-base text-slate-900 dark:text-slate-100">Superadmin</div>
-                <div class="text-xs text-gray-500 dark:text-slate-400">Percakapan dengan superadmin</div>
+                <div class="font-bold text-base text-slate-900 dark:text-slate-100">{{ $chatPartnerName }}</div>
+                <div class="text-xs text-gray-500 dark:text-slate-400">Percakapan dengan Admin Ujion</div>
             </div>
             <div class="flex items-center gap-2 ml-2">
                 <!-- Info Button -->
@@ -26,14 +31,20 @@
             <ul class="space-y-4">
                 @forelse($chats as $chat)
                     @php
-                        $isOwn = $chat->from_user_id == auth()->id();
+                        $isOwn = (int) $chat->from_user_id === (int) auth()->id();
+                        $sender = $chat->fromUser;
+                        $senderName = $sender?->name ?? ($isOwn ? (auth()->user()?->name ?? 'Anda') : $chatPartnerName);
+                        $senderAvatarUrl = $sender?->avatar_url
+                            ?? ($isOwn
+                                ? (auth()->user()?->avatar_url ?? 'https://ui-avatars.com/api/?name=Guru&background=22C1C3&color=fff')
+                                : $chatPartnerAvatarUrl);
                     @endphp
-                    <li class="flex {{ $isOwn ? 'justify-end' : 'justify-start' }}">
+                    <li class="flex items-end gap-2 {{ $isOwn ? 'justify-end' : 'justify-start' }}">
+                        @unless($isOwn)
+                            <img src="{{ $senderAvatarUrl }}" class="h-8 w-8 shrink-0 rounded-full border border-white object-cover shadow" alt="Avatar {{ $senderName }}">
+                        @endunless
                         <div class="max-w-[88%] sm:max-w-xl">
                             <div class="mb-1 flex items-center gap-2 {{ $isOwn ? 'justify-end' : 'justify-start' }}">
-                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                                    {{ $chat->fromUser->name ?? ($isOwn ? 'Anda' : 'Superadmin') }}
-                                </span>
                                 <span class="text-[11px] text-slate-400">{{ $chat->created_at->format('d M H:i') }}</span>
                             </div>
 
@@ -53,6 +64,9 @@
                                  @endif
                             </div>
                         </div>
+                        @if($isOwn)
+                            <img src="{{ $senderAvatarUrl }}" class="h-8 w-8 shrink-0 rounded-full border border-white object-cover shadow" alt="Avatar {{ $senderName }}">
+                        @endif
                     </li>
                 @empty
                     <li class="rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/80 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-900/40">

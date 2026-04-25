@@ -408,10 +408,10 @@
 </div>
 
 <script id="superadmin-bank-builder-config" type="application/json">
-    @json([
+    {!! json_encode([
         'slotSisa' => $slotSisa,
         'emptySelectionMessage' => 'Pilih minimal satu soal terlebih dahulu.',
         'processingImportHtml' => '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Memproses...',
-    ])
+    ]) !!}
 </script>
 @endsection

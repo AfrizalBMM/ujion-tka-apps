@@ -40,24 +40,45 @@
         </div>
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Tipe Soal</label>
-            <select name="tipe_soal" class="input" data-soal-type required @disabled($isSurvey)>
-                <option value="pilihan_ganda" @selected($currentType === 'pilihan_ganda')>Pilihan Ganda</option>
-                @unless($isSurvey)
-                    <option value="menjodohkan" @selected($currentType === 'menjodohkan')>Menjodohkan</option>
-                @endunless
-            </select>
+            <div class="ssd-wrap mt-1">
+                <input type="hidden" name="tipe_soal" value="{{ $currentType }}" required @disabled($isSurvey) data-soal-type>
+                <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full" @disabled($isSurvey)>
+                    <span class="ssd-label">{{ $currentType === 'pilihan_ganda' ? 'Pilihan Ganda' : 'Menjodohkan' }}</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                </button>
+                <div class="ssd-panel">
+                    <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+                    <div class="ssd-list">
+                        <div class="ssd-option{{ $currentType === 'pilihan_ganda' ? ' ssd-selected' : '' }}" data-value="pilihan_ganda">Pilihan Ganda</div>
+                        @unless($isSurvey)
+                            <div class="ssd-option{{ $currentType === 'menjodohkan' ? ' ssd-selected' : '' }}" data-value="menjodohkan">Menjodohkan</div>
+                        @endunless
+                    </div>
+                </div>
+            </div>
             @if($isSurvey)
                 <input type="hidden" name="tipe_soal" value="pilihan_ganda">
             @endif
         </div>
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Teks Bacaan</label>
-            <select name="teks_bacaan_id" class="input">
-                <option value="">Tanpa teks bacaan</option>
-                @foreach($teksBacaans as $bacaan)
-                    <option value="{{ $bacaan->id }}" @selected(old('teks_bacaan_id', $question->teks_bacaan_id ?? null) == $bacaan->id)>{{ $bacaan->judul ?: 'Teks bacaan #' . $bacaan->id }}</option>
-                @endforeach
-            </select>
+            <div class="ssd-wrap mt-1">
+                <input type="hidden" name="teks_bacaan_id" value="{{ old('teks_bacaan_id', $question->teks_bacaan_id ?? null) }}">
+                <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                    @php $selectedBacaan = $teksBacaans->firstWhere('id', old('teks_bacaan_id', $question->teks_bacaan_id ?? null)) @endphp
+                    <span class="ssd-label">{{ $selectedBacaan ? ($selectedBacaan->judul ?: 'Teks bacaan #' . $selectedBacaan->id) : 'Tanpa teks bacaan' }}</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                </button>
+                <div class="ssd-panel">
+                    <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari bacaan..."></div>
+                    <div class="ssd-list">
+                        <div class="ssd-option{{ !old('teks_bacaan_id', $question->teks_bacaan_id ?? null) ? ' ssd-selected' : '' }}" data-value="">Tanpa teks bacaan</div>
+                        @foreach($teksBacaans as $bacaan)
+                            <div class="ssd-option{{ old('teks_bacaan_id', $question->teks_bacaan_id ?? null) == $bacaan->id ? ' ssd-selected' : '' }}" data-value="{{ $bacaan->id }}">{{ $bacaan->judul ?: 'Teks bacaan #' . $bacaan->id }}</div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Bobot</label>
@@ -90,10 +111,21 @@
         </div>
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Arah Skor</label>
-            <select name="arah_skor" class="input">
-                <option value="positif" @selected(old('arah_skor', $question->arah_skor ?? 'positif') === 'positif')>Positif</option>
-                <option value="negatif" @selected(old('arah_skor', $question->arah_skor ?? 'positif') === 'negatif')>Negatif</option>
-            </select>
+            <div class="ssd-wrap mt-1">
+                @php $currentArah = old('arah_skor', $question->arah_skor ?? 'positif') @endphp
+                <input type="hidden" name="arah_skor" value="{{ $currentArah }}">
+                <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                    <span class="ssd-label">{{ $currentArah === 'negatif' ? 'Negatif' : 'Positif' }}</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                </button>
+                <div class="ssd-panel">
+                    <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                    <div class="ssd-list">
+                        <div class="ssd-option{{ $currentArah === 'positif' ? ' ssd-selected' : '' }}" data-value="positif">Positif</div>
+                        <div class="ssd-option{{ $currentArah === 'negatif' ? ' ssd-selected' : '' }}" data-value="negatif">Negatif</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -264,6 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     typeInput?.addEventListener('change', syncTypePanels);
+    typeInput?.addEventListener('input', syncTypePanels);
     syncTypePanels();
     reindexPairs();
 });

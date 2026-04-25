@@ -19,6 +19,9 @@ use App\Http\Controllers\ChatImageController as SharedChatImageController;
 Route::get('/register/guru', [RegisterGuruController::class, 'showForm'])->name('register.guru.form');
 Route::post('/register/guru', [RegisterGuruController::class, 'register'])->name('register.guru');
 Route::get('/register/guru/pending', [RegisterGuruController::class, 'showPending'])->name('register.guru.pending');
+Route::get('/register/guru/check-wa', [RegisterGuruController::class, 'checkWa'])->name('register.guru.check-wa');
+Route::get('/register/guru/check-email', [RegisterGuruController::class, 'checkEmail'])->name('register.guru.check-email');
+Route::post('/register/guru/pending/resume', [RegisterGuruController::class, 'resumePending'])->name('register.guru.pending.resume');
 Route::post('/register/guru/pending/payment', [RegisterGuruController::class, 'createPayment'])->name('register.guru.create-payment');
 Route::post('/register/guru/pending/payment-data', [RegisterGuruController::class, 'paymentData'])->name('register.guru.payment-data');
 Route::post('/register/guru/pending/payment-proof', [RegisterGuruController::class, 'uploadPaymentProof'])->name('register.guru.payment-proof');
@@ -27,7 +30,6 @@ Route::middleware(['auth', 'role:guru', 'guru.active'])->prefix('guru')->name('g
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::post('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials');
     Route::get('/materials/{material}', [MaterialController::class, 'show'])->name('materials.show');
     Route::post('/materials/{material}/bookmark', [MaterialController::class, 'bookmark'])->name('materials.bookmark');

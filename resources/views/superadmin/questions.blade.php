@@ -48,7 +48,7 @@
     </div>
 
     <div class="card">
-        <form method="GET" action="{{ route('superadmin.global-questions.index') }}" class="grid grid-cols-1 gap-3 lg:grid-cols-6">
+        <form id="filter-form" data-ssd-autosubmit method="GET" action="{{ route('superadmin.global-questions.index') }}" class="grid grid-cols-1 gap-3 lg:grid-cols-6">
             <div class="lg:col-span-2">
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Cari Soal</label>
                 <input class="input mt-1" type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari pertanyaan, kunci, pembahasan, atau materi...">
@@ -149,9 +149,7 @@
                 </div>
             </div>
             <div class="flex flex-wrap items-end gap-3 lg:col-span-6">
-                <button class="btn-primary" type="submit">
-                    <i class="fa-solid fa-filter mr-2"></i> Terapkan Filter
-                </button>
+
                 <a class="btn-secondary" href="{{ route('superadmin.global-questions.index') }}">
                     Reset
                 </a>
@@ -336,20 +334,40 @@
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang *</label>
-                    <select class="input mt-1" name="jenjang_id" id="create-jenjang-id" required>
-                        <option value="" disabled selected>Pilih Jenjang</option>
-                        @foreach($jenjangs as $jenjang)
-                            <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
-                        @endforeach
-                    </select>
+                    <div class="ssd-wrap mt-1">
+                        <input type="hidden" name="jenjang_id" id="create-jenjang-id" value="" required>
+                        <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                            <span class="ssd-label">Pilih Jenjang</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                        </button>
+                        <div class="ssd-panel">
+                            <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+                            <div class="ssd-list">
+                                <div class="ssd-option ssd-selected" data-value="">Pilih Jenjang</div>
+                                @foreach($jenjangs as $jenjang)
+                                    <div class="ssd-option" data-value="{{ $jenjang->id }}">{{ $jenjang->nama }}</div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenis Soal</label>
-                    <select class="input mt-1" name="question_type" id="create-question-type" required>
-                        <option value="multiple_choice">Pilihan Ganda</option>
-                        <option value="short_answer">Jawaban Singkat</option>
-                        <option value="matching">Menjodohkan</option>
-                    </select>
+                    <div class="ssd-wrap mt-1">
+                        <input type="hidden" name="question_type" id="create-question-type" value="multiple_choice" required>
+                        <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                            <span class="ssd-label">Pilihan Ganda</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                        </button>
+                        <div class="ssd-panel">
+                            <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                            <div class="ssd-list">
+                                <div class="ssd-option ssd-selected" data-value="multiple_choice">Pilihan Ganda</div>
+                                <div class="ssd-option" data-value="short_answer">Jawaban Singkat</div>
+                                <div class="ssd-option" data-value="matching">Menjodohkan</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -456,10 +474,20 @@
                 </div>
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Status</label>
-                    <select class="input mt-1" name="is_active">
-                        <option value="1">Aktif (Publik)</option>
-                        <option value="0">Draft (Sembunyi)</option>
-                    </select>
+                    <div class="ssd-wrap mt-1">
+                        <input type="hidden" name="is_active" value="1" required>
+                        <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                            <span class="ssd-label">Aktif (Publik)</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                        </button>
+                        <div class="ssd-panel">
+                            <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                            <div class="ssd-list">
+                                <div class="ssd-option ssd-selected" data-value="1">Aktif (Publik)</div>
+                                <div class="ssd-option" data-value="0">Draft (Sembunyi)</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -498,12 +526,22 @@
             @csrf
             <div>
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang *</label>
-                <select class="input mt-1" name="jenjang_id" required>
-                    <option value="" disabled selected>Pilih Jenjang Tujuan</option>
-                    @foreach($jenjangs as $jenjang)
-                        <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
-                    @endforeach
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="jenjang_id" value="" required>
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">Pilih Jenjang Tujuan</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option ssd-selected" data-value="">Pilih Jenjang Tujuan</div>
+                            @foreach($jenjangs as $jenjang)
+                                <div class="ssd-option" data-value="{{ $jenjang->id }}">{{ $jenjang->nama }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
             <div>
                 <label class="text-xs font-bold text-textSecondary">File Import</label>
@@ -546,12 +584,22 @@
             @csrf
             <div>
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang *</label>
-                <select class="input mt-1" name="jenjang_id" required>
-                    <option value="" disabled selected>Pilih Jenjang Tujuan</option>
-                    @foreach($jenjangs as $jenjang)
-                        <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
-                    @endforeach
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="jenjang_id" value="" required>
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">Pilih Jenjang Tujuan</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option ssd-selected" data-value="">Pilih Jenjang Tujuan</div>
+                            @foreach($jenjangs as $jenjang)
+                                <div class="ssd-option" data-value="{{ $jenjang->id }}">{{ $jenjang->nama }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
             <div>
                 <label class="text-xs font-bold text-textSecondary">File Import</label>
@@ -589,20 +637,40 @@
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang *</label>
-                    <select class="input mt-1" name="jenjang_id" id="edit-jenjang-id" required>
-                        <option value="" disabled selected>Pilih Jenjang</option>
-                        @foreach($jenjangs as $jenjang)
-                            <option value="{{ $jenjang->id }}">{{ $jenjang->nama }}</option>
-                        @endforeach
-                    </select>
+                    <div class="ssd-wrap mt-1">
+                        <input type="hidden" name="jenjang_id" id="edit-jenjang-id" value="" required>
+                        <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                            <span class="ssd-label">Pilih Jenjang</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                        </button>
+                        <div class="ssd-panel">
+                            <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+                            <div class="ssd-list">
+                                <div class="ssd-option ssd-selected" data-value="">Pilih Jenjang</div>
+                                @foreach($jenjangs as $jenjang)
+                                    <div class="ssd-option" data-value="{{ $jenjang->id }}">{{ $jenjang->nama }}</div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenis Soal</label>
-                    <select class="input mt-1" name="question_type" id="edit-question-type" required>
-                        <option value="multiple_choice">Pilihan Ganda</option>
-                        <option value="short_answer">Jawaban Singkat</option>
-                        <option value="matching">Menjodohkan</option>
-                    </select>
+                    <div class="ssd-wrap mt-1">
+                        <input type="hidden" name="question_type" id="edit-question-type" value="multiple_choice" required>
+                        <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                            <span class="ssd-label">Pilihan Ganda</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                        </button>
+                        <div class="ssd-panel">
+                            <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                            <div class="ssd-list">
+                                <div class="ssd-option ssd-selected" data-value="multiple_choice">Pilihan Ganda</div>
+                                <div class="ssd-option" data-value="short_answer">Jawaban Singkat</div>
+                                <div class="ssd-option" data-value="matching">Menjodohkan</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -709,10 +777,20 @@
                 </div>
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Status</label>
-                    <select class="input mt-1" name="is_active" id="edit-is-active">
-                        <option value="1">Aktif (Publik)</option>
-                        <option value="0">Draft (Sembunyi)</option>
-                    </select>
+                    <div class="ssd-wrap mt-1">
+                        <input type="hidden" name="is_active" id="edit-is-active" value="1" required>
+                        <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                            <span class="ssd-label">Aktif (Publik)</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                        </button>
+                        <div class="ssd-panel">
+                            <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                            <div class="ssd-list">
+                                <div class="ssd-option ssd-selected" data-value="1">Aktif (Publik)</div>
+                                <div class="ssd-option" data-value="0">Draft (Sembunyi)</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -731,10 +809,10 @@
 
 
 <script id="superadmin-questions-config" type="application/json">
-    @json([
+    {!! json_encode([
         'materialOptions' => $materialOptions,
         'optionLabels' => $optionLabels,
-        'updateRouteTemplate' => route('superadmin.global-questions.update', ['globalQuestion' => '__ID__']),
-    ])
+        'updateRouteTemplate' => route('superadmin.global-questions.update', ['globalQuestion' => '__ID__'])
+    ]) !!}
 </script>
 @endsection

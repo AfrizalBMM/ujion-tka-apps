@@ -9,12 +9,16 @@ use App\Http\Controllers\Superadmin\MapelPaketController as SuperadminMapelPaket
 use App\Http\Controllers\Superadmin\PaketSoalController;
 use App\Http\Controllers\Superadmin\PricingPlanController;
 use App\Http\Controllers\Superadmin\PaymentConfirmationController;
+use App\Http\Controllers\Superadmin\LandingSettingsController;
 use App\Http\Controllers\Superadmin\SoalController as SuperadminSoalController;
 use App\Http\Controllers\Superadmin\TeksBacaanController as SuperadminTeksBacaanController;
 use App\Http\Controllers\Superadmin\TeacherController;
+use App\Http\Controllers\Superadmin\ProfileController as SuperadminProfileController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\OgImageController;
 
 use App\Http\Controllers\Siswa\AuthController as SiswaAuthController;
 use App\Http\Controllers\Siswa\ExamController;
@@ -24,9 +28,13 @@ use App\Http\Controllers\AuthController as GeneralAuthController;
 Route::get('/', [LandingController::class , 'index'])->name('landing');
 Route::get('/payments/{referenceCode}', [PaymentController::class, 'show'])->name('payments.show');
 
+Route::get('/og-image.png', OgImageController::class)->name('og.image');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 // Auth routes for Guru
 Route::get('/login', [GeneralAuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [GeneralAuthController::class, 'login']);
+Route::get('/lupa-token', [GeneralAuthController::class, 'showForgotTokenForm'])->name('guru.token-request.form');
+Route::post('/lupa-token', [GeneralAuthController::class, 'requestForgotToken'])->name('guru.token-request.send');
 Route::post('/logout', [GeneralAuthController::class, 'logout'])->name('logout');
 
 // Auth routes for Superadmin (Ngadimin)
@@ -52,6 +60,23 @@ Route::prefix('superadmin')
 	->scopeBindings()
 	->group(function () {
 	    Route::get('/', [DashboardController::class , 'index'])->name('dashboard');
+
+	    Route::get('/landing-settings', [LandingSettingsController::class, 'index'])->name('landing-settings.index');
+	    Route::post('/landing-settings/content', [LandingSettingsController::class, 'saveContent'])->name('landing-settings.content');
+	    Route::post('/landing-settings/sections/{section}/toggle', [LandingSettingsController::class, 'toggleSection'])->name('landing-settings.sections.toggle');
+	    Route::post('/landing-settings/branding/logo', [LandingSettingsController::class, 'saveLogo'])->name('landing-settings.logo');
+	    Route::post('/landing-settings/branding/toggle', [LandingSettingsController::class, 'toggleBranding'])->name('landing-settings.branding.toggle');
+	    Route::post('/landing-settings/hero/mockups', [LandingSettingsController::class, 'storeHeroMockup'])->name('landing-settings.hero-mockups.store');
+	    Route::post('/landing-settings/hero/mockups/{landingHeroMockup}', [LandingSettingsController::class, 'updateHeroMockup'])->name('landing-settings.hero-mockups.update');
+	    Route::post('/landing-settings/hero/mockups/{landingHeroMockup}/toggle', [LandingSettingsController::class, 'toggleHeroMockup'])->name('landing-settings.hero-mockups.toggle');
+	    Route::post('/landing-settings/hero/mockups/{landingHeroMockup}/delete', [LandingSettingsController::class, 'destroyHeroMockup'])->name('landing-settings.hero-mockups.destroy');
+	    Route::post('/landing-settings/faq', [LandingSettingsController::class, 'storeFaq'])->name('landing-settings.faq.store');
+	    Route::post('/landing-settings/faq/{landingFaq}', [LandingSettingsController::class, 'updateFaq'])->name('landing-settings.faq.update');
+	    Route::post('/landing-settings/faq/{landingFaq}/toggle', [LandingSettingsController::class, 'toggleFaq'])->name('landing-settings.faq.toggle');
+	    Route::post('/landing-settings/faq/{landingFaq}/delete', [LandingSettingsController::class, 'destroyFaq'])->name('landing-settings.faq.destroy');
+	    Route::get('/profile', [SuperadminProfileController::class , 'show'])->name('profile');
+	    Route::post('/profile', [SuperadminProfileController::class , 'update'])->name('profile.update');
+	    Route::post('/profile/password', [SuperadminProfileController::class , 'password'])->name('profile.password');
 
 	    Route::get('/finance', [\App\Http\Controllers\Superadmin\FinanceController::class , 'index'])->name('finance.index');
 	    Route::post('/finance/admin-whatsapp', [\App\Http\Controllers\Superadmin\FinanceController::class , 'saveAdminWhatsapp'])->name('finance.admin-whatsapp');

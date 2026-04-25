@@ -17,12 +17,23 @@
         <form class="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
             <div class="input-group">
                 <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Filter Jenjang</label>
-                <select name="jenjang_id" class="input">
-                    <option value="">Semua jenjang</option>
-                    @foreach($jenjangs as $jenjang)
-                        <option value="{{ $jenjang->id }}" @selected(request('jenjang_id') == $jenjang->id)>{{ $jenjang->kode }}</option>
-                    @endforeach
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="jenjang_id" value="{{ request('jenjang_id') }}">
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        @php $selectedJenjang = $jenjangs->firstWhere('id', request('jenjang_id')) @endphp
+                        <span class="ssd-label">{{ $selectedJenjang ? $selectedJenjang->kode : 'Semua jenjang' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ !request('jenjang_id') ? ' ssd-selected' : '' }}" data-value="">Semua jenjang</div>
+                            @foreach($jenjangs as $jenjang)
+                                <div class="ssd-option{{ request('jenjang_id') == $jenjang->id ? ' ssd-selected' : '' }}" data-value="{{ $jenjang->id }}">{{ $jenjang->kode }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="input-group">
                 <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Filter Tahun Ajaran</label>

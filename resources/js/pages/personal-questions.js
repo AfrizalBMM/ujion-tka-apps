@@ -80,6 +80,7 @@ function initPersonalQuestionsPage() {
 
 		optionList.addEventListener('input', syncAnswerOptions);
 		questionType.addEventListener('change', syncTypeState);
+		questionType.addEventListener('input', syncTypeState);
 		syncAnswerOptions();
 		syncTypeState();
 	};

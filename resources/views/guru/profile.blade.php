@@ -16,18 +16,17 @@
             </div>
             <div>
                 <label class="text-xs font-bold">Jenjang</label>
-                <select name="jenjang" class="input w-full" required>
-                    @foreach(config('ujion.jenjangs') as $jnj)
-                        <option value="{{ $jnj }}" @selected(old('jenjang', $user->jenjang) === $jnj)>{{ $jnj }}</option>
-                    @endforeach
-                </select>
+                <div class="input w-full bg-slate-100 text-slate-600 dark:bg-slate-900/60 dark:text-slate-300">
+                    {{ $user->jenjang ?: '-' }}
+                </div>
+                <p class="mt-1 text-xs text-muted">Jenjang mengikuti data aktivasi akun dan tidak dapat diubah dari profil.</p>
             </div>
             <div>
                 <label class="text-xs font-bold">Satuan</label>
                 <input name="satuan_pendidikan" class="input w-full" value="{{ old('satuan_pendidikan', $user->satuan_pendidikan) }}" required>
             </div>
             <div>
-                <label class="text-xs font-bold">WA</label>
+                <label class="text-xs font-bold">No. Whatsapp</label>
                 <input name="no_wa" class="input w-full" value="{{ old('no_wa', $user->no_wa) }}" required>
             </div>
         </div>
@@ -39,18 +38,6 @@
             @endif
         </div>
         <button class="btn-primary" type="submit">Simpan Profil</button>
-    </form>
-    <form method="POST" action="{{ route('guru.profile.password') }}" class="card p-6 space-y-4">
-        @csrf
-        <div>
-            <label class="text-xs font-bold">Ganti Password</label>
-            <input type="password" name="password" class="input w-full" required>
-        </div>
-        <div>
-            <label class="text-xs font-bold">Konfirmasi Password</label>
-            <input type="password" name="password_confirmation" class="input w-full" required>
-        </div>
-        <button class="btn-secondary" type="submit">Ganti Password</button>
     </form>
 </div>
 @endsection

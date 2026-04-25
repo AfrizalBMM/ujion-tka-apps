@@ -293,8 +293,14 @@ function initSuperadminQuestions() {
 			const data = JSON.parse(raw);
 			form.action = updateRouteTemplate.replace('__ID__', data.id);
 			const jenjangInput = document.getElementById('edit-jenjang-id');
-			if (jenjangInput) jenjangInput.value = data.jenjang_id ?? '';
-			if (fields.questionType) fields.questionType.value = data.question_type ?? 'multiple_choice';
+			if (jenjangInput) {
+				jenjangInput.value = data.jenjang_id ?? '';
+				jenjangInput.dispatchEvent(new Event('change'));
+			}
+			if (fields.questionType) {
+				fields.questionType.value = data.question_type ?? 'multiple_choice';
+				fields.questionType.dispatchEvent(new Event('change'));
+			}
 			materialPickers.get('edit')?.setValues({
 				mapel: data.material_mapel ?? '',
 				curriculum: data.material_curriculum ?? '',
@@ -306,7 +312,10 @@ function initSuperadminQuestions() {
 			if (fields.readingPassage) fields.readingPassage.value = data.reading_passage ?? '';
 			if (editOptionList) renderOptionFields(editOptionList, data.options ?? []);
 			if (fields.answerKey) fields.answerKey.value = data.answer_key ?? '';
-			if (fields.isActive) fields.isActive.value = data.is_active ?? '1';
+			if (fields.isActive) {
+				fields.isActive.value = data.is_active ?? '1';
+				fields.isActive.dispatchEvent(new Event('change'));
+			}
 			if (fields.explanation) fields.explanation.value = data.explanation ?? '';
 			openModal(editModal);
 			fields.questionText?.focus();
@@ -337,6 +346,20 @@ function initSuperadminQuestions() {
 			if (target) appendOptionField(target);
 		});
 	});
+
+	const filterForm = document.getElementById('filter-form');
+	if (filterForm) {
+		let debounceTimer;
+		const searchInput = filterForm.querySelector('input[name="search"]');
+		if (searchInput) {
+			searchInput.addEventListener('input', () => {
+				clearTimeout(debounceTimer);
+				debounceTimer = setTimeout(() => {
+					filterForm.submit();
+				}, 500);
+			});
+		}
+	}
 }
 
 document.addEventListener('DOMContentLoaded', initSuperadminQuestions);

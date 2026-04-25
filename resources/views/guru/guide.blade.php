@@ -7,7 +7,7 @@
         <h2 class="font-semibold">Menu & Fitur</h2>
         <ul class="list-disc ml-6 space-y-1">
             <li><b>Dashboard:</b> Statistik aktivitas, info pengumuman.</li>
-            <li><b>Profil:</b> Edit profil, ganti password, avatar.</li>
+            <li><b>Profil:</b> Edit data profil dan avatar. Akses masuk guru memakai token, bukan password.</li>
             <li><b>Materi:</b> Lihat & bookmark materi sesuai jenjang.</li>
             <li><b>Bank Soal Pribadi:</b> CRUD soal, builder fullscreen.</li>
             <li><b>Simulasi Ujian:</b> Coba alur ujian dari sisi siswa, lalu lihat hasil dan pembahasan untuk evaluasi.</li>

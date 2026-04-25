@@ -11,6 +11,7 @@ use App\Policies\GlobalQuestionPolicy;
 use App\Policies\PaketSoalPolicy;
 use App\Policies\SoalPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,6 +29,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('production')) {
+            $appUrl = (string) config('app.url');
+            if ($appUrl !== '') {
+                URL::forceRootUrl($appUrl);
+
+                if (str_starts_with($appUrl, 'https://')) {
+                    URL::forceScheme('https');
+                }
+            }
+        }
+
         Gate::policy(PaketSoal::class, PaketSoalPolicy::class);
         Gate::policy(Soal::class, SoalPolicy::class);
         Gate::policy(GlobalQuestion::class, GlobalQuestionPolicy::class);

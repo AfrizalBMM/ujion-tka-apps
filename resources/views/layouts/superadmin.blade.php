@@ -18,8 +18,10 @@
 
 <body class="app-shell flex flex-col" data-dashboard-shell="superadmin">
     @php
-    $materialFilter = request()->query('jenjang');
-    $globalQuestionFilter = request()->query('jenjang_id');
+        $superadminUser = auth()->user();
+        $materialFilter = request()->query('jenjang');
+        $globalQuestionFilter = request()->query('jenjang_id');
+        $pendingPaymentCount = \App\Models\Transaction::where('status', \App\Models\Transaction::STATUS_PENDING)->whereNotNull('payment_submitted_at')->count();
     @endphp
     <header class="app-topbar">
         <div class="app-topbar-panel">
@@ -49,10 +51,10 @@
                 </button>
                 <div class="app-user-menu">
                     <button class="app-user-trigger">
-                        <img src="https://ui-avatars.com/api/?name=Superadmin&background=4F6EF7&color=fff" alt="avatar"
-                            class="app-user-avatar">
+                        <img src="{{ $superadminUser?->avatar_url ?? 'https://ui-avatars.com/api/?name=Superadmin&background=4F6EF7&color=fff' }}"
+                            alt="Avatar {{ $superadminUser?->name ?? 'Superadmin' }}" class="app-user-avatar">
                         <div class="app-user-copy">
-                            <div class="app-user-name">Superadmin</div>
+                            <div class="app-user-name">{{ $superadminUser?->name ?? 'Superadmin' }}</div>
                             <div class="app-user-role">Administrator</div>
                         </div>
                         <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
@@ -73,6 +75,10 @@
                             </button>
                             <div class="my-1 border-t border-slate-200/70 dark:border-slate-700/60"></div>
                         </div>
+                        <a href="{{ route('superadmin.profile') }}" class="app-dropdown-link">
+                            <i class="fa-solid fa-user fa-fw shrink-0"></i>
+                            Profil
+                        </a>
                         <a href="{{ route('superadmin.guide') }}" class="app-dropdown-link">
                             <i class="fa-solid fa-circle-info fa-fw shrink-0"></i>
                             Panduan
@@ -98,15 +104,24 @@
                 <i class="fa-solid fa-gauge-high"></i>
                 Dashboard
             </a>
+            <a href="{{ route('superadmin.landing-settings.index') }}"
+                class="mobile-nav-link {{ request()->routeIs('superadmin.landing-settings.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-globe"></i>
+                Landing
+            </a>
             <a href="{{ route('superadmin.finance.index') }}"
                 class="mobile-nav-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-credit-card"></i>
                 Keuangan
             </a>
             <a href="{{ route('superadmin.payment-confirmations.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.payment-confirmations.*') ? 'active' : '' }}">
+                class="mobile-nav-link relative {{ request()->routeIs('superadmin.payment-confirmations.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-money-check-dollar"></i>
                 Konfirmasi
+                @if($pendingPaymentCount > 0)
+                    <span
+                        class="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-950">{{ $pendingPaymentCount }}</span>
+                @endif
             </a>
             <a href="{{ route('superadmin.chat.index') }}"
                 class="mobile-nav-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
@@ -161,6 +176,11 @@
                     <i class="fa-solid fa-gauge-high w-5"></i>
                     <span class="sidebar-link-label">Dashboard</span>
                 </a>
+                <a href="{{ route('superadmin.landing-settings.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.landing-settings.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-globe w-5"></i>
+                    <span class="sidebar-link-label">Pengaturan Landing</span>
+                </a>
                 <a href="{{ route('superadmin.finance.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-credit-card w-5"></i>
@@ -169,7 +189,11 @@
                 <a href="{{ route('superadmin.payment-confirmations.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.payment-confirmations.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-money-check-dollar w-5"></i>
-                    <span class="sidebar-link-label">Konfirmasi Pembayaran</span>
+                    <span class="sidebar-link-label flex-1">Konfirmasi Bayar</span>
+                    @if($pendingPaymentCount > 0)
+                        <span
+                            class="inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white shrink-0">{{ $pendingPaymentCount }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('superadmin.chat.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">

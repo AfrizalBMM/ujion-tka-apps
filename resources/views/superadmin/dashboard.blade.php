@@ -155,6 +155,23 @@
         </div>
     </section>
 
+    <section class="card">
+        <div class="section-heading mb-6">
+            <div>
+                <h3 class="section-title">Landing Clicks</h3>
+                <p class="section-description">Akses landing (views) dan klik CTA yang tercatat per hari (14 hari terakhir).</p>
+            </div>
+        </div>
+        <div class="h-[320px]">
+            <canvas
+                id="superadmin-landing-click-chart"
+                data-labels='@json($landingTraffic["labels"] ?? [])'
+                data-views='@json($landingTraffic["views"] ?? [])'
+                data-clicks='@json($landingTraffic["clicks"] ?? [])'
+            ></canvas>
+        </div>
+    </section>
+
     <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <a href="{{ route('superadmin.teachers.index') }}" class="quick-action">
             <div class="quick-action-icon"><i class="fa-solid fa-users"></i></div>
@@ -210,6 +227,55 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(148, 163, 184, 0.16)', borderDash: [5, 5] },
+                            ticks: { stepSize: 1 }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        const landingChart = document.getElementById('superadmin-landing-click-chart');
+        if (landingChart) {
+            const labels = JSON.parse(landingChart.getAttribute('data-labels') || '[]');
+            const views = JSON.parse(landingChart.getAttribute('data-views') || '[]');
+            const clicks = JSON.parse(landingChart.getAttribute('data-clicks') || '[]');
+
+            new Chart(landingChart, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Views',
+                            data: views,
+                            borderColor: '#0EA5E9',
+                            backgroundColor: 'rgba(14, 165, 233, 0.18)',
+                            borderWidth: 1,
+                            borderRadius: 10,
+                        },
+                        {
+                            label: 'Clicks',
+                            data: clicks,
+                            borderColor: '#4F6EF7',
+                            backgroundColor: 'rgba(79, 110, 247, 0.18)',
+                            borderWidth: 1,
+                            borderRadius: 10,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true }
                     },
                     scales: {
                         y: {

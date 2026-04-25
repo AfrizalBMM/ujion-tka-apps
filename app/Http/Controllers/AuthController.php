@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,61 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         return view('auth.login');
+    }
+
+    public function showForgotTokenForm()
+    {
+        return view('auth.forgot-token');
+    }
+
+    public function requestForgotToken(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'contact' => ['required', 'string', 'max:255'],
+            'jenjang' => ['required', 'in:' . implode(',', config('ujion.jenjangs'))],
+        ], [], [
+            'name' => 'nama lengkap',
+            'contact' => 'email atau nomor WhatsApp aktif',
+            'jenjang' => 'jenjang',
+        ]);
+
+        $contact = trim((string) $validated['contact']);
+        if (! $this->isValidForgotTokenContact($contact)) {
+            throw ValidationException::withMessages([
+                'contact' => 'Isi email valid atau nomor WhatsApp aktif.',
+            ]);
+        }
+
+        $adminNumber = preg_replace(
+            '/\D+/',
+            '',
+            (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
+        ) ?? '';
+
+        if ($adminNumber === '') {
+            return redirect()->route('login')->with('flash', [
+                'type' => 'warning',
+                'title' => 'Nomor admin belum tersedia',
+                'message' => 'Permintaan token belum bisa dikirim otomatis karena WhatsApp admin belum dikonfigurasi.',
+                'description' => 'Silakan hubungi admin Ujion melalui kanal resmi sekolah atau operator.',
+            ]);
+        }
+
+        $message = rawurlencode(trim(implode("\n", [
+            'Halo Admin Ujion,',
+            '',
+            'Saya lupa token akses guru.',
+            '',
+            'Data verifikasi:',
+            "Nama lengkap: {$validated['name']}",
+            "Email/No. WhatsApp aktif: {$contact}",
+            "Jenjang: {$validated['jenjang']}",
+            '',
+            'Mohon dibantu pengecekan akun dan pengiriman token akses terbaru jika data saya sesuai.',
+        ])));
+
+        return redirect()->away("https://wa.me/{$adminNumber}?text={$message}");
     }
 
     /**
@@ -105,5 +161,16 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function isValidForgotTokenContact(string $contact): bool
+    {
+        if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+            return true;
+        }
+
+        $digits = preg_replace('/\D+/', '', $contact) ?? '';
+
+        return strlen($digits) >= 8 && strlen($digits) <= 20;
     }
 }

@@ -35,21 +35,41 @@
       </div>
       <div class="flex-1 min-w-[150px]">
         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mata Pelajaran</label>
-        <select name="mapel" class="input mt-1 w-full">
-          <option value="">Semua Mapel</option>
-          @foreach($mapels as $m)
-          <option value="{{ $m }}" @selected(request('mapel')==$m)> {{ $m }} </option>
-          @endforeach
-        </select>
+        <div class="ssd-wrap mt-1">
+          <input type="hidden" name="mapel" value="{{ request('mapel') }}">
+          <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+            <span class="ssd-label">{{ request('mapel') ?: 'Semua Mapel' }}</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+          </button>
+          <div class="ssd-panel">
+            <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari mapel..."></div>
+            <div class="ssd-list">
+              <div class="ssd-option{{ !request('mapel') ? ' ssd-selected' : '' }}" data-value="">Semua Mapel</div>
+              @foreach($mapels as $m)
+                <div class="ssd-option{{ request('mapel') == $m ? ' ssd-selected' : '' }}" data-value="{{ $m }}">{{ $m }}</div>
+              @endforeach
+            </div>
+          </div>
+        </div>
       </div>
       <div class="flex-1 min-w-[150px]">
         <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Kurikulum</label>
-        <select name="curriculum" class="input mt-1 w-full">
-          <option value="">Semua Kurikulum</option>
-          @foreach($curriculums as $c)
-          <option value="{{ $c }}" @selected(request('curriculum')==$c)> {{ $c }} </option>
-          @endforeach
-        </select>
+        <div class="ssd-wrap mt-1">
+          <input type="hidden" name="curriculum" value="{{ request('curriculum') }}">
+          <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+            <span class="ssd-label">{{ request('curriculum') ?: 'Semua Kurikulum' }}</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+          </button>
+          <div class="ssd-panel">
+            <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kurikulum..."></div>
+            <div class="ssd-list">
+              <div class="ssd-option{{ !request('curriculum') ? ' ssd-selected' : '' }}" data-value="">Semua Kurikulum</div>
+              @foreach($curriculums as $c)
+                <div class="ssd-option{{ request('curriculum') == $c ? ' ssd-selected' : '' }}" data-value="{{ $c }}">{{ $c }}</div>
+              @endforeach
+            </div>
+          </div>
+        </div>
       </div>
       <div class="w-full text-[11px] text-textSecondary dark:text-slate-400">Filter otomatis: ketik untuk mencari, atau pilih dropdown untuk menyaring.</div>
     </form>

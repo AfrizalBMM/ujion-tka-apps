@@ -25,19 +25,26 @@
     </div>
     <div>
         <label class="text-xs font-bold">Tipe Soal</label>
-        <select
-            name="tipe"
-            class="input w-full"
-            @if($isEditMode)
-                data-edit-question-type
-            @else
-                id="guru-personal-question-type"
-            @endif
-            required>
-            <option value="PG" @selected($typeValue === 'PG')>Pilihan Ganda</option>
-            <option value="Checklist" @selected($typeValue === 'Checklist')>Checklist</option>
-            <option value="Singkat" @selected($typeValue === 'Singkat')>Jawaban Singkat</option>
-        </select>
+        <div class="ssd-wrap mt-1">
+            <input type="hidden" name="tipe" value="{{ $typeValue }}" required
+                @if($isEditMode)
+                    data-edit-question-type
+                @else
+                    id="guru-personal-question-type"
+                @endif>
+            <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                <span class="ssd-label">{{ match($typeValue) { 'PG' => 'Pilihan Ganda', 'Checklist' => 'Checklist', 'Singkat' => 'Jawaban Singkat', default => 'Pilihan Ganda' } }}</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+            </button>
+            <div class="ssd-panel">
+                <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+                <div class="ssd-list">
+                    <div class="ssd-option{{ $typeValue === 'PG' ? ' ssd-selected' : '' }}" data-value="PG">Pilihan Ganda</div>
+                    <div class="ssd-option{{ $typeValue === 'Checklist' ? ' ssd-selected' : '' }}" data-value="Checklist">Checklist</div>
+                    <div class="ssd-option{{ $typeValue === 'Singkat' ? ' ssd-selected' : '' }}" data-value="Singkat">Jawaban Singkat</div>
+                </div>
+            </div>
+        </div>
     </div>
     <div>
         <label class="text-xs font-bold">Pertanyaan</label>
@@ -137,10 +144,20 @@
     </div>
     <div>
         <label class="text-xs font-bold">Status</label>
-        <select name="status" class="input w-full" required>
-            <option value="draft" @selected($statusValue === 'draft')>Draft</option>
-            <option value="terbit" @selected($statusValue === 'terbit')>Terbit</option>
-        </select>
+        <div class="ssd-wrap mt-1">
+            <input type="hidden" name="status" value="{{ $statusValue }}" required>
+            <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                <span class="ssd-label">{{ $statusValue === 'terbit' ? 'Terbit' : 'Draft' }}</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+            </button>
+            <div class="ssd-panel">
+                <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                <div class="ssd-list">
+                    <div class="ssd-option{{ $statusValue === 'draft' ? ' ssd-selected' : '' }}" data-value="draft">Draft</div>
+                    <div class="ssd-option{{ $statusValue === 'terbit' ? ' ssd-selected' : '' }}" data-value="terbit">Terbit</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

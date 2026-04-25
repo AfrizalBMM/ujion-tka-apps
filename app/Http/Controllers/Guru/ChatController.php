@@ -12,6 +12,9 @@ use Illuminate\View\View;
 class ChatController extends Controller {
     public function index(): View {
         $user = Auth::user();
+        $superadmin = User::query()
+            ->where('role', User::ROLE_SUPERADMIN)
+            ->first();
 
         $chats = Chat::with(['fromUser', 'toUser'])
             ->where(function ($query) use ($user) {
@@ -21,7 +24,7 @@ class ChatController extends Controller {
             ->orderBy('created_at')
             ->get();
 
-        return view('guru.chat', compact('chats'));
+        return view('guru.chat', compact('chats', 'superadmin'));
     }
 
     public function store(Request $request): RedirectResponse {

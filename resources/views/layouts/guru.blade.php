@@ -16,6 +16,12 @@
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
+@php
+  $currentGuru = auth()->user();
+  $guruAvatarUrl = $currentGuru?->avatar_url
+    ?? 'https://ui-avatars.com/api/?name=Guru&background=22C1C3&color=fff';
+@endphp
+
 <body class="app-shell flex flex-col" data-dashboard-shell="guru">
   <header class="app-topbar">
     <div class="app-topbar-panel">
@@ -46,10 +52,10 @@
         <div class="app-user-menu">
           <button class="app-user-trigger">
             <img
-              src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'Guru') }}&background=22C1C3&color=fff"
+              src="{{ $guruAvatarUrl }}"
               alt="avatar" class="app-user-avatar">
             <div class="app-user-copy">
-              <div class="app-user-name">{{ auth()->user()->name ?? 'Guru' }}</div>
+              <div class="app-user-name">{{ $currentGuru?->name ?? 'Guru' }}</div>
               <div class="app-user-role">Guru / Operator</div>
             </div>
             <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>

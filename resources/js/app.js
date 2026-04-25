@@ -1,6 +1,7 @@
 import './bootstrap';
 
 import 'flowbite';
+import './core/action-menus';
 import './core/katex-render';
 import './core/layout-controls';
 import './pages/guru-chat';

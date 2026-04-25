@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\PricingPlan;
 use App\Models\AppSetting;
+use App\Services\PaymentProofStorage;
 use App\Services\QrisService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,6 +20,37 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class RegisterGuruController extends Controller
 {
+    public function checkEmail(Request $request): JsonResponse
+    {
+        $email = $request->query('email');
+        if (!$email) {
+            return response()->json(['exists' => false]);
+        }
+
+        $exists = User::where('email', $email)->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? 'Email ini sudah terdaftar. Silakan Login atau gunakan email lain.' : 'Email bisa digunakan.'
+        ]);
+    }
+
+    public function checkWa(Request $request): JsonResponse
+    {
+        $no_wa = $request->query('no_wa');
+        if (!$no_wa) {
+            return response()->json(['exists' => false]);
+        }
+
+        $normalizedWa = preg_replace('/\D+/', '', $no_wa) ?: $no_wa;
+        $exists = User::where('no_wa', $normalizedWa)->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? 'Nomor WhatsApp ini sudah terdaftar. Silakan Login atau gunakan nomor lain.' : 'Nomor WhatsApp bisa digunakan.'
+        ]);
+    }
+
     public function showForm(): View
     {
         $selectedJenjang = old('jenjang', request()->query('jenjang'));
@@ -101,15 +133,21 @@ class RegisterGuruController extends Controller
     {
         $pendingRegistration = $request->session()->get('pending_registration');
 
-        if (! is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
-            return redirect()->route('register.guru.form');
+        if (!is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
+            return view('pending-aktivasi-resume', [
+                'adminWhatsappUrl' => $this->adminWhatsappUrl('Halo Admin Ujion, saya ingin melanjutkan aktivasi akun.'),
+            ]);
         }
 
         $teacher = User::query()->find($pendingRegistration['teacher_id']);
-        if (! $teacher) {
+        if (!$teacher) {
             $request->session()->forget('pending_registration');
 
-            return redirect()->route('register.guru.form');
+            return redirect()->route('register.guru.pending')->with('flash', [
+                'type' => 'warning',
+                'title' => 'Session aktivasi tidak ditemukan',
+                'message' => 'Masukkan kembali nama lengkap dan nomor WhatsApp untuk melanjutkan aktivasi.',
+            ]);
         }
 
         $tarifJenjang = $this->resolvePlanForJenjang($teacher->jenjang)
@@ -124,16 +162,51 @@ class RegisterGuruController extends Controller
         ]);
     }
 
+    public function resumePending(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'no_wa' => ['required', 'string', 'max:20'],
+        ]);
+
+        $normalizedWa = preg_replace('/\D+/', '', $validated['no_wa']) ?: $validated['no_wa'];
+        $normalizedName = trim($validated['name']);
+
+        $teacher = User::query()
+            ->where('role', User::ROLE_GURU)
+            ->where('account_status', User::STATUS_PENDING)
+            ->where('no_wa', $normalizedWa)
+            ->get()
+            ->first(fn(User $candidate) => $this->pendingResumeNameMatches($candidate->name, $normalizedName));
+
+        if (!$teacher) {
+            return back()
+                ->withErrors([
+                    'resume' => 'Data pending tidak ditemukan. Pastikan nomor WhatsApp sama seperti saat pendaftaran. Nama boleh tanpa gelar.',
+                ])
+                ->withInput();
+        }
+
+        $selectedTarifJenjang = $this->resolvePlanForJenjang($teacher->jenjang);
+        $this->storePendingRegistrationSession($request, $teacher, $selectedTarifJenjang);
+
+        return redirect()->route('register.guru.pending')->with('flash', [
+            'type' => 'info',
+            'title' => 'Data pendaftaran ditemukan',
+            'message' => 'Silakan lanjutkan pembayaran dan unggah bukti pembayaran.',
+        ]);
+    }
+
     public function createPayment(Request $request): RedirectResponse
     {
         $pendingRegistration = $request->session()->get('pending_registration');
 
-        if (! is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
+        if (!is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
             return redirect()->route('register.guru.form');
         }
 
         $teacher = User::query()->find($pendingRegistration['teacher_id']);
-        if (! $teacher) {
+        if (!$teacher) {
             $request->session()->forget('pending_registration');
 
             return redirect()->route('register.guru.form');
@@ -142,7 +215,7 @@ class RegisterGuruController extends Controller
         $plan = $this->resolvePlanForJenjang($teacher->jenjang)
             ?? PricingPlan::query()->where('is_active', true)->first();
 
-        if (! $plan) {
+        if (!$plan) {
             return back()->with('flash', [
                 'type' => 'warning',
                 'title' => 'Tarif jenjang belum tersedia',
@@ -158,7 +231,7 @@ class RegisterGuruController extends Controller
             ->latest()
             ->first();
 
-        if (! $transaction) {
+        if (!$transaction) {
             $transaction = $teacher->transactions()->create([
                 'pricing_plan_id' => $plan->id,
                 'reference_code' => $this->generateReferenceCode(),
@@ -175,7 +248,7 @@ class RegisterGuruController extends Controller
     {
         $pendingRegistration = $request->session()->get('pending_registration');
 
-        if (! is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
+        if (!is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Session pendaftaran tidak ditemukan. Silakan ulangi pendaftaran.',
@@ -183,7 +256,7 @@ class RegisterGuruController extends Controller
         }
 
         $teacher = User::query()->find($pendingRegistration['teacher_id']);
-        if (! $teacher) {
+        if (!$teacher) {
             $request->session()->forget('pending_registration');
 
             return response()->json([
@@ -195,7 +268,7 @@ class RegisterGuruController extends Controller
         $plan = $this->resolvePlanForJenjang($teacher->jenjang)
             ?? PricingPlan::query()->where('is_active', true)->first();
 
-        if (! $plan) {
+        if (!$plan) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Tarif jenjang belum tersedia. Hubungi admin untuk melanjutkan pembayaran.',
@@ -210,7 +283,7 @@ class RegisterGuruController extends Controller
             ->latest()
             ->first();
 
-        if (! $transaction) {
+        if (!$transaction) {
             $transaction = $teacher->transactions()->create([
                 'pricing_plan_id' => $plan->id,
                 'reference_code' => $this->generateReferenceCode(),
@@ -222,7 +295,7 @@ class RegisterGuruController extends Controller
 
         $amount = (int) round((float) $transaction->amount);
         $payload = $qrisService->generateFixedAmountPayload($amount);
-        $qrCodeSvg = QrCode::format('svg')->size(320)->margin(1)->generate($payload);
+        $qrCodeSvg = (string) QrCode::format('svg')->size(320)->margin(1)->generate($payload);
         $formattedAmount = 'Rp' . number_format($amount, 0, ',', '.');
 
         $adminNumber = preg_replace('/\D+/', '', (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))) ?? '';
@@ -255,32 +328,31 @@ class RegisterGuruController extends Controller
         ]);
     }
 
-    public function uploadPaymentProof(Request $request): RedirectResponse
+    public function uploadPaymentProof(Request $request, PaymentProofStorage $paymentProofStorage): RedirectResponse
     {
         $pendingRegistration = $request->session()->get('pending_registration');
 
-        if (! is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
+        if (!is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
             return redirect()->route('register.guru.form');
         }
 
         $teacher = User::query()->find($pendingRegistration['teacher_id']);
-        if (! $teacher) {
+        if (!$teacher) {
             $request->session()->forget('pending_registration');
 
             return redirect()->route('register.guru.form');
         }
 
-        $validated = $request->validate([
-            'payment_proof' => ['required', 'image', 'max:4096'],
+        $request->validate([
+            'payment_proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
-        $path = $request->file('payment_proof')->store('payment-proofs', 'public');
         $transaction = $teacher->transactions()
             ->whereIn('status', [Transaction::STATUS_PENDING, Transaction::STATUS_FAILED])
             ->latest()
             ->first();
 
-        if (! $transaction) {
+        if (!$transaction) {
             $plan = $this->resolvePlanForJenjang($teacher->jenjang)
                 ?? PricingPlan::query()->where('is_active', true)->first();
 
@@ -293,6 +365,19 @@ class RegisterGuruController extends Controller
                     'status' => Transaction::STATUS_PENDING,
                 ]);
             }
+        }
+
+        $oldProofPaths = collect([
+            $teacher->payment_proof_path,
+            $transaction?->payment_proof_path,
+        ])->filter()->unique()->values();
+
+        try {
+            $path = $paymentProofStorage->store($request->file('payment_proof'));
+        } catch (\RuntimeException $e) {
+            return back()
+                ->withErrors(['payment_proof' => $e->getMessage()])
+                ->withInput();
         }
 
         if ($transaction) {
@@ -314,6 +399,15 @@ class RegisterGuruController extends Controller
             'payment_reviewed_by' => null,
             'payment_rejection_reason' => null,
         ]);
+
+        $unusedOldProofPaths = $oldProofPaths->reject(fn(string $oldPath) => User::query()
+            ->where('payment_proof_path', $oldPath)
+            ->exists()
+            || Transaction::query()
+                ->where('payment_proof_path', $oldPath)
+                ->exists());
+
+        $paymentProofStorage->deleteOldProofs($unusedOldProofPaths, $path);
 
         $request->session()->forget('pending_registration');
 
@@ -376,6 +470,38 @@ class RegisterGuruController extends Controller
         } while (Transaction::query()->where('reference_code', $candidate)->exists());
 
         return $candidate;
+    }
+
+    private function adminWhatsappUrl(string $message): ?string
+    {
+        $adminNumber = preg_replace('/\D+/', '', (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))) ?? '';
+
+        if ($adminNumber === '') {
+            return null;
+        }
+
+        return "https://wa.me/{$adminNumber}?text=" . rawurlencode($message);
+    }
+
+    private function pendingResumeNameMatches(?string $storedName, string $inputName): bool
+    {
+        $stored = $this->normalizePendingResumeName($storedName);
+        $input = $this->normalizePendingResumeName($inputName);
+
+        if ($stored === '' || $input === '' || mb_strlen($input) < 3) {
+            return false;
+        }
+
+        return $stored === $input
+            || str_contains($stored, $input)
+            || str_contains($input, $stored);
+    }
+
+    private function normalizePendingResumeName(?string $name): string
+    {
+        $name = mb_strtolower(trim((string) $name));
+
+        return preg_replace('/[^\p{L}\p{N}]+/u', '', $name) ?? '';
     }
 
     private function resolvePlanForJenjang(?string $jenjang): ?PricingPlan

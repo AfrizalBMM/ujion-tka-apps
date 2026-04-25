@@ -92,13 +92,34 @@
             search.addEventListener('click', function (e) { e.stopPropagation(); });
 
             var autoSubmitForm = wrap.closest('[data-ssd-autosubmit]');
+            var syncUI = function() {
+                var val = hidden.value;
+                var opts = getOpts();
+                var found = false;
+                opts.forEach(function(o) {
+                    var isMatch = String(o.dataset.value || '') === String(val);
+                    o.classList.toggle('ssd-selected', isMatch);
+                    if (isMatch) {
+                        if (label) label.textContent = o.textContent.trim();
+                        found = true;
+                    }
+                });
+                if (!found && label) {
+                   // Fallback if value not in options
+                   // label.textContent = '...'; 
+                }
+            };
+
+            hidden.addEventListener('change', syncUI);
+
             getOpts().forEach(function (opt) {
                 opt.addEventListener('click', function () {
                     var val = opt.dataset.value !== undefined ? opt.dataset.value : '';
-                    if (hidden) hidden.value = val;
-                    if (label) label.textContent = opt.textContent.trim();
-                    getOpts().forEach(function (o) { o.classList.remove('ssd-selected'); });
-                    opt.classList.add('ssd-selected');
+                    if (hidden) {
+                        hidden.value = val;
+                        /* trigger change so external listeners (and our own syncUI) know */
+                        hidden.dispatchEvent(new Event('change'));
+                    }
                     closeWrap();
                     if (autoSubmitForm) autoSubmitForm.submit();
                 });

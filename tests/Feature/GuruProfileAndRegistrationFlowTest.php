@@ -23,6 +23,61 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         );
     }
 
+    public function test_login_links_to_guru_token_request_form(): void
+    {
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('guru.token-request.form'));
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Lupa token?')
+            ->assertSee(route('guru.token-request.form'), false);
+
+        $this->get(route('guru.token-request.form'))
+            ->assertOk()
+            ->assertSee('Nama Lengkap')
+            ->assertSee('Email / No. WhatsApp Aktif')
+            ->assertSee('Jenjang');
+    }
+
+    public function test_guru_token_request_redirects_to_admin_whatsapp(): void
+    {
+        config(['services.qris.admin_whatsapp' => '62 812-3456-7890']);
+
+        $response = $this->post(route('guru.token-request.send'), [
+            'name' => 'Guru Lupa Token',
+            'contact' => '0812-2222-3333',
+            'jenjang' => 'SMP',
+        ]);
+
+        $response->assertRedirect();
+
+        $location = $response->headers->get('Location');
+        $this->assertIsString($location);
+        $this->assertStringStartsWith('https://wa.me/6281234567890?text=', $location);
+
+        parse_str((string) parse_url($location, PHP_URL_QUERY), $query);
+        $message = (string) ($query['text'] ?? '');
+
+        $this->assertStringContainsString('Saya lupa token akses guru.', $message);
+        $this->assertStringContainsString('Nama lengkap: Guru Lupa Token', $message);
+        $this->assertStringContainsString('Email/No. WhatsApp aktif: 0812-2222-3333', $message);
+        $this->assertStringContainsString('Jenjang: SMP', $message);
+    }
+
+    public function test_guru_token_request_shows_warning_when_admin_whatsapp_is_missing(): void
+    {
+        config(['services.qris.admin_whatsapp' => '']);
+
+        $response = $this->post(route('guru.token-request.send'), [
+            'name' => 'Guru Lupa Token',
+            'contact' => 'guru.lupa@example.com',
+            'jenjang' => 'SD',
+        ]);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHas('flash.type', 'warning');
+    }
+
     public function test_guru_registration_creates_pending_account(): void
     {
         $response = $this->post(route('register.guru'), [
@@ -50,6 +105,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
     public function test_guru_can_upload_payment_proof_from_pending_page(): void
     {
         Storage::fake('public');
+        config(['services.qris.admin_whatsapp' => '']);
 
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
@@ -76,6 +132,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
     public function test_pending_registration_session_persists_for_upload_after_pending_page_is_opened(): void
     {
         Storage::fake('public');
+        config(['services.qris.admin_whatsapp' => '']);
 
         $response = $this->post(route('register.guru'), [
             'name' => 'Guru Baru',
@@ -120,11 +177,14 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         ]);
 
         $response->assertRedirect(route('register.guru.pending'));
-        $response->assertSessionHas('pending_registration', [
-            'teacher_id' => $guru->id,
-            'harga' => null,
-            'qr_url' => null,
-        ]);
+        $response->assertSessionHas('pending_registration.teacher_id', $guru->id);
+        $response->assertSessionHas('pending_registration');
+        $pendingRegistration = session('pending_registration');
+        $this->assertIsArray($pendingRegistration);
+        $this->assertArrayHasKey('pricing_plan_id', $pendingRegistration);
+        $this->assertArrayHasKey('harga', $pendingRegistration);
+        $this->assertNull($pendingRegistration['pricing_plan_id']);
+        $this->assertNull($pendingRegistration['harga']);
         $response->assertSessionHas('flash.message', 'Kami menemukan data pendaftaran Anda yang masih pending. Silakan lanjutkan dari halaman aktivasi pembayaran.');
         $this->assertDatabaseCount('users', 1);
     }
@@ -191,10 +251,60 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'id' => $guru->id,
             'name' => 'Guru Update',
             'email' => 'guru-update@example.com',
-            'jenjang' => 'SMP',
+            'jenjang' => 'SD',
             'satuan_pendidikan' => 'SMP Baru',
             'no_wa' => '089999',
         ]);
+    }
+
+    public function test_guru_profile_does_not_show_password_form(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($guru)
+            ->get(route('guru.profile'))
+            ->assertOk()
+            ->assertDontSee('Ganti Password')
+            ->assertDontSee('password_confirmation')
+            ->assertDontSee('name="jenjang"', false);
+
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('guru.profile.password'));
+    }
+
+    public function test_uploaded_guru_avatar_is_used_in_header_dropdown(): void
+    {
+        Storage::fake('public');
+
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'jenjang' => 'SD',
+            'satuan_pendidikan' => 'SD Lama',
+            'no_wa' => '08111',
+        ]);
+
+        $response = $this->actingAs($guru)->post(route('guru.profile.update'), [
+            'name' => $guru->name,
+            'email' => $guru->email,
+            'jenjang' => 'SD',
+            'satuan_pendidikan' => 'SD Lama',
+            'no_wa' => '08111',
+            'avatar' => UploadedFile::fake()->image('avatar.jpg'),
+        ]);
+
+        $response->assertRedirect();
+        $guru->refresh();
+
+        $this->assertNotNull($guru->avatar);
+        Storage::disk('public')->assertExists($guru->avatar);
+
+        $this->actingAs($guru)
+            ->get(route('guru.dashboard'))
+            ->assertOk()
+            ->assertSee(\Illuminate\Support\Facades\Storage::url($guru->avatar), false);
     }
 
     public function test_guru_cannot_delete_other_users_personal_question(): void

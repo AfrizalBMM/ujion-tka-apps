@@ -58,21 +58,41 @@ $resolveAnswerLabel = static function ($question) use ($optionLabels) {
         </div>
         <div class="flex-1 min-w-[150px]">
             <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Kategori</label>
-            <select name="kategori" class="input mt-1 w-full">
-                <option value="">Semua Kategori</option>
-                @foreach(($categories ?? collect()) as $kategori)
-                <option value="{{ $kategori }}" @selected(request('kategori')==$kategori)> {{ $kategori }} </option>
-                @endforeach
-            </select>
+            <div class="ssd-wrap mt-1">
+                <input type="hidden" name="kategori" value="{{ request('kategori') }}">
+                <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                    <span class="ssd-label">{{ request('kategori') ?: 'Semua Kategori' }}</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                </button>
+                <div class="ssd-panel">
+                    <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kategori..."></div>
+                    <div class="ssd-list">
+                        <div class="ssd-option{{ !request('kategori') ? ' ssd-selected' : '' }}" data-value="">Semua Kategori</div>
+                        @foreach(($categories ?? collect()) as $kategori)
+                            <div class="ssd-option{{ request('kategori') == $kategori ? ' ssd-selected' : '' }}" data-value="{{ $kategori }}">{{ $kategori }}</div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="flex-1 min-w-[150px]">
             <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Tipe Soal</label>
-            <select name="tipe" class="input mt-1 w-full">
-                <option value="">Semua Tipe</option>
-                <option value="PG" @selected(request('tipe')=='PG' )>Pilihan Ganda</option>
-                <option value="Checklist" @selected(request('tipe')=='Checklist' )>Checklist</option>
-                <option value="Singkat" @selected(request('tipe')=='Singkat' )>Jawaban Singkat</option>
-            </select>
+            <div class="ssd-wrap mt-1">
+                <input type="hidden" name="tipe" value="{{ request('tipe') }}">
+                <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                    <span class="ssd-label">{{ match(request('tipe')) { 'PG' => 'Pilihan Ganda', 'Checklist' => 'Checklist', 'Singkat' => 'Jawaban Singkat', default => 'Semua Tipe' } }}</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                </button>
+                <div class="ssd-panel">
+                    <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+                    <div class="ssd-list">
+                        <div class="ssd-option{{ !request('tipe') ? ' ssd-selected' : '' }}" data-value="">Semua Tipe</div>
+                        <div class="ssd-option{{ request('tipe') === 'PG' ? ' ssd-selected' : '' }}" data-value="PG">Pilihan Ganda</div>
+                        <div class="ssd-option{{ request('tipe') === 'Checklist' ? ' ssd-selected' : '' }}" data-value="Checklist">Checklist</div>
+                        <div class="ssd-option{{ request('tipe') === 'Singkat' ? ' ssd-selected' : '' }}" data-value="Singkat">Jawaban Singkat</div>
+                    </div>
+                </div>
+            </div>
         </div>
         <a href="{{ route('guru.personal-questions') }}"
             class="btn-secondary h-[42px] flex items-center justify-center">Reset</a>

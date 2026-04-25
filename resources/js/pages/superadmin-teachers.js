@@ -1,37 +1,6 @@
 import { copyTextToClipboard } from '../utils/copy-text';
 
 function initSuperadminTeachers() {
-	const closeAllActionMenus = () => {
-		document.querySelectorAll('[data-action-menu-toggle]').forEach((button) => {
-			button.setAttribute('aria-expanded', 'false');
-		});
-
-		document.querySelectorAll('[data-action-menu-panel]').forEach((panel) => {
-			panel.classList.add('invisible', 'translate-y-2', 'opacity-0');
-		});
-	};
-
-	document.querySelectorAll('[data-action-menu-toggle]').forEach((button) => {
-		button.addEventListener('click', (event) => {
-			event.stopPropagation();
-
-			const menu = button.closest('[data-action-menu]');
-			const panel = menu?.querySelector('[data-action-menu-panel]');
-			const isOpen = button.getAttribute('aria-expanded') === 'true';
-
-			closeAllActionMenus();
-
-			if (!panel || isOpen) {
-				return;
-			}
-
-			button.setAttribute('aria-expanded', 'true');
-			panel.classList.remove('invisible', 'translate-y-2', 'opacity-0');
-		});
-	});
-
-	document.addEventListener('click', closeAllActionMenus);
-
 	document.querySelectorAll('[data-copy-template]').forEach((button) => {
 		button.addEventListener('click', async () => {
 			const text = button.getAttribute('data-copy-text') || '';

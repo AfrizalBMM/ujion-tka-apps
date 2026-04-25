@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Ujion - Registrasi Guru/Operator')</title>
+    @yield('head')
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     {{-- KaTeX Math Rendering --}}
@@ -11,6 +12,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
+    @include('partials.ssd-style')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <style>
@@ -68,5 +70,7 @@
             </footer>
         @endif
     </div>
+    @include('partials.ssd')
+    @stack('scripts')
 </body>
 </html>

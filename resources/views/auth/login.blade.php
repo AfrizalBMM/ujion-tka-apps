@@ -67,6 +67,9 @@
                             class="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-700">
                         Ingat saya
                     </label>
+                    <a href="{{ route('guru.token-request.form') }}" class="text-sm font-bold text-primary hover:underline">
+                        Lupa token?
+                    </a>
                 </div>
 
                 <button type="submit" class="btn-primary w-full py-3 text-lg">

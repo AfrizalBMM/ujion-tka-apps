@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\LandingClickLog;
 use App\Models\PricingPlan;
 use App\Models\UjianSesi;
 use App\Models\User;
@@ -79,6 +80,41 @@ class DashboardController extends Controller
             $dailyActivity['values'] = $activityRows->pluck('total')->map(fn ($t) => (int) $t)->all();
         }
 
+        $landingTraffic = [
+            'labels' => [],
+            'views' => [],
+            'clicks' => [],
+        ];
+
+        if (Schema::hasTable('landing_click_logs')) {
+            $labels = collect(range(13, 0))
+                ->map(fn (int $offset) => now()->subDays($offset)->toDateString());
+
+            $from = now()->subDays(14);
+
+            $viewsRows = LandingClickLog::query()
+                ->where('created_at', '>=', $from)
+                ->where('event', 'landing_view')
+                ->selectRaw('DATE(created_at) as d, COUNT(*) as total')
+                ->groupBy('d')
+                ->orderBy('d')
+                ->get()
+                ->pluck('total', 'd');
+
+            $clickRows = LandingClickLog::query()
+                ->where('created_at', '>=', $from)
+                ->where('event', '!=', 'landing_view')
+                ->selectRaw('DATE(created_at) as d, COUNT(*) as total')
+                ->groupBy('d')
+                ->orderBy('d')
+                ->get()
+                ->pluck('total', 'd');
+
+            $landingTraffic['labels'] = $labels->values()->all();
+            $landingTraffic['views'] = $labels->map(fn (string $d) => (int) ($viewsRows[$d] ?? 0))->values()->all();
+            $landingTraffic['clicks'] = $labels->map(fn (string $d) => (int) ($clickRows[$d] ?? 0))->values()->all();
+        }
+
         $latestAuditLogs = AuditLog::latest()->limit(5)->get();
         $ongoingExamsCount = UjianSesi::query()
             ->where('status', 'mengerjakan')
@@ -115,6 +151,7 @@ class DashboardController extends Controller
 
         return [
             'dailyActivity' => $dailyActivity,
+            'landingTraffic' => $landingTraffic,
             'activeTeachersCount' => $activeTeachersCount,
             'ongoingExamsCount' => $ongoingExamsCount,
             'totalRevenue' => $totalRevenue,

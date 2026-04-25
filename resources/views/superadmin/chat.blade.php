@@ -26,7 +26,7 @@
                     @forelse($users as $user)
                         <a href="{{ route('superadmin.chat.index', ['user' => $user->id]) }}"
                            class="flex items-center gap-3 rounded-xl px-3 py-2 mb-1 transition {{ optional($selectedUser)->id === $user->id ? 'bg-blue-50 border border-blue-400 dark:bg-blue-500/10 dark:border-blue-400/40' : 'hover:bg-slate-100 dark:hover:bg-slate-800' }}">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=22C1C3&color=fff" class="w-9 h-9 rounded-full border border-white shadow" alt="avatar">
+                            <img src="{{ $user->avatar_url }}" class="w-9 h-9 rounded-full border border-white object-cover shadow" alt="Avatar {{ $user->name }}">
                             <div class="min-w-0 flex-1">
                                 <div class="truncate font-semibold text-slate-900 dark:text-slate-100">{{ $user->name }}</div>
                             </div>
@@ -44,7 +44,7 @@
         <div class="md:col-span-2 flex flex-col h-full">
             <div class="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-card mb-2">
                 @if($selectedUser)
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode($selectedUser->name) }}&background=22C1C3&color=fff" class="w-10 h-10 rounded-full border border-white shadow" alt="avatar">
+                    <img src="{{ $selectedUser->avatar_url }}" class="w-10 h-10 rounded-full border border-white object-cover shadow" alt="Avatar {{ $selectedUser->name }}">
                     <div class="flex-1 min-w-0">
                         <div class="font-bold text-base text-slate-900 dark:text-slate-100">{{ $selectedUser->name }}</div>
                         <div class="text-xs text-gray-500 dark:text-slate-400">{{ $selectedUser->email }}</div>
@@ -71,9 +71,18 @@
             <div class="flex-1 overflow-y-auto p-2 md:p-4 rounded-2xl shadow-inner" style="background: white; background-image: linear-gradient(rgba(120,120,120,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(120,120,120,0.06) 1px, transparent 1px); background-size: 32px 32px;">
                 @if($selectedUser)
                     @forelse($chats as $chat)
-                        <div class="mb-3 flex {{ $chat->from_user_id == auth()->id() ? 'justify-end' : 'justify-start' }}">
+                        @php
+                            $isOwn = (int) $chat->from_user_id === (int) auth()->id();
+                            $sender = $chat->fromUser;
+                            $senderAvatarUrl = $sender?->avatar_url
+                                ?? 'https://ui-avatars.com/api/?name=User&background=22C1C3&color=fff';
+                        @endphp
+                        <div class="mb-3 flex items-end gap-2 {{ $isOwn ? 'justify-end' : 'justify-start' }}">
+                            @unless($isOwn)
+                                <img src="{{ $senderAvatarUrl }}" class="h-8 w-8 shrink-0 rounded-full border border-white object-cover shadow" alt="Avatar {{ $sender?->name ?? 'Pengirim' }}">
+                            @endunless
                             <div class="max-w-[88%] sm:max-w-xl">
-                                <div class="rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm {{ $chat->from_user_id == auth()->id() ? 'bg-blue-100 text-slate-800 dark:bg-blue-500/20 dark:text-slate-100' : 'bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100' }}">
+                                <div class="rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm {{ $isOwn ? 'bg-blue-100 text-slate-800 dark:bg-blue-500/20 dark:text-slate-100' : 'bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100' }}">
                                     @if($chat->message)
                                         <div class="whitespace-pre-wrap">{{ $chat->message }}</div>
                                      @endif
@@ -83,9 +92,9 @@
                                         </a>
                                      @endif
                                  </div>
-                                <div class="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-slate-500 {{ $chat->from_user_id == auth()->id() ? 'justify-end' : 'justify-start' }}">
+                                <div class="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-slate-500 {{ $isOwn ? 'justify-end' : 'justify-start' }}">
                                     <span>{{ $chat->created_at->format('d M H:i') }}</span>
-                                    @if($chat->from_user_id == auth()->id())
+                                    @if($isOwn)
                                         @if($chat->is_read)
                                             <span class="text-green-500"><i class="fa-solid fa-check-double"></i></span>
                                         @else
@@ -95,6 +104,9 @@
                                     <!-- tombol hapus pesan individu dihapus, hanya tombol hapus semua di header -->
                                 </div>
                             </div>
+                            @if($isOwn)
+                                <img src="{{ auth()->user()?->avatar_url ?? 'https://ui-avatars.com/api/?name=Admin&background=4F6EF7&color=fff' }}" class="h-8 w-8 shrink-0 rounded-full border border-white object-cover shadow" alt="Avatar Admin">
+                            @endif
                         </div>
                     @empty
                         <div class="text-sm text-gray-500">Belum ada pesan untuk percakapan ini.</div>
@@ -152,7 +164,7 @@
             <i class="fa-solid fa-xmark fa-lg"></i>
         </button>
         <div class="flex flex-col items-center gap-3">
-            <img src="https://ui-avatars.com/api/?name={{ urlencode($selectedUser->name) }}&background=22C1C3&color=fff" class="w-16 h-16 rounded-full border border-white shadow" alt="avatar">
+            <img src="{{ $selectedUser->avatar_url }}" class="w-16 h-16 rounded-full border border-white object-cover shadow" alt="Avatar {{ $selectedUser->name }}">
             <div class="font-bold text-lg text-slate-900 dark:text-slate-100">{{ $selectedUser->name }}</div>
             <div class="text-sm text-gray-500 dark:text-slate-400">{{ $selectedUser->email }}</div>
             <div class="mt-2 w-full space-y-2">

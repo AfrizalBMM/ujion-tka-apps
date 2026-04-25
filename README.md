@@ -224,6 +224,21 @@ npm run dev
 php artisan serve
 ```
 
+## Konfigurasi QRIS
+
+Fitur pembayaran QRIS guru membutuhkan konfigurasi berikut di `.env`:
+
+```env
+GOPAY_MASTER_PAYLOAD=
+QRIS_ADMIN_WHATSAPP=
+```
+
+Catatan:
+
+- `GOPAY_MASTER_PAYLOAD` wajib diisi. Ini bukan API key GoPay, tetapi raw string QRIS statis dari merchant GoPay yang dipakai sistem untuk inject nominal dinamis.
+- `QRIS_ADMIN_WHATSAPP` opsional sebagai fallback nomor admin. Nilai ini juga bisa dioverride dari menu Superadmin > Keuangan & QR.
+- Jika Anda mengubah env di server lokal/production, jalankan `php artisan config:clear` agar konfigurasi terbaru terbaca.
+
 ## Testing
 
 ```bash

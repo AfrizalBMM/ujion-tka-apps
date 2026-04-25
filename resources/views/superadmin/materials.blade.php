@@ -317,12 +317,22 @@
             @csrf
             <div>
                 <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jenjang (opsional)</label>
-                <select class="input mt-1" name="jenjang">
-                    <option value="" @selected(! $contextJenjang)>Semua Jenjang</option>
-                    <option value="SD" @selected($contextJenjang === 'SD')>SD</option>
-                    <option value="SMP" @selected($contextJenjang === 'SMP')>SMP</option>
-                    <option value="SMA" @selected($contextJenjang === 'SMA')>SMA</option>
-                </select>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="jenjang" value="{{ $contextJenjang ?: '' }}">
+                    <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ $contextJenjang ?: 'Semua Jenjang' }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ! $contextJenjang ? ' ssd-selected' : '' }}" data-value="">Semua Jenjang</div>
+                            <div class="ssd-option{{ $contextJenjang === 'SD' ? ' ssd-selected' : '' }}" data-value="SD">SD</div>
+                            <div class="ssd-option{{ $contextJenjang === 'SMP' ? ' ssd-selected' : '' }}" data-value="SMP">SMP</div>
+                            <div class="ssd-option{{ $contextJenjang === 'SMA' ? ' ssd-selected' : '' }}" data-value="SMA">SMA</div>
+                        </div>
+                    </div>
+                </div>
                 <p class="mt-1 text-[10px] text-muted italic">
                     @if ($contextJenjang)
                         Default mengikuti submenu {{ $contextJenjang }} yang sedang dibuka.
@@ -334,10 +344,20 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Kurikulum</label>
-                    <select class="input mt-1" name="curriculum" required>
-                        <option value="Merdeka">Kurikulum Merdeka</option>
-                        <option value="K-13">K-13 (Masa Transisi)</option>
-                    </select>
+                    <div class="ssd-wrap mt-1">
+                        <input type="hidden" name="curriculum" value="Merdeka" required>
+                        <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                            <span class="ssd-label">Kurikulum Merdeka</span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                        </button>
+                        <div class="ssd-panel">
+                            <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+                            <div class="ssd-list">
+                                <div class="ssd-option ssd-selected" data-value="Merdeka">Kurikulum Merdeka</div>
+                                <div class="ssd-option" data-value="K-13">K-13 (Masa Transisi)</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Mata Pelajaran</label>

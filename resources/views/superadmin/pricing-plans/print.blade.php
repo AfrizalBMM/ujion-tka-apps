@@ -4,144 +4,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print Label QRIS - {{ $tarifJenjang->name }}</title>
+    @vite(['resources/css/app.css'])
     <style>
-        :root {
-            color-scheme: light;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f3f4f6;
-            color: #111827;
-        }
-
-        .page-shell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 32px 16px;
-        }
-
-        .print-container {
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            border: 2px solid #111827;
-            padding: 20px;
-            background: #ffffff;
-            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
-        }
-
-        .divider {
-            border: 0;
-            border-top: 1px dashed #d1d5db;
-            margin: 16px 0;
-        }
-
-        .print-actions {
-            margin-top: 16px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 16px;
-            border-radius: 10px;
-            border: 1px solid #cbd5e1;
-            background: #ffffff;
-            color: #111827;
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        .btn-primary {
-            background: #111827;
-            border-color: #111827;
-            color: #ffffff;
-        }
-
         @page {
             size: A4 portrait;
             margin: 12mm;
         }
 
         @media print {
-            body {
-                background: #ffffff;
-            }
-
-            .page-shell {
-                min-height: auto;
-                padding: 0;
-            }
-
-            .print-container {
-                max-width: 100%;
-                border: 2px solid #000000;
-                box-shadow: none;
-            }
-
             .no-print {
                 display: none !important;
+            }
+
+            body {
+                background-image: none !important;
+            }
+
+            .print-frame {
+                box-shadow: none !important;
             }
         }
     </style>
 </head>
-<body>
-    <div class="page-shell">
-        <div>
-            <div class="print-container">
-                <h1 style="margin: 0; font-size: 24px;">UJION TKA</h1>
-                <p style="margin: 5px 0; color: #555;">Sistem Ujian Terintegrasi</p>
+<body class="min-h-screen text-textPrimary antialiased">
+    <main class="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center gap-5 px-4 py-8">
+        <div class="no-print w-full max-w-md">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <div class="text-xs font-semibold uppercase tracking-[0.24em] text-muted">Preview label</div>
+                    <div class="mt-1 text-sm text-textSecondary dark:text-slate-300">Tekan print untuk mencetak ulang.</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" class="btn-primary" onclick="window.print()">
+                        <i class="fa-solid fa-print"></i>
+                        Print
+                    </button>
+                    <a href="{{ route('superadmin.finance.index') }}" class="btn-secondary">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Kembali
+                    </a>
+                </div>
+            </div>
+        </div>
 
-                <hr class="divider">
+        <section class="w-full max-w-md">
+            <div class="card print-frame">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-primary">UJION TKA</div>
+                        <div class="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">Label Pembayaran QRIS</div>
+                        <div class="mt-1 text-sm text-textSecondary dark:text-slate-300">Scan untuk membayar sesuai nominal.</div>
+                    </div>
+                    <div class="inline-flex items-center gap-2 rounded-2xl border border-border bg-white/70 px-3 py-2 text-xs font-semibold text-textSecondary shadow-sm backdrop-blur-sm dark:bg-slate-950/40 dark:text-slate-300">
+                        <i class="fa-solid fa-shield-halved text-muted"></i>
+                        Superadmin
+                    </div>
+                </div>
 
-                <h2 style="margin: 15px 0; font-size: 24px;">{{ $tarifJenjang->name }}</h2>
+                <div class="mt-4 rounded-2xl border border-border bg-white/70 p-4 backdrop-blur-sm dark:bg-slate-950/40">
+                    <div class="flex flex-wrap items-center gap-2">
+                        @if (! blank($tarifJenjang->jenjang))
+                            <span class="badge-info">{{ $tarifJenjang->jenjang }}</span>
+                        @endif
+                        @if (($tarifJenjang->is_active ?? true))
+                            <span class="badge-success">Aktif</span>
+                        @else
+                            <span class="badge-danger">Nonaktif</span>
+                        @endif
+                    </div>
+                    <h1 class="mt-3 text-2xl font-bold text-slate-900 dark:text-slate-100">{{ $tarifJenjang->name }}</h1>
 
-                @if ($tarifJenjang->description)
-                    <p style="margin: 0 0 12px; color: #4b5563; font-size: 13px; line-height: 1.5;">
-                        {{ $tarifJenjang->description }}
-                    </p>
-                @elseif ($tarifJenjang->subtitle)
-                    <p style="margin: 0 0 12px; color: #4b5563; font-size: 13px; line-height: 1.5;">
-                        {{ $tarifJenjang->subtitle }}
-                    </p>
-                @endif
-
-                <div style="margin: 20px 0;">
-                    @if (! empty($qrisImageUrl))
-                        <img src="{{ $qrisImageUrl }}" alt="QRIS" style="width: 250px; height: 250px; object-fit: contain;">
-                    @else
-                        {!! $qrCodeSvg !!}
+                    @if ($tarifJenjang->description)
+                        <p class="mt-2 text-sm leading-6 text-textSecondary dark:text-slate-300">{{ $tarifJenjang->description }}</p>
+                    @elseif ($tarifJenjang->subtitle)
+                        <p class="mt-2 text-sm leading-6 text-textSecondary dark:text-slate-300">{{ $tarifJenjang->subtitle }}</p>
                     @endif
                 </div>
 
-                <h1 style="margin: 0; font-size: 32px;">Rp {{ $formattedPrice }}</h1>
+                <div class="mt-4 overflow-hidden rounded-2xl border border-border bg-white p-4 dark:bg-slate-950">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-wide text-muted">Nominal</div>
+                            <div class="mt-1 text-3xl font-bold text-slate-900 dark:text-slate-100">Rp {{ $formattedPrice }}</div>
+                        </div>
+                        <div class="rounded-xl border border-border bg-slate-50 px-3 py-2 text-xs font-semibold text-textSecondary dark:bg-slate-900/60 dark:text-slate-300">
+                            Pastikan nominal sesuai
+                        </div>
+                    </div>
 
-                <p style="font-size: 12px; margin-top: 20px; line-height: 1.6;">
-                    *Pastikan nominal yang muncul di aplikasi sesuai.<br>
-                    Konfirmasi bukti bayar ke WhatsApp Admin.
-                </p>
-            </div>
+                    <div class="mt-4 flex items-center justify-center rounded-2xl border border-dashed border-border bg-white p-4 dark:bg-slate-950">
+                        @if (! empty($qrisImageUrl))
+                            <img src="{{ $qrisImageUrl }}" alt="QRIS {{ $tarifJenjang->name }}" class="h-64 w-64 object-contain">
+                        @else
+                            <div class="[&>svg]:h-64 [&>svg]:w-64">{!! $qrCodeSvg !!}</div>
+                        @endif
+                    </div>
+                </div>
 
-            <div class="print-actions no-print">
-                <button type="button" class="btn btn-primary" onclick="window.print()">Print Ulang</button>
-                <a href="{{ route('superadmin.finance.index') }}" class="btn">Kembali ke Keuangan</a>
+                <div class="mt-4 rounded-2xl border border-border bg-white/70 p-4 text-sm text-textSecondary backdrop-blur-sm dark:bg-slate-950/40 dark:text-slate-300">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-circle-info mt-1 text-muted"></i>
+                        <div class="leading-6">
+                            <div class="font-semibold text-slate-900 dark:text-slate-100">Instruksi singkat</div>
+                            <div class="mt-1">Scan QRIS menggunakan aplikasi bank/e-wallet yang mendukung.</div>
+                            <div>Setelah membayar, upload bukti dan konfirmasi ke WhatsApp admin.</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script>
         window.addEventListener('load', () => {

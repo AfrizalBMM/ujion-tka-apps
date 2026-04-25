@@ -12,6 +12,16 @@ return new class extends Migration
         $driver = Schema::getConnection()->getDriverName();
 
         if ($driver === 'mysql') {
+            // Pastikan data lama valid sebelum ALTER TABLE
+            DB::table('mapel_pakets')
+                ->whereNotIn('nama_mapel', [
+                    'matematika',
+                    'bahasa_indonesia',
+                    'survey_karakter',
+                    'survey_lingkungan_belajar'
+                ])
+                ->update(['nama_mapel' => 'matematika']); // Atau sesuaikan default jika perlu
+
             DB::statement("
                 ALTER TABLE mapel_pakets
                 MODIFY nama_mapel ENUM(

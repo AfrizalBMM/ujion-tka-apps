@@ -87,7 +87,7 @@
                                 <div class="flex justify-end gap-2">
                                     <form method="POST" action="{{ route('superadmin.payment-confirmations.approve', $transaction) }}">
                                         @csrf
-                                        <button type="submit" class="btn-primary">Approve</button>
+                                        <button type="submit" class="btn-primary" data-confirm="Apakah Anda yakin ingin menerima pembayaran ini dan mengaktifkan akun guru tersebut?" data-confirm-title="Terima Pembayaran">Terima</button>
                                     </form>
                                     <button
                                         type="button"

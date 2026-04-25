@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -31,11 +30,6 @@ class ProfileController extends Controller
             'avatar' => 'nullable|image|max:2048',
         ];
 
-        $jenjangs = (array) config('ujion.jenjangs', []);
-        if (Schema::hasColumn('users', 'jenjang') && ! empty($jenjangs)) {
-            $rules['jenjang'] = 'required|in:' . implode(',', $jenjangs);
-        }
-
         if (Schema::hasColumn('users', 'satuan_pendidikan')) {
             $rules['satuan_pendidikan'] = 'required|string|max:255';
         }
@@ -57,18 +51,5 @@ class ProfileController extends Controller
         $user->update($data);
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Profil berhasil diperbarui.']);
-    }
-
-    public function password(Request $request)
-    {
-        $request->validate([
-            'password' => 'required|confirmed|min:6',
-        ]);
-
-        $user = Auth::user();
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        return back()->with('flash', ['type' => 'success', 'message' => 'Password berhasil diganti.']);
     }
 }

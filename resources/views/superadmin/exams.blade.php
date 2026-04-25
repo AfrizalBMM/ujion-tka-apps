@@ -11,13 +11,22 @@
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             <div>
               <label class="text-xs font-bold">Paket Soal</label>
-              <select name="paket_soal_id" class="input w-full" required>
-                <option value="">Pilih paket</option>
-                @foreach($paketSoals as $paket)
-                <option value="{{ $paket->id }}">{{ $paket->nama }} &middot; {{ $paket->jenjang?->kode }} &middot;
-                  {{ $paket->tahun_ajaran }}</option>
-                @endforeach
-              </select>
+              <div class="ssd-wrap mt-1">
+                <input type="hidden" name="paket_soal_id" value="" required>
+                <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                  <span class="ssd-label">Pilih paket</span>
+                  <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                </button>
+                <div class="ssd-panel">
+                  <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari paket..."></div>
+                  <div class="ssd-list">
+                    <div class="ssd-option ssd-selected" data-value="">Pilih paket</div>
+                    @foreach($paketSoals as $paket)
+                    <div class="ssd-option" data-value="{{ $paket->id }}">{{ $paket->nama }} &middot; {{ $paket->jenjang?->kode }} &middot; {{ $paket->tahun_ajaran }}</div>
+                    @endforeach
+                  </div>
+                </div>
+              </div>
             </div>
             <div>
               <label class="text-xs font-bold">Judul</label>
@@ -37,10 +46,20 @@
             </div>
             <div>
               <label class="text-xs font-bold">Status</label>
-              <select name="status" class="input w-full" required>
-                <option value="draft">Draft</option>
-                <option value="terbit">Terbit</option>
-              </select>
+              <div class="ssd-wrap mt-1">
+                <input type="hidden" name="status" value="draft" required>
+                <button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
+                  <span class="ssd-label">Draft</span>
+                  <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                </button>
+                <div class="ssd-panel">
+                  <div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari status..."></div>
+                  <div class="ssd-list">
+                    <div class="ssd-option ssd-selected" data-value="draft">Draft</div>
+                    <div class="ssd-option" data-value="terbit">Terbit</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <button class="btn-primary mt-3 w-full sm:w-auto" type="submit">Buat Ujian</button>
