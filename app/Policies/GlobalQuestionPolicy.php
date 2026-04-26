@@ -30,5 +30,25 @@ class GlobalQuestionPolicy
 
         return (int) $question->jenjang_id === (int) $jenjangId;
     }
+
+    /**
+     * Determine whether the user can manage global questions.
+     */
+    public function manage(User $user): bool
+    {
+        return $user->isSuperadmin();
+    }
+
+    /**
+     * Determine whether the user can delete all global questions.
+     * This is a highly destructive action.
+     */
+    public function deleteAll(User $user): bool
+    {
+        // Currently allowed for all superadmins, but can be restricted
+        // to a specific user ID or admin level if needed in the future.
+        return $user->isSuperadmin();
+    }
 }
+
 

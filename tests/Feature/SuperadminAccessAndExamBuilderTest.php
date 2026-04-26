@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Superadmin\ExamController as SuperadminExamController;
 use App\Models\Exam;
 use App\Models\GlobalQuestion;
 use App\Models\Jenjang;
@@ -173,6 +174,47 @@ class SuperadminAccessAndExamBuilderTest extends TestCase
             'jawaban_benar' => 'Merkurius',
             'status' => 'terbit',
         ]);
+    }
+
+    public function test_superadmin_exam_builder_rejects_unknown_question_types(): void
+    {
+        $this->withoutMiddleware();
+
+        $superadmin = $this->createSuperadmin();
+        $paket = $this->createPaket($superadmin);
+        $material = $this->createMaterial();
+        $exam = $this->createExam($superadmin, $paket);
+
+        $response = $this->actingAs($superadmin)->postJson(route('superadmin.exams.builder.save', $exam), [
+            'questions' => [
+                [
+                    'material_id' => $material->id,
+                    'tipe' => 'essay_bebas',
+                    'pertanyaan' => 'Soal invalid',
+                    'opsi' => [],
+                    'jawaban_benar' => null,
+                    'pembahasan' => null,
+                    'image' => null,
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['questions.0.tipe']);
+
+        $this->assertDatabaseCount('questions', 0);
+    }
+
+    public function test_superadmin_exam_builder_normalizes_legacy_question_type_aliases(): void
+    {
+        $controller = app(SuperadminExamController::class);
+        $method = new \ReflectionMethod($controller, 'normalizeBuilderQuestionType');
+        $method->setAccessible(true);
+
+        $this->assertSame('PG', $method->invoke($controller, 'multiple_choice'));
+        $this->assertSame('Checklist', $method->invoke($controller, 'matching'));
+        $this->assertSame('Singkat', $method->invoke($controller, 'short_answer'));
+        $this->assertSame('PG', $method->invoke($controller, 'PG'));
     }
 
     private function createSuperadmin(): User

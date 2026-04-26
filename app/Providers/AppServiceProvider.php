@@ -21,7 +21,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        if ($this->app->environment('production')) {
+            config(['app.debug' => false]);
+        }
     }
 
     /**
@@ -30,14 +32,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->environment('production')) {
-            $appUrl = (string) config('app.url');
-            if ($appUrl !== '') {
-                URL::forceRootUrl($appUrl);
-
-                if (str_starts_with($appUrl, 'https://')) {
-                    URL::forceScheme('https');
-                }
-            }
+            URL::forceScheme('https');
         }
 
         Gate::policy(PaketSoal::class, PaketSoalPolicy::class);

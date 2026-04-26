@@ -363,6 +363,7 @@ class RemainingFlowsHardeningTest extends TestCase
     public function test_personal_question_builder_forces_logged_in_guru_jenjang(): void
     {
         $guru = $this->createGuru();
+        $this->withoutMiddleware();
 
         $response = $this->actingAs($guru)->post(route('guru.personal-questions.builder.save'), [
             'questions' => [
@@ -383,6 +384,162 @@ class RemainingFlowsHardeningTest extends TestCase
         $response->assertRedirect();
         $question = PersonalQuestion::query()->firstOrFail();
         $this->assertSame('SMP', $question->jenjang);
+    }
+
+    public function test_personal_question_builder_rejects_path_traversal_image_paths(): void
+    {
+        Storage::fake('public');
+        $this->withoutMiddleware();
+        $guru = $this->createGuru();
+
+        $response = $this->actingAs($guru)->postJson(route('guru.personal-questions.builder.save'), [
+            'questions' => [
+                [
+                    'pertanyaan' => 'Soal berbahaya',
+                    'tipe' => 'PG',
+                    'opsi' => ['A', 'B'],
+                    'jawaban_benar' => 'A',
+                    'pembahasan' => 'Pembahasan',
+                    'image_path' => '../../config/database.php',
+                    'kategori' => 'Numerasi',
+                    'status' => 'draft',
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['questions.0.image_path']);
+
+        $this->assertDatabaseCount('personal_questions', 0);
+    }
+
+    public function test_personal_question_builder_accepts_existing_uploaded_image_paths(): void
+    {
+        Storage::fake('public');
+        $this->withoutMiddleware();
+        Storage::disk('public')->put('personal-question-images/contoh.png', 'fake-image');
+
+        $guru = $this->createGuru();
+
+        $response = $this->actingAs($guru)->post(route('guru.personal-questions.builder.save'), [
+            'questions' => [
+                [
+                    'pertanyaan' => 'Soal dengan gambar',
+                    'tipe' => 'PG',
+                    'opsi' => ['A', 'B'],
+                    'jawaban_benar' => 'A',
+                    'pembahasan' => 'Pembahasan',
+                    'image_path' => 'personal-question-images/contoh.png',
+                    'kategori' => 'Numerasi',
+                    'status' => 'draft',
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect();
+
+        $question = PersonalQuestion::query()->firstOrFail();
+        $this->assertSame('personal-question-images/contoh.png', $question->image_path);
+    }
+
+    public function test_personal_question_builder_updates_existing_questions_in_place(): void
+    {
+        $this->withoutMiddleware();
+        $guru = $this->createGuru();
+
+        $existing = PersonalQuestion::create([
+            'user_id' => $guru->id,
+            'jenjang' => 'SMP',
+            'kategori' => 'Numerasi',
+            'tipe' => 'PG',
+            'pertanyaan' => 'Soal lama',
+            'opsi' => ['A', 'B'],
+            'jawaban_benar' => 'A',
+            'status' => 'draft',
+        ]);
+
+        $response = $this->actingAs($guru)->post(route('guru.personal-questions.builder.save'), [
+            'questions' => [
+                [
+                    'id' => $existing->id,
+                    'pertanyaan' => 'Soal diperbarui',
+                    'tipe' => 'PG',
+                    'opsi' => ['Benar', 'Salah'],
+                    'jawaban_benar' => 'A',
+                    'pembahasan' => 'Pembahasan baru',
+                    'image_path' => null,
+                    'kategori' => 'Logika',
+                    'status' => 'terbit',
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseCount('personal_questions', 1);
+        $this->assertDatabaseHas('personal_questions', [
+            'id' => $existing->id,
+            'user_id' => $guru->id,
+            'pertanyaan' => 'Soal diperbarui',
+            'kategori' => 'Logika',
+            'status' => 'terbit',
+        ]);
+    }
+
+    public function test_personal_question_builder_rejects_unknown_ids_without_deleting_existing_questions(): void
+    {
+        $this->withoutMiddleware();
+        $guru = $this->createGuru();
+        $otherGuru = $this->createGuru('Guru Lain');
+
+        $existing = PersonalQuestion::create([
+            'user_id' => $guru->id,
+            'jenjang' => 'SMP',
+            'kategori' => 'Numerasi',
+            'tipe' => 'PG',
+            'pertanyaan' => 'Soal milik guru',
+            'opsi' => ['A', 'B'],
+            'jawaban_benar' => 'A',
+            'status' => 'draft',
+        ]);
+
+        $foreign = PersonalQuestion::create([
+            'user_id' => $otherGuru->id,
+            'jenjang' => 'SMP',
+            'kategori' => 'Numerasi',
+            'tipe' => 'PG',
+            'pertanyaan' => 'Soal guru lain',
+            'opsi' => ['A', 'B'],
+            'jawaban_benar' => 'B',
+            'status' => 'draft',
+        ]);
+
+        $response = $this->actingAs($guru)->postJson(route('guru.personal-questions.builder.save'), [
+            'questions' => [
+                [
+                    'id' => $foreign->id,
+                    'pertanyaan' => 'Payload tidak sah',
+                    'tipe' => 'PG',
+                    'opsi' => ['A', 'B'],
+                    'jawaban_benar' => 'A',
+                    'pembahasan' => 'Pembahasan',
+                    'image_path' => null,
+                    'kategori' => 'Logika',
+                    'status' => 'draft',
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['questions']);
+
+        $this->assertDatabaseHas('personal_questions', [
+            'id' => $existing->id,
+            'pertanyaan' => 'Soal milik guru',
+        ]);
+        $this->assertDatabaseHas('personal_questions', [
+            'id' => $foreign->id,
+            'pertanyaan' => 'Soal guru lain',
+        ]);
     }
 
     public function test_superadmin_cannot_delete_package_with_exam_dependencies(): void

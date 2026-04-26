@@ -65,6 +65,8 @@ class MaterialController extends Controller
 
     public function destroyAll(): RedirectResponse
     {
+        $this->authorize('deleteAll', Material::class);
+
         $count = Material::count();
         Material::query()->delete();
         return back()->with('flash', [
@@ -75,8 +77,10 @@ class MaterialController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
+        $this->authorize('manage', Material::class);
+
         $validated = $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls', 'max:5120'],
             'default_jenjang' => ['nullable', 'in:SD,SMP,SMA'],
         ]);
 

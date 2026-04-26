@@ -7,6 +7,7 @@ use App\Models\JawabanSiswa;
 use App\Models\MapelPaket;
 use App\Models\Soal;
 use App\Models\UjianSesi;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -55,11 +56,6 @@ class ExamController extends Controller {
         $user = Auth::user();
         $token = strtoupper(trim($request->token));
 
-        if (blank($user->no_wa)) {
-            return redirect()->route('guru.profile')
-                ->with('flash', ['type' => 'warning', 'message' => 'Lengkapi nomor WhatsApp di profil sebelum memulai simulasi.']);
-        }
-
         $examMapelToken = \App\Models\ExamMapelToken::with(['exam.paketSoal.mapelPakets', 'exam.paketSoal.jenjang', 'mapelPaket'])
             ->where('token', $token)
             ->whereHas('exam', fn ($q) => $q->where('status', 'terbit')->where('is_active', true))
@@ -91,6 +87,7 @@ class ExamController extends Controller {
             'exam_id'        => $exam->id,
             'paket_soal_id'  => $exam->paket_soal_id,
             'mapel_paket_id' => $mapel->id,
+            'user_id'        => $user->id,
             'nama'           => $user->name,
             'nomor_wa'       => $user->no_wa,
             'session_token'  => Str::random(60),
@@ -154,9 +151,9 @@ class ExamController extends Controller {
         return view('guru.exam-result', compact('exam','result','pembahasan'));
     }
 
-    private function sessionQueryForUser($user)
+    private function sessionQueryForUser(User $user)
     {
-        return UjianSesi::query()->where('nomor_wa', $user->no_wa);
+        return UjianSesi::query()->where('user_id', $user->id);
     }
 
     private function buildTimerState(Exam $exam, MapelPaket $mapel): array

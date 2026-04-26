@@ -21,7 +21,7 @@ class DashboardController extends Controller {
             ->count();
 
         $sessionQuery = UjianSesi::query()
-            ->where('nomor_wa', $user->no_wa);
+            ->where('user_id', $user->id);
 
         $ujianDibuat = (clone $sessionQuery)->count();
         $totalPeserta = (clone $sessionQuery)->where('status', 'selesai')->count();
@@ -41,9 +41,6 @@ class DashboardController extends Controller {
             $availableExamsCount > 0
                 ? "Terdapat {$availableExamsCount} ujian aktif untuk jenjang {$user->jenjang}."
                 : "Belum ada ujian aktif untuk jenjang {$user->jenjang}.",
-            blank($user->no_wa)
-                ? 'Lengkapi nomor WhatsApp di profil agar histori ujian dapat disinkronkan otomatis.'
-                : null,
             $materialsCount > 0
                 ? 'Materi belajar sudah tersedia dan dapat dibookmark dari menu Materi.'
                 : null,

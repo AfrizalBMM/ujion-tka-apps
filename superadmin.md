@@ -267,6 +267,25 @@ Fitur aktif:
 - sidebar desktop bisa collapse
 - `KaTeX` auto-render sudah dipindah ke helper global JS
 
+## 14. Keamanan & Otorisasi (Granular Authorization)
+
+Sistem menggunakan **Laravel Policies** untuk memberikan lapisan keamanan tambahan pada aksi-aksi sensitif yang bersifat destruktif atau massal. Meskipun secara umum dilindungi oleh middleware `superadmin`, otorisasi granular ini memastikan setiap aksi divalidasi secara eksplisit di tingkat model.
+
+Aksi yang dilindungi Policy:
+
+- **Hapus Semua Data**: Menghapus seluruh bank soal global atau seluruh master materi wajib melewati Policy `deleteAll`.
+- **Import Massal**: Proses import data dari Excel/CSV dilindungi oleh Policy `manage` untuk mencegah eksekusi oleh admin yang tidak memiliki otoritas manajemen data.
+- **Manajemen Ujian**: Kontrol builder dan bank soal dilindungi oleh `ExamPolicy`.
+
+Struktur Policy:
+
+- `app/Policies/GlobalQuestionPolicy.php`
+- `app/Policies/MaterialPolicy.php`
+- `app/Policies/ExamPolicy.php`
+
+Catatan Arsitektur:
+Pola ini memudahkan pengembang untuk menambahkan tingkatan admin di masa depan (misal: membatasi "Hapus Semua" hanya untuk *Main Admin*) tanpa mengubah logika bisnis di Controller.
+
 ## Ringkasan Status
 
 Sudah aktif dan selaras dengan flow saat ini:

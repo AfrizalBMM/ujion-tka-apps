@@ -19,8 +19,12 @@ use App\Http\Controllers\ChatImageController as SharedChatImageController;
 Route::get('/register/guru', [RegisterGuruController::class, 'showForm'])->name('register.guru.form');
 Route::post('/register/guru', [RegisterGuruController::class, 'register'])->name('register.guru');
 Route::get('/register/guru/pending', [RegisterGuruController::class, 'showPending'])->name('register.guru.pending');
-Route::get('/register/guru/check-wa', [RegisterGuruController::class, 'checkWa'])->name('register.guru.check-wa');
-Route::get('/register/guru/check-email', [RegisterGuruController::class, 'checkEmail'])->name('register.guru.check-email');
+Route::get('/register/guru/check-wa', [RegisterGuruController::class, 'checkWa'])
+    ->middleware('throttle:30,1')
+    ->name('register.guru.check-wa');
+Route::get('/register/guru/check-email', [RegisterGuruController::class, 'checkEmail'])
+    ->middleware('throttle:30,1')
+    ->name('register.guru.check-email');
 Route::post('/register/guru/pending/resume', [RegisterGuruController::class, 'resumePending'])->name('register.guru.pending.resume');
 Route::post('/register/guru/pending/payment', [RegisterGuruController::class, 'createPayment'])->name('register.guru.create-payment');
 Route::post('/register/guru/pending/payment-data', [RegisterGuruController::class, 'paymentData'])->name('register.guru.payment-data');
@@ -36,12 +40,16 @@ Route::middleware(['auth', 'role:guru', 'guru.active'])->prefix('guru')->name('g
     Route::post('/materials/{material}/unbookmark', [MaterialController::class, 'unbookmark'])->name('materials.unbookmark');
     Route::get('/personal-questions', [PersonalQuestionController::class, 'index'])->name('personal-questions');
     Route::post('/personal-questions', [PersonalQuestionController::class, 'store'])->name('personal-questions.store');
-    Route::post('/personal-questions/{question}', [PersonalQuestionController::class, 'update'])->name('personal-questions.update');
-    Route::post('/personal-questions/{question}/destroy', [PersonalQuestionController::class, 'destroy'])->name('personal-questions.destroy');
     Route::get('/personal-questions/builder', [PersonalQuestionController::class, 'builder'])->name('personal-questions.builder');
     Route::post('/personal-questions/builder/save', [PersonalQuestionController::class, 'saveBuilder'])->name('personal-questions.builder.save');
     Route::post('/personal-questions/builder/upload-image', [PersonalQuestionController::class, 'uploadBuilderImage'])->name('personal-questions.builder.upload-image');
     Route::get('/personal-questions/builder/image', [PersonalQuestionController::class, 'builderImage'])->name('personal-questions.builder.image');
+    Route::post('/personal-questions/{question}', [PersonalQuestionController::class, 'update'])
+        ->whereNumber('question')
+        ->name('personal-questions.update');
+    Route::post('/personal-questions/{question}/destroy', [PersonalQuestionController::class, 'destroy'])
+        ->whereNumber('question')
+        ->name('personal-questions.destroy');
     Route::get('/exams', [ExamController::class, 'index'])->name('exams');
     Route::post('/exams/join', [ExamController::class, 'join'])->name('exams.join');
     Route::get('/exams/{exam}/result', [ExamController::class, 'result'])->name('exams.result');

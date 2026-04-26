@@ -10,9 +10,13 @@ class ChatImageController extends Controller
 {
     public function show(Chat $chat): BinaryFileResponse
     {
-        // Only allow participants to view the attachment.
-        $userId = auth()->id();
-        if (! $userId || ($userId !== (int) $chat->from_user_id && $userId !== (int) $chat->to_user_id)) {
+        // Only allow participants or superadmin to view the attachment.
+        $user = auth()->user();
+        if (! $user) {
+            abort(403);
+        }
+
+        if (! $user->isSuperadmin() && $user->id !== (int) $chat->from_user_id && $user->id !== (int) $chat->to_user_id) {
             abort(403);
         }
 

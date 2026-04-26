@@ -14,11 +14,21 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamController extends Controller {
+    private const BUILDER_ALLOWED_TYPES = [
+        'PG',
+        'Checklist',
+        'Singkat',
+        'multiple_choice',
+        'matching',
+        'short_answer',
+    ];
+
     public function index(): View {
         $exams = Exam::with(['paketSoal.jenjang', 'examMapelTokens.mapelPaket'])->latest()->get();
         $paketSoals = PaketSoal::with('jenjang')->latest()->get();
@@ -73,8 +83,10 @@ class ExamController extends Controller {
 
     public function import(Request $request): RedirectResponse
     {
+        $this->authorize('manage', Exam::class);
+
         $validated = $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls', 'max:5120'],
         ]);
 
         try {
@@ -145,17 +157,32 @@ class ExamController extends Controller {
     }
 
     public function builder(Exam $exam): View {
-        $bankQuestions = GlobalQuestion::with('material')
-            ->where('is_active', true)
-            ->latest()
-            ->get();
         $questions = $exam->questions()->orderBy('exam_question.order')->get();
         $materials = Material::all();
 
-        return view('superadmin.exam-builder', compact('exam', 'questions', 'bankQuestions', 'materials'));
+        return view('superadmin.exam-builder', compact('exam', 'questions', 'materials'));
+    }
+
+    public function bankQuestions(Request $request, Exam $exam): \Illuminate\Http\JsonResponse {
+        $search = trim((string) $request->query('q', ''));
+        
+        $bankQuestions = GlobalQuestion::with('material')
+            ->where('is_active', true)
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('question_text', 'like', "%{$search}%")
+                      ->orWhere('material_mapel', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(15);
+
+        return response()->json($bankQuestions);
     }
 
     public function importBankQuestions(Request $request, Exam $exam): RedirectResponse {
+        $this->authorize('manage', Exam::class);
+
         $data = $request->validate([
             'global_question_ids' => 'required|array|min:1',
             'global_question_ids.*' => 'integer|exists:global_questions,id',
@@ -176,7 +203,16 @@ class ExamController extends Controller {
                 ->get()
                 ->keyBy('id');
 
+            $existingGlobalQuestionIds = $exam->questions()
+                ->whereNotNull('source_global_question_id')
+                ->pluck('source_global_question_id')
+                ->toArray();
+
             foreach ($data['global_question_ids'] as $globalQuestionId) {
+                if (in_array($globalQuestionId, $existingGlobalQuestionIds)) {
+                    continue;
+                }
+
                 $source = $globalQuestions->get($globalQuestionId);
                 if (! $source) {
                     continue;
@@ -185,6 +221,7 @@ class ExamController extends Controller {
                 $question = Question::create($this->makeQuestionPayload(
                     exam: $exam,
                     source: [
+                        'source_global_question_id' => $globalQuestionId,
                         'material_id' => $source->material_id ?: $materialId,
                         'pertanyaan' => $source->question_text,
                         'tipe' => $source->question_type === 'multiple_choice' ? 'PG' : 'Singkat',
@@ -200,6 +237,10 @@ class ExamController extends Controller {
             }
         });
 
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Soal dari bank berhasil diimpor ke ujian.']);
+        }
+
         return back()->with('flash', ['type' => 'success', 'message' => 'Soal dari bank berhasil diimpor ke ujian.']);
     }
 
@@ -208,12 +249,18 @@ class ExamController extends Controller {
             'questions' => 'required|array',
             'questions.*.material_id' => 'nullable|integer|exists:materials,id',
             'questions.*.pertanyaan' => 'required',
-            'questions.*.tipe' => 'required',
+            'questions.*.tipe' => ['required', Rule::in(self::BUILDER_ALLOWED_TYPES)],
             'questions.*.opsi' => 'nullable|array',
             'questions.*.jawaban_benar' => 'nullable|string',
             'questions.*.pembahasan' => 'nullable|string',
             'questions.*.image' => 'nullable|string',
         ]);
+
+        $data['questions'] = array_map(function (array $question): array {
+            $question['tipe'] = $this->normalizeBuilderQuestionType($question['tipe'] ?? null);
+
+            return $question;
+        }, $data['questions']);
 
         $materialId = $this->resolveFallbackMaterialId();
         if (! $materialId) {
@@ -237,6 +284,10 @@ class ExamController extends Controller {
             }
         });
 
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Soal ujian berhasil disimpan.']);
+        }
+
         return back()->with('flash', ['type' => 'success', 'message' => 'Soal ujian berhasil disimpan.']);
     }
 
@@ -249,6 +300,7 @@ class ExamController extends Controller {
         $paketSoal = $exam->paketSoal;
 
         return [
+            'source_global_question_id' => $source['source_global_question_id'] ?? null,
             'material_id' => (int) ($source['material_id'] ?? $fallbackMaterialId),
             'jenjang' => $paketSoal?->jenjang?->kode ?? 'GENERAL',
             'kategori' => 'Sedang',
@@ -332,5 +384,15 @@ class ExamController extends Controller {
         $normalized = strtolower(trim((string) $value));
 
         return ! in_array($normalized, ['0', 'false', 'tidak', 'nonaktif'], true);
+    }
+
+    private function normalizeBuilderQuestionType(mixed $value): string
+    {
+        return match ((string) $value) {
+            'multiple_choice' => 'PG',
+            'matching' => 'Checklist',
+            'short_answer' => 'Singkat',
+            default => (string) $value,
+        };
     }
 }

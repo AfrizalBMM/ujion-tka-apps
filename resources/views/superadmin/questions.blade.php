@@ -148,6 +148,24 @@
                     </div>
                 </div>
             </div>
+            <div>
+                <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Tampilkan</label>
+                <div class="ssd-wrap mt-1">
+                    <input type="hidden" name="per_page" value="{{ $filters['per_page'] ?? '10' }}">
+                    <button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
+                        <span class="ssd-label">{{ $filters['per_page'] ?? '10' }} Baris</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
+                    </button>
+                    <div class="ssd-panel">
+                        <div class="ssd-list">
+                            <div class="ssd-option{{ ($filters['per_page'] ?? '10') == '10' ? ' ssd-selected' : '' }}" data-value="10">10 Baris</div>
+                            <div class="ssd-option{{ ($filters['per_page'] ?? '10') == '20' ? ' ssd-selected' : '' }}" data-value="20">20 Baris</div>
+                            <div class="ssd-option{{ ($filters['per_page'] ?? '10') == '30' ? ' ssd-selected' : '' }}" data-value="30">30 Baris</div>
+                            <div class="ssd-option{{ ($filters['per_page'] ?? '10') == '50' ? ' ssd-selected' : '' }}" data-value="50">50 Baris</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="flex flex-wrap items-end gap-3 lg:col-span-6">
 
                 <a class="btn-secondary" href="{{ route('superadmin.global-questions.index') }}">
@@ -159,17 +177,19 @@
 
     <div class="card min-h-[400px]">
         <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div class="font-bold text-lg">Daftar Soal Global ({{ count($globalQuestions) }})</div>
+            <div class="font-bold text-lg">Daftar Soal Global ({{ $globalQuestions->total() }})</div>
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                @if (count($globalQuestions) > 0)
+                @if ($globalQuestions->count() > 0)
                     <form method="POST" action="{{ route('superadmin.global-questions.destroyAll') }}" onsubmit="return false;" id="delete-all-global-questions-form">
                         @csrf
                         <button
                             type="submit"
                             class="btn-danger whitespace-nowrap"
-                            data-confirm
                             data-confirm-title="Hapus Semua Bank Soal?"
                             data-confirm="Semua bank soal global akan dihapus permanen. Tindakan ini tidak bisa dibatalkan. Lanjutkan?"
+                            data-confirm-require-text="HAPUS SEMUA"
+                            data-confirm-prompt-label="Ketik 'HAPUS SEMUA' untuk konfirmasi"
+                            data-confirm-prompt-placeholder="HAPUS SEMUA"
                             title="Hapus Semua Bank Soal"
                         >
                             <i class="fa-solid fa-trash"></i>
@@ -316,6 +336,12 @@
                 </div>
             @endforelse
         </div>
+
+        @if ($globalQuestions->hasPages())
+            <div class="mt-6">
+                {{ $globalQuestions->links() }}
+            </div>
+        @endif
     </div>
 </div>
 

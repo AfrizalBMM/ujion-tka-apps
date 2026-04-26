@@ -18,7 +18,7 @@ class AuditRequest
     {
         $response = $next($request);
 
-        if (! Schema::hasTable('audit_logs')) {
+        if (! config('ujion.audit_enabled', true)) {
             return $response;
         }
 

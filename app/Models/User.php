@@ -59,6 +59,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'access_token',
     ];
 
     /**
@@ -71,6 +72,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'access_token' => 'hashed',
             'bookmarks' => 'array',
             'global_question_bookmarks' => 'array',
             'payment_submitted_at' => 'datetime',

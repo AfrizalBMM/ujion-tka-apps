@@ -32,7 +32,7 @@ Route::get('/og-image.png', OgImageController::class)->name('og.image');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 // Auth routes for Guru
 Route::get('/login', [GeneralAuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [GeneralAuthController::class, 'login']);
+Route::post('/login', [GeneralAuthController::class, 'login'])->middleware('throttle:5,1');
 Route::get('/lupa-token', [GeneralAuthController::class, 'showForgotTokenForm'])->name('guru.token-request.form');
 Route::post('/lupa-token', [GeneralAuthController::class, 'requestForgotToken'])->name('guru.token-request.send');
 Route::post('/logout', [GeneralAuthController::class, 'logout'])->name('logout');
@@ -43,7 +43,9 @@ Route::post('/ngadimin/login', [GeneralAuthController::class, 'adminLogin']);
 
 // Siswa routes
 Route::get('/siswa/login', [SiswaAuthController::class , 'showLoginForm'])->name('siswa.login');
-Route::post('/siswa/login', [SiswaAuthController::class , 'validateToken'])->name('siswa.token.validate');
+Route::post('/siswa/login', [SiswaAuthController::class , 'validateToken'])
+	->middleware('throttle:10,1')
+	->name('siswa.token.validate');
 Route::get('/siswa/identitas', function () {
 	return view('siswa.identitas');
 })->name('siswa.identitas');
@@ -79,7 +81,7 @@ Route::prefix('superadmin')
 	    Route::post('/profile/password', [SuperadminProfileController::class , 'password'])->name('profile.password');
 
 	    Route::get('/finance', [\App\Http\Controllers\Superadmin\FinanceController::class , 'index'])->name('finance.index');
-	    Route::post('/finance/admin-whatsapp', [\App\Http\Controllers\Superadmin\FinanceController::class , 'saveAdminWhatsapp'])->name('finance.admin-whatsapp');
+	    Route::post('/finance/settings', [\App\Http\Controllers\Superadmin\FinanceController::class , 'saveSettings'])->name('finance.settings');
 	    Route::get('/payment-confirmations', [PaymentConfirmationController::class, 'index'])->name('payment-confirmations.index');
 	    Route::post('/payment-confirmations/{transaction}/approve', [PaymentConfirmationController::class, 'approve'])->name('payment-confirmations.approve');
 	    Route::post('/payment-confirmations/{transaction}/reject', [PaymentConfirmationController::class, 'reject'])->name('payment-confirmations.reject');
@@ -141,6 +143,7 @@ Route::prefix('superadmin')
 	    Route::post('/exams/{exam}/destroy', [\App\Http\Controllers\Superadmin\ExamController::class , 'destroy'])->name('exams.destroy');
 	    Route::post('/exams/{exam}/toggle', [\App\Http\Controllers\Superadmin\ExamController::class , 'toggle'])->name('exams.toggle');
 	    Route::get('/exams/{exam}/builder', [\App\Http\Controllers\Superadmin\ExamController::class , 'builder'])->name('exams.builder');
+	    Route::get('/exams/{exam}/bank-questions', [\App\Http\Controllers\Superadmin\ExamController::class , 'bankQuestions'])->name('exams.bank-questions');
 	    Route::post('/exams/{exam}/builder/save', [\App\Http\Controllers\Superadmin\ExamController::class , 'saveBuilder'])->name('exams.builder.save');
 	    Route::get('/exams/{exam}', [\App\Http\Controllers\Superadmin\ExamController::class , 'show'])->name('exams.show');
 	    Route::post('/exams/{exam}/import-bank', [\App\Http\Controllers\Superadmin\ExamController::class , 'importBankQuestions'])->name('exams.import-bank');

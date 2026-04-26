@@ -25,6 +25,7 @@ class GlobalQuestionController extends Controller
             'material_mapel'      => trim((string) $request->query('material_mapel', '')),
             'material_curriculum' => trim((string) $request->query('material_curriculum', '')),
             'jenjang_id'          => $request->query('jenjang_id'),
+            'per_page'            => in_array($request->query('per_page'), [10, 20, 30, 50]) ? (int) $request->query('per_page') : 10,
         ];
 
         $globalQuestions = GlobalQuestion::with('material')
@@ -46,7 +47,8 @@ class GlobalQuestionController extends Controller
             ->when($filters['material_curriculum'] !== '', fn ($query) => $query->where('material_curriculum', $filters['material_curriculum']))
             ->when($filters['jenjang_id'], fn ($query) => $query->where('jenjang_id', $filters['jenjang_id']))
             ->latest()
-            ->get();
+            ->paginate($filters['per_page'])
+            ->withQueryString();
 
         $materials = \App\Models\Material::all();
         $jenjangs = Jenjang::orderBy('urutan')->get();
@@ -103,8 +105,21 @@ class GlobalQuestionController extends Controller
         return back()->with('flash', ['type' => 'success', 'message' => 'Soal global berhasil dihapus.']);
     }
 
-    public function destroyAll(): RedirectResponse
+    public function destroyAll(Request $request): RedirectResponse
     {
+        $this->authorize('deleteAll', GlobalQuestion::class);
+
+        $validated = $request->validate([
+            'confirm_text' => ['required', 'string', 'max:50'],
+        ]);
+
+        $confirm = strtoupper(trim((string) ($validated['confirm_text'] ?? '')));
+        if ($confirm !== 'HAPUS SEMUA') {
+            return back()
+                ->withErrors(['confirm_text' => 'Konfirmasi tidak sesuai. Ketik: HAPUS SEMUA'])
+                ->withInput();
+        }
+
         $count = GlobalQuestion::count();
         GlobalQuestion::query()->delete();
 
@@ -225,9 +240,11 @@ class GlobalQuestionController extends Controller
 
     public function importPG(Request $request): RedirectResponse
     {
+        $this->authorize('manage', GlobalQuestion::class);
+
         $validated = $request->validate([
             'jenjang_id' => ['nullable', 'integer', 'exists:jenjangs,id'],
-            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls', 'max:5120'],
         ]);
 
         try {
@@ -301,9 +318,11 @@ class GlobalQuestionController extends Controller
 
     public function importMenjodohkan(Request $request): RedirectResponse
     {
+        $this->authorize('manage', GlobalQuestion::class);
+
         $validated = $request->validate([
             'jenjang_id' => ['required', 'integer', 'exists:jenjangs,id'],
-            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls', 'max:5120'],
         ]);
 
         try {

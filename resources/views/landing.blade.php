@@ -155,7 +155,7 @@
                 <div class="landing-orb left-[-4rem] top-16"></div>
                 <div class="landing-orb right-[-5rem] top-24"></div>
 
-                <div class="mx-auto grid max-w-7xl gap-10 px-4 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-16">
+                <div class="mx-auto grid max-w-7xl gap-10 px-4 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:py-16">
                     <div class="animate-fade-in-up">
                         <div class="landing-kicker">
                             <i class="fa-solid fa-sparkles text-warning"></i>
@@ -181,7 +181,7 @@
 
                         </div>
 
-                        <div class="mt-8 grid gap-3 sm:grid-cols-3">
+                        <!-- <div class="mt-8 grid gap-3 sm:grid-cols-3">
                             <div class="landing-mini-stat">
                                 <div class="landing-mini-value">Pantau progres</div>
                                 <div class="landing-mini-label">Guru bisa melihat perkembangan siswa dari latihan sampai
@@ -194,10 +194,10 @@
                             </div>
                             <div class="landing-mini-stat">
                                 <div class="landing-mini-value">Siapkan TKA</div>
-                                <div class="landing-mini-label">Sekolah dapat menyiapkan siswa dengan alur yang lebih
+                                <div class="landing-mini-label">Operator dapat menyiapkan siswa dengan alur yang lebih
                                     tertata dan terukur.</div>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="mt-8 flex flex-wrap gap-3 text-sm text-textSecondary dark:text-slate-400">
                             <span class="landing-proof-chip"><i class="fa-solid fa-circle-check text-success"></i> Paket
@@ -222,7 +222,7 @@
                                         $secondaryMockups = $heroMockups->skip(1)->take(2);
                                     @endphp
 
-                                    <div class="landing-mockup-card overflow-hidden">
+                                    <div class="overflow-hidden">
                                         @if ($featuredMockup['badge'])
                                             <div class="landing-mockup-badge">{{ $featuredMockup['badge'] }}</div>
                                         @endif
@@ -231,25 +231,25 @@
                                             <div class="landing-mockup-copy">{{ $featuredMockup['description'] }}</div>
                                         @endif
                                         <img src="{{ $featuredMockup['image_url'] }}" alt="{{ $featuredMockup['title'] }}"
-                                            class="mt-4 w-full rounded-2xl border border-slate-200 object-cover shadow-sm dark:border-slate-700">
+                                            class="mt-4 w-full rounded-2xl object-cover">
                                     </div>
 
                                     @if ($secondaryMockups->isNotEmpty())
                                         <div class="grid gap-4">
                                             @foreach ($secondaryMockups as $mockup)
-                                                <div class="landing-mockup-card compact overflow-hidden">
+                                                <div class="overflow-hidden">
                                                     @if ($mockup['badge'])
                                                         <div class="landing-mockup-badge">{{ $mockup['badge'] }}</div>
                                                     @endif
                                                     <div class="landing-mockup-title">{{ $mockup['title'] }}</div>
                                                     <img src="{{ $mockup['image_url'] }}" alt="{{ $mockup['title'] }}"
-                                                        class="mt-3 h-36 w-full rounded-xl border border-slate-200 object-cover dark:border-slate-700">
+                                                        class="mt-3 h-36 w-full rounded-xl object-cover">
                                                 </div>
                                             @endforeach
                                         </div>
                                     @endif
                                 @else
-                                    <div class="landing-mockup-card">
+                                    <div>
                                         <div class="landing-mockup-badge">Mockup 1</div>
                                         <div class="landing-mockup-title">Dashboard guru / analytics</div>
                                         <div class="landing-mockup-copy">Disarankan PNG landscape rasio 16:10 atau 4:3.</div>
@@ -262,7 +262,7 @@
                                     </div>
 
                                     <div class="grid gap-4">
-                                        <div class="landing-mockup-card compact">
+                                        <div>
                                             <div class="landing-mockup-badge">Mockup 2</div>
                                             <div class="landing-mockup-title">Tampilan ujian siswa</div>
                                             <div class="landing-mockup-dropzone compact">
@@ -630,7 +630,7 @@
         <section class="mx-auto max-w-7xl px-4 py-12">
             <div class="landing-feature-banner">
                 <div>
-                    <div class="landing-section-kicker text-white/70">Keunggulan inti</div>
+                    <div class="landing-section-kicker text-white/70">Keunggulan Memakai Ujion</div>
                     <h2 class="landing-section-title max-w-2xl text-white">Fitur yang membantu guru melihat progres dan
                         kesiapan siswa.</h2>
                 </div>

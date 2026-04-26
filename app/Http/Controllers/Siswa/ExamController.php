@@ -9,6 +9,7 @@ use App\Models\MapelPaket;
 use App\Models\Soal;
 use App\Models\UjianSesi;
 use App\Support\SurveyAnalytics;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -129,12 +130,10 @@ class ExamController extends Controller
             return redirect()->route('siswa.login')->withErrors(['token' => 'Mapel tidak ditemukan pada sesi ini.']);
         }
 
-        // Tandai timer mulai untuk mapel ini
-        $timerState = $sesi->timer_state ?? [];
-        if (blank($timerState[$mapel->id]['started_at'] ?? null)) {
-            $timerState[$mapel->id]['started_at'] = now()->toIso8601String();
-            $sesi->update(['timer_state' => $timerState]);
-            $sesi->refresh();
+        $timerMapel = $this->syncTimerStateForMapel($sesi, $mapel, true);
+
+        if (($timerMapel['remaining_seconds'] ?? 0) <= 0) {
+            return redirect()->route('siswa.selesai');
         }
 
         $questions = Soal::with(['pilihanJawabans', 'pasanganMenjodohkans', 'teksBacaan'])
@@ -183,11 +182,6 @@ class ExamController extends Controller
             return redirect()->route('siswa.petunjuk')->withErrors(['ujian' => 'Soal ujian belum siap untuk mapel ini.']);
         }
 
-        $timerMapel = $sesi->timer_state[$mapel->id] ?? [
-            'duration_seconds'  => $mapel->durasi_menit * 60,
-            'remaining_seconds' => $mapel->durasi_menit * 60,
-        ];
-
         return view('ujian.pengerjaan', [
             'exam'         => $sesi->exam,
             'session'      => $sesi,
@@ -217,12 +211,23 @@ class ExamController extends Controller
             'jawaban_menjodohkan.*.pair_id'=> 'nullable|integer',
             'jawaban_menjodohkan.*.match_id'=> 'nullable|integer',
             'is_ragu'                      => 'nullable|boolean',
-            'remaining_seconds'            => 'nullable|integer|min:0',
         ]);
 
         $soal = Soal::where('id', $validated['question_id'])
             ->where('mapel_paket_id', $validated['mapel_paket_id'])
             ->firstOrFail();
+
+        $mapel = MapelPaket::findOrFail($validated['mapel_paket_id']);
+        $timerMapel = $this->syncTimerStateForMapel($sesi, $mapel, true);
+
+        if (($timerMapel['remaining_seconds'] ?? 0) <= 0) {
+            return response()->json([
+                'error' => 'Waktu ujian sudah habis.',
+                'status' => 'expired',
+                'remaining_seconds' => 0,
+                'redirect_url' => route('siswa.selesai'),
+            ], 409);
+        }
 
         JawabanSiswa::updateOrCreate(
             ['ujian_sesi_id' => $sesi->id, 'soal_id' => $soal->id],
@@ -234,16 +239,14 @@ class ExamController extends Controller
             ]
         );
 
-        if (isset($validated['remaining_seconds'])) {
-            $timerState = $sesi->timer_state ?? [];
-            $timerState[$validated['mapel_paket_id']]['remaining_seconds'] = $validated['remaining_seconds'];
-            if ($validated['remaining_seconds'] <= 0) {
-                $timerState[$validated['mapel_paket_id']]['finished_at'] = now()->toIso8601String();
-            }
-            $sesi->update(['timer_state' => $timerState]);
-        }
+        $timerMapel = $this->syncTimerStateForMapel($sesi, $mapel, false);
 
-        return response()->json(['status' => 'success']);
+        return response()->json([
+            'status' => 'success',
+            'remaining_seconds' => $timerMapel['remaining_seconds'] ?? 0,
+            'time_expired' => ($timerMapel['remaining_seconds'] ?? 0) <= 0,
+            'redirect_url' => ($timerMapel['remaining_seconds'] ?? 0) <= 0 ? route('siswa.selesai') : null,
+        ]);
     }
 
     // ─── Selesai ─────────────────────────────────────────────────────────────────
@@ -320,13 +323,14 @@ class ExamController extends Controller
             $answers = collect($jawaban->jawaban_menjodohkan ?? [])
                 ->mapWithKeys(fn ($item) => [($item['pair_id'] ?? null) => ($item['match_id'] ?? null)]);
 
-            $allCorrect = $soal->pasanganMenjodohkans->every(function ($pair) use ($answers) {
-                // jawaban benar: match_id === id pasangan yang sesuai (teks_kiri → teks_kanan-nya sendiri)
-                return (int) $answers->get($pair->id) === (int) $pair->id;
-            });
+            $totalPairs = $soal->pasanganMenjodohkans->count();
+            if ($totalPairs > 0) {
+                $correctPairs = $soal->pasanganMenjodohkans->filter(function ($pair) use ($answers) {
+                    // jawaban benar: match_id === id pasangan yang sesuai (teks_kiri → teks_kanan-nya sendiri)
+                    return (int) $answers->get($pair->id) === (int) $pair->id;
+                })->count();
 
-            if ($allCorrect) {
-                $earnedScore += $soal->bobot;
+                $earnedScore += ($correctPairs / $totalPairs) * $soal->bobot;
             }
         }
 
@@ -335,5 +339,43 @@ class ExamController extends Controller
         }
 
         return round(($earnedScore / $maxScore) * 100, 2);
+    }
+
+    private function syncTimerStateForMapel(UjianSesi $sesi, MapelPaket $mapel, bool $startIfMissing): array
+    {
+        $timerState = $sesi->timer_state ?? [];
+        $mapelState = $timerState[$mapel->id] ?? [];
+
+        $durationSeconds = (int) ($mapelState['duration_seconds'] ?? ($mapel->durasi_menit * 60));
+        $startedAtRaw = $mapelState['started_at'] ?? null;
+
+        if ($startIfMissing && blank($startedAtRaw)) {
+            $startedAtRaw = ($sesi->waktu_mulai ?? now())->toIso8601String();
+        }
+
+        $remainingSeconds = $durationSeconds;
+        if (filled($startedAtRaw)) {
+            $startedAt = Carbon::parse($startedAtRaw);
+            $elapsedSeconds = max(0, $startedAt->diffInSeconds(now()));
+            $remainingSeconds = max($durationSeconds - $elapsedSeconds, 0);
+        }
+
+        $mapelState = [
+            'duration_seconds' => $durationSeconds,
+            'remaining_seconds' => $remainingSeconds,
+            'started_at' => $startedAtRaw,
+            'finished_at' => $remainingSeconds <= 0
+                ? ($mapelState['finished_at'] ?? now()->toIso8601String())
+                : ($mapelState['finished_at'] ?? null),
+        ];
+
+        $existingState = $sesi->timer_state ?? [];
+        if (($existingState[$mapel->id] ?? null) !== $mapelState) {
+            $existingState[$mapel->id] = $mapelState;
+            $sesi->update(['timer_state' => $existingState]);
+            $sesi->refresh();
+        }
+
+        return $mapelState;
     }
 }

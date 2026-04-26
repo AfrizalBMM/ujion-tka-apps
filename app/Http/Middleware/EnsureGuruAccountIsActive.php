@@ -17,6 +17,10 @@ class EnsureGuruAccountIsActive
     {
         $user = $request->user();
 
+        if ($user && $user->isSuperadmin()) {
+            return $next($request);
+        }
+
         if (! $user || $user->role !== User::ROLE_GURU) {
             abort(403);
         }

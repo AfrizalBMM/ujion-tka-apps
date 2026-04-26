@@ -264,6 +264,7 @@
 @php
     $initialQuestions = $questions->map(function ($q) {
         return [
+            'id' => $q->id,
             'tipe' => $q->tipe,
             'pertanyaan' => $q->pertanyaan,
             'opsi' => $q->opsi ?? [],

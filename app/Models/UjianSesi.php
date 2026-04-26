@@ -12,6 +12,7 @@ class UjianSesi extends Model
         'exam_id',
         'paket_soal_id',
         'mapel_paket_id',
+        'user_id',
         'nama',
         'nomor_wa',
         'session_token',
@@ -34,6 +35,11 @@ class UjianSesi extends Model
     public function exam(): BelongsTo
     {
         return $this->belongsTo(Exam::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function paketSoal(): BelongsTo

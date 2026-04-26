@@ -28,6 +28,7 @@ Rekomendasi:
 Verifikasi .gitignore mengandung .env
 Rotate APP_KEY segera: php artisan key:generate
 Gunakan .env.example untuk template, jangan masukkan nilai nyata
+
 [K-03] Siswa/Token Auth Tanpa Rate Limiting — Brute Force
 File: routes/web.php, app/Http/Controllers/Siswa/AuthController.php Baris: Route::post('/siswa/login', ...)
 
@@ -39,6 +40,7 @@ php
 Route::post('/siswa/login', [SiswaAuthController::class, 'validateToken'])
 ->name('siswa.token.validate')
 ->middleware('throttle:10,1'); // maks 10 percobaan per menit
+
 [K-04] Endpoint Check Email & WA — Enumeration Attack
 File: app/Http/Controllers/RegisterGuruController.php Method: checkEmail(), checkWa()
 
@@ -55,6 +57,7 @@ php
 Route::get('/register/guru/check-email', ...)->middleware('throttle:30,1');
 Route::get('/register/guru/check-wa', ...)->middleware('throttle:30,1');
 // Atau ubah respons menjadi ambigu lebih lanjut
+
 [K-05] destroyAll Bank Soal Global — Tidak Ada Konfirmasi Server-side
 File: app/Http/Controllers/Superadmin/GlobalQuestionController.php Method: destroyAll()
 
@@ -74,6 +77,7 @@ Rekomendasi:
 Tambahkan soft delete agar bisa di-recover
 Atau minta konfirmasi teks (misal: ketik nama database) sebelum menghapus massal
 Tambahkan audit log dengan snapshot jumlah data
+
 [K-06] saveBuilder Guru — Path Traversal Tidak Dicegah
 File: app/Http/Controllers/Guru/PersonalQuestionController.php Method: saveBuilder()
 
@@ -97,6 +101,7 @@ php
 // Validasi bahwa path hanya berisi karakter yang diharapkan dan ada di direktori yang benar
 abort_if(!str_starts_with($imagePath, 'personal-question-images/'), 422);
 abort_unless(Storage::disk('public')->exists($imagePath), 422);
+
 [K-07] Guru ExamController — Session Linking via no_wa — Impersonation Risk
 File: app/Http/Controllers/Guru/ExamController.php Method: sessionQueryForUser(), join()
 
@@ -132,6 +137,7 @@ Route::get('/personal-questions/builder', ...);
 Route::post('/personal-questions/builder/save', ...);
 // BARU: parameter
 Route::post('/personal-questions/{question}', ...);
+
 [B-02] register() — Race Condition pada Duplikat Registrasi
 File: app/Http/Controllers/RegisterGuruController.php Method: register()
 
@@ -168,6 +174,7 @@ $teacher = $transaction->user;
 if (!$teacher) {
 return back()->with('flash', ['type' => 'warning', 'message' => 'Akun guru tidak ditemukan.']);
 }
+
 [B-04] saveBuilder — Delete All Then Re-create Tanpa Rollback Proper
 File: app/Http/Controllers/Guru/PersonalQuestionController.php Method: saveBuilder()
 
@@ -197,6 +204,7 @@ Rekomendasi:
 
 php
 'questions.\*.tipe' => 'required|in:PG,Checklist,Singkat,multiple_choice,matching',
+
 [B-06] Guru Login — Identifikasi via name yang Tidak Unik
 File: app/Http/Controllers/AuthController.php Method: login()
 
@@ -211,7 +219,7 @@ $query->where('name', $request->login_identifier)
 ...->first();
 Login menggunakan nama yang tidak unik. Dua guru bernama "Siti Rahayu" yang kebetulan token-nya sama (walau sangat kecil kemungkinannya) bisa login ke akun yang salah. Nama juga bisa typo. ->first() mengambil yang pertama ditemukan tanpa kepastian.
 
-Rekomendasi: Gunakan email atau no_wa (yang lebih unik) sebagai login identifier utama.
+Rekomendasi: Gunakan no_wa (yang lebih unik) sebagai login identifier utama.
 
 [B-07] Siswa ExamController — Timer Tidak Dipaksa Server-Side
 File: app/Http/Controllers/Siswa/ExamController.php Method: apiSaveAnswer()
@@ -249,6 +257,7 @@ Rekomendasi: Pastikan ada authorization check:
 
 php
 abort_unless($chat->from_user_id === auth()->id() || auth()->user()->isSuperadmin(), 403);
+
 [B-10] importBankQuestions — Tidak Ada Cek Duplikat Soal
 File: app/Http/Controllers/Superadmin/ExamController.php Method: importBankQuestions()
 
@@ -273,9 +282,10 @@ $globalQuestions = GlobalQuestion::with('material')
 Dengan ribuan soal di bank, ini akan menggunakan memory besar dan memperlambat halaman. Tidak ada pagination.
 
 Rekomendasi:
-
+ADA DROPDOWN PILIHAN PAGINATION ( 10, 20, 30, 50)
 php
-->paginate(50)->withQueryString();
+->paginate(10)->withQueryString();
+
 [D-02] Redundansi Dua Entitas Review Pembayaran
 File: TeacherController.php dan PaymentConfirmationController.php
 
@@ -316,6 +326,7 @@ php
 if (app()->environment('production')) {
 URL::forceScheme('https');
 }
+
 [D-06] AuditRequest — Schema Check di Setiap Request
 File: app/Http/Middleware/AuditRequest.php Baris: 21
 
@@ -331,6 +342,7 @@ Rekomendasi: Cache hasil pengecekan schema atau gunakan config flag:
 
 php
 if (!config('ujion.audit_enabled', true)) return $response;
+
 [D-07] generateReferenceCode — Potential Infinite Loop
 File: app/Http/Controllers/RegisterGuruController.php Method: generateReferenceCode()
 
@@ -352,6 +364,7 @@ return $candidate;
 }
 }
 abort(500, 'Gagal generate kode referensi unik.');
+
 [D-08] Duplikasi generateUniqueToken di Dua Controller
 File: TeacherController.php (L212), PaymentConfirmationController.php (L136)
 
@@ -364,6 +377,7 @@ php
 class TokenGenerator {
 public static function uniqueTeacherToken(): string { ... }
 }
+
 [D-09] Logika Scoring Menjodohkan — Asumsi Salah
 File: app/Http/Controllers/Siswa/ExamController.php Method: calculateScore()
 
@@ -397,6 +411,7 @@ protected $hidden = [
 'remember_token',
 'access_token', // Tambahkan ini
 ];
+
 [S-04] Tidak Ada MIMES Restriction yang Ketat untuk Import Excel
 File: GlobalQuestionController::importPG()
 

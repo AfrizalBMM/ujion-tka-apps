@@ -20,6 +20,16 @@ Project ini saat ini berpusat pada:
 - Tailwind CSS
 - Vite
 
+## Environment & Secrets
+
+- Jangan pernah commit file `.env` atau varian-nya ke repository.
+- Gunakan `.env.example` sebagai template, lalu buat `.env` di mesin masing-masing.
+- Untuk production: set `APP_ENV=production` dan `APP_DEBUG=false`.
+- Jika ada indikasi `.env` / `APP_KEY` pernah bocor/ter-commit, lakukan rotasi key di server:
+    - Jalankan `php artisan key:generate --force`
+    - Lalu `php artisan config:clear` dan `php artisan cache:clear`
+    - Catatan: rotasi `APP_KEY` akan meng-invalidasi session dan data terenkripsi lama.
+
 ## Pintu Masuk Aplikasi
 
 - Landing: `/`
@@ -220,9 +230,27 @@ npm install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
+php artisan storage:link
 npm run dev
 php artisan serve
 ```
+
+## Deployment
+
+Saat men-deploy ke server production (shared hosting atau VPS), pastikan langkah-langkah berikut dilakukan:
+
+1.  **Storage Link (Kritis)**: Jalankan `php artisan storage:link`. Tanpa ini, bukti pembayaran guru dan gambar soal tidak akan muncul (404). Jika di shared hosting tidak ada akses SSH, gunakan route sementara atau symlink manual via file manager.
+2.  **Optimasi Konfigurasi**:
+    ```bash
+    composer install --optimize-autoloader --no-dev
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    ```
+3.  **Database**: Jalankan `php artisan migrate --force` untuk memperbarui skema.
+4.  **Aset**: Jalankan `npm run build` untuk memproses file CSS/JS.
+5.  **Environment**: Pastikan `APP_ENV=production` dan `APP_DEBUG=false` di file `.env` server.
+
 
 ## Konfigurasi QRIS
 
@@ -262,4 +290,5 @@ php artisan test
 - Sebagian builder/admin compatibility masih memakai tabel snapshot lama
 - Flow registrasi guru sekarang tersambung langsung dengan modul finance superadmin
 - QR pembayaran disederhanakan menjadi model operasional per jenjang
+- Aksi sensitif (hapus masal, import) dilindungi oleh **Laravel Policies** untuk otorisasi granular
 - Beberapa modul superadmin besar masih layak diaudit dan dirapikan lebih lanjut dari sisi JS dan UX internal

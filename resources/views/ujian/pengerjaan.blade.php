@@ -249,9 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let readingOpen       = false;
 
     // Timer
-    const initialRemaining = Number(sessionStorage.getItem(timerKey) ??
-        payload.timer?.remaining_seconds ?? payload.timer?.duration_seconds ?? 0);
+    const initialRemaining = Number(
+        payload.timer?.remaining_seconds ?? payload.timer?.duration_seconds ?? 0
+    );
     let remainingSeconds = Number.isFinite(initialRemaining) ? initialRemaining : 0;
+    sessionStorage.setItem(timerKey, String(Math.max(remainingSeconds, 0)));
 
     // ─── Format waktu ──────────────────────────────────────────────────────────
     const fmt = (s) => {
@@ -276,9 +278,29 @@ document.addEventListener('DOMContentLoaded', () => {
             jawaban_pg       : q.jawaban_pg ?? null,
             jawaban_menjodohkan: q.jawaban_menjodohkan ?? null,
             is_ragu          : q.is_ragu ?? false,
-            remaining_seconds: remainingSeconds,
         }),
-    }).catch(() => {});
+    })
+        .then(async (response) => {
+            let result = null;
+
+            try {
+                result = await response.json();
+            } catch (error) {
+                result = null;
+            }
+
+            if (typeof result?.remaining_seconds === 'number' && Number.isFinite(result.remaining_seconds)) {
+                remainingSeconds = Math.max(0, result.remaining_seconds);
+                sessionStorage.setItem(timerKey, String(remainingSeconds));
+                timerEl.textContent = fmt(remainingSeconds);
+            }
+
+            if ((response.status === 409 || result?.time_expired) && result?.redirect_url) {
+                sessionStorage.removeItem(timerKey);
+                window.location.href = result.redirect_url;
+            }
+        })
+        .catch(() => {});
 
     // ─── Render Grid ──────────────────────────────────────────────────────────
     const renderGrid = () => {

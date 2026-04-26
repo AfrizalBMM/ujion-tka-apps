@@ -15,7 +15,7 @@
             </div>
             <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">Masuk Guru / Operator</h1>
             <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                Masuk menggunakan nama yang terdaftar dan token akses yang dikirim saat akun Anda aktif.
+                Masuk menggunakan nomor WhatsApp terdaftar dan token akses yang dikirim saat akun Anda aktif.
             </p>
         </div>
 
@@ -42,12 +42,12 @@
             <form action="{{ route('login') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-200">Nama Lengkap atau No. WhatsApp</label>
+                    <label class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-200">No. WhatsApp</label>
                     <div class="relative">
-                        <i class="fa-solid fa-address-card absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" name="login_identifier"
+                        <i class="fa-solid fa-mobile-screen-button absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" name="no_wa"
                             class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-white"
-                            placeholder="Masukkan nama atau nomor WhatsApp" value="{{ old('login_identifier') }}" required autofocus>
+                            placeholder="Masukkan nomor WhatsApp terdaftar" value="{{ old('no_wa') }}" required autofocus>
                     </div>
                 </div>
 

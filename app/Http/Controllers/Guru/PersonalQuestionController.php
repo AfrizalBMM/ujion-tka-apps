@@ -9,10 +9,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\View\View;
 
 class PersonalQuestionController extends Controller {
+    private const BUILDER_IMAGE_DIRECTORY = 'personal-question-images/';
+
     public function index(Request $request): View {
         $user = Auth::user();
         $baseQuery = PersonalQuestion::query()
@@ -155,6 +158,7 @@ class PersonalQuestionController extends Controller {
         $user = Auth::user();
         $data = $request->validate([
             'questions' => 'required|array',
+            'questions.*.id' => 'nullable|integer',
             'questions.*.pertanyaan' => 'required|string',
             'questions.*.tipe' => 'required|in:PG,Checklist,Singkat',
             'questions.*.opsi' => 'nullable|array',
@@ -167,54 +171,68 @@ class PersonalQuestionController extends Controller {
             'questions.*.status' => 'required|in:draft,terbit',
         ]);
 
+        $data['questions'] = collect($data['questions'])
+            ->map(function (array $q, int $index): array {
+                $q['id'] = isset($q['id']) ? (int) $q['id'] : null;
+                $q['image_path'] = $this->sanitizeBuilderImagePath(
+                    $q['image_path'] ?? ($q['image'] ?? null),
+                    $index
+                );
+                unset($q['image']);
+
+                return $q;
+            })
+            ->all();
+
+        $incomingQuestionIds = collect($data['questions'])
+            ->pluck('id')
+            ->filter()
+            ->values();
+
+        if ($incomingQuestionIds->count() !== $incomingQuestionIds->unique()->count()) {
+            throw ValidationException::withMessages([
+                'questions' => 'Payload builder mengandung ID soal duplikat.',
+            ]);
+        }
+
         DB::transaction(function () use ($user, $data): void {
             $existingQuery = PersonalQuestion::query()->where('user_id', $user->id);
             if (filled($user->jenjang)) {
                 $existingQuery->where('jenjang', $user->jenjang);
             }
 
-            $existingQuestions = $existingQuery->get();
+            $existingQuestions = $existingQuery->get()->keyBy('id');
+
+            $requestedIds = collect($data['questions'])
+                ->pluck('id')
+                ->filter()
+                ->values();
+
+            $unknownIds = $requestedIds->diff($existingQuestions->keys());
+            if ($unknownIds->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    'questions' => 'Beberapa soal builder tidak ditemukan atau bukan milik Anda.',
+                ]);
+            }
 
             $incomingImagePaths = collect($data['questions'])
-                ->map(function (array $q): ?string {
-                    $candidate = $q['image_path'] ?? ($q['image'] ?? null);
-                    $candidate = is_string($candidate) ? trim($candidate) : null;
-                    if ($candidate === '') {
-                        return null;
-                    }
-
-                    // Keep only stored relative paths. External URLs should not be deleted via Storage.
-                    if (str_contains($candidate, '://') || str_starts_with($candidate, '/')) {
-                        return null;
-                    }
-
-                    return $candidate;
-                })
+                ->pluck('image_path')
                 ->filter()
                 ->values()
                 ->all();
 
-            foreach ($existingQuestions as $existingQuestion) {
-                if ($existingQuestion->image_path && ! in_array($existingQuestion->image_path, $incomingImagePaths, true)) {
-                    // Only delete images that are no longer referenced by the incoming payload.
-                    if (! str_contains($existingQuestion->image_path, '://') && ! str_starts_with($existingQuestion->image_path, '/')) {
-                        Storage::disk('public')->delete($existingQuestion->image_path);
-                    }
-                }
-            }
+            $imagesToDelete = $existingQuestions
+                ->pluck('image_path')
+                ->filter()
+                ->unique()
+                ->reject(fn (string $path) => in_array($path, $incomingImagePaths, true))
+                ->values()
+                ->all();
 
-            $existingQuery->delete();
+            $processedIds = [];
 
             foreach ($data['questions'] as $q) {
-                $imagePath = $q['image_path'] ?? ($q['image'] ?? null);
-                $imagePath = is_string($imagePath) ? trim($imagePath) : null;
-                if ($imagePath !== '') {
-                    $q['image_path'] = $imagePath;
-                } else {
-                    $q['image_path'] = null;
-                }
-                unset($q['image']);
-
+                $questionId = $q['id'] ?? null;
                 $q['user_id'] = $user->id;
                 $q['jenjang'] = $user->jenjang ?: ($q['jenjang'] ?? null);
 
@@ -223,7 +241,28 @@ class PersonalQuestionController extends Controller {
                 if ($q['tipe'] === 'Singkat') {
                     $q['opsi'] = null;
                 }
-                PersonalQuestion::create($q);
+
+                unset($q['id']);
+
+                if ($questionId) {
+                    $question = $existingQuestions->get($questionId);
+                    $question?->fill($q);
+                    $question?->save();
+                    $processedIds[] = $questionId;
+                    continue;
+                }
+
+                $created = PersonalQuestion::create($q);
+                $processedIds[] = $created->id;
+            }
+
+            $existingQuestions
+                ->except($processedIds)
+                ->each
+                ->delete();
+
+            foreach ($imagesToDelete as $path) {
+                Storage::disk('public')->delete($path);
             }
         });
 
@@ -320,5 +359,53 @@ class PersonalQuestionController extends Controller {
         }
 
         return $rawAnswer;
+    }
+
+    private function sanitizeBuilderImagePath(mixed $candidate, int $index): ?string
+    {
+        if (! is_string($candidate)) {
+            return null;
+        }
+
+        $path = trim($candidate);
+        if ($path === '') {
+            return null;
+        }
+
+        $field = "questions.$index.image_path";
+
+        if (str_contains($path, '://') || str_starts_with($path, '/') || str_contains($path, '\\')) {
+            throw ValidationException::withMessages([
+                $field => 'Path gambar builder tidak valid.',
+            ]);
+        }
+
+        if (! str_starts_with($path, self::BUILDER_IMAGE_DIRECTORY)) {
+            throw ValidationException::withMessages([
+                $field => 'Gambar builder harus berasal dari upload aplikasi.',
+            ]);
+        }
+
+        if (! preg_match('/\A[A-Za-z0-9._\/-]+\z/', $path)) {
+            throw ValidationException::withMessages([
+                $field => 'Path gambar builder mengandung karakter yang tidak diizinkan.',
+            ]);
+        }
+
+        foreach (explode('/', $path) as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                throw ValidationException::withMessages([
+                    $field => 'Path gambar builder tidak valid.',
+                ]);
+            }
+        }
+
+        if (! Storage::disk('public')->exists($path)) {
+            throw ValidationException::withMessages([
+                $field => 'Gambar builder tidak ditemukan. Upload ulang gambarnya.',
+            ]);
+        }
+
+        return $path;
     }
 }

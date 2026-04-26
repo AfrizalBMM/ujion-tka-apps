@@ -48,7 +48,7 @@ class PaymentConfirmationController extends Controller
         return view('superadmin.payment-confirmations', compact('transactions', 'summary', 'search'));
     }
 
-    public function approve(Transaction $transaction): RedirectResponse
+    public function approve(Transaction $transaction, \App\Services\PaymentApprovalService $paymentService): RedirectResponse
     {
         if ($transaction->status !== Transaction::STATUS_PENDING || blank($transaction->payment_proof_path)) {
             return back()->with('flash', [
@@ -59,26 +59,11 @@ class PaymentConfirmationController extends Controller
         }
 
         $teacher = $transaction->user;
-        $token = $teacher->access_token ?: $this->generateUniqueToken();
+        if (! $teacher) {
+            return $this->missingTeacherResponse();
+        }
 
-        $transaction->update([
-            'status' => Transaction::STATUS_SUCCESS,
-            'reviewed_at' => now(),
-            'reviewed_by' => Auth::id(),
-            'rejection_reason' => null,
-        ]);
-
-        $teacher->update([
-            'role' => User::ROLE_GURU,
-            'account_status' => User::STATUS_ACTIVE,
-            'payment_status' => User::PAYMENT_APPROVED,
-            'payment_verified_at' => now(),
-            'payment_reviewed_by' => Auth::id(),
-            'payment_rejection_reason' => null,
-            'payment_proof_path' => $transaction->payment_proof_path,
-            'payment_submitted_at' => $transaction->payment_submitted_at,
-            'access_token' => $token,
-        ]);
+        $token = $paymentService->approve($teacher, $transaction);
 
         return back()->with('flash', [
             'type' => 'success',
@@ -92,7 +77,7 @@ class PaymentConfirmationController extends Controller
         ]);
     }
 
-    public function reject(Request $request, Transaction $transaction): RedirectResponse
+    public function reject(Request $request, Transaction $transaction, \App\Services\PaymentApprovalService $paymentService): RedirectResponse
     {
         if ($transaction->status !== Transaction::STATUS_PENDING) {
             return back()->with('flash', [
@@ -102,46 +87,36 @@ class PaymentConfirmationController extends Controller
             ]);
         }
 
+        $teacher = $transaction->user;
+        if (! $teacher) {
+            return $this->missingTeacherResponse();
+        }
+
         $validated = $request->validate([
             'rejection_reason' => ['required', 'string', 'max:500'],
         ]);
 
-        $transaction->update([
-            'status' => Transaction::STATUS_FAILED,
-            'reviewed_at' => now(),
-            'reviewed_by' => Auth::id(),
-            'rejection_reason' => $validated['rejection_reason'],
-        ]);
-
-        $transaction->user->update([
-            'payment_status' => User::PAYMENT_REJECTED,
-            'payment_verified_at' => now(),
-            'payment_reviewed_by' => Auth::id(),
-            'payment_rejection_reason' => $validated['rejection_reason'],
-            'account_status' => User::STATUS_PENDING,
-        ]);
+        $paymentService->reject($teacher, $validated['rejection_reason'], $transaction);
 
         return back()->with('flash', [
             'type' => 'warning',
             'title' => 'Pembayaran ditandai perlu perbaikan',
             'message' => "Transaksi {$transaction->reference_code} ditolak dan guru diminta mengunggah ulang bukti pembayaran.",
             'copy_block' => GuruNotificationTemplates::paymentRejected(
-                $transaction->user->name,
+                $teacher->name,
                 $validated['rejection_reason']
             ),
             'copy_block_label' => 'Template pesan WhatsApp',
         ]);
     }
 
-    private function generateUniqueToken(): string
+    private function missingTeacherResponse(): RedirectResponse
     {
-        for ($i = 0; $i < 5; $i++) {
-            $candidate = strtoupper(Str::random(10));
-            if (! User::query()->where('access_token', $candidate)->exists()) {
-                return $candidate;
-            }
-        }
-
-        abort(500, 'Gagal generate token unik.');
+        return back()->with('flash', [
+            'type' => 'warning',
+            'title' => 'Akun guru tidak ditemukan',
+            'message' => 'Akun guru untuk transaksi ini sudah tidak tersedia. Periksa data transaksi sebelum melanjutkan review.',
+        ]);
     }
+
 }

@@ -39,6 +39,7 @@ class GuruAndAnalyticsFlowTest extends TestCase
         UjianSesi::create([
             'exam_id' => $exam->id,
             'paket_soal_id' => $exam->paket_soal_id,
+            'user_id' => $guru->id,
             'nama' => $guru->name,
             'nomor_wa' => $guru->no_wa,
             'session_token' => 'tok-1',
@@ -50,6 +51,7 @@ class GuruAndAnalyticsFlowTest extends TestCase
         UjianSesi::create([
             'exam_id' => $exam->id,
             'paket_soal_id' => $exam->paket_soal_id,
+            'user_id' => $guru->id,
             'nama' => $guru->name,
             'nomor_wa' => $guru->no_wa,
             'session_token' => 'tok-2',
@@ -68,6 +70,8 @@ class GuruAndAnalyticsFlowTest extends TestCase
 
     public function test_guru_can_join_exam_into_student_flow(): void
     {
+        $this->withoutMiddleware();
+
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_ACTIVE,
@@ -85,6 +89,7 @@ class GuruAndAnalyticsFlowTest extends TestCase
         $response->assertRedirect(route('siswa.petunjuk'));
         $this->assertDatabaseHas('ujian_sesis', [
             'exam_id' => $suite['exam']->id,
+            'user_id' => $guru->id,
             'nomor_wa' => $guru->no_wa,
             'status' => 'menunggu',
         ]);
@@ -106,6 +111,7 @@ class GuruAndAnalyticsFlowTest extends TestCase
         $session = UjianSesi::create([
             'exam_id' => $exam->id,
             'paket_soal_id' => $exam->paket_soal_id,
+            'user_id' => $guru->id,
             'nama' => $guru->name,
             'nomor_wa' => $guru->no_wa,
             'session_token' => 'tok-result',
@@ -128,6 +134,126 @@ class GuruAndAnalyticsFlowTest extends TestCase
         $this->assertSame('100.00', data_get($view->getData(), 'result.skor'));
         $this->assertSame('2 + 2 = ?', data_get($view->getData(), 'pembahasan.0.pertanyaan'));
         $this->assertSame('B', data_get($view->getData(), 'pembahasan.0.jawaban_user'));
+    }
+
+    public function test_guru_can_join_exam_without_whatsapp_number(): void
+    {
+        $this->withoutMiddleware();
+
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'jenjang' => 'SMP',
+            'no_wa' => null,
+        ]);
+
+        $suite = $this->createExamSuite($guru);
+
+        $response = $this->actingAs($guru)->post(route('guru.exams.join'), [
+            'token' => $suite['examMapelToken']->token,
+        ]);
+
+        $response->assertRedirect(route('siswa.petunjuk'));
+        $this->assertDatabaseHas('ujian_sesis', [
+            'exam_id' => $suite['exam']->id,
+            'user_id' => $guru->id,
+            'nama' => $guru->name,
+            'status' => 'menunggu',
+        ]);
+    }
+
+    public function test_guru_dashboard_ignores_sessions_from_other_guru_with_same_whatsapp_number(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'jenjang' => 'SMP',
+            'no_wa' => '0812345',
+        ]);
+
+        $otherGuru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'jenjang' => 'SMP',
+            'no_wa' => '0812345',
+        ]);
+
+        $exam = $this->createExamSuite($guru)['exam'];
+
+        UjianSesi::create([
+            'exam_id' => $exam->id,
+            'paket_soal_id' => $exam->paket_soal_id,
+            'user_id' => $guru->id,
+            'nama' => $guru->name,
+            'nomor_wa' => $guru->no_wa,
+            'session_token' => 'tok-own',
+            'status' => 'selesai',
+            'skor' => 88,
+            'waktu_selesai' => now(),
+        ]);
+
+        UjianSesi::create([
+            'exam_id' => $exam->id,
+            'paket_soal_id' => $exam->paket_soal_id,
+            'user_id' => $otherGuru->id,
+            'nama' => $otherGuru->name,
+            'nomor_wa' => $otherGuru->no_wa,
+            'session_token' => 'tok-other',
+            'status' => 'selesai',
+            'skor' => 12,
+            'waktu_selesai' => now(),
+        ]);
+
+        Auth::login($guru);
+
+        $view = app(GuruDashboardController::class)->index();
+
+        $this->assertSame(1, $view->getData()['ujianDibuat']);
+        $this->assertSame(1, $view->getData()['totalPeserta']);
+        $this->assertSame(88.0, $view->getData()['rataRataKelas']);
+    }
+
+    public function test_guru_dashboard_ignores_student_session_with_same_whatsapp_number(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'jenjang' => 'SMP',
+            'no_wa' => '0812345',
+        ]);
+
+        $exam = $this->createExamSuite($guru)['exam'];
+
+        UjianSesi::create([
+            'exam_id' => $exam->id,
+            'paket_soal_id' => $exam->paket_soal_id,
+            'user_id' => $guru->id,
+            'nama' => $guru->name,
+            'nomor_wa' => $guru->no_wa,
+            'session_token' => 'tok-own-guru',
+            'status' => 'selesai',
+            'skor' => 91,
+            'waktu_selesai' => now(),
+        ]);
+
+        UjianSesi::create([
+            'exam_id' => $exam->id,
+            'paket_soal_id' => $exam->paket_soal_id,
+            'nama' => 'Siswa dengan WA sama',
+            'nomor_wa' => $guru->no_wa,
+            'session_token' => 'tok-student-same-wa',
+            'status' => 'selesai',
+            'skor' => 10,
+            'waktu_selesai' => now(),
+        ]);
+
+        Auth::login($guru);
+
+        $view = app(GuruDashboardController::class)->index();
+
+        $this->assertSame(1, $view->getData()['ujianDibuat']);
+        $this->assertSame(1, $view->getData()['totalPeserta']);
+        $this->assertSame(91.0, $view->getData()['rataRataKelas']);
     }
 
     public function test_superadmin_dashboard_uses_real_metrics(): void

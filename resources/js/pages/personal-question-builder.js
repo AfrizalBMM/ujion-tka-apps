@@ -12,6 +12,7 @@ function parseBuilderConfig() {
 
 function getDefaultQuestion() {
 	return {
+		id: null,
 		tipe: 'PG',
 		pertanyaan: '',
 		opsi: [''],
@@ -197,6 +198,7 @@ function initPersonalQuestionBuilder() {
 				this.isSaving = true;
 
 				const payloadQuestions = this.questions.map((question) => ({
+					id: question.id || null,
 					tipe: question.tipe,
 					pertanyaan: question.pertanyaan,
 					opsi: question.opsi,

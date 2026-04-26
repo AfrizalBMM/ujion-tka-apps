@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -30,6 +31,8 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('Lupa token?')
+            ->assertSee('No. WhatsApp')
+            ->assertDontSee('Nama Lengkap atau No. WhatsApp')
             ->assertSee(route('guru.token-request.form'), false);
 
         $this->get(route('guru.token-request.form'))
@@ -37,6 +40,50 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             ->assertSee('Nama Lengkap')
             ->assertSee('Email / No. WhatsApp Aktif')
             ->assertSee('Jenjang');
+    }
+
+    public function test_guru_can_login_using_registered_whatsapp_number(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'no_wa' => '08123456789',
+            'access_token' => 'ABC123TOKEN',
+        ]);
+
+        $response = $this->withSession(['_token' => 'login-wa-token'])->post(route('login'), [
+            '_token' => 'login-wa-token',
+            'no_wa' => '0812-3456-789',
+            'access_token' => 'abc123token',
+        ]);
+
+        $response->assertRedirect(route('guru.dashboard'));
+        $this->assertAuthenticatedAs($guru);
+    }
+
+    public function test_guru_login_rejects_name_as_identifier(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'name' => 'Siti Rahayu',
+            'no_wa' => '08123456789',
+            'access_token' => 'ABC123TOKEN',
+        ]);
+
+        $response = $this->from(route('login'))
+            ->withSession(['_token' => 'login-name-token'])
+            ->post(route('login'), [
+                '_token' => 'login-name-token',
+                'no_wa' => $guru->name,
+                'access_token' => 'ABC123TOKEN',
+            ]);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors([
+            'access_token' => 'No. WA atau Token Akses tidak sesuai.',
+        ]);
+        $this->assertGuest();
     }
 
     public function test_guru_token_request_redirects_to_admin_whatsapp(): void
@@ -80,7 +127,8 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
     public function test_guru_registration_creates_pending_account(): void
     {
-        $response = $this->post(route('register.guru'), [
+        $response = $this->withSession(['_token' => 'register-token'])->post(route('register.guru'), [
+            '_token' => 'register-token',
             'name' => 'Guru Baru',
             'email' => 'guru.baru@example.com',
             'jenjang' => 'SMP',
@@ -168,7 +216,8 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'no_wa' => '08123456789',
         ]);
 
-        $response = $this->post(route('register.guru'), [
+        $response = $this->withSession(['_token' => 'pending-token'])->post(route('register.guru'), [
+            '_token' => 'pending-token',
             'name' => 'Guru Daftar Ulang',
             'email' => 'guru.pending@example.com',
             'jenjang' => 'SMP',
@@ -189,6 +238,54 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
+    public function test_resume_pending_accepts_registered_name_without_titles(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'payment_status' => User::PAYMENT_AWAITING,
+            'name' => 'Siti Rahayu, S.Pd.',
+            'email' => 'siti.pending@example.com',
+            'no_wa' => '08123456789',
+            'jenjang' => 'SMP',
+        ]);
+
+        $response = $this->withSession(['_token' => 'resume-token'])->post(route('register.guru.pending.resume'), [
+            '_token' => 'resume-token',
+            'name' => 'Siti Rahayu',
+            'no_wa' => '0812-3456-789',
+        ]);
+
+        $response->assertRedirect(route('register.guru.pending'));
+        $response->assertSessionHas('pending_registration.teacher_id', $guru->id);
+    }
+
+    public function test_resume_pending_rejects_partial_name_match_even_with_same_whatsapp(): void
+    {
+        User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'payment_status' => User::PAYMENT_AWAITING,
+            'name' => 'Anastasia Putri',
+            'email' => 'anastasia.pending@example.com',
+            'no_wa' => '08123456789',
+            'jenjang' => 'SMP',
+        ]);
+
+        $response = $this->from(route('register.guru.pending'))
+            ->withSession(['_token' => 'resume-partial-token'])
+            ->post(route('register.guru.pending.resume'), [
+                '_token' => 'resume-partial-token',
+                'name' => 'Ana',
+                'no_wa' => '0812-3456-789',
+            ]);
+
+        $response->assertRedirect(route('register.guru.pending'));
+        $response->assertSessionHasErrors([
+            'resume' => 'Data pending tidak ditemukan. Pastikan nomor WhatsApp sama seperti saat pendaftaran. Nama boleh tanpa gelar.',
+        ]);
+    }
+
     public function test_duplicate_active_registration_returns_clear_errors(): void
     {
         User::factory()->create([
@@ -198,7 +295,10 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'no_wa' => '08123456789',
         ]);
 
-        $response = $this->from(route('register.guru.form'))->post(route('register.guru'), [
+        $response = $this->from(route('register.guru.form'))
+            ->withSession(['_token' => 'active-token'])
+            ->post(route('register.guru'), [
+            '_token' => 'active-token',
             'name' => 'Guru Baru',
             'email' => 'guru.aktif@example.com',
             'jenjang' => 'SMP',
@@ -400,5 +500,19 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'user_id' => $otherGuru->id,
             'pertanyaan' => 'Soal guru B',
         ]);
+    }
+
+    public function test_personal_question_builder_routes_are_resolved_before_parameter_routes(): void
+    {
+        $routes = app('router')->getRoutes();
+
+        $builderRoute = $routes->match(Request::create('/guru/personal-questions/builder', 'GET'));
+        $this->assertSame('guru.personal-questions.builder', $builderRoute->getName());
+
+        $saveRoute = $routes->match(Request::create('/guru/personal-questions/builder/save', 'POST'));
+        $this->assertSame('guru.personal-questions.builder.save', $saveRoute->getName());
+
+        $updateRoute = $routes->match(Request::create('/guru/personal-questions/123', 'POST'));
+        $this->assertSame('guru.personal-questions.update', $updateRoute->getName());
     }
 }

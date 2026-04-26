@@ -27,16 +27,25 @@
 
             <p class="mt-3 text-sm text-textSecondary dark:text-slate-300">Nomor ini dipakai untuk tombol/redirect otomatis setelah guru upload bukti pembayaran.</p>
 
-            <form method="POST" action="{{ route('superadmin.finance.admin-whatsapp') }}" class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <form method="POST" action="{{ route('superadmin.finance.settings') }}" class="mt-4 flex flex-col gap-3">
                 @csrf
                 <div class="w-full">
-                    <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Nomor WhatsApp</label>
+                    <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Nomor WhatsApp Admin</label>
                     <input class="input w-full" name="admin_whatsapp" value="{{ old('admin_whatsapp', $adminWhatsapp) }}" placeholder="62812xxxxxxx / 08xxxxxxx">
                 </div>
-                <button type="submit" class="btn-primary whitespace-nowrap">
-                    <i class="fa-solid fa-floppy-disk mr-2"></i>
-                    Simpan
-                </button>
+                
+                <div class="w-full mt-2">
+                    <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">QRIS Master Payload</label>
+                    <textarea class="input w-full min-h-24 font-mono text-xs" name="master_payload" placeholder="000201010211...">{{ old('master_payload', $masterPayload) }}</textarea>
+                    <p class="mt-1 text-xs text-textSecondary dark:text-slate-300">Payload QRIS default (dari aplikasi Gopay/merchant). Sistem akan menyisipkan tag 54 (nominal) secara otomatis.</p>
+                </div>
+                
+                <div class="flex justify-end mt-2">
+                    <button type="submit" class="btn-primary whitespace-nowrap">
+                        <i class="fa-solid fa-floppy-disk mr-2"></i>
+                        Simpan Pengaturan
+                    </button>
+                </div>
             </form>
         </div>
 

@@ -22,7 +22,7 @@ class TeacherController extends Controller
             ]);
         }
 
-        $token = $teacher->access_token ?: $this->generateUniqueToken();
+        $token = \App\Support\TokenGenerator::uniqueTeacherToken();
 
         $updateData = [
             'role' => User::ROLE_GURU,
@@ -63,7 +63,7 @@ class TeacherController extends Controller
 
     public function refreshToken(User $teacher): RedirectResponse
     {
-        $token = $this->generateUniqueToken();
+        $token = \App\Support\TokenGenerator::uniqueTeacherToken();
 
         $teacher->update([
             'access_token' => $token,
@@ -81,7 +81,7 @@ class TeacherController extends Controller
         ]);
     }
 
-    public function approvePayment(User $teacher): RedirectResponse
+    public function approvePayment(User $teacher, \App\Services\PaymentApprovalService $paymentService): RedirectResponse
     {
         if (blank($teacher->payment_proof_path) && $teacher->payment_status !== User::PAYMENT_SUBMITTED) {
             return back()->with('flash', [
@@ -91,17 +91,7 @@ class TeacherController extends Controller
             ]);
         }
 
-        $token = $teacher->access_token ?: $this->generateUniqueToken();
-
-        $teacher->update([
-            'role' => User::ROLE_GURU,
-            'account_status' => User::STATUS_ACTIVE,
-            'payment_status' => User::PAYMENT_APPROVED,
-            'payment_verified_at' => now(),
-            'payment_reviewed_by' => Auth::id(),
-            'payment_rejection_reason' => null,
-            'access_token' => $token,
-        ]);
+        $token = $paymentService->approve($teacher);
 
         return back()->with('flash', [
             'type' => 'success',
@@ -115,7 +105,7 @@ class TeacherController extends Controller
         ]);
     }
 
-    public function rejectPayment(Request $request, User $teacher): RedirectResponse
+    public function rejectPayment(Request $request, User $teacher, \App\Services\PaymentApprovalService $paymentService): RedirectResponse
     {
         if (blank($teacher->payment_proof_path) && $teacher->payment_status !== User::PAYMENT_SUBMITTED) {
             return back()->with('flash', [
@@ -129,13 +119,7 @@ class TeacherController extends Controller
             'payment_rejection_reason' => ['required', 'string', 'max:500'],
         ]);
 
-        $teacher->update([
-            'payment_status' => User::PAYMENT_REJECTED,
-            'payment_verified_at' => now(),
-            'payment_reviewed_by' => Auth::id(),
-            'payment_rejection_reason' => $validated['payment_rejection_reason'],
-            'account_status' => User::STATUS_PENDING,
-        ]);
+        $paymentService->reject($teacher, $validated['payment_rejection_reason']);
 
         return back()->with('flash', [
             'type' => 'warning',
@@ -209,15 +193,4 @@ class TeacherController extends Controller
         ));
     }
 
-    private function generateUniqueToken(): string
-    {
-        for ($i = 0; $i < 5; $i++) {
-            $candidate = strtoupper(Str::random(10));
-            if (! User::query()->where('access_token', $candidate)->exists()) {
-                return $candidate;
-            }
-        }
-
-        abort(500, 'Gagal generate token unik.');
-    }
 }

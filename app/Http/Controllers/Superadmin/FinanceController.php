@@ -33,26 +33,32 @@ class FinanceController extends Controller
         $hasJenjangColumn = Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang');
         $hasQrisImageColumn = Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'qris_image_path');
         $adminWhatsapp = AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'));
+        $masterPayload = AppSetting::getValue('qris_master_payload', config('services.qris.master_payload'));
 
-        return view('superadmin.finance', compact('tarifJenjangs', 'hasJenjangColumn', 'hasQrisImageColumn', 'adminWhatsapp'));
+        return view('superadmin.finance', compact('tarifJenjangs', 'hasJenjangColumn', 'hasQrisImageColumn', 'adminWhatsapp', 'masterPayload'));
     }
 
-    public function saveAdminWhatsapp(Request $request): RedirectResponse
+    public function saveSettings(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'admin_whatsapp' => ['nullable', 'string', 'max:40'],
+            'master_payload' => ['nullable', 'string'],
         ]);
 
-        $raw = (string) ($validated['admin_whatsapp'] ?? '');
-        $digits = preg_replace('/\D+/', '', $raw) ?? '';
+        $rawWa = (string) ($validated['admin_whatsapp'] ?? '');
+        $digits = preg_replace('/\D+/', '', $rawWa) ?? '';
         $digits = $digits !== '' ? $digits : null;
 
+        $payload = trim((string) ($validated['master_payload'] ?? ''));
+        $payload = $payload !== '' ? $payload : null;
+
         AppSetting::putValue('qris_admin_whatsapp', $digits);
+        AppSetting::putValue('qris_master_payload', $payload);
 
         return back()->with('flash', [
             'type' => 'success',
-            'title' => 'WhatsApp admin disimpan',
-            'message' => $digits ? 'Nomor WhatsApp admin akan dipakai untuk tombol konfirmasi otomatis.' : 'Nomor WhatsApp admin dikosongkan.',
+            'title' => 'Pengaturan Keuangan & QRIS disimpan',
+            'message' => 'Konfigurasi WhatsApp admin dan Payload QRIS berhasil diperbarui.',
         ]);
     }
 }

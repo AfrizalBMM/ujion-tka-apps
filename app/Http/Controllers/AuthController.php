@@ -74,24 +74,24 @@ class AuthController extends Controller
     }
 
     /**
-     * Proses otentikasi Guru (Nama + Token).
+     * Proses otentikasi Guru (No. WhatsApp + Token).
      */
     public function login(Request $request)
     {
-        $request->validate([
-            'login_identifier' => ['required', 'string'],
+        $credentials = $request->validate([
+            'no_wa' => ['required', 'string', 'max:20'],
             'access_token' => ['required', 'string'],
         ]);
 
-        $user = User::where(function ($query) use ($request) {
-            $query->where('name', $request->login_identifier)
-                ->orWhere('no_wa', $request->login_identifier);
-        })
-            ->where('access_token', $request->access_token)
+        $normalizedWa = $this->normalizePhoneNumber($credentials['no_wa']);
+        $accessToken = strtoupper(trim((string) $credentials['access_token']));
+
+        $user = User::query()
+            ->where('no_wa', $normalizedWa)
             ->where('role', User::ROLE_GURU)
             ->first();
 
-        if ($user) {
+        if ($user && \Illuminate\Support\Facades\Hash::check($accessToken, $user->access_token)) {
             if ($user->account_status !== User::STATUS_ACTIVE) {
                 $message = $user->account_status === User::STATUS_PENDING
                     ? 'Akun Anda masih pending. Token akses akan bisa dipakai setelah pembayaran diverifikasi admin.'
@@ -109,7 +109,7 @@ class AuthController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'access_token' => 'Nama/No. WA atau Token Akses tidak sesuai.',
+            'access_token' => 'No. WA atau Token Akses tidak sesuai.',
         ]);
     }
 
@@ -169,8 +169,13 @@ class AuthController extends Controller
             return true;
         }
 
-        $digits = preg_replace('/\D+/', '', $contact) ?? '';
+        $digits = $this->normalizePhoneNumber($contact);
 
         return strlen($digits) >= 8 && strlen($digits) <= 20;
+    }
+
+    private function normalizePhoneNumber(?string $phone): string
+    {
+        return preg_replace('/\D+/', '', (string) $phone) ?: (string) $phone;
     }
 }

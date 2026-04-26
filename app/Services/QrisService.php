@@ -9,7 +9,7 @@ class QrisService
 {
     public function generateFixedAmountPayload(int|float|string $amount, ?string $masterPayload = null): string
     {
-        $basePayload = trim((string) ($masterPayload ?? config('services.qris.master_payload')));
+        $basePayload = trim((string) ($masterPayload ?? \App\Models\AppSetting::getValue('qris_master_payload', config('services.qris.master_payload'))));
 
         if ($basePayload === '') {
             throw new RuntimeException('GOPAY_MASTER_PAYLOAD belum dikonfigurasi.');
