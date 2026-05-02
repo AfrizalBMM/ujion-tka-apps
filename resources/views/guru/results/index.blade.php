@@ -11,6 +11,13 @@
     </div>
 </div>
 
+<div class="mb-6">
+    <a href="{{ route('guru.results.practice.index') }}" class="btn-secondary inline-flex items-center gap-2">
+        <i class="fa-solid fa-chart-column"></i>
+        Analisis Latihan Materi
+    </a>
+</div>
+
 <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
     @forelse($exams as $exam)
     <div

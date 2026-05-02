@@ -37,6 +37,7 @@ Project ini saat ini berpusat pada:
 - Login guru: `/login`
 - Login superadmin: `/ngadimin/login`
 - Login siswa: `/siswa/login`
+- Login siswa (latihan materi): `/siswa/latihan/login`
 
 ## Ringkasan Role
 
@@ -81,6 +82,12 @@ Siswa menggunakan token ujian untuk:
 - menyimpan jawaban
 - menyelesaikan ujian dan melihat status akhir
 
+Siswa juga bisa menggunakan token **latihan materi** untuk:
+
+- masuk ke halaman latihan berbasis materi
+- mengerjakan **telaah soal** (feedback benar/salah + pembahasan, boleh retry)
+- mengerjakan **paket latihan 1–3** (sekali submit per paket)
+
 ## Flow Aktif Utama
 
 ### 1. Registrasi Guru
@@ -117,6 +124,24 @@ Siswa menggunakan token ujian untuk:
 7. Sistem membuat sesi ujian dan menyimpan jawaban
 8. Sistem menghitung skor saat ujian selesai
 
+### 5. Flow Latihan Materi (Baru)
+
+1. Superadmin memilih materi lalu menyiapkan:
+
+- 2 soal **telaah** (PG dari `global_questions` yang aktif)
+- token latihan + snapshot paket 1–3 (acak dari bank soal global per materi), jumlah soal per paket: 10/15
+
+2. Guru membagikan token latihan ke siswa
+3. Siswa membuka `/siswa/latihan/login`, input token
+4. Siswa isi identitas (nama wajib, WA opsional)
+5. Di dashboard latihan:
+
+- bagian **telaah**: siswa jawab → sistem langsung tampil benar/salah + pembahasan, dan boleh ganti jawaban (retry)
+- bagian **paket latihan**: siswa kerjakan paket 1–3 dan submit (sekali submit per paket)
+
+6. Guru melihat analisis hasil latihan di menu hasil (area guru)
+7. Guru dapat download PDF per paket (paket 1–3)
+
 ## Modul Utama
 
 ### Superadmin
@@ -132,6 +157,10 @@ Siswa menggunakan token ujian untuk:
 - Manajemen ujian
 - Audit log
 
+Tambahan:
+
+- Latihan materi (token per materi + telaah + snapshot paket latihan)
+
 ### Guru
 
 - Dashboard
@@ -145,6 +174,11 @@ Siswa menggunakan token ujian untuk:
 - Live chat
 - Panduan
 
+Tambahan:
+
+- Download PDF paket latihan materi
+- Analisis hasil latihan materi
+
 ### Siswa
 
 - Login token
@@ -152,6 +186,11 @@ Siswa menggunakan token ujian untuk:
 - Petunjuk ujian
 - Pengerjaan ujian
 - Selesai ujian
+
+Tambahan:
+
+- Login token latihan
+- Dashboard latihan materi (telaah + paket 1–3)
 
 ## Arsitektur Data Singkat
 
@@ -172,6 +211,21 @@ Siswa menggunakan token ujian untuk:
 - `personal_questions` untuk bank soal pribadi guru
 - `questions` dan `exam_question` masih dipakai untuk sebagian builder/admin compatibility
 - `participants` dan `participant_answers` masih ada untuk modul legacy tertentu
+
+### Jalur latihan materi (Baru)
+
+- `material_practice_tokens` (1 token per materi)
+- `material_telaah_questions` (2 soal telaah per materi)
+- `material_practice_packages` (paket 1–3 per token)
+- `material_practice_package_questions` (snapshot soal per paket)
+- `material_practice_sessions` (identitas siswa per token)
+- `material_telaah_answers` (jawaban telaah; retry = update)
+- `material_practice_package_attempts` (1 attempt per siswa per paket; submit sekali)
+- `material_practice_package_answers` (jawaban paket)
+
+Catatan desain:
+
+- Paket latihan adalah **snapshot per token** (bukan per siswa) agar konsisten dan cocok dengan PDF.
 
 ## Struktur Folder Penting
 
@@ -235,6 +289,31 @@ npm run dev
 php artisan serve
 ```
 
+## Catatan PDF
+
+Fitur PDF paket latihan memakai `barryvdh/laravel-dompdf`.
+
+- Endpoint PDF hanya tersedia untuk role `guru`
+- View template PDF ada di `resources/views/guru/material-practice/package-pdf.blade.php`
+
+## Route Penting (Latihan Materi)
+
+Superadmin:
+
+- `GET /superadmin/materials/{material}/practice` (konfigurasi telaah + token)
+
+Siswa:
+
+- `GET /siswa/latihan/login` → `POST /siswa/latihan/login` (validasi token)
+- `GET /siswa/latihan/identitas` → `POST /siswa/latihan/mulai`
+- `GET /siswa/latihan` (dashboard)
+- `GET/POST /siswa/latihan/paket/{paketNo}`
+
+Guru:
+
+- `GET /guru/materials/{material}/latihan/paket/{paketNo}/pdf`
+- `GET /guru/results/latihan-materi`
+
 ## Deployment
 
 Saat men-deploy ke server production (shared hosting atau VPS), pastikan langkah-langkah berikut dilakukan:
@@ -250,7 +329,6 @@ Saat men-deploy ke server production (shared hosting atau VPS), pastikan langkah
 3.  **Database**: Jalankan `php artisan migrate --force` untuk memperbarui skema.
 4.  **Aset**: Jalankan `npm run build` untuk memproses file CSS/JS.
 5.  **Environment**: Pastikan `APP_ENV=production` dan `APP_DEBUG=false` di file `.env` server.
-
 
 ## Konfigurasi QRIS
 

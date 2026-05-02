@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
 use App\Models\User;
+use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -42,11 +43,9 @@ class AuthController extends Controller
             ]);
         }
 
-        $adminNumber = preg_replace(
-            '/\D+/',
-            '',
+        $adminNumber = PhoneNumber::normalizeIndonesian(
             (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
-        ) ?? '';
+        );
 
         if ($adminNumber === '') {
             return redirect()->route('login')->with('flash', [
@@ -87,7 +86,7 @@ class AuthController extends Controller
         $accessToken = strtoupper(trim((string) $credentials['access_token']));
 
         $user = User::query()
-            ->where('no_wa', $normalizedWa)
+            ->whereIn('no_wa', PhoneNumber::variants($credentials['no_wa']))
             ->where('role', User::ROLE_GURU)
             ->first();
 
@@ -176,6 +175,6 @@ class AuthController extends Controller
 
     private function normalizePhoneNumber(?string $phone): string
     {
-        return preg_replace('/\D+/', '', (string) $phone) ?: (string) $phone;
+        return PhoneNumber::normalizeIndonesian($phone);
     }
 }

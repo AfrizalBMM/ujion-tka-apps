@@ -55,6 +55,25 @@
             </div>
 
             <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+                <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Latihan Materi</div>
+                @if($practiceToken)
+                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                        <code class="rounded bg-indigo-50 px-2 py-1 text-sm font-black text-indigo-700">{{ $practiceToken->token }}</code>
+                        <span class="badge-success">Aktif</span>
+                    </div>
+                    <div class="mt-3 grid grid-cols-1 gap-2">
+                        @foreach([1,2,3] as $no)
+                            <a class="btn-secondary w-full justify-center" href="{{ route('guru.materials.practice.pdf', ['material' => $material, 'paketNo' => $no]) }}">
+                                Download PDF Paket {{ $no }}
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="mt-2 text-sm text-textSecondary">Token latihan belum disiapkan oleh admin.</div>
+                @endif
+            </div>
+
+            <div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
                 <div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Bank Soal Global</div>
                 <div class="mt-2 text-3xl font-bold">{{ $globalQuestionCount }}</div>
                 <div class="mt-2 text-xs text-textSecondary">Snapshot builder ujian: {{ $examSnapshotCount }}</div>

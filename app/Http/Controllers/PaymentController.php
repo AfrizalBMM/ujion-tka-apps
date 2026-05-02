@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\AppSetting;
 use App\Services\QrisService;
+use App\Support\PhoneNumber;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Number;
@@ -24,7 +25,9 @@ class PaymentController extends Controller
         $amount = (int) round((float) $transaction->amount);
         $payload = $qrisService->generateFixedAmountPayload($amount);
         $formattedAmount = Number::currency($amount, 'IDR', 'id');
-        $adminNumber = preg_replace('/\D+/', '', (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))) ?? '';
+        $adminNumber = PhoneNumber::normalizeIndonesian(
+            (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
+        );
 
         $message = rawurlencode(sprintf(
             'Halo Admin Ujion, saya sudah bayar Paket %s senilai %s. Kode referensi: %s. Bukti bayar akan saya upload di halaman aktivasi.',

@@ -230,12 +230,22 @@
                             <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $m->sub_unit }}
                         </div>
                     </div>
-                    <form method="POST" action="{{ route('superadmin.materials.destroy', $m) }}">
-                        @csrf
-                        <button class="btn-danger p-2" type="submit" data-confirm="Hapus materi ini? Data soal yang terikat akan kehilangan referensi materi. Lanjutkan?" title="Hapus">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </form>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('superadmin.materials.practice.show', $m) }}" class="btn-secondary p-2" title="Latihan Materi">
+                            <i class="fa-solid fa-key"></i>
+                        </a>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('superadmin.materials.practice.show', $m) }}" class="btn-secondary p-2" title="Latihan Materi">
+                                <i class="fa-solid fa-key"></i>
+                            </a>
+                            <form method="POST" action="{{ route('superadmin.materials.destroy', $m) }}">
+                                @csrf
+                                <button class="btn-danger p-2" type="submit" data-confirm="Hapus materi ini? Data soal yang terikat akan kehilangan referensi materi. Lanjutkan?" title="Hapus">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             @endforeach
             @else

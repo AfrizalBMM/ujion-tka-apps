@@ -8,6 +8,7 @@ use App\Models\PricingPlan;
 use App\Models\AppSetting;
 use App\Services\PaymentProofStorage;
 use App\Services\QrisService;
+use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -45,7 +46,7 @@ class RegisterGuruController extends Controller
         }
 
         $normalizedWa = $this->normalizePhoneNumber($no_wa);
-        $exists = User::where('no_wa', $normalizedWa)->exists();
+        $exists = User::whereIn('no_wa', PhoneNumber::variants($no_wa))->exists();
 
         return response()->json([
             'exists' => $exists,
@@ -78,7 +79,7 @@ class RegisterGuruController extends Controller
         $normalizedWa = $this->normalizePhoneNumber($validated['no_wa']);
 
         $existingByEmail = User::query()->where('email', $validated['email'])->first();
-        $existingByWa = User::query()->where('no_wa', $normalizedWa)->first();
+        $existingByWa = User::query()->whereIn('no_wa', PhoneNumber::variants($validated['no_wa']))->first();
 
         if ($existingByEmail && $existingByWa && $existingByEmail->id !== $existingByWa->id) {
             return back()
@@ -145,7 +146,7 @@ class RegisterGuruController extends Controller
             }
 
             $existingByEmail = User::query()->where('email', $validated['email'])->first();
-            $existingByWa = User::query()->where('no_wa', $normalizedWa)->first();
+            $existingByWa = User::query()->whereIn('no_wa', PhoneNumber::variants($validated['no_wa']))->first();
             $existingTeacher = $existingByEmail ?? $existingByWa;
 
             if ($existingTeacher instanceof User
@@ -223,7 +224,7 @@ class RegisterGuruController extends Controller
         $teacher = User::query()
             ->where('role', User::ROLE_GURU)
             ->where('account_status', User::STATUS_PENDING)
-            ->where('no_wa', $normalizedWa)
+            ->whereIn('no_wa', PhoneNumber::variants($validated['no_wa']))
             ->get()
             ->first(fn(User $candidate) => $this->pendingResumeNameMatches($candidate->name, $normalizedName));
 
@@ -346,7 +347,9 @@ class RegisterGuruController extends Controller
         $qrCodeSvg = (string) QrCode::format('svg')->size(320)->margin(1)->generate($payload);
         $formattedAmount = 'Rp' . number_format($amount, 0, ',', '.');
 
-        $adminNumber = preg_replace('/\D+/', '', (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))) ?? '';
+        $adminNumber = PhoneNumber::normalizeIndonesian(
+            (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
+        );
         $waUrl = null;
         if ($adminNumber !== '') {
             $message = rawurlencode(
@@ -459,7 +462,9 @@ class RegisterGuruController extends Controller
 
         $request->session()->forget('pending_registration');
 
-        $adminNumber = preg_replace('/\D+/', '', (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))) ?? '';
+        $adminNumber = PhoneNumber::normalizeIndonesian(
+            (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
+        );
         if ($adminNumber === '') {
             return redirect()->route('login')->with('flash', [
                 'type' => 'success',
@@ -487,7 +492,6 @@ class RegisterGuruController extends Controller
             . "Paket: {$planName}\n"
             . "Nominal: {$formattedAmount}\n"
             . "Kode Referensi: {$referenceCode}\n"
-            . "Bukti (URL): {$proofUrl}\n"
         );
 
         return redirect()->away("https://wa.me/{$adminNumber}?text={$message}");
@@ -513,7 +517,7 @@ class RegisterGuruController extends Controller
 
     private function normalizePhoneNumber(?string $phone): string
     {
-        return preg_replace('/\D+/', '', (string) $phone) ?: (string) $phone;
+        return PhoneNumber::normalizeIndonesian($phone);
     }
 
     private function generateReferenceCode(): string
@@ -531,7 +535,9 @@ class RegisterGuruController extends Controller
 
     private function adminWhatsappUrl(string $message): ?string
     {
-        $adminNumber = preg_replace('/\D+/', '', (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))) ?? '';
+        $adminNumber = PhoneNumber::normalizeIndonesian(
+            (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
+        );
 
         if ($adminNumber === '') {
             return null;

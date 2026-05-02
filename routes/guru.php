@@ -14,6 +14,8 @@ use App\Http\Controllers\Guru\ChatController;
 use App\Http\Controllers\Guru\SoalGuruController;
 use App\Http\Controllers\Guru\SoalUjionController;
 use App\Http\Controllers\Guru\TeksBacaanGuruController;
+use App\Http\Controllers\Guru\MaterialPracticePdfController;
+use App\Http\Controllers\Guru\MaterialPracticeResultController;
 use App\Http\Controllers\ChatImageController as SharedChatImageController;
 
 Route::get('/register/guru', [RegisterGuruController::class, 'showForm'])->name('register.guru.form');
@@ -60,6 +62,15 @@ Route::middleware(['auth', 'role:guru', 'guru.active'])->prefix('guru')->name('g
     Route::get('/results/{exam}/mapel/{mapel}', [ExamResultController::class, 'mapel'])->name('results.mapel');
     Route::get('/results/session/{session}', [ExamResultController::class, 'studentDetail'])->name('results.student');
     Route::get('/results/{exam}/mapel/{mapel}/export', [ExamResultController::class, 'export'])->name('results.export');
+
+    // Latihan Materi Results
+    Route::get('/results/latihan-materi', [MaterialPracticeResultController::class, 'index'])->name('results.practice.index');
+    Route::get('/results/latihan-materi/{material}', [MaterialPracticeResultController::class, 'show'])->name('results.practice.show');
+
+    // Latihan Materi PDF (guru only)
+    Route::get('/materials/{material}/latihan/paket/{paketNo}/pdf', [MaterialPracticePdfController::class, 'downloadPackage'])
+        ->whereNumber('paketNo')
+        ->name('materials.practice.pdf');
 
     Route::get('/chat', [ChatController::class, 'index'])->name('chat');
     Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');

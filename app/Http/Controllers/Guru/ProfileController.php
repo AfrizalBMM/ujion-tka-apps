@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -39,6 +41,23 @@ class ProfileController extends Controller
         }
 
         $data = $request->validate($rules);
+
+        if (array_key_exists('no_wa', $data)) {
+            $data['no_wa'] = PhoneNumber::normalizeIndonesian($data['no_wa']);
+
+            $duplicateWhatsapp = User::query()
+                ->where('id', '!=', $user->id)
+                ->whereIn('no_wa', PhoneNumber::variants($data['no_wa']))
+                ->exists();
+
+            if ($duplicateWhatsapp) {
+                return back()
+                    ->withErrors([
+                        'no_wa' => 'Nomor WhatsApp ini sudah terdaftar. Silakan gunakan nomor lain.',
+                    ])
+                    ->withInput();
+            }
+        }
 
         if ($request->hasFile('avatar')) {
             $data['avatar'] = $request->file('avatar')->store('avatars', 'public');

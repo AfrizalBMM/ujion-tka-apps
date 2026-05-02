@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use App\Models\GlobalQuestion;
 use App\Models\Question;
+use App\Models\MaterialPracticeToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Material;
@@ -94,7 +95,9 @@ class MaterialController extends Controller {
             ->count();
         $isBookmarked = in_array($material->id, $user->bookmarks ?? []);
 
-        return view('guru.material-show', compact('material', 'globalQuestionCount', 'examSnapshotCount', 'isBookmarked'));
+        $practiceToken = MaterialPracticeToken::query()->where('material_id', $material->id)->first();
+
+        return view('guru.material-show', compact('material', 'globalQuestionCount', 'examSnapshotCount', 'isBookmarked', 'practiceToken'));
     }
     public function bookmark(Material $material) {
         $user = Auth::user();

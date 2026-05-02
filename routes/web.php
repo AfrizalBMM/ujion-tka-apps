@@ -5,6 +5,7 @@ use App\Http\Controllers\Superadmin\AuditLogController;
 use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\GlobalQuestionController;
 use App\Http\Controllers\Superadmin\MaterialController;
+use App\Http\Controllers\Superadmin\MaterialPracticeController;
 use App\Http\Controllers\Superadmin\MapelPaketController as SuperadminMapelPaketController;
 use App\Http\Controllers\Superadmin\PaketSoalController;
 use App\Http\Controllers\Superadmin\PricingPlanController;
@@ -21,6 +22,8 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\OgImageController;
 
 use App\Http\Controllers\Siswa\AuthController as SiswaAuthController;
+use App\Http\Controllers\Siswa\MaterialPracticeAuthController;
+use App\Http\Controllers\Siswa\MaterialPracticeController as SiswaMaterialPracticeController;
 use App\Http\Controllers\Siswa\ExamController;
 
 use App\Http\Controllers\AuthController as GeneralAuthController;
@@ -55,6 +58,20 @@ Route::get('/siswa/petunjuk', [ExamController::class , 'petunjuk'])->name('siswa
 Route::get('/siswa/ujian', [ExamController::class , 'showUjian'])->name('siswa.ujian');
 Route::post('/siswa/api/save-answer', [ExamController::class , 'apiSaveAnswer'])->name('siswa.api.save_answer');
 Route::get('/siswa/selesai', [ExamController::class , 'selesai'])->name('siswa.selesai');
+
+// Siswa - Latihan Materi (Telaah + Paket Latihan)
+Route::get('/siswa/latihan/login', [MaterialPracticeAuthController::class, 'showLoginForm'])->name('siswa.practice.login');
+Route::post('/siswa/latihan/login', [MaterialPracticeAuthController::class, 'validateToken'])
+	->middleware('throttle:10,1')
+	->name('siswa.practice.token.validate');
+Route::get('/siswa/latihan/identitas', function () {
+	return view('siswa.practice.identitas');
+})->name('siswa.practice.identitas');
+Route::post('/siswa/latihan/mulai', [SiswaMaterialPracticeController::class, 'mulai'])->name('siswa.practice.mulai');
+Route::get('/siswa/latihan', [SiswaMaterialPracticeController::class, 'dashboard'])->name('siswa.practice.dashboard');
+Route::post('/siswa/latihan/telaah/{globalQuestion}', [SiswaMaterialPracticeController::class, 'submitTelaah'])->name('siswa.practice.telaah.submit');
+Route::get('/siswa/latihan/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'showPaket'])->whereNumber('paketNo')->name('siswa.practice.paket.show');
+Route::post('/siswa/latihan/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'submitPaket'])->whereNumber('paketNo')->name('siswa.practice.paket.submit');
 
 Route::prefix('superadmin')
 	->name('superadmin.')
@@ -104,6 +121,12 @@ Route::prefix('superadmin')
 	    Route::get('/materials/template', [MaterialController::class , 'template'])->name('materials.template');
 		Route::post('/materials/{material}/delete', [MaterialController::class , 'destroy'])->name('materials.destroy');
 		Route::post('/materials/destroy-all', [MaterialController::class, 'destroyAll'])->name('materials.destroyAll');
+
+		// Latihan Materi (Telaah + Paket Latihan)
+		Route::get('/materials/{material}/practice', [MaterialPracticeController::class, 'show'])->name('materials.practice.show');
+		Route::post('/materials/{material}/practice/telaah', [MaterialPracticeController::class, 'saveTelaah'])->name('materials.practice.telaah');
+		Route::post('/materials/{material}/practice/token', [MaterialPracticeController::class, 'upsertToken'])->name('materials.practice.token');
+		Route::post('/materials/{material}/practice/packages/regenerate', [MaterialPracticeController::class, 'regeneratePackages'])->name('materials.practice.packages.regenerate');
 
 	    Route::get('/global-questions', [GlobalQuestionController::class , 'index'])->name('global-questions.index');
 	    Route::post('/global-questions', [GlobalQuestionController::class , 'store'])->name('global-questions.store');

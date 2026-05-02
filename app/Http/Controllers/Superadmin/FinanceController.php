@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Models\PricingPlan;
+use App\Support\PhoneNumber;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,7 +47,7 @@ class FinanceController extends Controller
         ]);
 
         $rawWa = (string) ($validated['admin_whatsapp'] ?? '');
-        $digits = preg_replace('/\D+/', '', $rawWa) ?? '';
+        $digits = PhoneNumber::normalizeIndonesian($rawWa);
         $digits = $digits !== '' ? $digits : null;
 
         $payload = trim((string) ($validated['master_payload'] ?? ''));
