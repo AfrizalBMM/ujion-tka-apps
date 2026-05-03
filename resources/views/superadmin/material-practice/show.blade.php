@@ -23,6 +23,16 @@
             </div>
         </div>
 
+        @if(($bankQuestionCount ?? 0) === 0)
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-white p-4 text-sm text-textSecondary dark:bg-slate-900">
+                <div>
+                    <span class="badge-warning">Bank soal PG aktif: 0</span>
+                    <span class="ml-2">Token/paket latihan tidak bisa digenerate sebelum bank soal untuk materi ini tersedia.</span>
+                </div>
+                <a href="{{ route('superadmin.global-questions.index') }}" class="btn-secondary">Buka Bank Soal</a>
+            </div>
+        @endif
+
         <div class="grid gap-4 lg:grid-cols-2">
             <div class="rounded-2xl border border-border bg-white p-4 dark:bg-slate-900">
                 <div class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Token</div>
@@ -76,28 +86,41 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('superadmin.materials.practice.telaah', $material) }}" class="grid gap-4 lg:grid-cols-2">
-            @csrf
-            @for($i=0; $i<2; $i++)
-                @php($selectedId = old('question_ids.' . $i, $telaah[$i]->global_question_id ?? null))
-                <div class="input-group">
-                    <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Soal Telaah {{ $i+1 }}</label>
-                    <select name="question_ids[]" class="input" required>
-                        <option value="">Pilih soal...</option>
-                        @foreach($bankQuestions as $q)
-                            <option value="{{ $q->id }}" {{ (int)$selectedId === (int)$q->id ? 'selected' : '' }}>
-                                #{{ $q->id }} — {{ \Illuminate\Support\Str::limit(strip_tags($q->question_text), 90) }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @php($selected = $selectedId ? ($bankQuestionsById[$selectedId] ?? null) : null)
-                    <p class="mt-1 text-[11px] text-textSecondary">Opsional bacaan: {{ $selected ? ($selected->reading_passage ? 'Ya' : 'Tidak') : '-' }}</p>
+        @if($bankQuestionCount === 0)
+            <div class="rounded-2xl border border-border bg-white p-4 text-sm text-textSecondary dark:bg-slate-900">
+                Belum ada bank soal PG aktif untuk materi ini, sehingga dropdown telaah akan kosong.
+                <div class="mt-3">
+                    <a class="btn-secondary" href="{{ route('superadmin.global-questions.index') }}">Buka Bank Soal</a>
                 </div>
-            @endfor
-            <div class="lg:col-span-2">
-                <button class="btn-primary" type="submit">Simpan Telaah</button>
             </div>
-        </form>
+        @else
+            <form method="POST" action="{{ route('superadmin.materials.practice.telaah', $material) }}" class="grid gap-4 lg:grid-cols-2">
+                @csrf
+                @for($i=0; $i<2; $i++)
+                    @php
+                        $selectedId = old('question_ids.' . $i, $telaah[$i]->global_question_id ?? null);
+                    @endphp
+                    <div class="input-group">
+                        <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Soal Telaah {{ $i+1 }}</label>
+                        <select name="question_ids[]" class="input" required>
+                            <option value="">Pilih soal...</option>
+                            @foreach($bankQuestions as $q)
+                                <option value="{{ $q->id }}" {{ (int)$selectedId === (int)$q->id ? 'selected' : '' }}>
+                                    #{{ $q->id }} — {{ \Illuminate\Support\Str::limit(strip_tags($q->question_text), 90) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @php
+                            $selected = $selectedId ? ($bankQuestionsById[$selectedId] ?? null) : null;
+                        @endphp
+                        <p class="mt-1 text-[11px] text-textSecondary">Opsional bacaan: {{ $selected ? ($selected->reading_passage ? 'Ya' : 'Tidak') : '-' }}</p>
+                    </div>
+                @endfor
+                <div class="lg:col-span-2">
+                    <button class="btn-primary" type="submit">Simpan Telaah</button>
+                </div>
+            </form>
+        @endif
 
         @if($telaah->count() === 2)
             <div class="mt-6 rounded-2xl border border-border bg-slate-50/70 p-4 dark:bg-slate-900/60">

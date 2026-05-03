@@ -222,6 +222,14 @@
                             @if($m->jenjang)
                                 <span class="badge-warning text-[10px]">{{ $m->jenjang }}</span>
                             @endif
+                            @php
+                                $bankCount = (int) ($m->bank_question_count ?? 0);
+                            @endphp
+                            @if($bankCount > 0)
+                                <span class="badge-success text-[10px]">Sudah ada {{ $bankCount }} soal</span>
+                            @else
+                                <span class="badge-warning text-[10px]">Belum ada soal</span>
+                            @endif
                             <div class="text-xs text-muted">ID: #{{ $m->id }}</div>
                         </div>
                         <div class="font-bold text-slate-800 dark:text-slate-200">{{ $m->subelement }}</div>

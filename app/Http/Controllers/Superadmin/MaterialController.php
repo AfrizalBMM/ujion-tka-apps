@@ -11,7 +11,9 @@ use App\Support\SpreadsheetTable;
 use App\Support\SpreadsheetTemplateExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Models\GlobalQuestion;
 
 class MaterialController extends Controller
 {
@@ -229,7 +231,22 @@ class MaterialController extends Controller
             });
         }
 
+        $bankQuestionCountSub = GlobalQuestion::query()
+            ->selectRaw('COUNT(*)')
+            ->where('global_questions.is_active', true)
+            ->where('global_questions.question_type', 'multiple_choice')
+            ->where(function ($q) {
+                $q->whereColumn('global_questions.material_id', 'materials.id')
+                    ->orWhere(function ($inner) {
+                        $inner->whereNull('global_questions.material_id')
+                            ->whereColumn('global_questions.material_mapel', 'materials.mapel')
+                            ->whereColumn('global_questions.material_curriculum', 'materials.curriculum');
+                    });
+            });
+
         $materials = $materialsQuery
+            ->select('materials.*')
+            ->selectSub($bankQuestionCountSub, 'bank_question_count')
             ->orderBy('curriculum')
             ->orderBy('subelement')
             ->orderBy('unit')

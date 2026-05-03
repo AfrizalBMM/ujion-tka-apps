@@ -39,6 +39,6 @@ class MaterialPracticeAuthController extends Controller
             'siswa_practice_token_id' => $practiceToken->id,
         ]);
 
-        return redirect()->route('siswa.practice.identitas');
+        return redirect()->route('materi.identitas');
     }
 }

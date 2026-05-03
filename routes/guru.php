@@ -56,16 +56,24 @@ Route::middleware(['auth', 'role:guru', 'guru.active'])->prefix('guru')->name('g
     Route::post('/exams/join', [ExamController::class, 'join'])->name('exams.join');
     Route::get('/exams/{exam}/result', [ExamController::class, 'result'])->name('exams.result');
 
-    // New Exam Results Analysis Routes
+    // Student Results Analysis Routes
     Route::get('/results', [ExamResultController::class, 'index'])->name('results.index');
-    Route::get('/results/{exam}', [ExamResultController::class, 'show'])->name('results.show');
-    Route::get('/results/{exam}/mapel/{mapel}', [ExamResultController::class, 'mapel'])->name('results.mapel');
-    Route::get('/results/session/{session}', [ExamResultController::class, 'studentDetail'])->name('results.student');
-    Route::get('/results/{exam}/mapel/{mapel}/export', [ExamResultController::class, 'export'])->name('results.export');
 
-    // Latihan Materi Results
+    // Latihan Materi Results (static routes before /results/{exam})
     Route::get('/results/latihan-materi', [MaterialPracticeResultController::class, 'index'])->name('results.practice.index');
     Route::get('/results/latihan-materi/{material}', [MaterialPracticeResultController::class, 'show'])->name('results.practice.show');
+    Route::get('/results/latihan-materi/{material}/session/{session}', [MaterialPracticeResultController::class, 'student'])
+        ->withoutScopedBindings()
+        ->name('results.practice.student');
+    Route::get('/results/latihan-materi/{material}/session/{session}/paket/{attempt}/pdf', [MaterialPracticePdfController::class, 'downloadStudentPackage'])
+        ->whereNumber(['session', 'attempt'])
+        ->withoutScopedBindings()
+        ->name('results.practice.package-pdf');
+
+    Route::get('/results/session/{session}', [ExamResultController::class, 'studentDetail'])->name('results.student');
+    Route::get('/results/{exam}', [ExamResultController::class, 'show'])->name('results.show');
+    Route::get('/results/{exam}/mapel/{mapel}', [ExamResultController::class, 'mapel'])->name('results.mapel');
+    Route::get('/results/{exam}/mapel/{mapel}/export', [ExamResultController::class, 'export'])->name('results.export');
 
     // Latihan Materi PDF (guru only)
     Route::get('/materials/{material}/latihan/paket/{paketNo}/pdf', [MaterialPracticePdfController::class, 'downloadPackage'])

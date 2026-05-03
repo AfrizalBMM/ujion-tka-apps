@@ -83,7 +83,7 @@ class MaterialPracticeToken extends Model
             $poolIds = GlobalQuestion::query()
                 ->where('is_active', true)
                 ->where('question_type', 'multiple_choice')
-                ->where('material_id', $this->material_id)
+                ->forMaterial($this->material()->firstOrFail())
                 ->pluck('id')
                 ->values()
                 ->all();

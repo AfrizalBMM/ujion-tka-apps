@@ -20,16 +20,21 @@
     </style>
 </head>
 @php
-    // Otomatis sembunyikan showcase untuk semua halaman siswa
-    if (request()->is('siswa*')) {
+    // Otomatis sembunyikan showcase untuk halaman siswa dan latihan materi.
+    if (request()->is('siswa*') || request()->is('materi*')) {
         $hideShowcase = true;
     }
 
     $guestFullscreen = isset($fullscreenGuest) && $fullscreenGuest;
     $hideGuestFooter = isset($hideFooterGuest) && $hideFooterGuest;
+    $guestWide = isset($wideGuest) && $wideGuest;
+
+    if (request()->routeIs('materi.dashboard', 'materi.paket.*', 'siswa.practice.dashboard', 'siswa.practice.paket.*')) {
+        $guestWide = true;
+    }
 @endphp
 <body class="{{ $guestFullscreen ? 'min-h-screen' : 'min-h-screen flex flex-col items-center justify-center p-4' }}">
-    <div class="guest-shell {{ $guestFullscreen ? '!max-w-none !w-full !px-0 !py-0 !min-h-screen flex flex-col' : 'mx-auto' }} {{ isset($hideShowcase) && $hideShowcase ? 'max-w-lg' : '' }}">
+    <div class="guest-shell {{ $guestFullscreen ? '!max-w-none !w-full !px-0 !py-0 !min-h-screen flex flex-col' : 'mx-auto' }} {{ isset($hideShowcase) && $hideShowcase ? ($guestWide ? 'w-full max-w-6xl' : 'max-w-lg') : '' }}">
         <div class="guest-panel {{ $guestFullscreen ? '!rounded-none !border-0 !bg-transparent !shadow-none flex-1 min-h-0 md:!grid-cols-[40%_60%]' : '' }} {{ isset($hideShowcase) && $hideShowcase ? '!grid-cols-1' : '' }}">
             @if(!isset($hideShowcase) || !$hideShowcase)
             <section class="guest-showcase {{ $guestFullscreen ? 'md:border-r md:border-white/10' : '' }}">

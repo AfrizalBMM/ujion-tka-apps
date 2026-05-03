@@ -102,38 +102,45 @@
     <a href="{{ route('guru.materials') }}" class="btn-secondary h-[42px] flex items-center justify-center">Reset</a>
   </form>
 
-  <div id="materials-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-    @foreach($materials as $material)
-    <div class="card p-4 flex flex-col">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex-1">
-          <div class="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">{{ $material->mapel }}</div>
-          <div class="font-bold">{{ $material->subelement }}</div>
+  <div class="space-y-4">
+    @foreach($materials as $m)
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm hover:shadow-md transition-all dark:border-slate-800 dark:bg-slate-900">
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-wrap items-center gap-2 mb-1">
+          <span class="badge-info text-[11px]">{{ $m->curriculum }}</span>
+          @if($m->mapel)
+            <span class="badge-primary bg-blue-100 text-blue-700 text-[11px]">{{ $m->mapel }}</span>
+          @endif
+          @if($m->jenjang)
+            <span class="badge-warning text-[11px]">{{ $m->jenjang }}</span>
+          @endif
+          @php $bankCount = (int) ($m->bank_question_count ?? 0); @endphp
+          @if($bankCount > 0)
+            <span class="badge-success text-[11px]">Sudah ada {{ $bankCount }} soal</span>
+          @else
+            <span class="badge-warning text-[11px]">Belum ada soal</span>
+          @endif
+          <span class="text-xs text-muted">ID: #{{ $m->id }}</span>
         </div>
-        <span class="badge-info shrink-0">Materi dari Ujion</span>
+        <div class="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1">{{ $m->subelement }}</div>
+        <div class="flex flex-wrap items-center gap-2 text-sm text-textSecondary dark:text-slate-400">
+          <span><i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $m->unit }}</span>
+          <span><i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $m->sub_unit }}</span>
+        </div>
       </div>
-      <div class="mt-1 text-sm text-textSecondary">
-        <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $material->unit }}
-        <i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {{ $material->sub_unit }}
-      </div>
-      <div class="mt-2 text-xs text-textSecondary mb-3 flex flex-wrap gap-x-3 gap-y-1">
-        <span>Kurikulum: {{ $material->curriculum }}</span>
-        <span>|</span>
-        <span>Jenjang: {{ $material->jenjang ?? 'Semua' }}</span>
-      </div>
-      <a href="{{ route('guru.materials.show', $material) }}" class="btn-primary mb-2 w-full text-center">Detail
-        Materi</a>
-      <div class="flex gap-2">
-        @if($material->link)
-        <a href="{{ $material->link }}" class="btn-secondary flex-1 text-center" target="_blank" rel="noopener">Buka
-          Link</a>
+      <div class="flex flex-row gap-2 shrink-0 items-center justify-end">
+        <a href="{{ route('guru.materials.show', $m) }}" class="btn-secondary p-2" title="Detail Materi">
+          <i class="fa-solid fa-key"></i>
+        </a>
+        @if($m->link)
+        <a href="{{ $m->link }}" class="btn-secondary p-2" target="_blank" rel="noopener" title="Buka Link">
+          <i class="fa-solid fa-link"></i>
+        </a>
         @endif
-        @if(in_array($material->id, $bookmarks))
-        <form method="POST" action="{{ route('guru.materials.unbookmark', $material) }}" class="flex-1">@csrf<button
-            class="btn-danger w-full">Hapus Bookmark</button></form>
+        @if(in_array($m->id, $bookmarks))
+        <form method="POST" action="{{ route('guru.materials.unbookmark', $m) }}">@csrf<button class="btn-danger p-2" title="Hapus Bookmark"><i class="fa-solid fa-trash"></i></button></form>
         @else
-        <form method="POST" action="{{ route('guru.materials.bookmark', $material) }}" class="flex-1">@csrf<button
-            class="btn-secondary w-full">Bookmark</button></form>
+        <form method="POST" action="{{ route('guru.materials.bookmark', $m) }}">@csrf<button class="btn-secondary p-2" title="Bookmark"><i class="fa-regular fa-bookmark"></i></button></form>
         @endif
       </div>
     </div>

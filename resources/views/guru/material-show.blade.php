@@ -9,7 +9,7 @@
         <h1 class="page-title">{{ $material->subelement }}</h1>
         <p class="page-description">{{ $material->unit }} &middot; {{ $material->sub_unit }}</p>
         <div class="page-actions">
-            <span class="badge-info border-white/20 bg-white/10 text-white">Materi dari Ujion</span>
+            <span class="badge-info border-white/20 bg-white/10 text-white">dari Ujion</span>
             <a href="{{ route('guru.materials') }}" class="btn-secondary border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white">Kembali</a>
             @if($material->link)
                 <a href="{{ $material->link }}" class="btn-primary" target="_blank" rel="noopener">Buka Link</a>

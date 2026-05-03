@@ -3,7 +3,9 @@
 @section('title', 'Kelola Soal')
 
 @section('content')
-@php($canManage = $paket->isManagedByGuru(auth()->user()))
+@php
+    $canManage = $paket->isManagedByGuru(auth()->user());
+@endphp
 <div class="space-y-6">
   <section class="page-hero">
     <span class="page-kicker">{{ $paket->nama }}</span>

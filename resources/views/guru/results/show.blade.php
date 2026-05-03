@@ -16,10 +16,14 @@
 </div>
 
 <div class="grid gap-6 md:grid-cols-2">
-    @php($tokens = $exam->examMapelTokens()->with('mapelPaket')->get())
+    @php
+        $tokens = $exam->examMapelTokens()->with('mapelPaket')->get();
+    @endphp
     @foreach($tokens as $t)
-        @php($sessionCount = $exam->ujianSesis()->where('mapel_paket_id', $t->mapel_paket_id)->count())
-        @php($isSurveyComponent = $t->mapelPaket?->isSurvey())
+        @php
+            $sessionCount = $exam->ujianSesis()->where('mapel_paket_id', $t->mapel_paket_id)->count();
+            $isSurveyComponent = $t->mapelPaket?->isSurvey();
+        @endphp
         <div class="metric-card group flex flex-col p-6">
             <div class="mb-6 flex items-start justify-between">
                 <div class="flex h-14 w-14 items-center justify-center rounded-[20px] bg-slate-900 text-white shadow-lg transition-transform duration-300 group-hover:scale-110">
@@ -44,7 +48,9 @@
                 <div class="h-8 w-px bg-slate-200"></div>
                 <div class="text-center">
                     <div class="text-xs font-bold uppercase tracking-widest text-textSecondary">{{ $isSurveyComponent ? 'Indeks Respons' : 'Rata-rata' }}</div>
-                    @php($avg = round($exam->ujianSesis()->where('mapel_paket_id', $t->mapel_paket_id)->where('status', 'selesai')->avg('skor') ?? 0, 1))
+                    @php
+                        $avg = round($exam->ujianSesis()->where('mapel_paket_id', $t->mapel_paket_id)->where('status', 'selesai')->avg('skor') ?? 0, 1);
+                    @endphp
                     <div class="mt-1 text-xl font-black text-indigo-600">{{ $avg }}</div>
                 </div>
             </div>

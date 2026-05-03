@@ -182,6 +182,7 @@ class GlobalQuestionController extends Controller
     {
         return SpreadsheetTemplateExporter::download('template-soal-pg.xls', [
             'jenjang_id',
+            'material_id',
             'question_type',
             'reading_passage',
             'question_text',
@@ -199,8 +200,8 @@ class GlobalQuestionController extends Controller
             'explanation',
             'is_active',
         ], [
-            ['1', 'multiple_choice', 'Bacaan opsional, boleh dikosongkan.', 'Contoh pertanyaan pilihan ganda?', 'Matematika', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'Jakarta', 'Bandung', 'Surabaya', 'Medan', '', 'A', 'Pembahasan singkat...', '1'],
-            ['2', 'multiple_choice', '', 'Ibu kota Indonesia adalah...?', 'Bahasa Indonesia', 'K-13', 'Literasi', 'Teks Deskripsi', 'Menentukan informasi tersurat', 'Jakarta', 'Bandung', 'Surabaya', 'Bali', '', 'A', '', '1'],
+            ['1', '', 'multiple_choice', 'Bacaan opsional, boleh dikosongkan.', 'Contoh pertanyaan pilihan ganda?', 'Matematika', 'Merdeka', 'Literasi', 'Teks Narasi', 'Mengidentifikasi ide pokok', 'Jakarta', 'Bandung', 'Surabaya', 'Medan', '', 'A', 'Pembahasan singkat...', '1'],
+            ['2', '', 'multiple_choice', '', 'Ibu kota Indonesia adalah...?', 'Bahasa Indonesia', 'K-13', 'Literasi', 'Teks Deskripsi', 'Menentukan informasi tersurat', 'Jakarta', 'Bandung', 'Surabaya', 'Bali', '', 'A', '', '1'],
         ]);
     }
 
@@ -208,6 +209,7 @@ class GlobalQuestionController extends Controller
     {
         return SpreadsheetTemplateExporter::download('template-soal-menjodohkan.xls', [
             'jenjang_id',
+            'material_id',
             'question_type',
             'question_text',
             'material_mapel',
@@ -226,8 +228,8 @@ class GlobalQuestionController extends Controller
             'explanation',
             'is_active',
         ], [
-            ['1', 'matching', 'Jodohkan kata dengan artinya!', 'Bahasa Indonesia', 'Merdeka', 'Literasi', 'Kosakata', 'Makna kata', 'Dinamis', 'Bergerak', 'Statis', 'Diam', 'Eksplisit', 'Jelas/Tersurat', 'Implisit', 'Tersirat', '', '1'],
-            ['2', 'matching', 'Pasangkan bilangan dengan hasil kuadratnya!', 'Matematika', 'K-13', 'Numerasi', 'Bilangan', 'Operasi hitung', '2', '4', '3', '9', '4', '16', '5', '25', '', '1'],
+            ['1', '', 'matching', 'Jodohkan kata dengan artinya!', 'Bahasa Indonesia', 'Merdeka', 'Literasi', 'Kosakata', 'Makna kata', 'Dinamis', 'Bergerak', 'Statis', 'Diam', 'Eksplisit', 'Jelas/Tersurat', 'Implisit', 'Tersirat', '', '1'],
+            ['2', '', 'matching', 'Pasangkan bilangan dengan hasil kuadratnya!', 'Matematika', 'K-13', 'Numerasi', 'Bilangan', 'Operasi hitung', '2', '4', '3', '9', '4', '16', '5', '25', '', '1'],
         ]);
     }
 
@@ -288,17 +290,26 @@ class GlobalQuestionController extends Controller
                 $options = $this->extractOptionsFromImportRow($row);
                 $readingPassage = $this->normalizeNullableString($row['reading_passage'] ?? $row['bacaan'] ?? null);
 
+                $materialId = $this->resolveMaterialIdFromRow($row);
+                $material = $materialId ? Material::query()->find($materialId) : null;
+
+                $materialMapel = $this->normalizeMaterialText($row['material_mapel'] ?? $row['mapel'] ?? null) ?? $material?->mapel;
+                $materialCurriculum = $this->normalizeMaterialCurriculum($row['material_curriculum'] ?? $row['curriculum'] ?? null) ?? $material?->curriculum;
+                $materialSubelement = $this->normalizeMaterialText($row['material_subelement'] ?? $row['subelement'] ?? null) ?? $material?->subelement;
+                $materialUnit = $this->normalizeMaterialText($row['material_unit'] ?? $row['unit'] ?? null) ?? $material?->unit;
+                $materialSubUnit = $this->normalizeMaterialText($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null) ?? $material?->sub_unit;
+
                 GlobalQuestion::create([
                     'jenjang_id'          => $jenjangId,
-                    'material_id'         => $this->resolveMaterialIdFromRow($row),
+                    'material_id'         => $materialId,
                     'question_type'       => $questionType,
                     'reading_passage'     => $readingPassage,
                     'question_text'       => $questionText,
-                    'material_mapel'      => $this->normalizeNullableString($row['material_mapel'] ?? $row['mapel'] ?? null),
-                    'material_curriculum' => $this->normalizeNullableString($row['material_curriculum'] ?? $row['curriculum'] ?? null),
-                    'material_subelement' => $this->normalizeNullableString($row['material_subelement'] ?? $row['subelement'] ?? null),
-                    'material_unit'       => $this->normalizeNullableString($row['material_unit'] ?? $row['unit'] ?? null),
-                    'material_sub_unit'   => $this->normalizeNullableString($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null),
+                    'material_mapel'      => $materialMapel,
+                    'material_curriculum' => $materialCurriculum,
+                    'material_subelement' => $materialSubelement,
+                    'material_unit'       => $materialUnit,
+                    'material_sub_unit'   => $materialSubUnit,
                     'options'             => $options,
                     'answer_key'          => $this->normalizeAnswerKey($questionType, $row['answer_key'] ?? null, $options),
                     'explanation'         => trim((string) ($row['explanation'] ?? '')) ?: null,
@@ -357,17 +368,26 @@ class GlobalQuestionController extends Controller
                     continue;
                 }
 
+                $materialId = $this->resolveMaterialIdFromRow($row);
+                $material = $materialId ? Material::query()->find($materialId) : null;
+
+                $materialMapel = $this->normalizeMaterialText($row['material_mapel'] ?? $row['mapel'] ?? null) ?? $material?->mapel;
+                $materialCurriculum = $this->normalizeMaterialCurriculum($row['material_curriculum'] ?? $row['curriculum'] ?? null) ?? $material?->curriculum;
+                $materialSubelement = $this->normalizeMaterialText($row['material_subelement'] ?? $row['subelement'] ?? null) ?? $material?->subelement;
+                $materialUnit = $this->normalizeMaterialText($row['material_unit'] ?? $row['unit'] ?? null) ?? $material?->unit;
+                $materialSubUnit = $this->normalizeMaterialText($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null) ?? $material?->sub_unit;
+
                 GlobalQuestion::create([
                     'jenjang_id'          => $validated['jenjang_id'],
-                    'material_id'         => $this->resolveMaterialIdFromRow($row),
+                    'material_id'         => $materialId,
                     'question_type'       => 'matching',
                     'reading_passage'     => null,
                     'question_text'       => $questionText,
-                    'material_mapel'      => $this->normalizeNullableString($row['material_mapel'] ?? $row['mapel'] ?? null),
-                    'material_curriculum' => $this->normalizeNullableString($row['material_curriculum'] ?? $row['curriculum'] ?? null),
-                    'material_subelement' => $this->normalizeNullableString($row['material_subelement'] ?? $row['subelement'] ?? null),
-                    'material_unit'       => $this->normalizeNullableString($row['material_unit'] ?? $row['unit'] ?? null),
-                    'material_sub_unit'   => $this->normalizeNullableString($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null),
+                    'material_mapel'      => $materialMapel,
+                    'material_curriculum' => $materialCurriculum,
+                    'material_subelement' => $materialSubelement,
+                    'material_unit'       => $materialUnit,
+                    'material_sub_unit'   => $materialSubUnit,
                     'options'             => $pairs,
                     'answer_key'          => null,
                     'explanation'         => trim((string) ($row['explanation'] ?? '')) ?: null,
@@ -469,11 +489,11 @@ class GlobalQuestionController extends Controller
             return $materialId;
         }
 
-        $curriculum = $this->normalizeNullableString($row['material_curriculum'] ?? $row['curriculum'] ?? null);
-        $mapel      = $this->normalizeNullableString($row['material_mapel'] ?? $row['mapel'] ?? null);
-        $subelement = $this->normalizeNullableString($row['material_subelement'] ?? $row['subelement'] ?? null);
-        $unit       = $this->normalizeNullableString($row['material_unit'] ?? $row['unit'] ?? null);
-        $subUnit    = $this->normalizeNullableString($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null);
+        $curriculum = $this->normalizeMaterialCurriculum($row['material_curriculum'] ?? $row['curriculum'] ?? null);
+        $mapel      = $this->normalizeMaterialText($row['material_mapel'] ?? $row['mapel'] ?? null);
+        $subelement = $this->normalizeMaterialText($row['material_subelement'] ?? $row['subelement'] ?? null);
+        $unit       = $this->normalizeMaterialText($row['material_unit'] ?? $row['unit'] ?? null);
+        $subUnit    = $this->normalizeMaterialText($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null);
 
         if (! $curriculum || ! $mapel || ! $subelement || ! $unit || ! $subUnit) {
             return null;
@@ -494,11 +514,11 @@ class GlobalQuestionController extends Controller
             return null;
         }
 
-        $curriculum = $this->normalizeNullableString($attributes['material_curriculum'] ?? null);
-        $mapel      = $this->normalizeNullableString($attributes['material_mapel'] ?? null);
-        $subelement = $this->normalizeNullableString($attributes['material_subelement'] ?? null);
-        $unit       = $this->normalizeNullableString($attributes['material_unit'] ?? null);
-        $subUnit    = $this->normalizeNullableString($attributes['material_sub_unit'] ?? null);
+        $curriculum = $this->normalizeMaterialCurriculum($attributes['material_curriculum'] ?? null);
+        $mapel      = $this->normalizeMaterialText($attributes['material_mapel'] ?? null);
+        $subelement = $this->normalizeMaterialText($attributes['material_subelement'] ?? null);
+        $unit       = $this->normalizeMaterialText($attributes['material_unit'] ?? null);
+        $subUnit    = $this->normalizeMaterialText($attributes['material_sub_unit'] ?? null);
 
         if (! $curriculum || ! $mapel || ! $subelement || ! $unit || ! $subUnit) {
             return null;
@@ -525,5 +545,28 @@ class GlobalQuestionController extends Controller
         $normalized = trim((string) $value);
 
         return $normalized !== '' ? $normalized : null;
+    }
+
+    private function normalizeMaterialText(mixed $value): ?string
+    {
+        $normalized = preg_replace('/\s+/', ' ', trim((string) $value));
+
+        return $normalized !== '' ? $normalized : null;
+    }
+
+    private function normalizeMaterialCurriculum(mixed $value): ?string
+    {
+        $raw = $this->normalizeMaterialText($value);
+        if ($raw === null) {
+            return null;
+        }
+
+        $normalized = strtoupper(str_replace([' ', '.'], '', $raw));
+
+        return match ($normalized) {
+            'MERDEKA', 'KURIKULUMMERDEKA' => 'Merdeka',
+            'K13', 'K-13', 'KURIKULUM2013' => 'K-13',
+            default => $raw,
+        };
     }
 }

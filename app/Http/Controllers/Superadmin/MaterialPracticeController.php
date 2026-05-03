@@ -29,7 +29,7 @@ class MaterialPracticeController extends Controller
             ->get();
 
         $bankQuestions = GlobalQuestion::query()
-            ->where('material_id', $material->id)
+            ->forMaterial($material)
             ->where('question_type', 'multiple_choice')
             ->where('is_active', true)
             ->latest('id')
@@ -39,7 +39,7 @@ class MaterialPracticeController extends Controller
         $bankQuestionsById = $bankQuestions->keyBy('id');
 
         $bankQuestionCount = GlobalQuestion::query()
-            ->where('material_id', $material->id)
+            ->forMaterial($material)
             ->where('question_type', 'multiple_choice')
             ->where('is_active', true)
             ->count();
@@ -65,7 +65,7 @@ class MaterialPracticeController extends Controller
 
         $validCount = GlobalQuestion::query()
             ->whereIn('id', $ids)
-            ->where('material_id', $material->id)
+            ->forMaterial($material)
             ->where('question_type', 'multiple_choice')
             ->where('is_active', true)
             ->count();

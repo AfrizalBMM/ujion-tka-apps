@@ -16,7 +16,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('siswa.practice.token.validate') }}" class="space-y-4">
+    <form method="POST" action="{{ route('materi.token.validate') }}" class="space-y-4">
         @csrf
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-widest text-textSecondary" for="token">Token Latihan</label>

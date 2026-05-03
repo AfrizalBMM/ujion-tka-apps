@@ -222,6 +222,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const payload   = JSON.parse(dataEl.textContent);
     const questions = payload.questions;
 
+    const sanitizeRichText = (value) => {
+        const template = document.createElement('template');
+        template.innerHTML = String(value ?? '');
+        const allowedTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'SUP', 'SUB', 'BR', 'P', 'UL', 'OL', 'LI']);
+
+        template.content.querySelectorAll('*').forEach((node) => {
+            if (!allowedTags.has(node.tagName)) {
+                node.replaceWith(document.createTextNode(node.textContent || ''));
+                return;
+            }
+
+            Array.from(node.attributes).forEach((attribute) => node.removeAttribute(attribute.name));
+        });
+
+        return template.innerHTML;
+    };
+
+    const escapeHtml = (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
     // DOM refs
     const timerEl       = document.getElementById('timer-display');
     const soalIndex     = document.getElementById('soal-index');
@@ -350,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const btn = document.createElement('button');
             btn.type      = 'button';
             btn.className = 'opt-btn' + (q.jawaban_pg === opt.kode ? ' active' : '');
-            btn.innerHTML = `<span class="opt-kode">${opt.kode}</span><span>${opt.teks}</span>`;
+            btn.innerHTML = `<span class="opt-kode">${escapeHtml(opt.kode)}</span><span>${sanitizeRichText(opt.teks)}</span>`;
             btn.addEventListener('click', () => {
                 q.jawaban_pg = opt.kode;
                 q.is_ragu    = false;
@@ -372,12 +396,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const row      = document.createElement('div');
             row.className  = 'grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[1fr_220px]';
             const selected = answers.find(a => Number(a.pair_id) === Number(pair.id))?.match_id ?? '';
-            row.innerHTML  = `<div class="text-sm font-medium text-slate-800 flex items-center">${pair.teks_kiri}</div>`;
+            row.innerHTML  = `<div class="text-sm font-medium text-slate-800 flex items-center">${sanitizeRichText(pair.teks_kiri)}</div>`;
             const sel      = document.createElement('select');
             sel.className  = 'input';
             sel.innerHTML  = `<option value="">Pilih jawaban...</option>` +
                 q.matching_options.map(opt =>
-                    `<option value="${opt.id}" ${Number(selected) === Number(opt.id) ? 'selected' : ''}>${opt.label}</option>`
+                    `<option value="${escapeHtml(opt.id)}" ${Number(selected) === Number(opt.id) ? 'selected' : ''}>${escapeHtml(opt.label)}</option>`
                 ).join('');
             sel.addEventListener('change', () => {
                 const next = answers.filter(a => Number(a.pair_id) !== Number(pair.id));
@@ -398,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const q = questions[currentIndex];
         soalIndex.textContent      = q.nomor_soal;
         indikatorBadge.textContent = q.indikator || '';
-        questionText.textContent   = q.pertanyaan;
+        questionText.innerHTML     = sanitizeRichText(q.pertanyaan);
 
         if (q.gambar_url) {
             questionImage.src = q.gambar_url;
@@ -409,8 +433,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (q.teks_bacaan) {
             readingPanel.classList.remove('hidden');
-            readingTitle.textContent   = q.teks_bacaan.judul || 'Teks Bacaan';
-            readingContent.textContent = q.teks_bacaan.konten;
+            readingTitle.innerHTML     = sanitizeRichText(q.teks_bacaan.judul || 'Teks Bacaan');
+            readingContent.innerHTML   = sanitizeRichText(q.teks_bacaan.konten);
         } else {
             readingPanel.classList.add('hidden');
         }

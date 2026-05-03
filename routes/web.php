@@ -73,6 +73,22 @@ Route::post('/siswa/latihan/telaah/{globalQuestion}', [SiswaMaterialPracticeCont
 Route::get('/siswa/latihan/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'showPaket'])->whereNumber('paketNo')->name('siswa.practice.paket.show');
 Route::post('/siswa/latihan/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'submitPaket'])->whereNumber('paketNo')->name('siswa.practice.paket.submit');
 
+// Materi / Latihan (URL khusus, terpisah dari ujian)
+Route::prefix('materi')->name('materi.')->group(function () {
+	Route::get('/login', [MaterialPracticeAuthController::class, 'showLoginForm'])->name('login');
+	Route::post('/login', [MaterialPracticeAuthController::class, 'validateToken'])
+		->middleware('throttle:10,1')
+		->name('token.validate');
+	Route::get('/identitas', function () {
+		return view('siswa.practice.identitas');
+	})->name('identitas');
+	Route::post('/mulai', [SiswaMaterialPracticeController::class, 'mulai'])->name('mulai');
+	Route::get('/', [SiswaMaterialPracticeController::class, 'dashboard'])->name('dashboard');
+	Route::post('/telaah/{globalQuestion}', [SiswaMaterialPracticeController::class, 'submitTelaah'])->name('telaah.submit');
+	Route::get('/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'showPaket'])->whereNumber('paketNo')->name('paket.show');
+	Route::post('/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'submitPaket'])->whereNumber('paketNo')->name('paket.submit');
+});
+
 Route::prefix('superadmin')
 	->name('superadmin.')
 	->middleware(['auth', 'role:superadmin', 'audit'])

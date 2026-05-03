@@ -4,17 +4,23 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\MaterialPracticeToken;
 use App\Models\MapelPaket;
 use App\Models\UjianSesi;
 use App\Support\SurveyAnalytics;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamResultController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $activeTab = in_array($request->query('tab'), ['ujian', 'materi'], true)
+            ? $request->query('tab')
+            : 'ujian';
+
         $exams = Exam::where(function($q) {
             $q->where('user_id', Auth::id())
               ->orWhereHas('creator', function($query) {
@@ -26,7 +32,29 @@ class ExamResultController extends Controller
         ->latest()
         ->get();
 
-        return view('guru.results.index', compact('exams'));
+        $jenjangUser = Auth::user()?->jenjang;
+        $practiceTokens = MaterialPracticeToken::query()
+            ->with(['material', 'sessions.packageAttempts'])
+            ->withCount(['sessions', 'packages'])
+            ->when(Schema::hasColumn('materials', 'jenjang'), function ($q) use ($jenjangUser) {
+                $q->whereHas('material', fn ($mq) => $mq->where('jenjang', $jenjangUser));
+            })
+            ->orderByDesc('id')
+            ->get()
+            ->map(function (MaterialPracticeToken $token) {
+                $attempts = $token->sessions->flatMap->packageAttempts->where('status', 'selesai');
+                $completedSessions = $token->sessions->filter(function ($session) {
+                    return $session->status === 'selesai'
+                        || $session->packageAttempts->where('status', 'selesai')->count() >= 3;
+                })->count();
+
+                $token->avg_score = $attempts->avg('skor');
+                $token->completed_sessions_count = $completedSessions;
+
+                return $token;
+            });
+
+        return view('guru.results.index', compact('exams', 'practiceTokens', 'activeTab'));
     }
 
     public function show(Exam $exam)

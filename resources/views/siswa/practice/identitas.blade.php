@@ -16,7 +16,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('siswa.practice.mulai') }}" class="space-y-4">
+    <form method="POST" action="{{ route('materi.mulai') }}" class="space-y-4">
         @csrf
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-widest text-textSecondary" for="nama">Nama Lengkap <span class="text-red-500">*</span></label>

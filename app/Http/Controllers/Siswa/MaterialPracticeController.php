@@ -29,13 +29,13 @@ class MaterialPracticeController extends Controller
 
         $tokenId = session('siswa_practice_token_id');
         if (! $tokenId) {
-            return redirect()->route('siswa.practice.login')
+            return redirect()->route('materi.login')
                 ->withErrors(['token' => 'Sesi latihan telah habis. Masukkan token kembali.']);
         }
 
         $token = MaterialPracticeToken::query()->find($tokenId);
         if (! $token || ! $token->is_active) {
-            return redirect()->route('siswa.practice.login')
+            return redirect()->route('materi.login')
                 ->withErrors(['token' => 'Token latihan tidak valid atau tidak aktif.']);
         }
 
@@ -50,7 +50,7 @@ class MaterialPracticeController extends Controller
 
         if ($existing) {
             session(['material_practice_session_token' => $existing->session_token]);
-            return redirect()->route('siswa.practice.dashboard');
+            return redirect()->route('materi.dashboard');
         }
 
         $session = MaterialPracticeSession::create([
@@ -63,14 +63,14 @@ class MaterialPracticeController extends Controller
 
         session(['material_practice_session_token' => $session->session_token]);
 
-        return redirect()->route('siswa.practice.dashboard');
+        return redirect()->route('materi.dashboard');
     }
 
     public function dashboard(): View|RedirectResponse
     {
         $session = $this->getActiveSession();
         if (! $session) {
-            return redirect()->route('siswa.practice.login');
+            return redirect()->route('materi.login');
         }
 
         $session->load([
@@ -107,7 +107,7 @@ class MaterialPracticeController extends Controller
     {
         $session = $this->getActiveSession();
         if (! $session) {
-            return redirect()->route('siswa.practice.login');
+            return redirect()->route('materi.login');
         }
 
         $session->load('token');
@@ -149,7 +149,7 @@ class MaterialPracticeController extends Controller
     {
         $session = $this->getActiveSession();
         if (! $session) {
-            return redirect()->route('siswa.practice.login');
+            return redirect()->route('materi.login');
         }
 
         $session->load('token');
@@ -169,7 +169,7 @@ class MaterialPracticeController extends Controller
             ->first();
 
         if ($attempt && $attempt->status === 'selesai') {
-            return redirect()->route('siswa.practice.dashboard')->with('flash', [
+            return redirect()->route('materi.dashboard')->with('flash', [
                 'type' => 'warning',
                 'message' => 'Paket ini sudah diselesaikan dan tidak dapat dikerjakan ulang.',
             ]);
@@ -201,7 +201,7 @@ class MaterialPracticeController extends Controller
     {
         $session = $this->getActiveSession();
         if (! $session) {
-            return redirect()->route('siswa.practice.login');
+            return redirect()->route('materi.login');
         }
 
         $session->load('token');
@@ -221,7 +221,7 @@ class MaterialPracticeController extends Controller
             ->firstOrFail();
 
         if ($attempt->status === 'selesai') {
-            return redirect()->route('siswa.practice.dashboard')->with('flash', [
+            return redirect()->route('materi.dashboard')->with('flash', [
                 'type' => 'warning',
                 'message' => 'Paket ini sudah diselesaikan dan tidak dapat dikerjakan ulang.',
             ]);
@@ -281,7 +281,7 @@ class MaterialPracticeController extends Controller
             }
         });
 
-        return redirect()->route('siswa.practice.dashboard')->with('flash', [
+        return redirect()->route('materi.dashboard')->with('flash', [
             'type' => 'success',
             'message' => 'Paket berhasil dikumpulkan. Hasil tersimpan.',
         ]);

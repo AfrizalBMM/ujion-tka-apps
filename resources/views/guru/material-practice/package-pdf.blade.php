@@ -18,8 +18,10 @@
     </style>
 </head>
 <body>
-    @php($material = $material)
-    @php($labels = range('A', 'Z'))
+    @php
+        $material = $material;
+        $labels = range('A', 'Z');
+    @endphp
 
     <div class="box">
         <div class="title">Latihan Materi — Paket {{ $package->paket_no }}</div>

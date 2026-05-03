@@ -575,7 +575,7 @@
                        type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
             </div>
             <div class="rounded-2xl border border-blue-200/70 bg-blue-50/70 p-3 text-sm text-blue-900">
-                <strong>Kolom wajib:</strong> question_text. Kolom opsional: reading_passage, option_a–e, answer_key, material_*, explanation, is_active.
+                <strong>Kolom wajib:</strong> question_text. Kolom opsional: material_id, reading_passage, option_a–e, answer_key, material_*, explanation, is_active.
             </div>
             <div class="flex flex-wrap gap-3">
                 <button class="btn-primary" type="submit">
@@ -633,7 +633,7 @@
                        type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required>
             </div>
             <div class="rounded-2xl border border-amber-200/70 bg-amber-50/70 p-3 text-sm text-amber-900">
-                <strong>Kolom wajib:</strong> question_text + minimal pair_1_left & pair_1_right. Maksimal 8 pasangan (pair_1 s/d pair_8).
+                <strong>Kolom wajib:</strong> question_text + minimal pair_1_left & pair_1_right. Kolom opsional: material_id, material_*. Maksimal 8 pasangan (pair_1 s/d pair_8).
             </div>
             <div class="flex flex-wrap gap-3">
                 <button class="btn-primary" type="submit">

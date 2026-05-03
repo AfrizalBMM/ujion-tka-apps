@@ -73,44 +73,40 @@
       </div>
       <div class="w-full text-[11px] text-textSecondary dark:text-slate-400">Filter otomatis: ketik untuk mencari, atau pilih dropdown untuk menyaring.</div>
     </form>
-    <div id="questions-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div class="space-y-4">
       @forelse($questions as $question)
-      <div class="card p-4 flex flex-col">
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex-1">
-            <div class="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">{{ $question->material_mapel }}</div>
-            <div class="font-bold">{{ $question->material_subelement }}</div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            @php $isBookmarked = in_array($question->id, $bookmarks ?? []); @endphp
-            @if($isBookmarked)
-              <form method="POST" action="{{ route('guru.soal-ujion.unbookmark', $question) }}">
-                @csrf
-                <button type="submit" class="icon-button h-9 w-9 rounded-2xl border-danger/30 bg-danger/10 text-danger" title="Hapus Bookmark">
-                  <i class="fa-solid fa-bookmark"></i>
-                </button>
-              </form>
-            @else
-              <form method="POST" action="{{ route('guru.soal-ujion.bookmark', $question) }}">
-                @csrf
-                <button type="submit" class="icon-button h-9 w-9 rounded-2xl" title="Bookmark Soal">
-                  <i class="fa-regular fa-bookmark"></i>
-                </button>
-              </form>
+      @php $isBookmarked = in_array($question->id, $bookmarks ?? []); @endphp
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm hover:shadow-md transition-all dark:border-slate-800 dark:bg-slate-900">
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span class="badge-info text-[11px]">{{ $question->material_curriculum }}</span>
+            @if($question->material_mapel)
+              <span class="badge-primary bg-blue-100 text-blue-700 text-[11px]">{{ $question->material_mapel }}</span>
             @endif
-            <span class="badge-info shrink-0">Soal Ujion</span>
+            @if($question->jenjang?->nama)
+              <span class="badge-warning text-[11px]">{{ $question->jenjang->nama }}</span>
+            @endif
+            <span class="badge-info text-[11px]">Soal Ujion</span>
+            <span class="text-xs text-muted">ID: #{{ $question->id }}</span>
+          </div>
+          <div class="font-bold text-lg text-slate-800 dark:text-slate-200 mb-1">{{ $question->material_subelement }}</div>
+          <div class="flex flex-wrap items-center gap-2 text-sm text-textSecondary dark:text-slate-400">
+            <span><i class="fa-solid fa-chevron-right text-[10px] mx-1"></i> {!! Str::limit(strip_tags($question->question_text), 80) !!}</span>
           </div>
         </div>
-        <div class="mt-1 text-sm text-textSecondary">{!! Str::limit(strip_tags($question->question_text), 120) !!}</div>
-        <div class="mt-2 text-xs text-textSecondary mb-3 flex flex-wrap gap-x-3 gap-y-1">
-          <span>Kurikulum: {{ $question->material_curriculum }}</span>
-          <span>|</span>
-          <span>Jenjang: {{ $question->jenjang?->nama ?? '-' }}</span>
+        <div class="flex flex-row gap-2 shrink-0 items-center justify-end">
+          <a href="{{ route('guru.soal-ujion.show', $question) }}" class="btn-secondary p-2" title="Lihat Detail">
+            <i class="fa-solid fa-eye"></i>
+          </a>
+          @if($isBookmarked)
+          <form method="POST" action="{{ route('guru.soal-ujion.unbookmark', $question) }}">@csrf<button class="btn-danger p-2" title="Hapus Bookmark"><i class="fa-solid fa-bookmark"></i></button></form>
+          @else
+          <form method="POST" action="{{ route('guru.soal-ujion.bookmark', $question) }}">@csrf<button class="btn-secondary p-2" title="Bookmark"><i class="fa-regular fa-bookmark"></i></button></form>
+          @endif
         </div>
-        <a href="{{ route('guru.soal-ujion.show', $question) }}" class="btn-primary w-full text-center">Lihat Detail</a>
       </div>
       @empty
-      <div class="col-span-full text-center text-textSecondary py-8">Tidak ada soal ditemukan.</div>
+      <div class="text-center text-textSecondary py-8">Tidak ada soal ditemukan.</div>
       @endforelse
     </div>
   </div>

@@ -104,7 +104,7 @@ class SpreadsheetTable
                 $value = '';
 
                 if ($type === 'inlineStr') {
-                    $value = trim((string) ($cell->is->t ?? ''));
+                    $value = self::parseRichTextItem($cell->is);
                 } else {
                     $rawValue = (string) ($cell->v ?? '');
                     if ($type === 's') {
@@ -217,20 +217,41 @@ class SpreadsheetTable
         $strings = [];
 
         foreach ($xml->si as $item) {
-            $text = '';
-
-            if (isset($item->t)) {
-                $text = (string) $item->t;
-            } else {
-                foreach ($item->r as $run) {
-                    $text .= (string) ($run->t ?? '');
-                }
-            }
-
-            $strings[] = trim($text);
+            $strings[] = self::parseRichTextItem($item);
         }
 
         return $strings;
+    }
+
+    private static function parseRichTextItem(?SimpleXMLElement $item): string
+    {
+        if (! $item instanceof SimpleXMLElement) {
+            return '';
+        }
+
+        if (isset($item->t)) {
+            return trim((string) $item->t);
+        }
+
+        $text = '';
+
+        foreach ($item->r as $run) {
+            $value = (string) ($run->t ?? '');
+            $isItalic = isset($run->rPr->i);
+            $isBold = isset($run->rPr->b);
+
+            if ($isItalic) {
+                $value = '<em>' . $value . '</em>';
+            }
+
+            if ($isBold) {
+                $value = '<strong>' . $value . '</strong>';
+            }
+
+            $text .= $value;
+        }
+
+        return trim($text);
     }
 
     private static function resolveFirstWorksheetPath(ZipArchive $zip): string
