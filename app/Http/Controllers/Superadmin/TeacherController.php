@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppBlast;
 use App\Models\User;
 use App\Support\GuruNotificationTemplates;
+use App\Services\WaMessageTemplateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +14,7 @@ use Illuminate\Support\Str;
 
 class TeacherController extends Controller
 {
-    public function activate(User $teacher): RedirectResponse
+    public function activate(User $teacher, WaMessageTemplateService $templates): RedirectResponse
     {
         if ($teacher->payment_status === User::PAYMENT_SUBMITTED) {
             return back()->with('flash', [
@@ -36,6 +38,11 @@ class TeacherController extends Controller
 
         $teacher->update($updateData);
 
+        $waBody = $templates->render('event_activation_token', [
+            'name' => $teacher->name,
+            'token' => $token,
+        ]);
+
         return back()->with('flash', [
             'type' => 'success',
             'title' => 'Akun guru berhasil diaktifkan',
@@ -43,7 +50,7 @@ class TeacherController extends Controller
             'description' => 'Bagikan token ini lewat kanal yang aman. Token hanya ditampilkan satu kali pada notifikasi ini.',
             'token' => $token,
             'token_label' => 'Token akses untuk dibagikan',
-            'copy_block' => GuruNotificationTemplates::activationToken($teacher->name, $token),
+            'copy_block' => $waBody,
             'copy_block_label' => 'Template pesan WhatsApp',
         ]);
     }
@@ -61,12 +68,17 @@ class TeacherController extends Controller
         ]);
     }
 
-    public function refreshToken(User $teacher): RedirectResponse
+    public function refreshToken(User $teacher, WaMessageTemplateService $templates): RedirectResponse
     {
         $token = \App\Support\TokenGenerator::uniqueTeacherToken();
 
         $teacher->update([
             'access_token' => $token,
+        ]);
+
+        $waBody = $templates->render('event_activation_token', [
+            'name' => $teacher->name,
+            'token' => $token,
         ]);
 
         return back()->with('flash', [
@@ -76,12 +88,12 @@ class TeacherController extends Controller
             'description' => 'Pastikan guru memakai token terbaru saat login.',
             'token' => $token,
             'token_label' => 'Token akses terbaru',
-            'copy_block' => GuruNotificationTemplates::activationToken($teacher->name, $token),
+            'copy_block' => $waBody,
             'copy_block_label' => 'Template pesan WhatsApp',
         ]);
     }
 
-    public function approvePayment(User $teacher, \App\Services\PaymentApprovalService $paymentService): RedirectResponse
+    public function approvePayment(User $teacher, \App\Services\PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
         if (blank($teacher->payment_proof_path) && $teacher->payment_status !== User::PAYMENT_SUBMITTED) {
             return back()->with('flash', [
@@ -93,6 +105,15 @@ class TeacherController extends Controller
 
         $token = $paymentService->approve($teacher);
 
+        $waBody = $templates->render('event_payment_approved', [
+            'name' => $teacher->name,
+            'token' => $token,
+        ]);
+
+        if (! blank($teacher->no_wa)) {
+            SendWhatsAppBlast::dispatch($teacher->no_wa, $waBody)->onQueue('high');
+        }
+
         return back()->with('flash', [
             'type' => 'success',
             'title' => 'Pembayaran berhasil disetujui',
@@ -100,12 +121,12 @@ class TeacherController extends Controller
             'description' => 'Gunakan template di bawah ini untuk mengirim konfirmasi pembayaran dan token akses ke guru.',
             'token' => $token,
             'token_label' => 'Token akses',
-            'copy_block' => GuruNotificationTemplates::paymentApproved($teacher->name, $token),
+            'copy_block' => $waBody,
             'copy_block_label' => 'Template pesan WhatsApp',
         ]);
     }
 
-    public function rejectPayment(Request $request, User $teacher, \App\Services\PaymentApprovalService $paymentService): RedirectResponse
+    public function rejectPayment(Request $request, User $teacher, \App\Services\PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
         if (blank($teacher->payment_proof_path) && $teacher->payment_status !== User::PAYMENT_SUBMITTED) {
             return back()->with('flash', [
@@ -121,14 +142,20 @@ class TeacherController extends Controller
 
         $paymentService->reject($teacher, $validated['payment_rejection_reason']);
 
+        $waBody = $templates->render('event_payment_rejected', [
+            'name' => $teacher->name,
+            'reason' => $validated['payment_rejection_reason'],
+        ]);
+
+        if (! blank($teacher->no_wa)) {
+            SendWhatsAppBlast::dispatch($teacher->no_wa, $waBody)->onQueue('high');
+        }
+
         return back()->with('flash', [
             'type' => 'warning',
             'title' => 'Pembayaran ditandai perlu perbaikan',
             'message' => 'Guru telah ditandai perlu mengirim ulang atau memperjelas pembayaran.',
-            'copy_block' => GuruNotificationTemplates::paymentRejected(
-                $teacher->name,
-                $validated['payment_rejection_reason']
-            ),
+            'copy_block' => $waBody,
             'copy_block_label' => 'Template pesan WhatsApp',
         ]);
     }

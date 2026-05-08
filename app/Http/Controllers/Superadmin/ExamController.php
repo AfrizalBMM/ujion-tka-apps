@@ -8,6 +8,9 @@ use App\Models\GlobalQuestion;
 use App\Models\Material;
 use App\Models\PaketSoal;
 use App\Models\Question;
+use App\Models\User;
+use App\Jobs\SendWhatsAppBlast;
+use App\Services\WaMessageTemplateService;
 use App\Support\SpreadsheetTable;
 use App\Support\SpreadsheetTemplateExporter;
 use Carbon\Carbon;
@@ -35,7 +38,7 @@ class ExamController extends Controller {
         return view('superadmin.exams', compact('exams', 'paketSoals'));
     }
 
-    public function store(Request $request): RedirectResponse {
+    public function store(Request $request, WaMessageTemplateService $templates): RedirectResponse {
         $data = $request->validate([
             'paket_soal_id' => 'required|exists:paket_soals,id',
             'judul' => 'required',
@@ -60,6 +63,32 @@ class ExamController extends Controller {
                 'exam_id'        => $exam->id,
                 'mapel_paket_id' => $mapel->id,
             ]);
+        }
+
+        if (($data['status'] ?? null) === 'terbit') {
+            $hariTanggal = Carbon::parse($exam->tanggal_terbit)->translatedFormat('l, d F Y');
+
+            User::query()
+                ->where('role', User::ROLE_GURU)
+                ->where('account_status', User::STATUS_ACTIVE)
+                ->whereNotNull('no_wa')
+                ->where('no_wa', '!=', '')
+                ->orderBy('id')
+                ->chunkById(200, function ($teachers) use ($exam, $hariTanggal, $templates) {
+                    foreach ($teachers as $teacher) {
+                        $message = $templates->render('event_exam_published', [
+                            'name' => $teacher->name,
+                            'exam_title' => $exam->judul,
+                            'exam_date' => $hariTanggal,
+                        ]);
+
+                        $delaySeconds = random_int(2, 7);
+
+                        SendWhatsAppBlast::dispatch($teacher->no_wa, $message)
+                            ->onQueue('low')
+                            ->delay(now()->addSeconds($delaySeconds));
+                    }
+                });
         }
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Ujian berhasil dibuat. Token per mapel sudah digenerate.']);

@@ -156,6 +156,7 @@ Siswa juga bisa menggunakan token **latihan materi** untuk:
 - Paket soal TKA
 - Manajemen ujian
 - Audit log
+- Blast pengumuman WhatsApp
 
 Tambahan:
 
@@ -295,6 +296,79 @@ Fitur PDF paket latihan memakai `barryvdh/laravel-dompdf`.
 
 - Endpoint PDF hanya tersedia untuk role `guru`
 - View template PDF ada di `resources/views/guru/material-practice/package-pdf.blade.php`
+
+## WhatsApp Blast & Gateway
+
+Fitur **Blast Pengumuman WhatsApp** memungkinkan superadmin mengirim pengumuman massal ke guru/siswa melalui WhatsApp.
+
+### Komponen Utama
+
+1. **WhatsApp Gateway (Node.js)**
+    - Layanan eksternal yang menangani pengiriman WA aktual
+    - Berjalan di port 3000 (default)
+    - Lokasi: `../WA_Gateway_v4`
+    - File konfigurasi: `.env` atau `config.js` di folder gateway
+
+2. **Laravel Backend**
+    - Model: `App\Models\WhatsAppLog`
+    - Controller: `App\Http\Controllers\Superadmin\WhatsAppGatewayController`
+    - Service: `App\Services\WhatsAppService`
+    - Job (Queue): `App\Jobs\SendWhatsAppBlast`
+
+3. **Database**
+    - Tabel: `whatsapp_logs` (log semua pengiriman WA)
+    - Kolom: `id`, `phone`, `message`, `status` (success/failed/unknown), `response_data` (JSON), `timestamps`
+
+### Fitur
+
+- **Jadwal Pengiriman**: Kirim sekarang atau jadwalkan untuk waktu tertentu
+- **Target Dinamis**:
+    - Semua guru aktif
+    - Guru aktif per jenjang
+    - Guru aktif per sekolah
+    - Semua siswa (peserta ujian)
+    - Siswa per paket soal
+- **Queue System**: Pengiriman asinkron agar tidak memblokir request
+- **Random Delay**: Delay acak per pesan untuk menghindari rate limiting WhatsApp
+- **Monitoring Dashboard**: Lihat statistik (terkirim/gagal/lainnya) dan 10 log terbaru
+
+### Setup & Penggunaan
+
+**Lokal (Development)**:
+
+```bash
+# Terminal 1: Jalankan WA Gateway
+cd ../WA_Gateway_v4
+node server.js
+
+# Terminal 2: Jalankan queue worker
+cd ../ujion-tka-apps
+php artisan queue:work --queue=high,low
+
+# Terminal 3: Jalankan dev server
+php artisan serve
+```
+
+**Routes**:
+
+- `GET /superadmin/wa-blast` → Form dan dashboard monitoring
+- `POST /superadmin/wa-blast` → Proses pengiriman blast
+
+**Panduan Penggunaan di UI**:
+
+1. Pilih **Target penerima** (guru aktif semua, per jenjang, per sekolah, siswa, atau siswa per paket)
+2. Isi field target tambahan jika diperlukan (jenjang/sekolah/paket soal)
+3. (Opsional) Tentukan **Jadwal pengiriman** dengan datetime-local input. Kosongkan untuk kirim segera.
+4. Tulis **Isi pesan** pengumuman
+5. Klik **Jadwalkan Blast** untuk mengirim
+
+**Catatan**:
+
+- Pastikan WA Gateway berjalan (`node server.js` di folder gateway)
+- Pastikan queue worker aktif (`php artisan queue:work --queue=high,low`)
+- Setiap pesan memiliki delay acak (untuk menghindari pembatasan WhatsApp)
+- Log semua pengiriman tersimpan di tabel `whatsapp_logs`
+- Dashboard monitoring menampilkan 10 catatan terbaru dan statistik jumlah terkirim/gagal/unknown
 
 ## Route Penting (Latihan Materi)
 

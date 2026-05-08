@@ -37,13 +37,14 @@ class ProfileController extends Controller
         }
 
         if (Schema::hasColumn('users', 'no_wa')) {
-            $rules['no_wa'] = ['required', 'string', 'max:20', Rule::unique('users', 'no_wa')->ignore($user->id)];
+            $rules['no_wa'] = ['required', 'string', 'max:20'];
         }
 
         $data = $request->validate($rules);
 
         if (array_key_exists('no_wa', $data)) {
-            $data['no_wa'] = PhoneNumber::normalizeIndonesian($data['no_wa']);
+            $normalized = PhoneNumber::normalizeIndonesian($data['no_wa']);
+            $data['no_wa'] = PhoneNumber::toLocalFormat($normalized);
 
             $duplicateWhatsapp = User::query()
                 ->where('id', '!=', $user->id)

@@ -15,6 +15,7 @@ use App\Http\Controllers\Superadmin\SoalController as SuperadminSoalController;
 use App\Http\Controllers\Superadmin\TeksBacaanController as SuperadminTeksBacaanController;
 use App\Http\Controllers\Superadmin\TeacherController;
 use App\Http\Controllers\Superadmin\ProfileController as SuperadminProfileController;
+use App\Http\Controllers\Superadmin\WhatsAppGatewayController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
@@ -95,6 +96,17 @@ Route::prefix('superadmin')
 	->scopeBindings()
 	->group(function () {
 	    Route::get('/', [DashboardController::class , 'index'])->name('dashboard');
+
+	    Route::get('/wa-koneksi', [WhatsAppGatewayController::class, 'connection'])->name('wa-koneksi');
+	    Route::get('/wa-pesan-otomatis', [\App\Http\Controllers\Superadmin\WhatsAppAutoMessageController::class, 'index'])->name('wa-templates.index');
+	    Route::get('/wa-pesan-otomatis/tambah', [\App\Http\Controllers\Superadmin\WhatsAppAutoMessageController::class, 'create'])->name('wa-templates.create');
+	    Route::post('/wa-pesan-otomatis', [\App\Http\Controllers\Superadmin\WhatsAppAutoMessageController::class, 'store'])->name('wa-templates.store');
+	    Route::get('/wa-pesan-otomatis/{template}/edit', [\App\Http\Controllers\Superadmin\WhatsAppAutoMessageController::class, 'edit'])->name('wa-templates.edit');
+	    Route::post('/wa-pesan-otomatis/{template}', [\App\Http\Controllers\Superadmin\WhatsAppAutoMessageController::class, 'update'])->name('wa-templates.update');
+	    Route::post('/wa-pesan-otomatis/{template}/toggle', [\App\Http\Controllers\Superadmin\WhatsAppAutoMessageController::class, 'toggle'])->name('wa-templates.toggle');
+	    Route::post('/wa-pesan-otomatis/{template}/delete', [\App\Http\Controllers\Superadmin\WhatsAppAutoMessageController::class, 'destroy'])->name('wa-templates.destroy');
+	    Route::get('/wa-blast', [WhatsAppGatewayController::class, 'blastForm'])->name('wa-blast');
+	    Route::post('/wa-blast', [WhatsAppGatewayController::class, 'sendBlast'])->name('wa-blast.send');
 
 	    Route::get('/landing-settings', [LandingSettingsController::class, 'index'])->name('landing-settings.index');
 	    Route::post('/landing-settings/content', [LandingSettingsController::class, 'saveContent'])->name('landing-settings.content');

@@ -8,7 +8,9 @@ use App\Models\PricingPlan;
 use App\Models\AppSetting;
 use App\Services\PaymentProofStorage;
 use App\Services\QrisService;
+use App\Jobs\SendWhatsAppBlast;
 use App\Support\PhoneNumber;
+use App\Support\GuruNotificationTemplates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -465,36 +467,44 @@ class RegisterGuruController extends Controller
         $adminNumber = PhoneNumber::normalizeIndonesian(
             (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
         );
-        if ($adminNumber === '') {
-            return redirect()->route('login')->with('flash', [
-                'type' => 'success',
-                'title' => 'Bukti pembayaran berhasil dikirim',
-                'message' => 'Bukti pembayaran Anda sudah kami terima. Silakan login kembali setelah admin mengirim token akses.',
-                'description' => 'Nomor WhatsApp admin belum dikonfigurasi. Admin bisa mengisinya di menu Superadmin > Keuangan & QR.',
-            ]);
-        }
-
-        $proofUrl = Storage::url($path);
         $referenceCode = $transaction?->reference_code ?? '-';
         $planName = $transaction?->plan_name ?? ($this->resolvePlanForJenjang($teacher->jenjang)?->name ?? 'Aktivasi Akun Guru');
         $amount = $transaction ? (int) round((float) $transaction->amount) : 0;
         $formattedAmount = 'Rp' . number_format($amount, 0, ',', '.');
 
-        $message = rawurlencode(
-            "Halo Admin Ujion,\n"
-            . "Saya sudah melakukan pembayaran dan sudah upload bukti di sistem.\n\n"
-            . "Data pendaftar:\n"
-            . "Nama: {$teacher->name}\n"
-            . "Email: {$teacher->email}\n"
-            . "No HP/WA: {$teacher->no_wa}\n"
-            . "Jenjang: {$teacher->jenjang}\n\n"
-            . "Detail:\n"
-            . "Paket: {$planName}\n"
-            . "Nominal: {$formattedAmount}\n"
-            . "Kode Referensi: {$referenceCode}\n"
-        );
+        if ($adminNumber !== '') {
+            $adminMessage = GuruNotificationTemplates::paymentSubmittedAlert(
+                teacherName: $teacher->name,
+                schoolName: (string) ($teacher->satuan_pendidikan ?? '-'),
+                whatsApp: (string) ($teacher->no_wa ?? '-')
+            ) . "\n\nDetail:\nPaket: {$planName}\nNominal: {$formattedAmount}\nKode Referensi: {$referenceCode}";
 
-        return redirect()->away("https://wa.me/{$adminNumber}?text={$message}");
+            SendWhatsAppBlast::dispatch($adminNumber, $adminMessage)->onQueue('high');
+        }
+
+        if (! blank($teacher->no_wa)) {
+            $teacherMessage = trim(implode("\n", [
+                "Halo {$teacher->name},",
+                '',
+                'Terima kasih! Bukti pembayaran Anda sudah kami terima dan sedang diproses.',
+                "Kode referensi: {$referenceCode}",
+                'Kami akan menghubungi Anda kembali setelah akun diaktifkan dan token akses dibuat.',
+                '',
+                'Salam,',
+                'Admin Ujion',
+            ]));
+
+            SendWhatsAppBlast::dispatch($teacher->no_wa, $teacherMessage)->onQueue('high');
+        }
+
+        return redirect()->route('login')->with('flash', [
+            'type' => 'success',
+            'title' => 'Bukti pembayaran berhasil dikirim',
+            'message' => 'Bukti pembayaran Anda sudah kami terima. Silakan login kembali setelah admin mengirim token akses.',
+            'description' => $adminNumber === ''
+                ? 'Nomor WhatsApp admin belum dikonfigurasi. Admin bisa mengisinya di menu Superadmin > Keuangan & QR.'
+                : 'Notifikasi WhatsApp ke admin dan konfirmasi ke Anda dijadwalkan lewat antrean.',
+        ]);
     }
 
     private function storePendingRegistrationSession(Request $request, User $teacher, ?PricingPlan $selectedTarifJenjang = null): void
@@ -517,7 +527,9 @@ class RegisterGuruController extends Controller
 
     private function normalizePhoneNumber(?string $phone): string
     {
-        return PhoneNumber::normalizeIndonesian($phone);
+        $normalized = PhoneNumber::normalizeIndonesian($phone);
+
+        return PhoneNumber::toLocalFormat($normalized);
     }
 
     private function generateReferenceCode(): string
@@ -614,7 +626,7 @@ class RegisterGuruController extends Controller
             $errors['email'] = 'Email ini sudah terdaftar. Silakan gunakan email lain atau login bila akun Anda sudah aktif.';
         }
 
-        if ($existingByWa?->no_wa === $normalizedWa) {
+        if ($existingByWa && in_array($existingByWa->no_wa, PhoneNumber::variants($normalizedWa), true)) {
             $errors['no_wa'] = 'Nomor WhatsApp ini sudah terdaftar. Silakan gunakan nomor lain atau lanjutkan pendaftaran sebelumnya.';
         }
 

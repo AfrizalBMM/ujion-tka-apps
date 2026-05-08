@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\LandingClickController;
+use App\Http\Controllers\Api\WebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,4 +23,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/landing-click', [LandingClickController::class, 'store'])
     ->middleware('throttle:120,1')
     ->name('api.landing-click');
+
+Route::post('/wa-webhook', [WebhookController::class, 'handle'])
+    ->middleware('throttle:120,1')
+    ->name('api.wa-webhook');
 

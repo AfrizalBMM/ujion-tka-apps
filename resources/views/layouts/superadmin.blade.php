@@ -290,6 +290,21 @@
                     <i class="fa-solid fa-shield-halved w-5"></i>
                     <span class="sidebar-link-label">Log Aktivitas</span>
                 </a>
+                <a href="{{ route('superadmin.wa-koneksi') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.wa-koneksi') ? 'active' : '' }}">
+                    <i class="fa-solid fa-qrcode w-5"></i>
+                    <span class="sidebar-link-label">Koneksi WhatsApp</span>
+                </a>
+                <a href="{{ route('superadmin.wa-templates.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.wa-templates.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-message w-5"></i>
+                    <span class="sidebar-link-label">Pesan Otomatis</span>
+                </a>
+                <a href="{{ route('superadmin.wa-blast') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.wa-blast') || request()->routeIs('superadmin.wa-blast.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-bullhorn w-5"></i>
+                    <span class="sidebar-link-label">Blast Pengumuman</span>
+                </a>
                 <a href="{{ route('superadmin.guide') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.guide') ? 'active' : '' }}">
                     <i class="fa-solid fa-circle-info w-5"></i>

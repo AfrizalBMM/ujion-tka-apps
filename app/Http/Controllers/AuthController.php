@@ -90,7 +90,7 @@ class AuthController extends Controller
             ->where('role', User::ROLE_GURU)
             ->first();
 
-        if ($user && \Illuminate\Support\Facades\Hash::check($accessToken, $user->access_token)) {
+        if ($user && strtoupper(trim((string) $user->access_token)) === $accessToken) {
             if ($user->account_status !== User::STATUS_ACTIVE) {
                 $message = $user->account_status === User::STATUS_PENDING
                     ? 'Akun Anda masih pending. Token akses akan bisa dipakai setelah pembayaran diverifikasi admin.'

@@ -72,7 +72,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'access_token' => 'hashed',
             'bookmarks' => 'array',
             'global_question_bookmarks' => 'array',
             'payment_submitted_at' => 'datetime',

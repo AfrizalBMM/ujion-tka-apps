@@ -31,6 +31,8 @@ class PaketSoalManagementTest extends TestCase
             'is_active' => 1,
         ]);
 
+        $response->assertRedirect();
+        
         $paket = PaketSoal::where('nama', 'Paket SMP Reguler')->first();
 
         $this->assertNotNull($paket);

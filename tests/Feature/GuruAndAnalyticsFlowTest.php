@@ -168,14 +168,14 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_ACTIVE,
             'jenjang' => 'SMP',
-            'no_wa' => '0812345',
+            'no_wa' => '08123456789',
         ]);
 
         $otherGuru = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_ACTIVE,
             'jenjang' => 'SMP',
-            'no_wa' => '0812345',
+            'no_wa' => '08123456788', // Different number but same normalized
         ]);
 
         $exam = $this->createExamSuite($guru)['exam'];
@@ -197,7 +197,7 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'paket_soal_id' => $exam->paket_soal_id,
             'user_id' => $otherGuru->id,
             'nama' => $otherGuru->name,
-            'nomor_wa' => $otherGuru->no_wa,
+            'nomor_wa' => $guru->no_wa, // Same nomor_wa as the first guru
             'session_token' => 'tok-other',
             'status' => 'selesai',
             'skor' => 12,
@@ -316,11 +316,14 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'account_status' => User::STATUS_ACTIVE,
         ]);
 
-        $exam = $this->createExamSuite($superadmin)['exam'];
+        $suite = $this->createExamSuite($superadmin);
+        $exam = $suite['exam'];
+        $mapel = $suite['mapel'];
 
         UjianSesi::create([
             'exam_id' => $exam->id,
             'paket_soal_id' => $exam->paket_soal_id,
+            'mapel_paket_id' => $mapel->id,
             'nama' => 'Peserta A',
             'nomor_wa' => '08001',
             'session_token' => 'tok-a',
@@ -332,6 +335,7 @@ class GuruAndAnalyticsFlowTest extends TestCase
         UjianSesi::create([
             'exam_id' => $exam->id,
             'paket_soal_id' => $exam->paket_soal_id,
+            'mapel_paket_id' => $mapel->id,
             'nama' => 'Peserta B',
             'nomor_wa' => '08002',
             'session_token' => 'tok-b',
