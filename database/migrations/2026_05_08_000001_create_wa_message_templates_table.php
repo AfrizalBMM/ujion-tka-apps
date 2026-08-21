@@ -79,7 +79,7 @@ return new class extends Migration
             [
                 'key' => 'event_payment_approved',
                 'title' => 'Event: Pembayaran disetujui',
-                'body' => "Halo {name},\n\nPembayaran Anda sudah kami verifikasi.\nAkun Anda telah diaktifkan dan siap digunakan.\nToken akses Anda: {token}\n\nSilakan login menggunakan nama yang terdaftar dan token akses tersebut.\nJika ada kendala saat login, balas pesan ini ya.\n\nSalam,\nAdmin Ujion",
+                'body' => "Halo {name},\n\nPembayaran Anda sudah kami verifikasi.\nAkun Anda telah diaktifkan dan siap digunakan.\nToken akses Anda:\n {token}\n\nSilakan login menggunakan nama yang terdaftar dan token akses tersebut.\nJika ada kendala saat login, balas pesan ini ya.\n\nSalam,\nAdmin Ujion",
                 'description' => 'Dipakai saat approve pembayaran (TeacherController/PaymentConfirmationController).',
                 'is_active' => true,
                 'created_at' => $now,

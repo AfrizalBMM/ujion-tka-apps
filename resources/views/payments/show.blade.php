@@ -78,7 +78,7 @@
                 </a>
                 @if ($waUrl)
                     <a href="{{ $waUrl }}" target="_blank" rel="noopener noreferrer" class="btn-secondary w-full text-center">
-                        Konfirmasi via WhatsApp
+                        Konfirmasi 
                     </a>
                 @endif
             </div>
