@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
@@ -7,8 +8,10 @@ use App\Support\SurveyAnalytics;
 use Illuminate\Contracts\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class ExamAnalysisController extends Controller {
-    public function show(Exam $exam): View {
+class ExamAnalysisController extends Controller
+{
+    public function show(Exam $exam): View
+    {
         return view('superadmin.exam-analysis', $this->buildAnalysis($exam));
     }
 

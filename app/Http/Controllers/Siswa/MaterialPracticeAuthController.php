@@ -34,6 +34,13 @@ class MaterialPracticeAuthController extends Controller
             return back()->withErrors(['token' => 'Token latihan tidak valid atau belum disiapkan.']);
         }
 
+        session()->forget([
+            'siswa_practice_token',
+            'siswa_practice_token_id',
+            'material_practice_session_token',
+        ]);
+        $request->session()->regenerate();
+
         session([
             'siswa_practice_token' => $tokenRaw,
             'siswa_practice_token_id' => $practiceToken->id,

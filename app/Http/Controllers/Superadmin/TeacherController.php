@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppBlast;
 use App\Models\User;
-use App\Support\GuruNotificationTemplates;
+use App\Services\PaymentApprovalService;
 use App\Services\WaMessageTemplateService;
+use App\Support\GuruNotificationTemplates;
+use App\Support\TokenGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class TeacherController extends Controller
 {
@@ -24,7 +25,7 @@ class TeacherController extends Controller
             ]);
         }
 
-        $token = \App\Support\TokenGenerator::uniqueTeacherToken();
+        $token = TokenGenerator::uniqueTeacherToken();
 
         $updateData = [
             'role' => User::ROLE_GURU,
@@ -70,7 +71,7 @@ class TeacherController extends Controller
 
     public function refreshToken(User $teacher, WaMessageTemplateService $templates): RedirectResponse
     {
-        $token = \App\Support\TokenGenerator::uniqueTeacherToken();
+        $token = TokenGenerator::uniqueTeacherToken();
 
         $teacher->update([
             'access_token' => $token,
@@ -93,7 +94,7 @@ class TeacherController extends Controller
         ]);
     }
 
-    public function approvePayment(User $teacher, \App\Services\PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
+    public function approvePayment(User $teacher, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
         if (blank($teacher->payment_proof_path) && $teacher->payment_status !== User::PAYMENT_SUBMITTED) {
             return back()->with('flash', [
@@ -104,6 +105,14 @@ class TeacherController extends Controller
         }
 
         $token = $paymentService->approve($teacher);
+
+        if ($token === null) {
+            return back()->with('flash', [
+                'type' => 'warning',
+                'title' => 'Pembayaran sudah diproses',
+                'message' => 'Pembayaran guru ini sudah diverifikasi sebelumnya. Tidak ada perubahan yang dilakukan.',
+            ]);
+        }
 
         $waBody = $templates->render('event_payment_approved', [
             'name' => $teacher->name,
@@ -126,7 +135,7 @@ class TeacherController extends Controller
         ]);
     }
 
-    public function rejectPayment(Request $request, User $teacher, \App\Services\PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
+    public function rejectPayment(Request $request, User $teacher, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
         if (blank($teacher->payment_proof_path) && $teacher->payment_status !== User::PAYMENT_SUBMITTED) {
             return back()->with('flash', [
@@ -140,7 +149,15 @@ class TeacherController extends Controller
             'payment_rejection_reason' => ['required', 'string', 'max:500'],
         ]);
 
-        $paymentService->reject($teacher, $validated['payment_rejection_reason']);
+        $rejected = $paymentService->reject($teacher, $validated['payment_rejection_reason']);
+
+        if (! $rejected) {
+            return back()->with('flash', [
+                'type' => 'warning',
+                'title' => 'Pembayaran sudah diproses',
+                'message' => 'Pembayaran guru ini sudah diverifikasi sebelumnya. Tidak ada perubahan yang dilakukan.',
+            ]);
+        }
 
         $waBody = $templates->render('event_payment_rejected', [
             'name' => $teacher->name,
@@ -219,5 +236,4 @@ class TeacherController extends Controller
             'accountStatus',
         ));
     }
-
 }

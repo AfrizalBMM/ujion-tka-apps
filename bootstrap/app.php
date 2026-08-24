@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\AuditRequest;
+use App\Http\Middleware\EnsureGuruAccountIsActive;
+use App\Http\Middleware\EnsureGuruJenjangAccess;
+use App\Http\Middleware\EnsureRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,10 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'audit' => \App\Http\Middleware\AuditRequest::class,
-            'role' => \App\Http\Middleware\EnsureRole::class,
-            'guru.active' => \App\Http\Middleware\EnsureGuruAccountIsActive::class,
-            'guru.jenjang' => \App\Http\Middleware\EnsureGuruJenjangAccess::class,
+            'audit' => AuditRequest::class,
+            'role' => EnsureRole::class,
+            'guru.active' => EnsureGuruAccountIsActive::class,
+            'guru.jenjang' => EnsureGuruJenjangAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

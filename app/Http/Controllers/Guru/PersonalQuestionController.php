@@ -1,22 +1,25 @@
 <?php
+
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\PersonalQuestion;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-class PersonalQuestionController extends Controller {
+class PersonalQuestionController extends Controller
+{
     private const BUILDER_IMAGE_DIRECTORY = 'personal-question-images/';
 
-    public function index(Request $request): View {
+    public function index(Request $request): View
+    {
         $user = Auth::user();
         $baseQuery = PersonalQuestion::query()
             ->where('user_id', $user->id)
@@ -25,7 +28,7 @@ class PersonalQuestionController extends Controller {
         $questions = (clone $baseQuery)
             ->when($request->filled('q'), function ($query) use ($request) {
                 $term = trim((string) $request->query('q'));
-                $like = '%' . $term . '%';
+                $like = '%'.$term.'%';
 
                 $query->where(function ($inner) use ($like) {
                     $inner->where('pertanyaan', 'like', $like)
@@ -34,8 +37,8 @@ class PersonalQuestionController extends Controller {
                         ->orWhere('pembahasan', 'like', $like);
                 });
             })
-            ->when($request->filled('kategori'), fn($q) => $q->where('kategori', $request->query('kategori')))
-            ->when($request->filled('tipe'), fn($q) => $q->where('tipe', $request->query('tipe')))
+            ->when($request->filled('kategori'), fn ($q) => $q->where('kategori', $request->query('kategori')))
+            ->when($request->filled('tipe'), fn ($q) => $q->where('tipe', $request->query('tipe')))
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -50,7 +53,8 @@ class PersonalQuestionController extends Controller {
         return view('guru.personal-questions', compact('questions', 'user', 'categories'));
     }
 
-    public function store(Request $request): RedirectResponse {
+    public function store(Request $request): RedirectResponse
+    {
         $user = Auth::user();
         $data = $request->validate([
             'jenjang' => 'nullable|string',
@@ -68,7 +72,7 @@ class PersonalQuestionController extends Controller {
         $data['user_id'] = $user->id;
         $data['jenjang'] = $user->jenjang ?: $request->string('jenjang')->toString();
         if ($request->hasFile('image')) {
-            $data['image_path'] = $request->file('image')->store('personal-question-images', 'public');
+            $data['image_path'] = $request->file('image')->store('personal-question-images', 'local');
         }
         $data['opsi'] = $this->normalizeOptions($request->input('options'), $request->input('options_raw'));
         $data['jawaban_benar'] = $this->normalizeCorrectAnswer($data['tipe'], $request->input('jawaban_benar'), $data['opsi']);
@@ -76,19 +80,20 @@ class PersonalQuestionController extends Controller {
         unset($data['options_raw']);
         PersonalQuestion::create($data);
 
-        return back()->with('flash', ['type'=>'success','message'=>'Soal berhasil ditambahkan.']);
+        return back()->with('flash', ['type' => 'success', 'message' => 'Soal berhasil ditambahkan.']);
     }
 
-    public function destroy(PersonalQuestion $question): RedirectResponse {
+    public function destroy(PersonalQuestion $question): RedirectResponse
+    {
         $question = $this->ownedQuestion($question);
 
         if ($question->image_path) {
-            Storage::disk('public')->delete($question->image_path);
+            Storage::disk('local')->delete($question->image_path);
         }
 
         $question->delete();
 
-        return back()->with('flash', ['type'=>'success','message'=>'Soal dihapus.']);
+        return back()->with('flash', ['type' => 'success', 'message' => 'Soal dihapus.']);
     }
 
     public function update(Request $request, PersonalQuestion $question): RedirectResponse
@@ -114,15 +119,15 @@ class PersonalQuestionController extends Controller {
         ]);
 
         if ($request->boolean('remove_image') && $question->image_path) {
-            Storage::disk('public')->delete($question->image_path);
+            Storage::disk('local')->delete($question->image_path);
             $question->image_path = null;
         }
 
         if ($request->hasFile('image')) {
             if ($question->image_path) {
-                Storage::disk('public')->delete($question->image_path);
+                Storage::disk('local')->delete($question->image_path);
             }
-            $question->image_path = $request->file('image')->store('personal-question-images', 'public');
+            $question->image_path = $request->file('image')->store('personal-question-images', 'local');
         }
 
         $question->fill([
@@ -145,7 +150,8 @@ class PersonalQuestionController extends Controller {
         return back()->with('flash', ['type' => 'success', 'message' => 'Soal berhasil diperbarui.']);
     }
 
-    public function builder(): View {
+    public function builder(): View
+    {
         $user = Auth::user();
         $questions = PersonalQuestion::where('user_id', $user->id)
             ->where('jenjang', $user->jenjang)
@@ -154,7 +160,8 @@ class PersonalQuestionController extends Controller {
         return view('guru.personal-question-builder', compact('questions', 'user'));
     }
 
-    public function saveBuilder(Request $request): JsonResponse|RedirectResponse {
+    public function saveBuilder(Request $request): JsonResponse|RedirectResponse
+    {
         $user = Auth::user();
         $data = $request->validate([
             'questions' => 'required|array',
@@ -249,6 +256,7 @@ class PersonalQuestionController extends Controller {
                     $question?->fill($q);
                     $question?->save();
                     $processedIds[] = $questionId;
+
                     continue;
                 }
 
@@ -262,7 +270,7 @@ class PersonalQuestionController extends Controller {
                 ->delete();
 
             foreach ($imagesToDelete as $path) {
-                Storage::disk('public')->delete($path);
+                Storage::disk('local')->delete($path);
             }
         });
 
@@ -273,7 +281,7 @@ class PersonalQuestionController extends Controller {
             ]);
         }
 
-        return back()->with('flash', ['type'=>'success','message'=>'Soal berhasil disimpan.']);
+        return back()->with('flash', ['type' => 'success', 'message' => 'Soal berhasil disimpan.']);
     }
 
     public function uploadBuilderImage(Request $request): JsonResponse
@@ -285,7 +293,7 @@ class PersonalQuestionController extends Controller {
             'image.max' => 'Ukuran gambar maksimal 2 MB.',
         ]);
 
-        $path = $request->file('image')->store('personal-question-images', 'public');
+        $path = $request->file('image')->store('personal-question-images', 'local');
 
         return response()->json([
             'path' => $path,
@@ -299,12 +307,12 @@ class PersonalQuestionController extends Controller {
 
         abort_if($path === '' || ! str_starts_with($path, 'personal-question-images/'), 404);
 
-        $disk = Storage::disk('public');
+        $disk = Storage::disk('local');
         abort_unless($disk->exists($path), 404);
 
         return response()->file($disk->path($path), [
             'Content-Type' => $disk->mimeType($path) ?? 'application/octet-stream',
-            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+            'Content-Disposition' => 'inline; filename="'.basename($path).'"',
             'Cache-Control' => 'private, max-age=86400',
         ]);
     }
@@ -400,7 +408,7 @@ class PersonalQuestionController extends Controller {
             }
         }
 
-        if (! Storage::disk('public')->exists($path)) {
+        if (! Storage::disk('local')->exists($path)) {
             throw ValidationException::withMessages([
                 $field => 'Gambar builder tidak ditemukan. Upload ulang gambarnya.',
             ]);

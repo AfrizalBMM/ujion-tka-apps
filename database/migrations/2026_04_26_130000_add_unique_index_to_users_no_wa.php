@@ -20,7 +20,7 @@ return new class extends Migration
         if ($duplicates->isNotEmpty()) {
             throw new RuntimeException(
                 'Tidak bisa menambahkan unique index users.no_wa karena masih ada nomor duplikat: '
-                . $duplicates->take(5)->implode(', ')
+                .$duplicates->take(5)->implode(', ')
             );
         }
 

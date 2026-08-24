@@ -2,6 +2,4 @@
 
 namespace App\Http\Requests;
 
-class UpdateSoalRequest extends StoreSoalRequest
-{
-}
+class UpdateSoalRequest extends StoreSoalRequest {}

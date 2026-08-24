@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AppSetting;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -9,7 +10,7 @@ class QrisService
 {
     public function generateFixedAmountPayload(int|float|string $amount, ?string $masterPayload = null): string
     {
-        $basePayload = trim((string) ($masterPayload ?? \App\Models\AppSetting::getValue('qris_master_payload', config('services.qris.master_payload'))));
+        $basePayload = trim((string) ($masterPayload ?? AppSetting::getValue('qris_master_payload', config('services.qris.master_payload'))));
 
         if ($basePayload === '') {
             throw new RuntimeException('GOPAY_MASTER_PAYLOAD belum dikonfigurasi.');
@@ -19,7 +20,7 @@ class QrisService
         $payloadWithoutCrc = $this->stripCrc($basePayload);
         $segments = $this->parseTlv($payloadWithoutCrc);
         $tag54Value = $sanitizedAmount;
-        $tag54Segment = '54' . str_pad((string) strlen($tag54Value), 2, '0', STR_PAD_LEFT) . $tag54Value;
+        $tag54Segment = '54'.str_pad((string) strlen($tag54Value), 2, '0', STR_PAD_LEFT).$tag54Value;
 
         $rebuilt = '';
         $inserted = false;
@@ -44,7 +45,7 @@ class QrisService
             $rebuilt .= $tag54Segment;
         }
 
-        return $rebuilt . '6304' . $this->calculateCrc($rebuilt . '6304');
+        return $rebuilt.'6304'.$this->calculateCrc($rebuilt.'6304');
     }
 
     public function sanitizeAmount(int|float|string $amount): string
@@ -95,7 +96,7 @@ class QrisService
                 'id' => $id,
                 'length' => $length,
                 'value' => $value,
-                'raw' => $id . substr($payload, $offset + 2, 2) . $value,
+                'raw' => $id.substr($payload, $offset + 2, 2).$value,
             ];
 
             $offset += 4 + $length;

@@ -53,7 +53,7 @@
                 <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">Telaah Soal</h2>
                 <p class="mt-1 text-sm text-textSecondary">Jawaban langsung dinilai dan pembahasan tampil setelah menjawab.</p>
             </div>
-            <span class="badge-info w-fit">{{ $telaahQuestions->count() }}/2</span>
+            <span class="badge-info w-fit">{{ $telaahQuestions->count() }} soal</span>
         </div>
 
         <div class="grid gap-4 lg:grid-cols-2">

@@ -305,7 +305,7 @@ class LandingSettingsController extends Controller
         $oldPath = $branding?->logo_path;
 
         if (! $branding) {
-            $branding = new LandingBranding();
+            $branding = new LandingBranding;
         }
 
         $branding->fill([

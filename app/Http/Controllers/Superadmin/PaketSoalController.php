@@ -101,7 +101,7 @@ class PaketSoalController extends Controller
                     ]);
                 } catch (\Exception $e) {
                     // Skip if constraint violation (e.g., SQLite CHECK constraint)
-                    if (str_contains($e->getMessage(), 'CHECK constraint failed') || 
+                    if (str_contains($e->getMessage(), 'CHECK constraint failed') ||
                         str_contains($e->getMessage(), 'constraint')) {
                         // Continue to next item
                         return;

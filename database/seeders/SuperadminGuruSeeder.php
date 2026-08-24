@@ -3,16 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Jenjang;
-use App\Models\PaketSoal;
-use App\Models\MapelPaket;
-use App\Models\Soal;
-use App\Models\PilihanJawaban;
-use App\Models\Material;
-use App\Models\Question;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 
 class SuperadminGuruSeeder extends Seeder
 {

@@ -145,6 +145,11 @@
       </div>
     </div>
     @endforeach
+    @if($materials->hasPages())
+    <div class="mt-4">
+      {{ $materials->links() }}
+    </div>
+    @endif
   </div>
 </div>
 

@@ -4,20 +4,20 @@ namespace App\Services;
 
 use App\Models\WhatsAppLog;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class WhatsAppService
 {
     public function gatewayUrl(): string
     {
-        return rtrim((string) env('WA_GATEWAY_URL', 'http://127.0.0.1:3000'), '/');
+        return rtrim((string) config('services.wa_gateway.url'), '/');
     }
 
     public function senderId(): string
     {
-        return (string) env('WA_SENDER_ID', 'tka-admin');
+        return (string) config('services.wa_gateway.sender_id');
     }
 
     public function normalizeNumber(?string $number): ?string
@@ -40,7 +40,7 @@ class WhatsAppService
         // 8xxxx  => 628xxxx
         // 62xxxx => 62xxxx
         if (str_starts_with($digits, '8')) {
-            return '62' . $digits;
+            return '62'.$digits;
         }
 
         if (str_starts_with($digits, '62')) {
@@ -66,7 +66,7 @@ class WhatsAppService
             $response = Http::timeout(15)
                 ->acceptJson()
                 ->asJson()
-                ->post($this->gatewayUrl() . '/send-message', [
+                ->post($this->gatewayUrl().'/send-message', [
                     'sender' => $this->senderId(),
                     'number' => $normalized,
                     'message' => $message,
@@ -121,7 +121,7 @@ class WhatsAppService
             $response = Http::timeout(25)
                 ->acceptJson()
                 ->asJson()
-                ->post($this->gatewayUrl() . '/send-media', [
+                ->post($this->gatewayUrl().'/send-media', [
                     'sender' => $this->senderId(),
                     'number' => $normalized,
                     'url' => $url,

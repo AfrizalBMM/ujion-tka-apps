@@ -18,7 +18,7 @@ return new class extends Migration
                     'matematika',
                     'bahasa_indonesia',
                     'survey_karakter',
-                    'survey_lingkungan_belajar'
+                    'survey_lingkungan_belajar',
                 ])
                 ->update(['nama_mapel' => 'matematika']); // Atau sesuaikan default jika perlu
 

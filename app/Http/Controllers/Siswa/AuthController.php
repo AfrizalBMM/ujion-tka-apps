@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Siswa;
 
+use App\Http\Controllers\Controller;
 use App\Models\ExamMapelToken;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 
 class AuthController extends Controller
 {
@@ -33,17 +33,28 @@ class AuthController extends Controller
             return back()->withErrors(['token' => 'Token tidak valid, ujian tidak aktif, atau belum diterbitkan.']);
         }
 
-        $exam  = $examMapelToken->exam;
+        $exam = $examMapelToken->exam;
         $mapel = $examMapelToken->mapelPaket;
 
         if (! $exam->paketSoal || ! $mapel) {
             return back()->withErrors(['token' => 'Paket soal atau mapel tidak ditemukan.']);
         }
 
+        session()->forget([
+            'participant_token',
+            'siswa_mapel_token',
+            'siswa_exam_id',
+            'siswa_mapel_id',
+            'siswa_practice_token',
+            'siswa_practice_token_id',
+            'material_practice_session_token',
+        ]);
+        $request->session()->regenerate();
+
         session([
             'siswa_mapel_token' => $token,
-            'siswa_exam_id'     => $exam->id,
-            'siswa_mapel_id'    => $mapel->id,
+            'siswa_exam_id' => $exam->id,
+            'siswa_mapel_id' => $mapel->id,
         ]);
 
         return redirect()->route('siswa.identitas');

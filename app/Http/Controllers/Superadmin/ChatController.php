@@ -1,23 +1,28 @@
 <?php
+
 namespace App\Http\Controllers\Superadmin;
+
 use App\Http\Controllers\Controller;
 use App\Models\Chat;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
-class ChatController extends Controller {
-    public function destroyAllGuru(Request $request) {
+class ChatController extends Controller
+{
+    public function destroyAllGuru(Request $request)
+    {
         // Ambil semua chat antara superadmin dan seluruh guru
         $guruIds = User::where('role', User::ROLE_GURU)->pluck('id');
         $chats = Chat::query()
             ->where(function ($q) use ($guruIds) {
                 $q->where('from_user_id', auth()->id())
-                  ->whereIn('to_user_id', $guruIds);
+                    ->whereIn('to_user_id', $guruIds);
             })
             ->orWhere(function ($q) use ($guruIds) {
                 $q->whereIn('from_user_id', $guruIds)
-                  ->where('to_user_id', auth()->id());
+                    ->where('to_user_id', auth()->id());
             })
             ->get();
 
@@ -28,20 +33,21 @@ class ChatController extends Controller {
 
         return back()->with('flash', [
             'type' => 'success',
-            'message' => 'Semua pesan dan gambar dari seluruh guru berhasil dihapus.'
+            'message' => 'Semua pesan dan gambar dari seluruh guru berhasil dihapus.',
         ]);
     }
 
-    public function destroyAll(Request $request, User $user) {
+    public function destroyAll(Request $request, User $user)
+    {
         // Ambil semua chat antara superadmin dan user
         $chats = Chat::query()
             ->where(function ($q) use ($user) {
                 $q->where('from_user_id', auth()->id())
-                  ->where('to_user_id', $user->id);
+                    ->where('to_user_id', $user->id);
             })
             ->orWhere(function ($q) use ($user) {
                 $q->where('from_user_id', $user->id)
-                  ->where('to_user_id', auth()->id());
+                    ->where('to_user_id', auth()->id());
             })
             ->get();
 
@@ -52,10 +58,12 @@ class ChatController extends Controller {
 
         return back()->with('flash', [
             'type' => 'success',
-            'message' => 'Semua pesan dan gambar berhasil dihapus.'
+            'message' => 'Semua pesan dan gambar berhasil dihapus.',
         ]);
     }
-    public function index(Request $request): View {
+
+    public function index(Request $request): View
+    {
         $users = User::query()
             ->where('role', User::ROLE_GURU)
             ->withCount([
@@ -106,29 +114,51 @@ class ChatController extends Controller {
 
         return view('superadmin.chat', compact('chats', 'users', 'selectedUser', 'chatPaginator'));
     }
-    public function store(Request $request) {
+
+    public function store(Request $request)
+    {
         $data = $request->validate([
-            'to_user_id' => 'required|exists:users,id',
-            'message' => 'nullable|string',
+            'to_user_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', User::ROLE_GURU)],
+            'message' => 'nullable|string|max:2000',
             'image' => 'nullable|image|max:2048',
         ], [
             'image.image' => 'File lampiran harus berupa gambar.',
             'image.max' => 'Ukuran gambar maksimal 2 MB.',
+            'to_user_id.exists' => 'Penerima harus akun guru.',
         ]);
         $data['from_user_id'] = auth()->id();
         if ($request->hasFile('image')) {
-            $data['image_path'] = $request->file('image')->store('chat-images', 'public');
+            $data['image_path'] = $request->file('image')->store('chat-images', 'local');
         }
         unset($data['image']);
         Chat::create($data);
+
         return back()->with('flash', ['type' => 'success', 'message' => 'Pesan terkirim.']);
     }
-    public function destroy(Chat $chat) {
+
+    public function destroy(Chat $chat)
+    {
+        $this->authorizeChatParticipant($chat);
         $chat->delete();
+
         return back()->with('flash', ['type' => 'success', 'message' => 'Pesan dihapus.']);
     }
-    public function markRead(Chat $chat) {
+
+    public function markRead(Chat $chat)
+    {
+        $this->authorizeChatParticipant($chat);
         $chat->update(['is_read' => true]);
+
         return response()->json(['success' => true]);
+    }
+
+    private function authorizeChatParticipant(Chat $chat): void
+    {
+        $userId = (int) auth()->id();
+
+        abort_unless(
+            $userId === (int) $chat->from_user_id || $userId === (int) $chat->to_user_id,
+            403
+        );
     }
 }

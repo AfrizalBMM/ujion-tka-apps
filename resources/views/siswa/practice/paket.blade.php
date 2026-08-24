@@ -266,6 +266,50 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentIndex = 0;
     const flagged = new Set();
 
+    // ─── Draft: simpan pilihan ke localStorage agar tidak hilang saat refresh ───
+    const draftKey = 'ujion-practice-draft-{{ $session->id }}-{{ $package->paket_no }}';
+    const restored = new Set();
+
+    const loadDraft = () => {
+        try {
+            const raw = localStorage.getItem(draftKey);
+            if (!raw) return;
+
+            const draft = JSON.parse(raw);
+            Object.entries(draft.answers || {}).forEach(([name, value]) => {
+                const input = form.querySelector(`input[name="answers[${name}]"][value="${CSS.escape(value)}"]`);
+                if (input) {
+                    input.checked = true;
+                    restored.add(input.dataset.questionIndex);
+                }
+            });
+            (draft.flagged || []).forEach((index) => flagged.add(Number(index)));
+        } catch (e) { /* draft korup — abaikan */ }
+    };
+
+    const saveDraft = () => {
+        try {
+            const answers = {};
+            form.querySelectorAll('[data-practice-answer]:checked').forEach((input) => {
+                const name = input.name.match(/answers\[(\d+)\]/);
+                if (name) answers[name[1]] = input.value;
+            });
+
+            localStorage.setItem(draftKey, JSON.stringify({
+                answers,
+                flagged: Array.from(flagged),
+            }));
+        } catch (e) { /* storage penuh — abaikan */ }
+    };
+
+    const clearDraft = () => {
+        try { localStorage.removeItem(draftKey); } catch (e) { /* abaikan */ }
+    };
+
+    const isDraftRestored = () => restored.size > 0;
+
+    loadDraft();
+
     const isAnswered = (index) => !!document.querySelector(`[data-practice-answer][data-question-index="${index}"]:checked`);
 
     const renderNav = () => {
@@ -354,11 +398,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             flagged.add(currentIndex);
         }
+        saveDraft();
         renderNav();
     });
 
     document.querySelectorAll('[data-practice-answer]').forEach((input) => {
-        input.addEventListener('change', renderNav);
+        input.addEventListener('change', () => {
+            restored.delete(input.dataset.questionIndex);
+            saveDraft();
+            renderNav();
+        });
     });
 
     const showFinishModal = () => {
@@ -390,8 +439,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('practice-modal-confirm').addEventListener('click', () => {
+        clearDraft();
         form.submit();
     });
+
+    form.addEventListener('submit', clearDraft);
+
+    if (isDraftRestored()) {
+        const notice = document.createElement('div');
+        notice.className = 'fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-lg md:bottom-6';
+        notice.textContent = 'Pilihan jawaban terakhir Anda dipulihkan';
+        document.body.appendChild(notice);
+        setTimeout(() => notice.remove(), 5000);
+    }
 
     renderQuestion();
 });

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Jenjang;
 use App\Models\PaketSoal;
 use App\Models\User;
-use App\Models\Jenjang;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -32,7 +32,7 @@ class PaketSoalManagementTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        
+
         $paket = PaketSoal::where('nama', 'Paket SMP Reguler')->first();
 
         $this->assertNotNull($paket);

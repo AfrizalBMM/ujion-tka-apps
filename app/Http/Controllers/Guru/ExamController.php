@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\ExamMapelToken;
 use App\Models\JawabanSiswa;
 use App\Models\MapelPaket;
 use App\Models\Soal;
@@ -10,13 +12,14 @@ use App\Models\UjianSesi;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
-class ExamController extends Controller {
-    public function index(): View {
+class ExamController extends Controller
+{
+    public function index(): View
+    {
         $user = Auth::user();
 
         $available = Exam::query()
@@ -48,15 +51,16 @@ class ExamController extends Controller {
             ])
             ->values();
 
-        return view('guru.exams', compact('available','joined','history'));
+        return view('guru.exams', compact('available', 'joined', 'history'));
     }
 
-    public function join(Request $request): RedirectResponse {
+    public function join(Request $request): RedirectResponse
+    {
         $request->validate(['token' => 'required|string']);
         $user = Auth::user();
         $token = strtoupper(trim($request->token));
 
-        $examMapelToken = \App\Models\ExamMapelToken::with(['exam.paketSoal.mapelPakets', 'exam.paketSoal.jenjang', 'mapelPaket'])
+        $examMapelToken = ExamMapelToken::with(['exam.paketSoal.mapelPakets', 'exam.paketSoal.jenjang', 'mapelPaket'])
             ->where('token', $token)
             ->whereHas('exam', fn ($q) => $q->where('status', 'terbit')->where('is_active', true))
             ->firstOrFail();
@@ -84,28 +88,29 @@ class ExamController extends Controller {
         }
 
         $session = $existingSession ?? UjianSesi::create([
-            'exam_id'        => $exam->id,
-            'paket_soal_id'  => $exam->paket_soal_id,
+            'exam_id' => $exam->id,
+            'paket_soal_id' => $exam->paket_soal_id,
             'mapel_paket_id' => $mapel->id,
-            'user_id'        => $user->id,
-            'nama'           => $user->name,
-            'nomor_wa'       => $user->no_wa,
-            'session_token'  => Str::random(60),
-            'status'         => 'menunggu',
-            'timer_state'    => $this->buildTimerState($exam, $mapel),
+            'user_id' => $user->id,
+            'nama' => $user->name,
+            'nomor_wa' => $user->no_wa,
+            'session_token' => Str::random(60),
+            'status' => 'menunggu',
+            'timer_state' => $this->buildTimerState($exam, $mapel),
         ]);
 
         session([
             'siswa_mapel_token' => $token,
-            'siswa_exam_id'     => $exam->id,
-            'siswa_mapel_id'    => $mapel->id,
+            'siswa_exam_id' => $exam->id,
+            'siswa_mapel_id' => $mapel->id,
             'participant_token' => $session->session_token,
         ]);
 
         return redirect()->route('siswa.petunjuk');
     }
 
-    public function result(Exam $exam): View|RedirectResponse {
+    public function result(Exam $exam): View|RedirectResponse
+    {
         $user = Auth::user();
         $session = $this->sessionQueryForUser($user)
             ->where('exam_id', $exam->id)
@@ -148,7 +153,7 @@ class ExamController extends Controller {
             'waktu_selesai' => $session->waktu_selesai,
         ];
 
-        return view('guru.exam-result', compact('exam','result','pembahasan'));
+        return view('guru.exam-result', compact('exam', 'result', 'pembahasan'));
     }
 
     private function sessionQueryForUser(User $user)

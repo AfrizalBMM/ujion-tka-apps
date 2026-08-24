@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Material;
 use App\Models\MaterialPracticeSession;
 use App\Models\MaterialPracticeToken;
-use Illuminate\Support\Collection;
+use App\Models\MaterialTelaahQuestion;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -42,6 +43,10 @@ class MaterialPracticeResultController extends Controller
         $rankings = collect();
 
         if ($token) {
+            $activeTelaahQuestionIds = MaterialTelaahQuestion::query()
+                ->where('material_id', $token->material_id)
+                ->pluck('global_question_id');
+
             $sessions = MaterialPracticeSession::query()
                 ->where('material_practice_token_id', $token->id)
                 ->withCount([
@@ -58,6 +63,14 @@ class MaterialPracticeResultController extends Controller
                 ])
                 ->orderByDesc('id')
                 ->get();
+
+            // Abaikan jawaban telaah untuk soal yang sudah tidak aktif (diganti admin).
+            $sessions->each(function ($session) use ($activeTelaahQuestionIds): void {
+                $session->setRelation(
+                    'telaahAnswers',
+                    $session->telaahAnswers->whereIn('global_question_id', $activeTelaahQuestionIds)
+                );
+            });
 
             $completedAttempts = $sessions->flatMap->packageAttempts->where('status', 'selesai');
             $sessionAverages = $sessions->mapWithKeys(function ($session) {

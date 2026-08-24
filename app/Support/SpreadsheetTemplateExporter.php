@@ -27,7 +27,7 @@ class SpreadsheetTemplateExporter
 
             foreach (array_values($row) as $cell) {
                 $styleId = $rowIndex === 0 ? 'Header' : 'Default';
-                $xmlRows .= '<Cell ss:StyleID="' . $styleId . '"><Data ss:Type="String">' . self::escape((string) $cell) . '</Data></Cell>';
+                $xmlRows .= '<Cell ss:StyleID="'.$styleId.'"><Data ss:Type="String">'.self::escape((string) $cell).'</Data></Cell>';
             }
 
             $xmlRows .= '</Row>';

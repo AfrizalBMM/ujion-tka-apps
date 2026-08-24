@@ -7,6 +7,7 @@ use App\Http\Requests\StoreTeksBacaanRequest;
 use App\Http\Requests\UpdateTeksBacaanRequest;
 use App\Models\MapelPaket;
 use App\Models\PaketSoal;
+use App\Models\Soal;
 use App\Models\TeksBacaan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -26,7 +27,7 @@ class TeksBacaanGuruController extends Controller
     public function store(StoreTeksBacaanRequest $request, PaketSoal $paket, MapelPaket $mapel): RedirectResponse
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
-        $this->authorize('create', [\App\Models\Soal::class, $mapel]);
+        $this->authorize('create', [Soal::class, $mapel]);
 
         $mapel->teksBacaans()->create($request->validated());
 
@@ -36,7 +37,7 @@ class TeksBacaanGuruController extends Controller
     public function update(UpdateTeksBacaanRequest $request, PaketSoal $paket, MapelPaket $mapel, TeksBacaan $bacaan): RedirectResponse
     {
         abort_if($mapel->paket_soal_id !== $paket->id || $bacaan->mapel_paket_id !== $mapel->id, 404);
-        $this->authorize('create', [\App\Models\Soal::class, $mapel]);
+        $this->authorize('create', [Soal::class, $mapel]);
 
         $bacaan->update($request->validated());
 
@@ -46,7 +47,7 @@ class TeksBacaanGuruController extends Controller
     public function destroy(PaketSoal $paket, MapelPaket $mapel, TeksBacaan $bacaan): RedirectResponse
     {
         abort_if($mapel->paket_soal_id !== $paket->id || $bacaan->mapel_paket_id !== $mapel->id, 404);
-        $this->authorize('create', [\App\Models\Soal::class, $mapel]);
+        $this->authorize('create', [Soal::class, $mapel]);
 
         if ($bacaan->soals()->exists()) {
             return back()->with('flash', [

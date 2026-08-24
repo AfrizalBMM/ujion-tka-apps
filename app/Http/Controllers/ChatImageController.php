@@ -24,7 +24,7 @@ class ChatImageController extends Controller
             abort(404);
         }
 
-        $disk = Storage::disk('public');
+        $disk = Storage::disk('local');
         if (! $disk->exists($chat->image_path)) {
             abort(404);
         }
@@ -34,7 +34,7 @@ class ChatImageController extends Controller
 
         return response()->file($path, [
             'Content-Type' => $mime,
-            'Content-Disposition' => 'inline; filename="' . basename($chat->image_path) . '"',
+            'Content-Disposition' => 'inline; filename="'.basename($chat->image_path).'"',
             'Cache-Control' => 'private, max-age=86400',
         ]);
     }

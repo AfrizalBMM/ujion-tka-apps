@@ -2,7 +2,4 @@
 
 namespace App\Http\Requests;
 
-class UpdateTeksBacaanRequest extends StoreTeksBacaanRequest
-{
-}
-
+class UpdateTeksBacaanRequest extends StoreTeksBacaanRequest {}

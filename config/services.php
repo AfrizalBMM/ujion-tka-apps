@@ -50,4 +50,14 @@ return [
         'admin_whatsapp' => env('QRIS_ADMIN_WHATSAPP'),
     ],
 
+    'wa_webhook' => [
+        'key' => env('WA_WEBHOOK_KEY'),
+        'debug' => env('WA_WEBHOOK_DEBUG', false),
+    ],
+
+    'wa_gateway' => [
+        'url' => env('WA_GATEWAY_URL', 'http://127.0.0.1:3000'),
+        'sender_id' => env('WA_SENDER_ID', 'tka-admin'),
+    ],
+
 ];

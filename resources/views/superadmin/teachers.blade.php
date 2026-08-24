@@ -188,13 +188,13 @@
                                             type="button"
                                             class="btn-secondary text-xs"
                                             data-payment-proof-open
-                                            data-payment-proof-src="{{ \Illuminate\Support\Facades\Storage::url($teacher->payment_proof_path) }}"
+                                            data-payment-proof-src="{{ route('superadmin.payment-proofs.show', ['path' => $teacher->payment_proof_path]) }}"
                                             data-payment-proof-name="{{ $teacher->name }}"
                                         >
                                             Bukti
                                         </button>
                                         <div>
-                                            <a href="{{ \Illuminate\Support\Facades\Storage::url($teacher->payment_proof_path) }}" target="_blank" class="text-xs font-semibold text-primary hover:underline">Buka file asli</a>
+                                            <a href="{{ route('superadmin.payment-proofs.show', ['path' => $teacher->payment_proof_path]) }}" target="_blank" class="text-xs font-semibold text-primary hover:underline">Buka file asli</a>
                                         </div>
                                     </div>
                                 @else

@@ -184,9 +184,9 @@ class WaMessageTemplateService
             $stringValue = $value === null ? '' : (string) $value;
             $key = (string) $name;
 
-            $replacements['{' . $key . '}'] = $stringValue;
-            $replacements['{{' . $key . '}}'] = $stringValue;
-            $replacements['[' . strtoupper($key) . ']'] = $stringValue;
+            $replacements['{'.$key.'}'] = $stringValue;
+            $replacements['{{'.$key.'}}'] = $stringValue;
+            $replacements['['.strtoupper($key).']'] = $stringValue;
         }
 
         // Compatibility placeholders.

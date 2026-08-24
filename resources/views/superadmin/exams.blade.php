@@ -157,8 +157,21 @@
               <div class="flex flex-wrap gap-2">
                 <form method="POST" action="{{ route('superadmin.exams.toggle', $exam) }}">@csrf<button
                     class="btn-secondary text-xs px-2 py-1">Toggle</button></form>
+                @php
+                  $sesiCount = (int) ($exam->ujian_sesis_count ?? 0);
+                @endphp
+                @if($sesiCount > 0)
+                <form method="POST" action="{{ route('superadmin.exams.destroy', $exam) }}"
+                      onsubmit="return confirm('Ujian ini memiliki {{ $sesiCount }} hasil peserta yang akan DIHAPUS PERMANEN beserta ujiannya. Lanjutkan?')">
+                  @csrf
+                  <input type="text" name="confirm_text" placeholder="Ketik HAPUS" required
+                         class="w-24 rounded-lg border border-rose-200 px-2 py-1 text-xs uppercase" autocomplete="off">
+                  <button class="btn-danger text-xs px-2 py-1">Hapus ({{ $sesiCount }} hasil)</button>
+                </form>
+                @else
                 <form method="POST" action="{{ route('superadmin.exams.destroy', $exam) }}">@csrf<button
                     class="btn-danger text-xs px-2 py-1">Hapus</button></form>
+                @endif
               </div>
             </td>
           </tr>

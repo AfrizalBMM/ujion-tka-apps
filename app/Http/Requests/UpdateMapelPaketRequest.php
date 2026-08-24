@@ -20,4 +20,3 @@ class UpdateMapelPaketRequest extends FormRequest
         ];
     }
 }
-

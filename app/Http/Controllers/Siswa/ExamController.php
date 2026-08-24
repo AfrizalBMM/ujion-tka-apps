@@ -8,11 +8,14 @@ use App\Models\JawabanSiswa;
 use App\Models\MapelPaket;
 use App\Models\Soal;
 use App\Models\UjianSesi;
+use App\Support\MatchingKey;
+use App\Support\NameMatcher;
 use App\Support\SurveyAnalytics;
-use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -24,24 +27,25 @@ class ExamController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'wa'   => 'nullable|string|max:20',
+            'wa' => 'nullable|string|max:20',
         ]);
 
-        $examId  = session('siswa_exam_id');
+        $examId = session('siswa_exam_id');
         $mapelId = session('siswa_mapel_id');
 
         if (! $examId || ! $mapelId) {
             return redirect()->route('siswa.login')->withErrors(['token' => 'Sesi ujian telah habis. Masukkan token kembali.']);
         }
 
-        $exam  = Exam::with('paketSoal')->find($examId);
+        $exam = Exam::with('paketSoal')->find($examId);
         $mapel = MapelPaket::find($mapelId);
 
         if (! $exam || ! $mapel || ! $exam->paketSoal) {
             return redirect()->route('siswa.login')->withErrors(['token' => 'Ujian atau mapel tidak ditemukan.']);
         }
 
-        // Cek apakah sudah ada sesi sebelumnya untuk WA yang sama di mapel ini
+        // Cek apakah sudah ada sesi sebelumnya untuk WA yang sama di mapel ini.
+        // Resume hanya jika WA + nama keduanya cocok (anti impersonasi antar siswa).
         $existingSesi = null;
         if ($request->wa) {
             $existingSesi = UjianSesi::where('exam_id', $examId)
@@ -50,31 +54,46 @@ class ExamController extends Controller
                 ->whereIn('status', ['menunggu', 'mengerjakan'])
                 ->latest()
                 ->first();
+
+            if ($existingSesi && ! NameMatcher::matches($existingSesi->nama, $request->nama)) {
+                $existingSesi = null;
+            }
         }
 
         if ($existingSesi) {
             session(['participant_token' => $existingSesi->session_token]);
+
             return redirect()->route('siswa.petunjuk');
+        }
+
+        if ($exam->max_peserta && $exam->max_peserta > 0) {
+            $jumlahPeserta = UjianSesi::where('exam_id', $exam->id)->count();
+
+            if ($jumlahPeserta >= $exam->max_peserta) {
+                return redirect()->route('siswa.identitas')->withErrors([
+                    'nama' => 'Kuota peserta ujian ini sudah penuh. Silakan hubungi guru/pengawas Anda.',
+                ]);
+            }
         }
 
         $timerState = [
             $mapel->id => [
-                'duration_seconds'  => $mapel->durasi_menit * 60,
+                'duration_seconds' => $mapel->durasi_menit * 60,
                 'remaining_seconds' => $mapel->durasi_menit * 60,
-                'started_at'        => null,
-                'finished_at'       => null,
+                'started_at' => null,
+                'finished_at' => null,
             ],
         ];
 
         $sesi = UjianSesi::create([
-            'exam_id'        => $exam->id,
-            'paket_soal_id'  => $exam->paket_soal_id,
+            'exam_id' => $exam->id,
+            'paket_soal_id' => $exam->paket_soal_id,
             'mapel_paket_id' => $mapel->id,
-            'nama'           => $request->nama,
-            'nomor_wa'       => $request->wa,
-            'session_token'  => Str::random(60),
-            'status'         => 'menunggu',
-            'timer_state'    => $timerState,
+            'nama' => $request->nama,
+            'nomor_wa' => $request->wa,
+            'session_token' => Str::random(60),
+            'status' => 'menunggu',
+            'timer_state' => $timerState,
         ]);
 
         session(['participant_token' => $sesi->session_token]);
@@ -95,9 +114,9 @@ class ExamController extends Controller
 
         return view('ujian.mulai', [
             'session' => $sesi,
-            'exam'    => $sesi->exam,
-            'paket'   => $sesi->paketSoal,
-            'mapel'   => $sesi->mapelPaket,
+            'exam' => $sesi->exam,
+            'paket' => $sesi->paketSoal,
+            'mapel' => $sesi->mapelPaket,
         ]);
     }
 
@@ -118,7 +137,7 @@ class ExamController extends Controller
 
         if ($sesi->status === 'menunggu') {
             $sesi->update([
-                'status'      => 'mengerjakan',
+                'status' => 'mengerjakan',
                 'waktu_mulai' => now(),
             ]);
             $sesi->refresh();
@@ -136,45 +155,61 @@ class ExamController extends Controller
             return redirect()->route('siswa.selesai');
         }
 
+        $seed = $sesi->session_token;
+
         $questions = Soal::with(['pilihanJawabans', 'pasanganMenjodohkans', 'teksBacaan'])
             ->where('mapel_paket_id', $mapel->id)
             ->orderBy('nomor_soal')
             ->get()
-            ->map(function (Soal $soal) use ($sesi) {
+            ->map(function (Soal $soal) use ($sesi, $seed) {
                 $jawaban = $sesi->jawabanSiswas->firstWhere('soal_id', $soal->id);
+
+                // Opsi menjodohkan: urutan stabil per sesi (seeded), tanpa id mentah.
                 $matchingOptions = $soal->pasanganMenjodohkans
-                    ->map(fn ($pair) => ['id' => $pair->id, 'label' => $pair->teks_kanan])
-                    ->shuffle()
+                    ->sortBy(fn ($pair) => sha1('shuffle:'.$pair->id.':'.$seed))
+                    ->values()
+                    ->map(fn ($pair) => [
+                        'key' => MatchingKey::optKey((int) $pair->id, $seed),
+                        'label' => $pair->teks_kanan,
+                    ])
                     ->values();
 
+                // Jawaban tersimpan (pair_id/match_id) dikonversi ke key opaque.
+                $jawabanMenjodohkan = collect($jawaban?->jawaban_menjodohkan ?? [])
+                    ->map(fn ($item) => [
+                        'row_key' => MatchingKey::rowKey((int) ($item['pair_id'] ?? 0), $seed),
+                        'opt_key' => MatchingKey::optKey((int) ($item['match_id'] ?? 0), $seed),
+                    ])
+                    ->values()
+                    ->all();
+
                 return [
-                    'id'                  => $soal->id,
-                    'nomor_soal'          => $soal->nomor_soal,
-                    'tipe_soal'           => $soal->tipe_soal,
-                    'jenis_instrumen'     => $soal->jenis_instrumen,
-                    'indikator'           => $soal->indikator,
-                    'dimensi'             => $soal->dimensi,
-                    'subdimensi'          => $soal->subdimensi,
-                    'pertanyaan'          => $soal->pertanyaan,
-                    'gambar_url'          => $soal->gambar_url,
-                    'teks_bacaan'         => $soal->teksBacaan ? [
-                        'judul'  => $soal->teksBacaan->judul,
+                    'id' => $soal->id,
+                    'nomor_soal' => $soal->nomor_soal,
+                    'tipe_soal' => $soal->tipe_soal,
+                    'jenis_instrumen' => $soal->jenis_instrumen,
+                    'indikator' => $soal->indikator,
+                    'dimensi' => $soal->dimensi,
+                    'subdimensi' => $soal->subdimensi,
+                    'pertanyaan' => $soal->pertanyaan,
+                    'gambar_url' => $soal->gambar_url,
+                    'teks_bacaan' => $soal->teksBacaan ? [
+                        'judul' => $soal->teksBacaan->judul,
                         'konten' => $soal->teksBacaan->konten,
                     ] : null,
-                    'pilihan'             => $soal->pilihanJawabans->map(fn ($item) => [
-                        'kode'      => $item->kode,
-                        'teks'      => $item->teks,
-                        'gambar_url'=> $item->gambar_url,
+                    'pilihan' => $soal->pilihanJawabans->map(fn ($item) => [
+                        'kode' => $item->kode,
+                        'teks' => $item->teks,
+                        'gambar_url' => $item->gambar_url,
                     ])->values(),
-                    'pasangan'            => $soal->pasanganMenjodohkans->map(fn ($item) => [
-                        'id'        => $item->id,
+                    'pasangan' => $soal->pasanganMenjodohkans->map(fn ($item) => [
+                        'key' => MatchingKey::rowKey((int) $item->id, $seed),
                         'teks_kiri' => $item->teks_kiri,
-                        'teks_kanan'=> $item->teks_kanan,
                     ])->values(),
-                    'matching_options'    => $matchingOptions,
-                    'jawaban_pg'          => $jawaban?->jawaban_pg,
-                    'jawaban_menjodohkan' => $jawaban?->jawaban_menjodohkan,
-                    'is_ragu'             => $jawaban?->is_ragu ?? false,
+                    'matching_options' => $matchingOptions,
+                    'jawaban_pg' => $jawaban?->jawaban_pg,
+                    'jawaban_menjodohkan' => $jawabanMenjodohkan,
+                    'is_ragu' => $jawaban?->is_ragu ?? false,
                 ];
             });
 
@@ -183,12 +218,12 @@ class ExamController extends Controller
         }
 
         return view('ujian.pengerjaan', [
-            'exam'         => $sesi->exam,
-            'session'      => $sesi,
-            'paket'        => $sesi->paketSoal,
-            'mapel'        => $mapel,
-            'questions'    => $questions,
-            'timer'        => $timerMapel,
+            'exam' => $sesi->exam,
+            'session' => $sesi,
+            'paket' => $sesi->paketSoal,
+            'mapel' => $mapel,
+            'questions' => $questions,
+            'timer' => $timerMapel,
         ]);
     }
 
@@ -203,17 +238,22 @@ class ExamController extends Controller
         }
 
         $validated = $request->validate([
-            'question_id'                  => 'required|exists:soals,id',
-            'mapel_paket_id'               => 'required|exists:mapel_pakets,id',
-            'tipe_soal'                    => 'required|in:pilihan_ganda,menjodohkan',
-            'jawaban_pg'                   => 'nullable|string|max:5',
-            'jawaban_menjodohkan'          => 'nullable|array',
-            'jawaban_menjodohkan.*.pair_id'=> 'nullable|integer',
-            'jawaban_menjodohkan.*.match_id'=> 'nullable|integer',
-            'is_ragu'                      => 'nullable|boolean',
+            'question_id' => 'required|exists:soals,id',
+            'mapel_paket_id' => 'required|exists:mapel_pakets,id',
+            'tipe_soal' => 'required|in:pilihan_ganda,menjodohkan',
+            'jawaban_pg' => 'nullable|string|max:5',
+            'jawaban_menjodohkan' => 'nullable|array',
+            'jawaban_menjodohkan.*.row_key' => 'nullable|string|max:64',
+            'jawaban_menjodohkan.*.opt_key' => 'nullable|string|max:64',
+            'is_ragu' => 'nullable|boolean',
         ]);
 
-        $soal = Soal::where('id', $validated['question_id'])
+        if ((int) $validated['mapel_paket_id'] !== (int) $sesi->mapel_paket_id) {
+            return response()->json(['error' => 'Mapel tidak sesuai dengan sesi ujian Anda.'], 403);
+        }
+
+        $soal = Soal::with('pasanganMenjodohkans')
+            ->where('id', $validated['question_id'])
             ->where('mapel_paket_id', $validated['mapel_paket_id'])
             ->firstOrFail();
 
@@ -229,13 +269,39 @@ class ExamController extends Controller
             ], 409);
         }
 
+        // Resolve key opaque menjodohkan kembali ke pair id sebelum disimpan.
+        $jawabanMenjodohkan = [];
+        if ($validated['tipe_soal'] === 'menjodohkan') {
+            $seed = $sesi->session_token;
+            $rowLookup = MatchingKey::rowKeyLookup($soal->pasanganMenjodohkans, $seed);
+            $optLookup = MatchingKey::optKeyLookup($soal->pasanganMenjodohkans, $seed);
+
+            foreach ($validated['jawaban_menjodohkan'] ?? [] as $item) {
+                $rowKey = (string) ($item['row_key'] ?? '');
+                $optKey = (string) ($item['opt_key'] ?? '');
+
+                if ($rowKey === '' || $optKey === '') {
+                    continue;
+                }
+
+                if (! isset($rowLookup[$rowKey]) || ! isset($optLookup[$optKey])) {
+                    return response()->json(['error' => 'Jawaban menjodohkan tidak valid.'], 422);
+                }
+
+                $jawabanMenjodohkan[] = [
+                    'pair_id' => $rowLookup[$rowKey],
+                    'match_id' => $optLookup[$optKey],
+                ];
+            }
+        }
+
         JawabanSiswa::updateOrCreate(
             ['ujian_sesi_id' => $sesi->id, 'soal_id' => $soal->id],
             [
-                'tipe_soal'           => $validated['tipe_soal'],
-                'jawaban_pg'          => $validated['tipe_soal'] === 'pilihan_ganda' ? ($validated['jawaban_pg'] ?? null) : null,
-                'jawaban_menjodohkan' => $validated['tipe_soal'] === 'menjodohkan' ? ($validated['jawaban_menjodohkan'] ?? []) : null,
-                'is_ragu'             => (bool) ($validated['is_ragu'] ?? false),
+                'tipe_soal' => $validated['tipe_soal'],
+                'jawaban_pg' => $validated['tipe_soal'] === 'pilihan_ganda' ? ($validated['jawaban_pg'] ?? null) : null,
+                'jawaban_menjodohkan' => $validated['tipe_soal'] === 'menjodohkan' ? $jawabanMenjodohkan : null,
+                'is_ragu' => (bool) ($validated['is_ragu'] ?? false),
             ]
         );
 
@@ -256,27 +322,81 @@ class ExamController extends Controller
         $sesi = $this->getActiveSession();
 
         if ($sesi && $sesi->status !== 'selesai') {
-            $sesi->load([
+            $mapel = $sesi->mapelPaket;
+
+            if ($mapel) {
+                $timerMapel = $this->syncTimerStateForMapel($sesi, $mapel, false);
+                $remaining = (int) ($timerMapel['remaining_seconds'] ?? 0);
+
+                if ($remaining > 0) {
+                    $sesi->load(['exam', 'paketSoal', 'mapelPaket.soals', 'jawabanSiswas']);
+
+                    return view('ujian.konfirmasi-selesai', [
+                        'session' => $sesi,
+                        'exam' => $sesi->exam,
+                        'mapel' => $mapel,
+                        'remainingSeconds' => $remaining,
+                    ]);
+                }
+            }
+
+            $sesi = $this->finalizeSession($sesi);
+        }
+
+        if ($sesi && $sesi->status === 'selesai' && ! $sesi->relationLoaded('mapelPaket')) {
+            $sesi->load(['mapelPaket.soals', 'jawabanSiswas']);
+        }
+
+        return view('ujian.selesai', ['session' => $sesi]);
+    }
+
+    public function submitSelesai(Request $request): RedirectResponse
+    {
+        $sesi = $this->getActiveSession();
+
+        if (! $sesi) {
+            return redirect()->route('siswa.login')->withErrors(['token' => 'Sesi ujian telah habis. Masukkan token kembali.']);
+        }
+
+        if ($sesi->status === 'selesai') {
+            return redirect()->route('siswa.selesai');
+        }
+
+        $this->finalizeSession($sesi);
+
+        return redirect()->route('siswa.selesai');
+    }
+
+    private function finalizeSession(UjianSesi $sesi): UjianSesi
+    {
+        return DB::transaction(function () use ($sesi): UjianSesi {
+            $locked = UjianSesi::whereKey($sesi->id)->lockForUpdate()->firstOrFail();
+
+            if ($locked->status === 'selesai') {
+                return $locked;
+            }
+
+            $locked->load([
                 'mapelPaket.soals.pilihanJawabans',
                 'mapelPaket.soals.pasanganMenjodohkans',
                 'jawabanSiswas',
             ]);
 
-            $profilRingkasan = $sesi->mapelPaket?->usesProfiling()
-                ? SurveyAnalytics::sessionProfile($sesi)
+            $profilRingkasan = $locked->mapelPaket?->usesProfiling()
+                ? SurveyAnalytics::sessionProfile($locked)
                 : null;
 
-            $sesi->update([
-                'status'        => 'selesai',
+            $locked->update([
+                'status' => 'selesai',
                 'waktu_selesai' => now(),
-                'skor'          => $this->calculateScore($sesi),
+                'skor' => $this->calculateScore($locked),
                 'profil_ringkasan' => $profilRingkasan,
             ]);
 
-            session()->forget(['siswa_mapel_token', 'siswa_exam_id', 'siswa_mapel_id', 'participant_token']);
-        }
+            session()->forget(['siswa_mapel_token', 'siswa_exam_id', 'siswa_mapel_id']);
 
-        return view('ujian.selesai', ['session' => $sesi]);
+            return $locked->refresh();
+        });
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -293,16 +413,16 @@ class ExamController extends Controller
 
     private function calculateScore(UjianSesi $sesi): float
     {
-        $mapel           = $sesi->mapelPaket;
+        $mapel = $sesi->mapelPaket;
 
         if ($mapel?->usesProfiling()) {
             return SurveyAnalytics::sessionProfile($sesi)['score_percent'];
         }
 
-        $soals           = $mapel?->soals ?? collect();
-        $jawabanBySoal   = $sesi->jawabanSiswas->keyBy('soal_id');
+        $soals = $mapel?->soals ?? collect();
+        $jawabanBySoal = $sesi->jawabanSiswas->keyBy('soal_id');
 
-        $maxScore    = (float) $soals->sum('bobot');
+        $maxScore = (float) $soals->sum('bobot');
         $earnedScore = 0.0;
 
         foreach ($soals as $soal) {
@@ -316,6 +436,7 @@ class ExamController extends Controller
                 if ($correct && $jawaban->jawaban_pg === $correct) {
                     $earnedScore += $soal->bobot;
                 }
+
                 continue;
             }
 

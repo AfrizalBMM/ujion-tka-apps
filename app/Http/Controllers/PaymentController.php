@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction;
 use App\Models\AppSetting;
+use App\Models\Transaction;
 use App\Services\QrisService;
 use App\Support\PhoneNumber;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Number;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Number;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PaymentController extends Controller
@@ -23,7 +24,6 @@ class PaymentController extends Controller
         $this->authorizeSessionAccess($transaction);
 
         $amount = (int) round((float) $transaction->amount);
-        $payload = $qrisService->generateFixedAmountPayload($amount);
         $formattedAmount = Number::currency($amount, 'IDR', 'id');
         $adminNumber = PhoneNumber::normalizeIndonesian(
             (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
@@ -40,10 +40,24 @@ class PaymentController extends Controller
             ? "https://wa.me/{$adminNumber}?text={$message}"
             : null;
 
+        $qrCodeSvg = null;
+        $qrUnavailable = false;
+
+        if ($transaction->status === Transaction::STATUS_PENDING) {
+            try {
+                $payload = $qrisService->generateFixedAmountPayload($amount);
+                $qrCodeSvg = QrCode::format('svg')->size(320)->margin(1)->generate($payload);
+            } catch (\RuntimeException $e) {
+                Log::error('QRIS generation failed on payment page: '.$e->getMessage());
+                $qrUnavailable = true;
+            }
+        }
+
         return view('payments.show', [
             'transaction' => $transaction,
             'formattedAmount' => $formattedAmount,
-            'qrCodeSvg' => QrCode::format('svg')->size(320)->margin(1)->generate($payload),
+            'qrCodeSvg' => $qrCodeSvg,
+            'qrUnavailable' => $qrUnavailable,
             'waUrl' => $waUrl,
         ]);
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\ManagesSoalCrud;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSoalRequest;
 use App\Http\Requests\UpdateSoalRequest;
+use App\Models\GlobalQuestion;
 use App\Models\MapelPaket;
 use App\Models\PaketSoal;
 use App\Models\Soal;
@@ -99,31 +100,33 @@ class SoalGuruController extends Controller
         $this->authorize('create', [Soal::class, $mapel]);
 
         $data = $request->validate([
-            'global_question_ids'   => ['required', 'array', 'min:1'],
+            'global_question_ids' => ['required', 'array', 'min:1'],
             'global_question_ids.*' => ['integer', 'exists:global_questions,id'],
         ]);
 
         $selectedIds = array_values(array_unique($data['global_question_ids']));
-        $bankSoals   = \App\Models\GlobalQuestion::whereIn('id', $selectedIds)->get()->keyBy('id');
+        $bankSoals = GlobalQuestion::whereIn('id', $selectedIds)->get()->keyBy('id');
 
         $nextNomor = ((int) $mapel->soals()->max('nomor_soal'));
-        $imported  = 0;
-        $skipped   = 0;
+        $imported = 0;
+        $skipped = 0;
 
         \DB::transaction(function () use ($mapel, $bankSoals, $selectedIds, &$nextNomor, &$imported, &$skipped) {
             $currentCount = $mapel->soals()->count();
-            $maxSoal      = $mapel->jumlah_soal;
+            $maxSoal = $mapel->jumlah_soal;
 
             foreach ($selectedIds as $gqId) {
-                /** @var \App\Models\GlobalQuestion|null $gq */
+                /** @var GlobalQuestion|null $gq */
                 $gq = $bankSoals->get($gqId);
                 if (! $gq) {
                     $skipped++;
+
                     continue;
                 }
 
                 if ($currentCount >= $maxSoal) {
                     $skipped++;
+
                     continue;
                 }
 
@@ -134,13 +137,13 @@ class SoalGuruController extends Controller
                 $soal = $mapel->soals()->create([
                     'nomor_soal' => $nextNomor,
                     'tipe_soal' => $gq->question_type ?? 'pilihan_ganda',
-                    'indikator' => $gq->indikator ?? null,
+                    'indikator' => $gq->indikator ?? 'Diimpor dari bank soal Ujion',
                     'pertanyaan' => $gq->question_text,
-                    'dimensi' => $gq->dimensi ?? null,
-                    'subdimensi' => $gq->subdimensi ?? null,
-                    'kategori_profil' => $gq->kategori_profil ?? null,
-                    'arah_skor' => $gq->arah_skor ?? null,
-                    'bobot' => $gq->bobot ?? null,
+                    'dimensi' => $gq->dimensi,
+                    'subdimensi' => $gq->subdimensi,
+                    'kategori_profil' => $gq->kategori_profil,
+                    'arah_skor' => $gq->arah_skor ?: 'positif',
+                    'bobot' => $gq->bobot ?? 1,
                 ]);
 
                 // Pilihan ganda
@@ -158,8 +161,8 @@ class SoalGuruController extends Controller
                     foreach ($gq->options as $idx => $opt) {
                         $soal->pasanganMenjodohkans()->create([
                             'urutan' => $idx + 1,
-                            'pernyataan' => $opt['left'] ?? '',
-                            'jawaban' => $opt['right'] ?? '',
+                            'teks_kiri' => $opt['left'] ?? '',
+                            'teks_kanan' => $opt['right'] ?? '',
                         ]);
                     }
                 }

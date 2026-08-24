@@ -9,7 +9,7 @@ class QrisServiceTest extends TestCase
 {
     public function test_it_inserts_tag_54_before_country_code_and_recalculates_crc(): void
     {
-        $service = new QrisService();
+        $service = new QrisService;
         $masterPayload = '0002010102115802ID5910TEST STORE6007JAKARTA6304ABCD';
 
         $payload = $service->generateFixedAmountPayload('99.000', $masterPayload);
@@ -23,7 +23,7 @@ class QrisServiceTest extends TestCase
 
     public function test_it_replaces_existing_tag_54_value(): void
     {
-        $service = new QrisService();
+        $service = new QrisService;
         $masterPayload = '000201010211540410005802ID5910TEST STORE6007JAKARTA6304ABCD';
 
         $payload = $service->generateFixedAmountPayload('1000000', $masterPayload);

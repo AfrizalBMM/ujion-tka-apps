@@ -77,6 +77,7 @@ class SiswaExamSessionTest extends TestCase
         $sesi = UjianSesi::create([
             'exam_id' => $exam->id,
             'paket_soal_id' => $paket->id,
+            'mapel_paket_id' => $mapel->id,
             'nama' => 'Siswa Contoh',
             'session_token' => Str::random(40),
             'status' => 'mengerjakan',
@@ -91,9 +92,9 @@ class SiswaExamSessionTest extends TestCase
         ]);
 
         $response = $this->withSession([
-                'participant_token' => $sesi->session_token,
-                '_token' => 'save-answer-token',
-            ])
+            'participant_token' => $sesi->session_token,
+            '_token' => 'save-answer-token',
+        ])
             ->withHeader('X-CSRF-TOKEN', 'save-answer-token')
             ->postJson(route('siswa.api.save_answer'), [
                 'question_id' => $soal->id,
@@ -114,7 +115,7 @@ class SiswaExamSessionTest extends TestCase
             'jawaban_pg' => 'B',
         ]);
         $sesi->refresh();
-        $this->assertSame(4500, data_get($sesi->timer_state, $mapel->id . '.remaining_seconds'));
+        $this->assertSame(4500, data_get($sesi->timer_state, $mapel->id.'.remaining_seconds'));
 
         Carbon::setTestNow();
     }
@@ -126,9 +127,9 @@ class SiswaExamSessionTest extends TestCase
         [$soal, $mapel, $sesi] = $this->createExamSessionFixture(now()->subSeconds(120)->toIso8601String(), 300, 999999);
 
         $response = $this->withSession([
-                'participant_token' => $sesi->session_token,
-                '_token' => 'extend-timer-token',
-            ])
+            'participant_token' => $sesi->session_token,
+            '_token' => 'extend-timer-token',
+        ])
             ->withHeader('X-CSRF-TOKEN', 'extend-timer-token')
             ->postJson(route('siswa.api.save_answer'), [
                 'question_id' => $soal->id,
@@ -146,7 +147,7 @@ class SiswaExamSessionTest extends TestCase
         ]);
 
         $sesi->refresh();
-        $this->assertSame(180, data_get($sesi->timer_state, $mapel->id . '.remaining_seconds'));
+        $this->assertSame(180, data_get($sesi->timer_state, $mapel->id.'.remaining_seconds'));
 
         Carbon::setTestNow();
     }
@@ -158,9 +159,9 @@ class SiswaExamSessionTest extends TestCase
         [$soal, $mapel, $sesi] = $this->createExamSessionFixture(now()->subSeconds(301)->toIso8601String(), 300, 10);
 
         $response = $this->withSession([
-                'participant_token' => $sesi->session_token,
-                '_token' => 'expired-timer-token',
-            ])
+            'participant_token' => $sesi->session_token,
+            '_token' => 'expired-timer-token',
+        ])
             ->withHeader('X-CSRF-TOKEN', 'expired-timer-token')
             ->postJson(route('siswa.api.save_answer'), [
                 'question_id' => $soal->id,
@@ -182,8 +183,8 @@ class SiswaExamSessionTest extends TestCase
         ]);
 
         $sesi->refresh();
-        $this->assertSame(0, data_get($sesi->timer_state, $mapel->id . '.remaining_seconds'));
-        $this->assertNotNull(data_get($sesi->timer_state, $mapel->id . '.finished_at'));
+        $this->assertSame(0, data_get($sesi->timer_state, $mapel->id.'.remaining_seconds'));
+        $this->assertNotNull(data_get($sesi->timer_state, $mapel->id.'.finished_at'));
 
         Carbon::setTestNow();
     }
@@ -244,6 +245,7 @@ class SiswaExamSessionTest extends TestCase
         $sesi = UjianSesi::create([
             'exam_id' => $exam->id,
             'paket_soal_id' => $paket->id,
+            'mapel_paket_id' => $mapel->id,
             'nama' => 'Siswa Timer',
             'session_token' => Str::random(40),
             'status' => 'mengerjakan',

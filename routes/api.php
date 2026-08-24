@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\LandingClickController;
 use App\Http\Controllers\Api\WebhookController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,4 +27,3 @@ Route::post('/landing-click', [LandingClickController::class, 'store'])
 Route::post('/wa-webhook', [WebhookController::class, 'handle'])
     ->middleware('throttle:120,1')
     ->name('api.wa-webhook');
-

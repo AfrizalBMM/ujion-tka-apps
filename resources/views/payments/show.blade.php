@@ -18,22 +18,51 @@
 
     <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <div class="card">
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
-                <div class="mx-auto flex max-w-[360px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4">
-                    {!! $qrCodeSvg !!}
+            @if ($transaction->status === \App\Models\Transaction::STATUS_SUCCESS)
+                <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-6 text-center">
+                    <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">✅</div>
+                    <h3 class="text-lg font-bold text-emerald-900">Pembayaran Sudah Diverifikasi</h3>
+                    <p class="mt-2 text-sm text-emerald-800">Transaksi ini sudah disetujui admin. Silakan cek WhatsApp Anda untuk token akses, lalu login.</p>
+                    <a href="{{ route('login') }}" class="btn-primary mt-4 inline-flex">Masuk Sekarang</a>
                 </div>
-            </div>
+            @elseif ($transaction->status === \App\Models\Transaction::STATUS_FAILED)
+                <div class="rounded-2xl border border-rose-100 bg-rose-50 p-6 text-center">
+                    <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 text-2xl">⚠️</div>
+                    <h3 class="text-lg font-bold text-rose-900">Pembayaran Perlu Dikirim Ulang</h3>
+                    <p class="mt-2 text-sm text-rose-800">
+                        Admin meminta Anda mengirim ulang bukti pembayaran.
+                        @if (! blank($transaction->rejection_reason))
+                            <span class="mt-2 block rounded-lg bg-white/70 px-3 py-2 text-left"><strong>Catatan admin:</strong> {{ $transaction->rejection_reason }}</span>
+                        @endif
+                    </p>
+                    <a href="{{ route('register.guru.pending') }}" class="btn-primary mt-4 inline-flex">Kembali ke Halaman Aktivasi</a>
+                </div>
+            @else
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                    @if ($qrCodeSvg)
+                        <div class="mx-auto flex max-w-[360px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4">
+                            {!! $qrCodeSvg !!}
+                        </div>
+                    @else
+                        <div class="mx-auto max-w-[360px] rounded-2xl border border-dashed border-amber-300 bg-amber-50 p-6">
+                            <div class="mb-2 text-3xl">🔧</div>
+                            <p class="text-sm font-semibold text-amber-900">QR pembayaran belum tersedia</p>
+                            <p class="mt-1 text-xs text-amber-800">Konfigurasi pembayaran belum selesai. Silakan hubungi admin untuk menyelesaikan pembayaran Anda.</p>
+                        </div>
+                    @endif
+                </div>
 
-            <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nominal</div>
-                    <div class="mt-2 text-xl font-bold text-slate-900">{{ $formattedAmount }}</div>
+                <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nominal</div>
+                        <div class="mt-2 text-xl font-bold text-slate-900">{{ $formattedAmount }}</div>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kode Referensi</div>
+                        <div class="mt-2 break-all text-sm font-bold text-slate-900">{{ $transaction->reference_code }}</div>
+                    </div>
                 </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kode Referensi</div>
-                    <div class="mt-2 break-all text-sm font-bold text-slate-900">{{ $transaction->reference_code }}</div>
-                </div>
-            </div>
+            @endif
         </div>
 
         <div class="space-y-4">

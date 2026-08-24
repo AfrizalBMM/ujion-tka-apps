@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -71,5 +72,25 @@ class ProfileController extends Controller
         $user->update($data);
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Profil berhasil diperbarui.']);
+    }
+
+    public function password(Request $request)
+    {
+        $request->validate([
+            'password' => ['required', 'confirmed', 'min:8', 'different:access_token'],
+        ], [
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak sama.',
+            'password.different' => 'Password tidak boleh sama dengan token akses Anda.',
+        ]);
+
+        $user = Auth::user();
+        abort_unless($user, 401);
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return back()->with('flash', ['type' => 'success', 'message' => 'Password berhasil disimpan.']);
     }
 }

@@ -5,13 +5,11 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppBlast;
 use App\Models\Transaction;
-use App\Models\User;
+use App\Services\PaymentApprovalService;
 use App\Services\WaMessageTemplateService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class PaymentConfirmationController extends Controller
 {
@@ -49,7 +47,7 @@ class PaymentConfirmationController extends Controller
         return view('superadmin.payment-confirmations', compact('transactions', 'summary', 'search'));
     }
 
-    public function approve(Transaction $transaction, \App\Services\PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
+    public function approve(Transaction $transaction, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
         if ($transaction->status !== Transaction::STATUS_PENDING || blank($transaction->payment_proof_path)) {
             return back()->with('flash', [
@@ -70,6 +68,14 @@ class PaymentConfirmationController extends Controller
         }
 
         $token = $paymentService->approve($teacher, $transaction);
+
+        if ($token === null) {
+            return back()->with('flash', [
+                'type' => 'warning',
+                'title' => 'Transaksi sudah diproses',
+                'message' => "Transaksi {$transaction->reference_code} sudah diverifikasi sebelumnya. Tidak ada perubahan yang dilakukan.",
+            ]);
+        }
 
         $waBody = $templates->render('event_payment_approved', [
             'name' => $teacher->name,
@@ -92,7 +98,7 @@ class PaymentConfirmationController extends Controller
         ]);
     }
 
-    public function reject(Request $request, Transaction $transaction, \App\Services\PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
+    public function reject(Request $request, Transaction $transaction, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
         if ($transaction->status !== Transaction::STATUS_PENDING) {
             return back()->with('flash', [
@@ -111,7 +117,15 @@ class PaymentConfirmationController extends Controller
             'rejection_reason' => ['required', 'string', 'max:500'],
         ]);
 
-        $paymentService->reject($teacher, $validated['rejection_reason'], $transaction);
+        $rejected = $paymentService->reject($teacher, $validated['rejection_reason'], $transaction);
+
+        if (! $rejected) {
+            return back()->with('flash', [
+                'type' => 'warning',
+                'title' => 'Transaksi sudah diproses',
+                'message' => "Transaksi {$transaction->reference_code} sudah diverifikasi sebelumnya. Tidak ada perubahan yang dilakukan.",
+            ]);
+        }
 
         $waBody = $templates->render('event_payment_rejected', [
             'name' => $teacher->name,
@@ -139,5 +153,4 @@ class PaymentConfirmationController extends Controller
             'message' => 'Akun guru untuk transaksi ini sudah tidak tersedia. Periksa data transaksi sebelum melanjutkan review.',
         ]);
     }
-
 }

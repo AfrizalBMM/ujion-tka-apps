@@ -10,6 +10,7 @@ use App\Models\LandingHeroMockup;
 use App\Models\Material;
 use App\Models\PricingPlan;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -59,31 +60,35 @@ class LandingController extends Controller
                 ->all();
         }
 
-        // Fetch counts for materials and questions
-        $materialStats = Material::query()
-            ->select('jenjang', 'mapel', DB::raw('count(*) as count'))
-            ->groupBy('jenjang', 'mapel')
-            ->get();
+        // Fetch counts for materials and questions (cached 10 minutes — aggregate queries)
+        $stats = Cache::remember('landing.stats.v1', now()->addMinutes(10), function () {
+            $materialStats = Material::query()
+                ->select('jenjang', 'mapel', DB::raw('count(*) as count'))
+                ->groupBy('jenjang', 'mapel')
+                ->get();
 
-        $questionStats = GlobalQuestion::query()
-            ->join('jenjangs', 'global_questions.jenjang_id', '=', 'jenjangs.id')
-            ->select('jenjangs.kode as jenjang', 'material_mapel as mapel', DB::raw('count(*) as count'))
-            ->groupBy('jenjangs.kode', 'material_mapel')
-            ->get();
+            $questionStats = GlobalQuestion::query()
+                ->join('jenjangs', 'global_questions.jenjang_id', '=', 'jenjangs.id')
+                ->select('jenjangs.kode as jenjang', 'material_mapel as mapel', DB::raw('count(*) as count'))
+                ->groupBy('jenjangs.kode', 'material_mapel')
+                ->get();
 
-        $stats = [];
+            $stats = [];
 
-        foreach ($materialStats as $m) {
-            $jenjang = $m->jenjang;
-            $mapel = $m->mapel ?: 'Umum';
-            $stats[$jenjang][$mapel]['materials'] = $m->count;
-        }
+            foreach ($materialStats as $m) {
+                $jenjang = $m->jenjang;
+                $mapel = $m->mapel ?: 'Umum';
+                $stats[$jenjang][$mapel]['materials'] = $m->count;
+            }
 
-        foreach ($questionStats as $q) {
-            $jenjang = $q->jenjang;
-            $mapel = $q->mapel ?: 'Umum';
-            $stats[$jenjang][$mapel]['questions'] = $q->count;
-        }
+            foreach ($questionStats as $q) {
+                $jenjang = $q->jenjang;
+                $mapel = $q->mapel ?: 'Umum';
+                $stats[$jenjang][$mapel]['questions'] = $q->count;
+            }
+
+            return $stats;
+        });
 
         $logoUrl = asset('assets/img/logo.png');
         if (Schema::hasTable('landing_brandings')) {

@@ -1,19 +1,25 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 
-class Exam extends Model {
+class Exam extends Model
+{
     protected $guarded = [];
+
     protected $casts = [
         'tanggal_terbit' => 'datetime',
-        'is_active'      => 'boolean',
+        'is_active' => 'boolean',
     ];
 
-    public function questions() {
+    public function questions()
+    {
         return $this->belongsToMany(Question::class, 'exam_question')->withTimestamps()->withPivot('order');
     }
 
-    public function creator() {
+    public function creator()
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
 
@@ -22,7 +28,8 @@ class Exam extends Model {
         return $this->belongsTo(PaketSoal::class);
     }
 
-    public function participants() {
+    public function participants()
+    {
         return $this->hasMany(Participant::class);
     }
 

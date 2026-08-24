@@ -9,6 +9,10 @@ class TokenGenerator
 {
     public static function uniqueTeacherToken(): string
     {
-        return strtoupper(Str::random(10));
+        do {
+            $token = strtoupper(Str::random(10));
+        } while (User::query()->where('access_token', $token)->exists());
+
+        return $token;
     }
 }

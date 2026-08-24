@@ -1,25 +1,27 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Guru\ExamResultController;
-use App\Http\Controllers\RegisterGuruController;
-use App\Http\Controllers\Guru\DashboardController;
-use App\Http\Controllers\Guru\PaketSoalGuruController;
-use App\Http\Controllers\Guru\ProfileController;
-use App\Http\Controllers\Guru\MaterialController;
-use App\Http\Controllers\Guru\MapelPaketGuruController;
-use App\Http\Controllers\Guru\PersonalQuestionController;
-use App\Http\Controllers\Guru\ExamController;
+use App\Http\Controllers\ChatImageController as SharedChatImageController;
 use App\Http\Controllers\Guru\ChatController;
+use App\Http\Controllers\Guru\DashboardController;
+use App\Http\Controllers\Guru\ExamController;
+use App\Http\Controllers\Guru\ExamResultController;
+use App\Http\Controllers\Guru\MapelPaketGuruController;
+use App\Http\Controllers\Guru\MaterialController;
+use App\Http\Controllers\Guru\MaterialPracticePdfController;
+use App\Http\Controllers\Guru\MaterialPracticeResultController;
+use App\Http\Controllers\Guru\PaketSoalGuruController;
+use App\Http\Controllers\Guru\PersonalQuestionController;
+use App\Http\Controllers\Guru\ProfileController;
 use App\Http\Controllers\Guru\SoalGuruController;
 use App\Http\Controllers\Guru\SoalUjionController;
 use App\Http\Controllers\Guru\TeksBacaanGuruController;
-use App\Http\Controllers\Guru\MaterialPracticePdfController;
-use App\Http\Controllers\Guru\MaterialPracticeResultController;
-use App\Http\Controllers\ChatImageController as SharedChatImageController;
+use App\Http\Controllers\RegisterGuruController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/register/guru', [RegisterGuruController::class, 'showForm'])->name('register.guru.form');
-Route::post('/register/guru', [RegisterGuruController::class, 'register'])->name('register.guru');
+Route::post('/register/guru', [RegisterGuruController::class, 'register'])
+    ->middleware('throttle:10,1')
+    ->name('register.guru');
 Route::get('/register/guru/pending', [RegisterGuruController::class, 'showPending'])->name('register.guru.pending');
 Route::get('/register/guru/check-wa', [RegisterGuruController::class, 'checkWa'])
     ->middleware('throttle:30,1')
@@ -32,10 +34,11 @@ Route::post('/register/guru/pending/payment', [RegisterGuruController::class, 'c
 Route::post('/register/guru/pending/payment-data', [RegisterGuruController::class, 'paymentData'])->name('register.guru.payment-data');
 Route::post('/register/guru/pending/payment-proof', [RegisterGuruController::class, 'uploadPaymentProof'])->name('register.guru.payment-proof');
 
-Route::middleware(['auth', 'role:guru', 'guru.active'])->prefix('guru')->name('guru.')->scopeBindings()->group(function () {
+Route::middleware(['auth', 'role:guru', 'guru.active', 'audit'])->prefix('guru')->name('guru.')->scopeBindings()->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials');
     Route::get('/materials/{material}', [MaterialController::class, 'show'])->name('materials.show');
     Route::post('/materials/{material}/bookmark', [MaterialController::class, 'bookmark'])->name('materials.bookmark');

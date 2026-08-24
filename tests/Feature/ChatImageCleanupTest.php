@@ -14,12 +14,12 @@ class ChatImageCleanupTest extends TestCase
 
     public function test_deleting_chat_removes_image_from_storage(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
 
         $from = User::factory()->create();
         $to = User::factory()->create();
 
-        Storage::disk('public')->put('chat-images/sample.png', 'dummy');
+        Storage::disk('local')->put('chat-images/sample.png', 'dummy');
 
         $eventFired = false;
         $pathAtDelete = null;
@@ -27,7 +27,7 @@ class ChatImageCleanupTest extends TestCase
         Chat::deleting(function (Chat $chat) use (&$eventFired, &$pathAtDelete, &$existsAtDelete): void {
             $eventFired = true;
             $pathAtDelete = $chat->image_path;
-            $existsAtDelete = Storage::disk('public')->exists((string) $chat->image_path);
+            $existsAtDelete = Storage::disk('local')->exists((string) $chat->image_path);
         });
 
         $chat = Chat::create([
@@ -44,7 +44,7 @@ class ChatImageCleanupTest extends TestCase
         $this->assertTrue($eventFired);
         $this->assertSame('chat-images/sample.png', $pathAtDelete);
         $this->assertTrue($existsAtDelete);
-        Storage::disk('public')->assertMissing('chat-images/sample.png');
+        Storage::disk('local')->assertMissing('chat-images/sample.png');
         $this->assertDatabaseMissing('chats', ['id' => $chat->id]);
     }
 

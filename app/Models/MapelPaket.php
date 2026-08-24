@@ -9,8 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class MapelPaket extends Model
 {
     public const NAMA_MATEMATIKA = 'matematika';
+
     public const NAMA_BAHASA_INDONESIA = 'bahasa_indonesia';
+
     public const NAMA_SURVEY_KARAKTER = 'survey_karakter';
+
     public const NAMA_SURVEY_LINGKUNGAN = 'survey_lingkungan_belajar';
 
     protected $fillable = [

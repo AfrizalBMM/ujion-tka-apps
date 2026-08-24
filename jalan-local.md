@@ -6,7 +6,7 @@ Panduan lengkap untuk setup dan menjalankan aplikasi **Ujion TKA** beserta **Wha
 
 Pastikan sudah install:
 
-- **PHP 8.2+** (dengan extensions: curl, json, mbstring, pdo, pdo_mysql)
+- **PHP 8.3+** (dengan extensions: curl, json, mbstring, pdo, pdo_mysql)
 - **Composer** (latest)
 - **Node.js 16+** & **npm** (atau yarn)
 - **MySQL / MariaDB** (atau SQLite untuk development)
@@ -403,7 +403,7 @@ php artisan tinker
 http://localhost:8000/login
 ```
 
-Guru login menggunakan nama + access token (buat dari superadmin area).
+Guru login menggunakan nomor WhatsApp + access token (buat dari superadmin area).
 
 ### Login Siswa
 

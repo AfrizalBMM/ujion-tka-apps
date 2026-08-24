@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\LandingClickLog;
-use App\Models\PricingPlan;
+use App\Models\Transaction;
 use App\Models\UjianSesi;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -48,15 +48,6 @@ class DashboardController extends Controller
     public function print(): View
     {
         return view('superadmin.exports.dashboard-print', $this->buildMetrics());
-    }
-
-    private function normalizeCurrency(?string $value): int
-    {
-        if (! $value) {
-            return 0;
-        }
-
-        return (int) preg_replace('/\D+/', '', $value);
     }
 
     private function buildMetrics(): array
@@ -120,25 +111,9 @@ class DashboardController extends Controller
             ->where('status', 'mengerjakan')
             ->count();
 
-        $activePlans = PricingPlan::query()
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('jenjang');
-        $fallbackPlan = PricingPlan::query()
-            ->where('is_active', true)
-            ->first();
-
-        $activeTeachersByJenjang = User::query()
-            ->where('role', User::ROLE_GURU)
-            ->where('account_status', User::STATUS_ACTIVE)
-            ->selectRaw('jenjang, COUNT(*) as total')
-            ->groupBy('jenjang')
-            ->pluck('total', 'jenjang');
-
-        $totalRevenue = 0;
-        foreach ($activeTeachersByJenjang as $jenjang => $count) {
-            $totalRevenue += (int) $count * $this->normalizeCurrency(($activePlans->get($jenjang) ?? $fallbackPlan)?->price);
-        }
+        $totalRevenue = (int) Transaction::query()
+            ->where('status', Transaction::STATUS_SUCCESS)
+            ->sum('amount');
 
         $topTeacher = User::query()
             ->where('role', User::ROLE_GURU)

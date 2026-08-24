@@ -108,6 +108,9 @@
       @empty
       <div class="text-center text-textSecondary py-8">Tidak ada soal ditemukan.</div>
       @endforelse
+      <div class="mt-4">
+        {{ $questions->links() }}
+      </div>
     </div>
   </div>
 </div>

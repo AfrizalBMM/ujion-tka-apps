@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Superadmin;
 
-use Illuminate\View\View;
-use RuntimeException;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Http\Controllers\Controller;
+use App\Models\GlobalQuestion;
 use App\Models\Material;
 use App\Support\SpreadsheetTable;
 use App\Support\SpreadsheetTemplateExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use App\Models\GlobalQuestion;
+use Illuminate\View\View;
+use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MaterialController extends Controller
 {
@@ -31,27 +30,27 @@ class MaterialController extends Controller
             'SMP' => [
                 ['SMP', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan', 'Skala dan rasio',                  'https://contoh-materi.test/skala-rasio'],
                 ['SMP', 'Matematika',       'K-13',    'Numerasi',  'Aljabar',      'Persamaan linear satu variabel',   ''],
-                ['SMP', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Informasi','Menentukan gagasan utama',        'https://contoh-materi.test/gagasan-utama'],
-                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Deskripsi','Mengidentifikasi informasi tersurat',''],
+                ['SMP', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Informasi', 'Menentukan gagasan utama',        'https://contoh-materi.test/gagasan-utama'],
+                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Deskripsi', 'Mengidentifikasi informasi tersurat', ''],
             ],
             'SMA' => [
-                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat','Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
-                ['SMA', 'Matematika',       'K-13',    'Numerasi',  'Trigonometri',  'Nilai trigonometri sudut istimewa',''],
+                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat', 'Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
+                ['SMA', 'Matematika',       'K-13',    'Numerasi',  'Trigonometri',  'Nilai trigonometri sudut istimewa', ''],
                 ['SMA', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   'https://contoh-materi.test/argumen-kompleks'],
-                ['SMA', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Eksposisi','Menentukan tesis dan argumen',    ''],
+                ['SMA', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Eksposisi', 'Menentukan tesis dan argumen',    ''],
             ],
             default => [
                 ['SD',  'Matematika',       'Merdeka', 'Numerasi',  'Bilangan',      'Bilangan Cacah',                  'https://contoh-materi.test/bilangan-cacah'],
                 ['SD',  'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Narasi',   'Mengidentifikasi ide pokok',      ''],
                 ['SMP', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan',  'Skala dan rasio',                 'https://contoh-materi.test/skala-rasio'],
-                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Informasi','Menentukan gagasan utama',        ''],
-                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat','Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
+                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Informasi', 'Menentukan gagasan utama',        ''],
+                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat', 'Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
                 ['SMA', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   ''],
             ],
         };
 
         $filename = $defaultJenjang
-            ? 'template-materi-' . strtolower($defaultJenjang) . '.xls'
+            ? 'template-materi-'.strtolower($defaultJenjang).'.xls'
             : 'template-materi.xls';
 
         return SpreadsheetTemplateExporter::download($filename, [
@@ -71,9 +70,10 @@ class MaterialController extends Controller
 
         $count = Material::count();
         Material::query()->delete();
+
         return back()->with('flash', [
             'type' => 'success',
-            'message' => "Berhasil menghapus semua materi ($count data)."
+            'message' => "Berhasil menghapus semua materi ($count data).",
         ]);
     }
 
@@ -116,6 +116,7 @@ class MaterialController extends Controller
                 || $payload['sub_unit'] === ''
             ) {
                 $skipped++;
+
                 continue;
             }
 
@@ -128,12 +129,12 @@ class MaterialController extends Controller
             }
 
             $matchKeys = [
-                'jenjang'    => $payload['jenjang'] ?? null,
-                'mapel'      => $payload['mapel'],
+                'jenjang' => $payload['jenjang'] ?? null,
+                'mapel' => $payload['mapel'],
                 'curriculum' => $payload['curriculum'],
                 'subelement' => $payload['subelement'],
-                'unit'       => $payload['unit'],
-                'sub_unit'   => $payload['sub_unit'],
+                'unit' => $payload['unit'],
+                'sub_unit' => $payload['sub_unit'],
             ];
             $updateValues = ['link' => $payload['link'] ?? null];
 
@@ -165,10 +166,10 @@ class MaterialController extends Controller
             'link' => ['nullable', 'string', 'max:500'],
         ]);
 
-        if (!Schema::hasColumn('materials', 'jenjang')) {
+        if (! Schema::hasColumn('materials', 'jenjang')) {
             unset($validated['jenjang']);
         }
-        if (!Schema::hasColumn('materials', 'link')) {
+        if (! Schema::hasColumn('materials', 'link')) {
             unset($validated['link']);
         }
 
@@ -184,14 +185,15 @@ class MaterialController extends Controller
         return back()->with('flash', ['type' => 'success', 'message' => 'Materi berhasil dihapus.']);
     }
 
-    public function index(Request $request): View {
-        $filter     = $request->query('jenjang');
-        $mapel      = $request->query('mapel');
+    public function index(Request $request): View
+    {
+        $filter = $request->query('jenjang');
+        $mapel = $request->query('mapel');
         $curriculum = $request->query('curriculum');
         $subelement = $request->query('subelement');
-        $unit       = $request->query('unit');
-        $subUnit    = $request->query('sub_unit');
-        $search     = trim((string) $request->query('search'));
+        $unit = $request->query('unit');
+        $subUnit = $request->query('sub_unit');
+        $search = trim((string) $request->query('search'));
 
         $materialsQuery = Material::query();
 
@@ -225,9 +227,9 @@ class MaterialController extends Controller
         if ($search !== '') {
             $materialsQuery->where(function ($q) use ($search) {
                 $q->where('mapel', 'like', "%{$search}%")
-                  ->orWhere('subelement', 'like', "%{$search}%")
-                  ->orWhere('unit', 'like', "%{$search}%")
-                  ->orWhere('sub_unit', 'like', "%{$search}%");
+                    ->orWhere('subelement', 'like', "%{$search}%")
+                    ->orWhere('unit', 'like', "%{$search}%")
+                    ->orWhere('sub_unit', 'like', "%{$search}%");
             });
         }
 
@@ -262,11 +264,11 @@ class MaterialController extends Controller
                 $baseQuery->where('jenjang', $filter);
             }
         }
-        $mapels      = $baseQuery->clone()->distinct()->whereNotNull('mapel')->where('mapel', '!=', '')->pluck('mapel')->sort()->values();
+        $mapels = $baseQuery->clone()->distinct()->whereNotNull('mapel')->where('mapel', '!=', '')->pluck('mapel')->sort()->values();
         $curriculums = $baseQuery->clone()->distinct()->pluck('curriculum')->sort()->values();
         $subelements = $baseQuery->clone()->distinct()->pluck('subelement')->sort()->values();
-        $units       = $baseQuery->clone()->distinct()->pluck('unit')->sort()->values();
-        $subUnits    = $baseQuery->clone()->distinct()->pluck('sub_unit')->sort()->values();
+        $units = $baseQuery->clone()->distinct()->pluck('unit')->sort()->values();
+        $subUnits = $baseQuery->clone()->distinct()->pluck('sub_unit')->sort()->values();
 
         return view('superadmin.materials', compact(
             'materials', 'filter',

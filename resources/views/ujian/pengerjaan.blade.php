@@ -61,6 +61,7 @@
 $payload = [
     'saveUrl'        => route('siswa.api.save_answer'),
     'finishUrl'      => route('siswa.selesai'),
+    'finishSubmitUrl'=> route('siswa.selesai.submit'),
     'currentMapelId' => $mapel->id,
     'timer'          => $timer,
     'questions'      => $questions,
@@ -85,6 +86,10 @@ $payload = [
         </div>
 
         <div class="flex items-center gap-3 md:gap-6">
+            <div id="save-status" class="hidden items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold md:text-xs" role="status" aria-live="polite">
+                <span id="save-status-dot" class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                <span id="save-status-text">Tersimpan</span>
+            </div>
             <div class="text-right">
                 <div class="text-[9px] font-bold uppercase tracking-wider text-slate-500 md:text-[10px]">Sisa Waktu</div>
                 <div id="timer-display" class="font-mono text-lg font-bold text-indigo-400 md:text-2xl">00:00</div>
@@ -287,8 +292,44 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
     };
 
-    // ─── API save ──────────────────────────────────────────────────────────────
-    const postAnswer = (q) => fetch(payload.saveUrl, {
+    // ─── API save + retry ─────────────────────────────────────────────────────
+    const saveStatusWrap = document.getElementById('save-status');
+    const saveStatusDot  = document.getElementById('save-status-dot');
+    const saveStatusText = document.getElementById('save-status-text');
+
+    const setSaveStatus = (state) => {
+        if (!saveStatusWrap) return;
+        saveStatusWrap.classList.remove('hidden');
+        saveStatusWrap.classList.add('flex');
+        if (state === 'ok') {
+            saveStatusDot.className = 'h-2 w-2 rounded-full bg-emerald-400';
+            saveStatusText.textContent = 'Tersimpan';
+        } else if (state === 'saving') {
+            saveStatusDot.className = 'h-2 w-2 rounded-full bg-indigo-400 animate-pulse';
+            saveStatusText.textContent = 'Menyimpan...';
+        } else {
+            saveStatusDot.className = 'h-2 w-2 rounded-full bg-rose-400';
+            saveStatusText.textContent = 'Koneksi terputus — mencoba lagi...';
+        }
+    };
+
+    const pendingSaves = new Map();
+    let retryTimer = null;
+
+    const flushPendingSaves = () => {
+        if (pendingSaves.size === 0 || retryTimer !== null) return;
+
+        const backoff = Math.min(3000 * Math.pow(2, Math.min(pendingSaves.size, 4)), 30000);
+        retryTimer = setTimeout(async () => {
+            retryTimer = null;
+            const items = Array.from(pendingSaves.values());
+            for (const q of items) {
+                await postAnswer(q, { isRetry: true });
+            }
+        }, backoff);
+    };
+
+    const postAnswer = (q, { isRetry = false } = {}) => fetch(payload.saveUrl, {
         method : 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -322,9 +363,35 @@ document.addEventListener('DOMContentLoaded', () => {
             if ((response.status === 409 || result?.time_expired) && result?.redirect_url) {
                 sessionStorage.removeItem(timerKey);
                 window.location.href = result.redirect_url;
+                return;
+            }
+
+            if (response.ok) {
+                pendingSaves.delete(q.id);
+                if (pendingSaves.size === 0) {
+                    setSaveStatus('ok');
+                }
+            } else if (response.status !== 401) {
+                pendingSaves.set(q.id, q);
+                setSaveStatus('error');
+                flushPendingSaves();
             }
         })
-        .catch(() => {});
+        .catch(() => {
+            pendingSaves.set(q.id, q);
+            setSaveStatus('error');
+            flushPendingSaves();
+        });
+
+    const hasUnsavedAnswers = () => pendingSaves.size > 0;
+
+    const flushNowAndWait = async () => {
+        if (pendingSaves.size === 0) return;
+
+        setSaveStatus('saving');
+        const items = Array.from(pendingSaves.values());
+        await Promise.all(items.map(q => postAnswer(q, { isRetry: true })));
+    };
 
     // ─── Render Grid ──────────────────────────────────────────────────────────
     const renderGrid = () => {
@@ -380,6 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 q.is_ragu    = false;
                 renderQuestion();
                 renderGrid();
+                setSaveStatus('saving');
                 postAnswer(q);
             });
             wrap.appendChild(btn);
@@ -395,20 +463,21 @@ document.addEventListener('DOMContentLoaded', () => {
         q.pasangan.forEach(pair => {
             const row      = document.createElement('div');
             row.className  = 'grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[1fr_220px]';
-            const selected = answers.find(a => Number(a.pair_id) === Number(pair.id))?.match_id ?? '';
+            const selected = answers.find(a => String(a.row_key) === String(pair.key))?.opt_key ?? '';
             row.innerHTML  = `<div class="text-sm font-medium text-slate-800 flex items-center">${sanitizeRichText(pair.teks_kiri)}</div>`;
             const sel      = document.createElement('select');
             sel.className  = 'input';
             sel.innerHTML  = `<option value="">Pilih jawaban...</option>` +
                 q.matching_options.map(opt =>
-                    `<option value="${escapeHtml(opt.id)}" ${Number(selected) === Number(opt.id) ? 'selected' : ''}>${escapeHtml(opt.label)}</option>`
+                    `<option value="${escapeHtml(opt.key)}" ${String(selected) === String(opt.key) ? 'selected' : ''}>${escapeHtml(opt.label)}</option>`
                 ).join('');
             sel.addEventListener('change', () => {
-                const next = answers.filter(a => Number(a.pair_id) !== Number(pair.id));
-                if (sel.value) next.push({ pair_id: pair.id, match_id: Number(sel.value) });
+                const next = answers.filter(a => String(a.row_key) !== String(pair.key));
+                if (sel.value) next.push({ row_key: pair.key, opt_key: sel.value });
                 q.jawaban_menjodohkan = next;
                 q.is_ragu = false;
                 renderGrid();
+                setSaveStatus('saving');
                 postAnswer(q);
             });
             row.appendChild(sel);
@@ -521,15 +590,50 @@ document.addEventListener('DOMContentLoaded', () => {
         finishModal.classList.remove('flex');
     });
 
-    document.getElementById('modal-confirm').addEventListener('click', () => {
-        window.location.href = payload.finishUrl;
+    document.getElementById('modal-confirm').addEventListener('click', async () => {
+        const btn = document.getElementById('modal-confirm');
+        btn.disabled = true;
+
+        if (hasUnsavedAnswers()) {
+            btn.textContent = 'Menyimpan jawaban...';
+            await flushNowAndWait();
+
+            if (hasUnsavedAnswers()) {
+                btn.disabled = false;
+                btn.textContent = 'Ya, Selesai';
+                alert('Masih ada jawaban yang gagal tersimpan ke server. Periksa koneksi Anda lalu coba lagi.');
+                return;
+            }
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = payload.finishSubmitUrl;
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = '{{ csrf_token() }}';
+        form.appendChild(csrf);
+        document.body.appendChild(form);
+        form.submit();
     });
 
     // ─── Auto-save tiap 30 detik ──────────────────────────────────────────────
     setInterval(() => {
         const current = questions[currentIndex];
-        if (current) postAnswer(current);
+        if (current && (current.jawaban_pg || (current.jawaban_menjodohkan || []).length > 0)) {
+            setSaveStatus('saving');
+            postAnswer(current);
+        }
     }, 30000);
+
+    // ─── Cegah tutup tab saat masih ada jawaban belum tersimpan ───────────────
+    window.addEventListener('beforeunload', (event) => {
+        if (hasUnsavedAnswers()) {
+            event.preventDefault();
+            event.returnValue = '';
+        }
+    });
 
     // ─── Countdown ────────────────────────────────────────────────────────────
     timerEl.textContent = fmt(remainingSeconds);

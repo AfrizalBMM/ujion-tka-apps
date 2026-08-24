@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppBlast;
 use App\Models\Exam;
 use App\Models\ExamMapelToken;
 use App\Models\GlobalQuestion;
@@ -9,11 +11,11 @@ use App\Models\Material;
 use App\Models\PaketSoal;
 use App\Models\Question;
 use App\Models\User;
-use App\Jobs\SendWhatsAppBlast;
 use App\Services\WaMessageTemplateService;
 use App\Support\SpreadsheetTable;
 use App\Support\SpreadsheetTemplateExporter;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +24,8 @@ use Illuminate\View\View;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class ExamController extends Controller {
+class ExamController extends Controller
+{
     private const BUILDER_ALLOWED_TYPES = [
         'PG',
         'Checklist',
@@ -32,23 +35,29 @@ class ExamController extends Controller {
         'short_answer',
     ];
 
-    public function index(): View {
-        $exams = Exam::with(['paketSoal.jenjang', 'examMapelTokens.mapelPaket'])->latest()->get();
+    public function index(): View
+    {
+        $exams = Exam::with(['paketSoal.jenjang', 'examMapelTokens.mapelPaket'])
+            ->withCount('ujianSesis')
+            ->latest()
+            ->get();
         $paketSoals = PaketSoal::with('jenjang')->latest()->get();
+
         return view('superadmin.exams', compact('exams', 'paketSoals'));
     }
 
-    public function store(Request $request, WaMessageTemplateService $templates): RedirectResponse {
+    public function store(Request $request, WaMessageTemplateService $templates): RedirectResponse
+    {
         $data = $request->validate([
             'paket_soal_id' => 'required|exists:paket_soals,id',
             'judul' => 'required',
             'tanggal_terbit' => 'required|date',
-            'max_peserta' => 'required|integer',
+            'max_peserta' => 'required|integer|min:0',
             'timer' => 'nullable|integer',
             'status' => 'required|in:draft,terbit',
         ]);
 
-        $paket = PaketSoal::with('mapelPakets')->findOrFail($data['paket_soal_id']);
+        $paket = PaketSoal::with(['mapelPakets', 'jenjang'])->findOrFail($data['paket_soal_id']);
 
         if (blank($data['timer'])) {
             $data['timer'] = $paket->mapelPakets->sum('durasi_menit') ?? 150;
@@ -60,19 +69,21 @@ class ExamController extends Controller {
         // Auto-generate token per mapel
         foreach ($paket->mapelPakets as $mapel) {
             ExamMapelToken::create([
-                'exam_id'        => $exam->id,
+                'exam_id' => $exam->id,
                 'mapel_paket_id' => $mapel->id,
             ]);
         }
 
         if (($data['status'] ?? null) === 'terbit') {
             $hariTanggal = Carbon::parse($exam->tanggal_terbit)->translatedFormat('l, d F Y');
+            $jenjangPaket = $paket->jenjang?->kode;
 
             User::query()
                 ->where('role', User::ROLE_GURU)
                 ->where('account_status', User::STATUS_ACTIVE)
                 ->whereNotNull('no_wa')
                 ->where('no_wa', '!=', '')
+                ->when($jenjangPaket, fn ($q) => $q->where('jenjang', $jenjangPaket))
                 ->orderBy('id')
                 ->chunkById(200, function ($teachers) use ($exam, $hariTanggal, $templates) {
                     foreach ($teachers as $teacher) {
@@ -135,6 +146,7 @@ class ExamController extends Controller {
 
             if (! $paketSoalId || $judul === '' || ! $tanggalTerbit || ! $status) {
                 $skipped++;
+
                 continue;
             }
 
@@ -144,21 +156,21 @@ class ExamController extends Controller {
             }
 
             $exam = Exam::create([
-                'user_id'       => $request->user()->id,
+                'user_id' => $request->user()->id,
                 'paket_soal_id' => $paketSoalId,
-                'judul'         => $judul,
-                'tanggal_terbit'=> $tanggalTerbit,
-                'max_peserta'   => $this->normalizeNullableInteger($row['max_peserta'] ?? null) ?? 50,
-                'timer'         => $timer,
-                'status'        => $status,
-                'is_active'     => $this->toBoolean($row['is_active'] ?? true),
+                'judul' => $judul,
+                'tanggal_terbit' => $tanggalTerbit,
+                'max_peserta' => $this->normalizeNullableInteger($row['max_peserta'] ?? null) ?? 50,
+                'timer' => $timer,
+                'status' => $status,
+                'is_active' => $this->toBoolean($row['is_active'] ?? true),
             ]);
 
             // Auto-generate token per mapel
             $paketObj = PaketSoal::with('mapelPakets')->find($paketSoalId);
             foreach (($paketObj?->mapelPakets ?? []) as $mapel) {
                 ExamMapelToken::create([
-                    'exam_id'        => $exam->id,
+                    'exam_id' => $exam->id,
                     'mapel_paket_id' => $mapel->id,
                 ]);
             }
@@ -172,35 +184,60 @@ class ExamController extends Controller {
         ]);
     }
 
-    public function destroy(Exam $exam): RedirectResponse {
+    public function destroy(Request $request, Exam $exam): RedirectResponse
+    {
+        $sesiCount = $exam->ujianSesis()->count();
+
+        if ($sesiCount > 0) {
+            $validated = $request->validate([
+                'confirm_text' => ['required', 'string', 'max:50'],
+            ]);
+
+            $confirm = strtoupper(trim((string) ($validated['confirm_text'] ?? '')));
+
+            if ($confirm !== 'HAPUS') {
+                return back()->withErrors([
+                    'confirm_text' => "Konfirmasi tidak sesuai. Ketik: HAPUS ({$sesiCount} hasil peserta akan terhapus permanen).",
+                ]);
+            }
+        }
+
         $this->deleteExamQuestions($exam);
         $exam->delete();
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Ujian dihapus.']);
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => $sesiCount > 0
+                ? "Ujian dihapus beserta {$sesiCount} hasil peserta."
+                : 'Ujian dihapus.',
+        ]);
     }
 
-    public function toggle(Exam $exam): RedirectResponse {
+    public function toggle(Exam $exam): RedirectResponse
+    {
         $exam->update(['is_active' => ! $exam->is_active]);
 
         return back();
     }
 
-    public function builder(Exam $exam): View {
+    public function builder(Exam $exam): View
+    {
         $questions = $exam->questions()->orderBy('exam_question.order')->get();
         $materials = Material::all();
 
         return view('superadmin.exam-builder', compact('exam', 'questions', 'materials'));
     }
 
-    public function bankQuestions(Request $request, Exam $exam): \Illuminate\Http\JsonResponse {
+    public function bankQuestions(Request $request, Exam $exam): JsonResponse
+    {
         $search = trim((string) $request->query('q', ''));
-        
+
         $bankQuestions = GlobalQuestion::with('material')
             ->where('is_active', true)
             ->when($search !== '', function ($query) use ($search) {
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('question_text', 'like', "%{$search}%")
-                      ->orWhere('material_mapel', 'like', "%{$search}%");
+                        ->orWhere('material_mapel', 'like', "%{$search}%");
                 });
             })
             ->latest()
@@ -209,7 +246,8 @@ class ExamController extends Controller {
         return response()->json($bankQuestions);
     }
 
-    public function importBankQuestions(Request $request, Exam $exam): RedirectResponse {
+    public function importBankQuestions(Request $request, Exam $exam): RedirectResponse
+    {
         $this->authorize('manage', Exam::class);
 
         $data = $request->validate([
@@ -273,7 +311,8 @@ class ExamController extends Controller {
         return back()->with('flash', ['type' => 'success', 'message' => 'Soal dari bank berhasil diimpor ke ujian.']);
     }
 
-    public function saveBuilder(Request $request, Exam $exam): RedirectResponse {
+    public function saveBuilder(Request $request, Exam $exam): RedirectResponse
+    {
         $data = $request->validate([
             'questions' => 'required|array',
             'questions.*.material_id' => 'nullable|integer|exists:materials,id',
@@ -320,7 +359,8 @@ class ExamController extends Controller {
         return back()->with('flash', ['type' => 'success', 'message' => 'Soal ujian berhasil disimpan.']);
     }
 
-    public function show(Exam $exam): View {
+    public function show(Exam $exam): View
+    {
         return view('superadmin.exam-detail', compact('exam'));
     }
 

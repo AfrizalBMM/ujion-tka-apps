@@ -50,6 +50,7 @@ class SpreadsheetTable
 
             if ($headers === null) {
                 $headers = self::normalizeHeaders($rawRow);
+
                 continue;
             }
 
@@ -71,7 +72,7 @@ class SpreadsheetTable
             throw new RuntimeException('Ekstensi ZIP tidak tersedia di server untuk membaca file XLSX.');
         }
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
 
         if ($zip->open($path) !== true) {
             throw new RuntimeException('File XLSX tidak bisa dibuka.');
@@ -241,11 +242,11 @@ class SpreadsheetTable
             $isBold = isset($run->rPr->b);
 
             if ($isItalic) {
-                $value = '<em>' . $value . '</em>';
+                $value = '<em>'.$value.'</em>';
             }
 
             if ($isBold) {
-                $value = '<strong>' . $value . '</strong>';
+                $value = '<strong>'.$value.'</strong>';
             }
 
             $text .= $value;
@@ -281,7 +282,8 @@ class SpreadsheetTable
 
         if ($relationshipId !== '' && isset($relationships[$relationshipId])) {
             $target = $relationships[$relationshipId];
-            return str_starts_with($target, 'xl/') ? $target : 'xl/' . ltrim($target, '/');
+
+            return str_starts_with($target, 'xl/') ? $target : 'xl/'.ltrim($target, '/');
         }
 
         return 'xl/worksheets/sheet1.xml';
@@ -290,7 +292,7 @@ class SpreadsheetTable
     private static function normalizeHeaders(array $headers): array
     {
         return array_map(
-            fn ($header, $index) => self::normalizeHeader((string) $header) ?: 'column_' . ($index + 1),
+            fn ($header, $index) => self::normalizeHeader((string) $header) ?: 'column_'.($index + 1),
             array_values($headers),
             array_keys(array_values($headers))
         );

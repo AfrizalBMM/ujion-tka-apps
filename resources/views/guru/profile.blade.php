@@ -180,6 +180,37 @@
                 </div>
             </section>
 
+            <section class="overflow-hidden rounded-[30px] border border-slate-200/70 bg-white shadow-[0_24px_70px_-42px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-950/95">
+                <div class="border-b border-slate-200/80 px-6 py-5 dark:border-slate-800">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Password</h2>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Login utama Anda tetap menggunakan nomor WhatsApp + token akses. Password bersifat opsional dan hanya relevan bila login email+password diaktifkan.
+                    </p>
+                </div>
+                <form method="POST" action="{{ route('guru.profile.password') }}" class="space-y-4 px-6 py-6">
+                    @csrf
+                    <div class="space-y-2">
+                        <label for="password" class="text-sm font-semibold text-slate-700 dark:text-slate-200">Password Baru</label>
+                        <input id="password" type="password" name="password" required minlength="8"
+                            class="w-full rounded-2xl border px-4 py-3 text-sm text-slate-800 transition focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10 dark:bg-slate-900 dark:text-slate-100 {{ $errors->has('password') ? 'border-rose-300 bg-rose-50/50 dark:border-rose-500/40 dark:bg-rose-500/10' : 'border-slate-200 bg-slate-50/80 dark:border-slate-700 dark:bg-slate-900/80' }}"
+                            placeholder="Minimal 8 karakter">
+                        @error('password')
+                            <p class="text-sm text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="space-y-2">
+                        <label for="password_confirmation" class="text-sm font-semibold text-slate-700 dark:text-slate-200">Konfirmasi Password</label>
+                        <input id="password_confirmation" type="password" name="password_confirmation" required minlength="8"
+                            class="w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-800 transition focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                            placeholder="Ulangi password baru">
+                    </div>
+                    <button type="submit"
+                        class="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-500/20 dark:bg-teal-500 dark:text-slate-950 dark:hover:bg-teal-400">
+                        Simpan Password
+                    </button>
+                </form>
+            </section>
+
             <section class="overflow-hidden rounded-[30px] border border-slate-200/70 bg-[linear-gradient(160deg,_#0f172a_0%,_#134e4a_100%)] text-white shadow-[0_24px_70px_-42px_rgba(15,23,42,0.75)] dark:border-slate-700/70">
                 <div class="space-y-4 px-6 py-6">
                     <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-lg">

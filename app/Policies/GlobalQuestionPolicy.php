@@ -50,5 +50,3 @@ class GlobalQuestionPolicy
         return $user->isSuperadmin();
     }
 }
-
-

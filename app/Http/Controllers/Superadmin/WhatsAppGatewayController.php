@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppBlast;
 use App\Models\PaketSoal;
-use App\Models\Participant;
+use App\Models\UjianSesi;
 use App\Models\User;
 use App\Models\WhatsAppLog;
 use Carbon\Carbon;
@@ -16,8 +16,8 @@ class WhatsAppGatewayController extends Controller
 {
     public function connection()
     {
-        $waGatewayUrl = rtrim((string) env('WA_GATEWAY_URL', 'http://127.0.0.1:3000'), '/');
-        $senderId = (string) env('WA_SENDER_ID', 'tka-admin');
+        $waGatewayUrl = rtrim((string) config('services.wa_gateway.url'), '/');
+        $senderId = (string) config('services.wa_gateway.sender_id');
 
         return view('superadmin.wa-koneksi', compact('waGatewayUrl', 'senderId'));
     }
@@ -54,7 +54,15 @@ class WhatsAppGatewayController extends Controller
             $jenjangOptions = ['SD', 'SMP', 'SMA'];
         }
 
+        // Statistik dihitung per pesan (log terbaru per phone+message) —
+        // percobaan retry antara tidak dihitung ganda.
+        $latestIds = WhatsAppLog::query()
+            ->selectRaw('MAX(id) as max_id')
+            ->groupBy('phone', 'message')
+            ->pluck('max_id');
+
         $blastStats = WhatsAppLog::query()
+            ->whereIn('id', $latestIds)
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status')
@@ -145,7 +153,7 @@ class WhatsAppGatewayController extends Controller
 
             if ($validated['target'] === 'guru_school') {
                 $school = trim((string) ($validated['school'] ?? ''));
-                $teachersQuery->where('satuan_pendidikan', 'like', '%' . $school . '%');
+                $teachersQuery->where('satuan_pendidikan', 'like', '%'.$school.'%');
             }
 
             $teachersQuery
@@ -163,18 +171,18 @@ class WhatsAppGatewayController extends Controller
                     }
                 });
         } else {
-            $participantsQuery = Participant::query()
+            // Siswa nyata tersimpan di ujian_sesis (bukan tabel legacy participants).
+            $siswaQuery = UjianSesi::query()
+                ->whereNull('user_id')
                 ->whereNotNull('nomor_wa')
                 ->where('nomor_wa', '!=', '');
 
             if ($validated['target'] === 'siswa_paket') {
                 $paketSoalId = (int) ($validated['paket_soal_id'] ?? 0);
-                $participantsQuery->whereHas('exam', function ($query) use ($paketSoalId) {
-                    $query->where('paket_soal_id', $paketSoalId);
-                });
+                $siswaQuery->where('paket_soal_id', $paketSoalId);
             }
 
-            $participantsQuery
+            $siswaQuery
                 ->select('nomor_wa')
                 ->distinct()
                 ->orderBy('nomor_wa')

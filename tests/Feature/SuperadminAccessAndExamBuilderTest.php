@@ -6,8 +6,8 @@ use App\Http\Controllers\Superadmin\ExamController as SuperadminExamController;
 use App\Models\Exam;
 use App\Models\GlobalQuestion;
 use App\Models\Jenjang;
-use App\Models\Material;
 use App\Models\MapelPaket;
+use App\Models\Material;
 use App\Models\PaketSoal;
 use App\Models\Soal;
 use App\Models\User;
@@ -81,8 +81,6 @@ class SuperadminAccessAndExamBuilderTest extends TestCase
 
         $exam = Exam::where('judul', 'Ujian Creator Check')->firstOrFail();
     }
-
-
 
     public function test_guru_cannot_manage_superadmin_owned_package_content(): void
     {

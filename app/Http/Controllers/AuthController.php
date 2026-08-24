@@ -29,7 +29,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'contact' => ['required', 'string', 'max:255'],
-            'jenjang' => ['required', 'in:' . implode(',', config('ujion.jenjangs'))],
+            'jenjang' => ['required', 'in:'.implode(',', config('ujion.jenjangs'))],
         ], [], [
             'name' => 'nama lengkap',
             'contact' => 'email atau nomor WhatsApp aktif',
@@ -88,9 +88,11 @@ class AuthController extends Controller
         $user = User::query()
             ->whereIn('no_wa', PhoneNumber::variants($credentials['no_wa']))
             ->where('role', User::ROLE_GURU)
+            ->orderByRaw("case when account_status = 'active' then 0 else 1 end")
+            ->latest('id')
             ->first();
 
-        if ($user && strtoupper(trim((string) $user->access_token)) === $accessToken) {
+        if ($user && hash_equals(strtoupper(trim((string) $user->access_token)), $accessToken)) {
             if ($user->account_status !== User::STATUS_ACTIVE) {
                 $message = $user->account_status === User::STATUS_PENDING
                     ? 'Akun Anda masih pending. Token akses akan bisa dipakai setelah pembayaran diverifikasi admin.'
@@ -141,6 +143,7 @@ class AuthController extends Controller
             }
 
             $request->session()->regenerate();
+
             return redirect()->intended(route('superadmin.dashboard'));
         }
 

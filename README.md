@@ -15,7 +15,7 @@ Project ini saat ini berpusat pada:
 ## Stack
 
 - Laravel 12
-- PHP 8.2+
+- PHP 8.3+
 - MySQL / MariaDB
 - Tailwind CSS
 - Vite
@@ -102,7 +102,7 @@ Siswa juga bisa menggunakan token **latihan materi** untuk:
 
 ### 2. Operasional Guru
 
-1. Guru login memakai `nama + access token`
+ 1. Guru login memakai `nomor WhatsApp + access token`
 2. Guru masuk ke dashboard
 3. Guru mengakses materi, soal Ujion, bank soal pribadi, paket soal, simulasi, atau chat
 

@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\PersonalQuestion;
+use App\Models\PricingPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -17,7 +20,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
     public function test_landing_points_to_guru_registration_route(): void
     {
-        $this->assertTrue(\Illuminate\Support\Facades\Route::has('register.guru.form'));
+        $this->assertTrue(Route::has('register.guru.form'));
         $this->assertStringContainsString(
             "route('register.guru.form')",
             file_get_contents(resource_path('views/landing.blade.php'))
@@ -26,7 +29,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
     public function test_login_links_to_guru_token_request_form(): void
     {
-        $this->assertTrue(\Illuminate\Support\Facades\Route::has('guru.token-request.form'));
+        $this->assertTrue(Route::has('guru.token-request.form'));
 
         $this->get(route('login'))
             ->assertOk()
@@ -152,13 +155,21 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
     public function test_guru_can_upload_payment_proof_from_pending_page(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         config(['services.qris.admin_whatsapp' => '']);
+
+        PricingPlan::create([
+            'name' => 'Aktivasi SMP',
+            'jenjang' => 'SMP',
+            'price' => 100000,
+            'is_active' => true,
+        ]);
 
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_AWAITING,
+            'jenjang' => 'SMP',
         ]);
 
         $response = $this->withSession([
@@ -174,13 +185,21 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->assertSame(User::PAYMENT_SUBMITTED, $guru->payment_status);
         $this->assertNotNull($guru->payment_proof_path);
         $this->assertNotNull($guru->payment_submitted_at);
-        Storage::disk('public')->assertExists($guru->payment_proof_path);
+        Storage::disk('local')->assertExists($guru->payment_proof_path);
     }
 
     public function test_pending_registration_session_persists_for_upload_after_pending_page_is_opened(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
+        Queue::fake();
         config(['services.qris.admin_whatsapp' => '']);
+
+        PricingPlan::create([
+            'name' => 'Aktivasi SMP',
+            'jenjang' => 'SMP',
+            'price' => 100000,
+            'is_active' => true,
+        ]);
 
         $response = $this->post(route('register.guru'), [
             'name' => 'Guru Baru',
@@ -203,7 +222,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $guru = User::where('email', 'guru.persist@example.com')->firstOrFail();
         $this->assertSame(User::PAYMENT_SUBMITTED, $guru->payment_status);
         $this->assertNotNull($guru->payment_proof_path);
-        Storage::disk('public')->assertExists($guru->payment_proof_path);
+        Storage::disk('local')->assertExists($guru->payment_proof_path);
     }
 
     public function test_duplicate_pending_registration_redirects_back_to_pending_page(): void
@@ -298,13 +317,13 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $response = $this->from(route('register.guru.form'))
             ->withSession(['_token' => 'active-token'])
             ->post(route('register.guru'), [
-            '_token' => 'active-token',
-            'name' => 'Guru Baru',
-            'email' => 'guru.aktif@example.com',
-            'jenjang' => 'SMP',
-            'satuan_pendidikan' => 'SMPN 1 Contoh',
-            'no_wa' => '0812-3456-789',
-        ]);
+                '_token' => 'active-token',
+                'name' => 'Guru Baru',
+                'email' => 'guru.aktif@example.com',
+                'jenjang' => 'SMP',
+                'satuan_pendidikan' => 'SMPN 1 Contoh',
+                'no_wa' => '0812-3456-789',
+            ]);
 
         $response->assertRedirect(route('register.guru.form'));
         $response->assertSessionHasErrors([
@@ -357,7 +376,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         ]);
     }
 
-    public function test_guru_profile_does_not_show_password_form(): void
+    public function test_guru_profile_shows_optional_password_form(): void
     {
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
@@ -367,11 +386,48 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->actingAs($guru)
             ->get(route('guru.profile'))
             ->assertOk()
-            ->assertDontSee('Ganti Password')
-            ->assertDontSee('password_confirmation')
+            ->assertSee('password_confirmation')
+            ->assertSee(route('guru.profile.password'))
             ->assertDontSee('name="jenjang"', false);
 
-        $this->assertFalse(\Illuminate\Support\Facades\Route::has('guru.profile.password'));
+        $this->assertTrue(Route::has('guru.profile.password'));
+    }
+
+    public function test_guru_can_set_password(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+        ]);
+
+        $response = $this->actingAs($guru)
+            ->post(route('guru.profile.password'), [
+                'password' => 'rahasia-baru-123',
+                'password_confirmation' => 'rahasia-baru-123',
+            ]);
+
+        $response->assertRedirect();
+        $guru->refresh();
+        $this->assertTrue(Hash::check('rahasia-baru-123', $guru->password));
+    }
+
+    public function test_guru_password_requires_confirmation(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+        ]);
+
+        $oldHash = $guru->password;
+
+        $this->actingAs($guru)
+            ->post(route('guru.profile.password'), [
+                'password' => 'rahasia-baru-123',
+                'password_confirmation' => 'beda-sekali',
+            ])->assertSessionHasErrors('password');
+
+        $guru->refresh();
+        $this->assertSame($oldHash, $guru->password);
     }
 
     public function test_uploaded_guru_avatar_is_used_in_header_dropdown(): void
@@ -404,7 +460,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->actingAs($guru)
             ->get(route('guru.dashboard'))
             ->assertOk()
-            ->assertSee(\Illuminate\Support\Facades\Storage::url($guru->avatar), false);
+            ->assertSee(Storage::url($guru->avatar), false);
     }
 
     public function test_guru_cannot_delete_other_users_personal_question(): void

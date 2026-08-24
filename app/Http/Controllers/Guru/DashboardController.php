@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
@@ -10,8 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
-class DashboardController extends Controller {
-    public function index(): View {
+class DashboardController extends Controller
+{
+    public function index(): View
+    {
         $user = Auth::user();
 
         $availableExamsCount = Exam::query()
@@ -20,12 +23,25 @@ class DashboardController extends Controller {
             ->whereHas('paketSoal.jenjang', fn ($query) => $query->where('kode', $user->jenjang))
             ->count();
 
-        $sessionQuery = UjianSesi::query()
-            ->where('user_id', $user->id);
+        // Statistik siswa nyata: peserta ujian (non-simulasi) di paket jenjang guru.
+        $siswaSesiQuery = UjianSesi::query()
+            ->whereNull('user_id')
+            ->whereHas('paketSoal.jenjang', fn ($query) => $query->where('kode', $user->jenjang));
 
-        $ujianDibuat = (clone $sessionQuery)->count();
-        $totalPeserta = (clone $sessionQuery)->where('status', 'selesai')->count();
-        $rataRataKelas = (float) ((clone $sessionQuery)->whereNotNull('skor')->avg('skor') ?? 0);
+        $totalPeserta = (clone $siswaSesiQuery)
+            ->where('status', 'selesai')
+            ->distinct('nomor_wa')
+            ->count('nomor_wa');
+
+        $rataRataKelas = (float) ((clone $siswaSesiQuery)
+            ->where('status', 'selesai')
+            ->whereNotNull('skor')
+            ->avg('skor') ?? 0);
+
+        $simulasiSelesai = UjianSesi::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'selesai')
+            ->count();
 
         $logs = AuditLog::where('user_id', $user->id)->latest()->limit(10)->get();
         $materialsCount = Material::query()
@@ -46,6 +62,6 @@ class DashboardController extends Controller {
                 : null,
         ]));
 
-        return view('guru.dashboard', compact('ujianDibuat', 'totalPeserta', 'rataRataKelas', 'logs', 'pengumuman'));
+        return view('guru.dashboard', compact('totalPeserta', 'rataRataKelas', 'simulasiSelesai', 'logs', 'pengumuman'));
     }
 }

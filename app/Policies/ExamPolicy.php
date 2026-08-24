@@ -2,9 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Exam;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ExamPolicy
 {
@@ -16,4 +14,3 @@ class ExamPolicy
         return $user->isSuperadmin();
     }
 }
-

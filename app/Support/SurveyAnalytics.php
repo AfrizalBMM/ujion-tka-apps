@@ -126,6 +126,7 @@ class SurveyAnalytics
             foreach ($soal->pilihanJawabans as $option) {
                 $count = $sessions->filter(function (UjianSesi $session) use ($soal, $option) {
                     $answer = $session->jawabanSiswas->firstWhere('soal_id', $soal->id);
+
                     return $answer?->jawaban_pg === $option->kode;
                 })->count();
 

@@ -25,10 +25,10 @@ class UjianSesi extends Model
     ];
 
     protected $casts = [
-        'timer_state'   => 'array',
-        'waktu_mulai'   => 'datetime',
+        'timer_state' => 'array',
+        'waktu_mulai' => 'datetime',
         'waktu_selesai' => 'datetime',
-        'skor'          => 'decimal:2',
+        'skor' => 'decimal:2',
         'profil_ringkasan' => 'array',
     ];
 

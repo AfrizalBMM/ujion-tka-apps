@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_SUCCESS = 'success';
+
     public const STATUS_FAILED = 'failed';
 
     protected $guarded = [];

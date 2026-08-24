@@ -1,17 +1,18 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schedule;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 use App\Jobs\SendWhatsAppBlast;
 use App\Models\AppSetting;
 use App\Models\User;
 use App\Services\WaMessageTemplateService;
+use Carbon\Carbon;
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Facades\Schema;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -50,7 +51,7 @@ Schedule::call(function (): void {
     $adminNumbers = array_values(array_unique(array_filter($adminNumbers)));
 
     $gatewayUrl = rtrim((string) env('WA_GATEWAY_URL', 'http://127.0.0.1:3000'), '/');
-    $healthUrl = $gatewayUrl . '/';
+    $healthUrl = $gatewayUrl.'/';
 
     $isUp = false;
     $errorMessage = null;
@@ -59,7 +60,7 @@ Schedule::call(function (): void {
         $response = Http::timeout(5)->get($healthUrl);
         $isUp = $response->successful();
         if (! $isUp) {
-            $errorMessage = 'HTTP ' . $response->status();
+            $errorMessage = 'HTTP '.$response->status();
         }
     } catch (Throwable $e) {
         $isUp = false;
@@ -69,6 +70,7 @@ Schedule::call(function (): void {
     if ($isUp) {
         Cache::forget('wa_gateway.down_since');
         Cache::put('wa_gateway.last_ok_at', now()->toISOString(), now()->addDays(2));
+
         return;
     }
 
@@ -82,7 +84,7 @@ Schedule::call(function (): void {
     $lastAlertAt = Cache::get('wa_gateway.last_alert_at');
     if ($lastAlertAt) {
         try {
-            $last = \Carbon\Carbon::parse($lastAlertAt);
+            $last = Carbon::parse($lastAlertAt);
             if ($last->diffInMinutes(now()) < 30) {
                 return;
             }
@@ -91,9 +93,9 @@ Schedule::call(function (): void {
         }
     }
 
-    $text = "[Ujion] WA Gateway DOWN\n" .
-        "URL: {$healthUrl}\n" .
-        "Time: " . now()->format('Y-m-d H:i:s') . "\n" .
+    $text = "[Ujion] WA Gateway DOWN\n".
+        "URL: {$healthUrl}\n".
+        'Time: '.now()->format('Y-m-d H:i:s')."\n".
         ($errorMessage ? "Error: {$errorMessage}" : '');
 
     $sent = false;
@@ -152,7 +154,7 @@ Schedule::call(function (): void {
     $oldest = null;
     try {
         if ($minAvailableAt) {
-            $oldest = \Carbon\Carbon::createFromTimestamp((int) $minAvailableAt);
+            $oldest = Carbon::createFromTimestamp((int) $minAvailableAt);
         }
     } catch (Throwable) {
         $oldest = null;
@@ -166,7 +168,7 @@ Schedule::call(function (): void {
     $lastAlertAt = Cache::get('wa_queue.last_alert_at');
     if ($lastAlertAt) {
         try {
-            $last = \Carbon\Carbon::parse($lastAlertAt);
+            $last = Carbon::parse($lastAlertAt);
             if ($last->diffInMinutes(now()) < 30) {
                 return;
             }
@@ -237,7 +239,7 @@ Schedule::call(function (): void {
 
     $pending24h->chunkById(200, function ($teachers) use ($templates) {
         foreach ($teachers as $teacher) {
-            $key = 'wa:followup:pending24h:' . $teacher->id . ':' . now()->format('Y-m-d');
+            $key = 'wa:followup:pending24h:'.$teacher->id.':'.now()->format('Y-m-d');
             if (! Cache::add($key, '1', now()->addDays(2))) {
                 continue;
             }
@@ -268,7 +270,7 @@ Schedule::call(function (): void {
 
         $noProof->chunkById(200, function ($teachers) use ($templates) {
             foreach ($teachers as $teacher) {
-                $key = 'wa:followup:noproof2h:' . $teacher->id;
+                $key = 'wa:followup:noproof2h:'.$teacher->id;
                 if (! Cache::add($key, '1', now()->addDays(2))) {
                     continue;
                 }

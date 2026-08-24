@@ -25,9 +25,31 @@ class LandingClickController extends Controller
             'path' => $validated['path'] ?? $request->path(),
             'referrer' => $validated['referrer'] ?? $request->headers->get('referer'),
             'user_agent' => $request->userAgent(),
-            'ip_address' => $request->ip(),
+            'ip_address' => $this->maskIp($request->ip()),
         ]);
 
         return response()->json(['ok' => true]);
+    }
+
+    private function maskIp(?string $ip): ?string
+    {
+        if (blank($ip)) {
+            return null;
+        }
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $parts = explode('.', $ip);
+            $parts[3] = 'x';
+
+            return implode('.', $parts);
+        }
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $parts = explode(':', $ip);
+
+            return implode(':', array_slice($parts, 0, 4)).':xxxx:xxxx:xxxx:xxxx';
+        }
+
+        return null;
     }
 }

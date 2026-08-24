@@ -25,7 +25,7 @@ class StoreSoalRequest extends FormRequest
         }
 
         return [
-            'nomor_soal' => ['required', 'integer', 'min:1', 'max:' . $maxNomorSoal],
+            'nomor_soal' => ['required', 'integer', 'min:1', 'max:'.$maxNomorSoal],
             'tipe_soal' => ['required', Rule::in($isSurvey ? ['pilihan_ganda'] : ['pilihan_ganda', 'menjodohkan'])],
             'indikator' => 'required|string',
             'dimensi' => [$isSurvey ? 'required' : 'nullable', 'string', 'max:255'],

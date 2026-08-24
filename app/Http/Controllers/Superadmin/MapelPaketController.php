@@ -33,9 +33,8 @@ class MapelPaketController extends Controller
         });
 
         return back()->with('flash', [
-            'type'    => 'success',
+            'type' => 'success',
             'message' => "{$count} soal pada {$mapel->nama_label} berhasil dihapus.",
         ]);
     }
 }
-

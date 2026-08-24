@@ -37,7 +37,7 @@
     <div class="grid gap-5 md:grid-cols-3">
         @forelse($attempts as $attempt)
             @php
-                $paketNo = $attempt->package?->paket_no;
+                $paketNo = $attempt->paket_no ?? $attempt->package?->paket_no;
                 $answers = $answersByAttempt[$attempt->id] ?? collect();
                 $answeredCount = $answers->filter(fn ($answer) => filled($answer?->jawaban))->count();
                 $totalSoal = (int) ($attempt->total_soal ?: ($attempt->package?->questions->count() ?? 0));
@@ -94,7 +94,7 @@
                 </div>
 
                 <div class="mt-5">
-                    @if($paketNo)
+                    @if($attempt->package)
                         <a href="{{ route('guru.results.practice.package-pdf', ['material' => $material, 'session' => $session, 'attempt' => $attempt]) }}"
                            class="btn-secondary w-full justify-center"
                            target="_blank"
@@ -102,6 +102,12 @@
                             <i class="fa-solid fa-file-pdf"></i>
                             Download PDF Hasil Paket {{ $paketNo }}
                         </a>
+                    @elseif($paketNo)
+                        <button type="button" class="btn-secondary w-full justify-center" disabled
+                                title="Paket sudah diregenerasi admin — PDF hanya tersedia untuk paket aktif">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            PDF tidak tersedia (paket arsip)
+                        </button>
                     @else
                         <button type="button" class="btn-secondary w-full justify-center" disabled>
                             <i class="fa-solid fa-file-pdf"></i>

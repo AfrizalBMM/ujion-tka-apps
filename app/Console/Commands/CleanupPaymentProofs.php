@@ -13,7 +13,7 @@ class CleanupPaymentProofs extends Command
         {--days=90 : Delete unreferenced payment proof files older than this many days}
         {--dry-run : Show what would be deleted without deleting files}';
 
-    protected $description = 'Delete old unreferenced payment proof files from public storage.';
+    protected $description = 'Delete old unreferenced payment proof files from private storage.';
 
     public function handle(): int
     {
@@ -33,7 +33,7 @@ class CleanupPaymentProofs extends Command
             ->unique()
             ->flip();
 
-        $disk = Storage::disk('public');
+        $disk = Storage::disk('local');
         $files = $disk->files('payment-proofs');
         $deleted = 0;
         $skipped = 0;
@@ -41,6 +41,7 @@ class CleanupPaymentProofs extends Command
         foreach ($files as $file) {
             if ($referencedPaths->has($file) || $disk->lastModified($file) > $cutoffTimestamp) {
                 $skipped++;
+
                 continue;
             }
 

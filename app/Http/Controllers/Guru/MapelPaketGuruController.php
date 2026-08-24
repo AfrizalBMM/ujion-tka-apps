@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateMapelPaketRequest;
 use App\Models\MapelPaket;
 use App\Models\PaketSoal;
+use App\Models\Soal;
 use Illuminate\Http\RedirectResponse;
 
 class MapelPaketGuruController extends Controller
@@ -14,11 +15,10 @@ class MapelPaketGuruController extends Controller
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('view', $paket);
-        $this->authorize('create', [\App\Models\Soal::class, $mapel]);
+        $this->authorize('create', [Soal::class, $mapel]);
 
         $mapel->update($request->validated());
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Konfigurasi mapel diperbarui.']);
     }
 }
-

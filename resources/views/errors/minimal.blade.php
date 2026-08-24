@@ -231,13 +231,17 @@
                 <p class="message">{{ $statusMessage }}</p>
 
                 <div class="actions">
-                    <a class="btn btn-primary" href="{{ route('landing') }}">Ke Beranda</a>
-                    <button class="btn" type="button" onclick="history.back()">Kembali</button>
-                    @if($showReload)
-                        <button class="btn" type="button" onclick="location.reload()">Muat Ulang</button>
-                    @endif
-                    @if(\Illuminate\Support\Facades\Route::has('login'))
-                        <a class="btn" href="{{ route('login') }}">Login Guru</a>
+                    @hasSection('actions')
+                        @yield('actions')
+                    @else
+                        <a class="btn btn-primary" href="{{ route('landing') }}">Ke Beranda</a>
+                        <button class="btn" type="button" onclick="history.back()">Kembali</button>
+                        @if($showReload)
+                            <button class="btn" type="button" onclick="location.reload()">Muat Ulang</button>
+                        @endif
+                        @if(\Illuminate\Support\Facades\Route::has('login'))
+                            <a class="btn" href="{{ route('login') }}">Login Guru</a>
+                        @endif
                     @endif
                 </div>
 

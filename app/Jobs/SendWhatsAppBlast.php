@@ -24,14 +24,13 @@ class SendWhatsAppBlast implements ShouldQueue
     public function __construct(
         public readonly string $number,
         public readonly string $message,
-    ) {
-    }
+    ) {}
 
     public function handle(WhatsAppService $whatsAppService): void
     {
         $result = $whatsAppService->sendMessage($this->number, $this->message);
 
-        if (!((bool) ($result['status'] ?? false))) {
+        if (! ((bool) ($result['status'] ?? false))) {
             Log::warning('WA blast failed', [
                 'number' => $this->number,
                 'error' => $result['error'] ?? null,

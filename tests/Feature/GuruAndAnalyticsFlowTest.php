@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\Guru\ExamController as GuruExamController;
 use App\Http\Controllers\Guru\DashboardController as GuruDashboardController;
+use App\Http\Controllers\Guru\ExamController as GuruExamController;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\ExamAnalysisController as SuperadminExamAnalysisController;
 use App\Models\Exam;
+use App\Models\ExamMapelToken;
 use App\Models\Jenjang;
 use App\Models\MapelPaket;
 use App\Models\PaketSoal;
@@ -14,6 +15,7 @@ use App\Models\PersonalQuestion;
 use App\Models\PilihanJawaban;
 use App\Models\PricingPlan;
 use App\Models\Soal;
+use App\Models\Transaction;
 use App\Models\UjianSesi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -58,14 +60,26 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'status' => 'mengerjakan',
         ]);
 
+        // Siswa nyata selesai di paket jenjang guru.
+        UjianSesi::create([
+            'exam_id' => $exam->id,
+            'paket_soal_id' => $exam->paket_soal_id,
+            'nama' => 'Siswa Nyata',
+            'nomor_wa' => '0899888777',
+            'session_token' => 'tok-siswa',
+            'status' => 'selesai',
+            'skor' => 90,
+            'waktu_selesai' => now(),
+        ]);
+
         Auth::login($guru);
 
         $view = app(GuruDashboardController::class)->index();
 
         $this->assertInstanceOf(View::class, $view);
-        $this->assertSame(2, $view->getData()['ujianDibuat']);
+        $this->assertSame(1, $view->getData()['simulasiSelesai']);
         $this->assertSame(1, $view->getData()['totalPeserta']);
-        $this->assertSame(80.0, $view->getData()['rataRataKelas']);
+        $this->assertSame(90.0, $view->getData()['rataRataKelas']);
     }
 
     public function test_guru_can_join_exam_into_student_flow(): void
@@ -208,9 +222,9 @@ class GuruAndAnalyticsFlowTest extends TestCase
 
         $view = app(GuruDashboardController::class)->index();
 
-        $this->assertSame(1, $view->getData()['ujianDibuat']);
-        $this->assertSame(1, $view->getData()['totalPeserta']);
-        $this->assertSame(88.0, $view->getData()['rataRataKelas']);
+        $this->assertSame(1, $view->getData()['simulasiSelesai']);
+        $this->assertSame(0, $view->getData()['totalPeserta']);
+        $this->assertSame(0.0, $view->getData()['rataRataKelas']);
     }
 
     public function test_guru_dashboard_ignores_student_session_with_same_whatsapp_number(): void
@@ -251,9 +265,10 @@ class GuruAndAnalyticsFlowTest extends TestCase
 
         $view = app(GuruDashboardController::class)->index();
 
-        $this->assertSame(1, $view->getData()['ujianDibuat']);
+        $this->assertSame(1, $view->getData()['simulasiSelesai']);
+        // Siswa nyata (WA sama dgn guru) tetap dihitung sebagai peserta siswa.
         $this->assertSame(1, $view->getData()['totalPeserta']);
-        $this->assertSame(91.0, $view->getData()['rataRataKelas']);
+        $this->assertSame(10.0, $view->getData()['rataRataKelas']);
     }
 
     public function test_superadmin_dashboard_uses_real_metrics(): void
@@ -286,6 +301,16 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'price' => '150000',
             'is_active' => true,
             'sort_order' => 1,
+        ]);
+
+        // Revenue nyata: transaksi success yang tercatat.
+        Transaction::create([
+            'user_id' => $guru->id,
+            'pricing_plan_id' => 1,
+            'reference_code' => 'UJN-260101-REVTEST01',
+            'plan_name' => 'Plan 1',
+            'amount' => '150000',
+            'status' => Transaction::STATUS_SUCCESS,
         ]);
 
         $suite = $this->createExamSuite($superadmin);
@@ -404,7 +429,7 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'is_active' => true,
         ]);
 
-        $examMapelToken = \App\Models\ExamMapelToken::create([
+        $examMapelToken = ExamMapelToken::create([
             'exam_id' => $exam->id,
             'mapel_paket_id' => $mapel->id,
             'token' => strtoupper(substr(md5((string) now()->timestamp.$owner->id.rand()), 0, 6)),

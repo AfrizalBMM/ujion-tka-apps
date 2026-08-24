@@ -15,16 +15,23 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     public const ROLE_SISWA = 'siswa';
+
     public const ROLE_GURU = 'guru';
+
     public const ROLE_SUPERADMIN = 'superadmin';
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_SUSPEND = 'suspend';
 
     public const PAYMENT_AWAITING = 'awaiting_payment';
+
     public const PAYMENT_SUBMITTED = 'submitted';
+
     public const PAYMENT_APPROVED = 'approved';
+
     public const PAYMENT_REJECTED = 'rejected';
 
     /**
@@ -107,7 +114,7 @@ class User extends Authenticatable
 
         $background = $this->isSuperadmin() ? '4F6EF7' : '22C1C3';
 
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name ?: 'User') . "&background={$background}&color=fff";
+        return 'https://ui-avatars.com/api/?name='.urlencode($this->name ?: 'User')."&background={$background}&color=fff";
     }
 
     public function exams()

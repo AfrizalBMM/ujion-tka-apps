@@ -9,23 +9,27 @@ use App\Services\WaMessageTemplateService;
 use App\Support\PhoneNumber;
 use App\Support\TokenGenerator;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
 {
     public function handle(Request $request): JsonResponse
     {
-        $debug = filter_var((string) env('WA_WEBHOOK_DEBUG', 'false'), FILTER_VALIDATE_BOOL);
+        $debug = (bool) config('services.wa_webhook.debug');
 
-        $expectedKey = (string) env('WA_WEBHOOK_KEY', '');
-        if ($expectedKey !== '') {
-            $provided = (string) $request->header('X-WA-WEBHOOK-KEY', '');
-            if (! hash_equals($expectedKey, $provided)) {
-                return response()->json(['success' => false, 'msg' => 'Unauthorized'], 401);
-            }
+        $expectedKey = (string) config('services.wa_webhook.key');
+        if ($expectedKey === '') {
+            Log::critical('WA webhook rejected: WA_WEBHOOK_KEY is not configured. Set it in .env to enable the webhook.');
+
+            return response()->json(['success' => false, 'msg' => 'Webhook not configured'], 503);
+        }
+
+        $provided = (string) $request->header('X-WA-WEBHOOK-KEY', '');
+        if (! hash_equals($expectedKey, $provided)) {
+            return response()->json(['success' => false, 'msg' => 'Unauthorized'], 401);
         }
 
         $from = $this->extractFrom($request);
@@ -43,7 +47,7 @@ class WebhookController extends Controller
             $isLid = true;
         }
 
-        $identityKey = trim($device . '|' . ($chat !== '' ? $chat : $from));
+        $identityKey = trim($device.'|'.($chat !== '' ? $chat : $from));
         $cache = Cache::store('file');
 
         $normalizedFrom = PhoneNumber::normalizeIndonesian($from);
@@ -237,7 +241,7 @@ class WebhookController extends Controller
     private function resolveTeacherFromSender($cache, string $identityKey, bool $isLid, string $normalizedFrom): array
     {
         if ($isLid) {
-            $mappedTeacherId = (int) $cache->get('wa:lidmap:' . $identityKey, 0);
+            $mappedTeacherId = (int) $cache->get('wa:lidmap:'.$identityKey, 0);
             if ($mappedTeacherId > 0) {
                 $teacher = User::query()
                     ->where('id', $mappedTeacherId)
@@ -265,7 +269,7 @@ class WebhookController extends Controller
             if ($suffix !== '') {
                 $teacher = User::query()
                     ->where('role', User::ROLE_GURU)
-                    ->where('no_wa', 'like', '%' . $suffix)
+                    ->where('no_wa', 'like', '%'.$suffix)
                     ->first();
             }
         }
@@ -283,13 +287,14 @@ class WebhookController extends Controller
             $suffix = $needle !== '' ? substr($needle, -9) : '';
             if ($suffix !== '') {
                 $anyUser = User::query()
-                    ->where('no_wa', 'like', '%' . $suffix)
+                    ->where('no_wa', 'like', '%'.$suffix)
                     ->first();
             }
         }
 
         if ($anyUser) {
             $templates = app(WaMessageTemplateService::class);
+
             return ['error' => $templates->render('bot_not_guru')];
         }
 

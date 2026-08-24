@@ -11,6 +11,7 @@ class MaterialPracticePackageAttempt extends Model
     protected $fillable = [
         'material_practice_session_id',
         'material_practice_package_id',
+        'paket_no',
         'status',
         'waktu_mulai',
         'waktu_selesai',
@@ -20,6 +21,7 @@ class MaterialPracticePackageAttempt extends Model
     ];
 
     protected $casts = [
+        'paket_no' => 'integer',
         'waktu_mulai' => 'datetime',
         'waktu_selesai' => 'datetime',
         'total_soal' => 'integer',

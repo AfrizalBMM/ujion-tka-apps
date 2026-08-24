@@ -21,15 +21,19 @@ class PricingPlanController extends Controller
             'name' => ['required', 'string', 'max:80'],
             'subtitle' => ['nullable', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:500'],
-            'price' => ['required', 'string', 'max:40'],
+            'price' => ['required', 'numeric', 'min:1000', 'max:100000000'],
             'image' => ['nullable', 'image', 'max:4096'],
         ];
 
         if (Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang')) {
-            $rules['jenjang'] = ['required', 'string', 'in:' . implode(',', config('ujion.jenjangs'))];
+            $rules['jenjang'] = ['required', 'string', 'in:'.implode(',', config('ujion.jenjangs'))];
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'price.min' => 'Nominal minimal Rp1.000.',
+            'price.max' => 'Nominal maksimal Rp100.000.000.',
+            'price.numeric' => 'Nominal harus berupa angka.',
+        ]);
 
         $pricingPlan = PricingPlan::query()->firstOrNew(
             Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang') && isset($validated['jenjang'])
@@ -71,15 +75,19 @@ class PricingPlanController extends Controller
             'name' => ['required', 'string', 'max:80'],
             'subtitle' => ['nullable', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:500'],
-            'price' => ['required', 'string', 'max:40'],
+            'price' => ['required', 'numeric', 'min:1000', 'max:100000000'],
             'image' => ['nullable', 'image', 'max:4096'],
         ];
 
         if (Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang')) {
-            $rules['jenjang'] = ['required', 'string', 'in:' . implode(',', config('ujion.jenjangs'))];
+            $rules['jenjang'] = ['required', 'string', 'in:'.implode(',', config('ujion.jenjangs'))];
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'price.min' => 'Nominal minimal Rp1.000.',
+            'price.max' => 'Nominal maksimal Rp100.000.000.',
+            'price.numeric' => 'Nominal harus berupa angka.',
+        ]);
 
         $pricingPlan->fill([
             'name' => $validated['name'],
@@ -140,7 +148,12 @@ class PricingPlanController extends Controller
     public function printLabel(PricingPlan $pricingPlan, QrisService $qrisService): View
     {
         $amount = $this->sanitizeAmount($pricingPlan->price);
-        $qrisPayload = $qrisService->generateFixedAmountPayload($amount);
+
+        try {
+            $qrisPayload = $qrisService->generateFixedAmountPayload($amount);
+        } catch (\RuntimeException $e) {
+            abort(503, 'Konfigurasi QRIS belum selesai. Isi GOPAY_MASTER_PAYLOAD terlebih dahulu.');
+        }
 
         $qrisImageUrl = null;
         if (! blank($pricingPlan->qris_image_path)) {

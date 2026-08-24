@@ -10,7 +10,9 @@ use RuntimeException;
 class PaymentProofStorage
 {
     private const DIRECTORY = 'payment-proofs';
+
     private const MAX_SIDE = 1600;
+
     private const JPEG_QUALITY = 82;
 
     public function store(UploadedFile $file): string
@@ -43,10 +45,10 @@ class PaymentProofStorage
         imagefill($target, 0, 0, imagecolorallocate($target, 255, 255, 255));
         imagecopyresampled($target, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $width, $height);
 
-        Storage::disk('public')->makeDirectory(self::DIRECTORY);
+        Storage::disk('local')->makeDirectory(self::DIRECTORY);
 
-        $path = self::DIRECTORY . '/' . now()->format('YmdHis') . '-' . Str::uuid() . '.jpg';
-        $absolutePath = Storage::disk('public')->path($path);
+        $path = self::DIRECTORY.'/'.now()->format('YmdHis').'-'.Str::uuid().'.jpg';
+        $absolutePath = Storage::disk('local')->path($path);
 
         if (! imagejpeg($target, $absolutePath, self::JPEG_QUALITY)) {
             imagedestroy($source);
@@ -68,7 +70,7 @@ class PaymentProofStorage
                 continue;
             }
 
-            Storage::disk('public')->delete($path);
+            Storage::disk('local')->delete($path);
         }
     }
 

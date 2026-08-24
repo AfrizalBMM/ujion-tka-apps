@@ -36,16 +36,16 @@
         <div class="metric-card">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <div class="metric-label">Ujian Dibuat</div>
-                    <div class="metric-value">{{ $ujianDibuat }}</div>
+                    <div class="metric-label">Simulasi Selesai</div>
+                    <div class="metric-value">{{ $simulasiSelesai }}</div>
                 </div>
                 <div class="metric-icon text-blue-600">
                     <i class="fa-solid fa-file-circle-plus text-xl"></i>
                 </div>
             </div>
             <div class="metric-meta">
-                <span>Total sesi yang sudah disiapkan</span>
-                <span class="badge-info">Aktif</span>
+                <span>Simulasi yang sudah Anda selesaikan</span>
+                <span class="badge-info">Simulasi</span>
             </div>
         </div>
         <div class="metric-card">
@@ -59,14 +59,14 @@
                 </div>
             </div>
             <div class="metric-meta">
-                <span>Rerata performa peserta</span>
+                <span>Rerata skor siswa (ujian & simulasi kelas)</span>
                 <span class="font-semibold text-amber-500">Skor</span>
             </div>
         </div>
         <div class="metric-card">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <div class="metric-label">Total Peserta</div>
+                    <div class="metric-label">Peserta Selesai</div>
                     <div class="metric-value">{{ $totalPeserta }}</div>
                 </div>
                 <div class="metric-icon text-emerald-600">
@@ -74,8 +74,8 @@
                 </div>
             </div>
             <div class="metric-meta">
-                <span>Peserta yang tercatat di sistem</span>
-                <span class="font-semibold text-emerald-600">Kelas</span>
+                <span>Siswa unik yang menyelesaikan ujian di jenjang Anda</span>
+                <span class="font-semibold text-emerald-600">Siswa</span>
             </div>
         </div>
     </div>

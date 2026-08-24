@@ -4,14 +4,13 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
-use App\Models\MaterialPracticeToken;
 use App\Models\MapelPaket;
+use App\Models\MaterialPracticeToken;
 use App\Models\UjianSesi;
 use App\Support\SurveyAnalytics;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamResultController extends Controller
 {
@@ -21,16 +20,16 @@ class ExamResultController extends Controller
             ? $request->query('tab')
             : 'ujian';
 
-        $exams = Exam::where(function($q) {
+        $exams = Exam::where(function ($q) {
             $q->where('user_id', Auth::id())
-              ->orWhereHas('creator', function($query) {
-                  $query->where('role', 'superadmin');
-              });
+                ->orWhereHas('creator', function ($query) {
+                    $query->where('role', 'superadmin');
+                });
         })
-        ->withCount(['ujianSesis as total_peserta'])
-        ->with(['paketSoal', 'creator'])
-        ->latest()
-        ->get();
+            ->withCount(['ujianSesis as total_peserta' => fn ($q) => $q->whereNull('user_id')])
+            ->with(['paketSoal', 'creator'])
+            ->latest()
+            ->get();
 
         $jenjangUser = Auth::user()?->jenjang;
         $practiceTokens = MaterialPracticeToken::query()
@@ -61,7 +60,8 @@ class ExamResultController extends Controller
     {
         $this->authorizeOwner($exam);
 
-        $exam->load(['paketSoal.mapelPakets', 'ujianSesis']);
+        $exam->load(['paketSoal.mapelPakets']);
+        $exam->setRelation('ujianSesis', $exam->ujianSesis()->whereNull('user_id')->get());
 
         return view('guru.results.show', compact('exam'));
     }
@@ -73,6 +73,7 @@ class ExamResultController extends Controller
         $sessions = UjianSesi::where('exam_id', $exam->id)
             ->where('mapel_paket_id', $mapel->id)
             ->where('status', 'selesai')
+            ->whereNull('user_id')
             ->orderBy('skor', 'desc')
             ->get();
 
@@ -100,32 +101,43 @@ class ExamResultController extends Controller
         }
 
         $stats = [
-            'total'   => $sessions->count(),
-            'avg'     => round($sessions->avg('skor') ?? 0, 2),
-            'max'     => round($sessions->max('skor') ?? 0, 2),
-            'min'     => round($sessions->min('skor') ?? 0, 2),
-            'pass'    => $sessions->where('skor', '>=', 70)->count(), // Example threshold
+            'total' => $sessions->count(),
+            'avg' => round($sessions->avg('skor') ?? 0, 2),
+            'max' => round($sessions->max('skor') ?? 0, 2),
+            'min' => round($sessions->min('skor') ?? 0, 2),
+            'pass' => $sessions->where('skor', '>=', 70)->count(), // Example threshold
         ];
 
         // Question Analysis (Heatmap)
-        $mapel->load('soals.jawabanSiswas', 'soals.pilihanJawabans');
-        $questionStats = $mapel->soals->map(function ($soal) use ($sessions) {
-            $sessionIds = $sessions->pluck('id');
-            $correctCount = $soal->jawabanSiswas()
+        $mapel->load('soals.jawabanSiswas', 'soals.pilihanJawabans', 'soals.pasanganMenjodohkans');
+        $sessionIds = $sessions->pluck('id');
+        $questionStats = $mapel->soals->map(function ($soal) use ($sessionIds) {
+            $answers = $soal->jawabanSiswas()
                 ->whereIn('ujian_sesi_id', $sessionIds)
-                ->get()
-                ->filter(function ($j) use ($soal) {
-                    if ($soal->tipe_soal === 'pilihan_ganda') {
-                        return $j->jawaban_pg === $soal->pilihanJawabans->where('is_benar', true)->first()?->kode;
-                    }
-                    // Simplified for now, can add matching logic if needed
+                ->get();
+
+            $correctCount = $answers->filter(function ($j) use ($soal) {
+                if ($soal->tipe_soal === 'pilihan_ganda') {
+                    return $j->jawaban_pg === $soal->pilihanJawabans->where('is_benar', true)->first()?->kode;
+                }
+
+                $mapped = collect($j->jawaban_menjodohkan ?? [])
+                    ->mapWithKeys(fn ($item) => [($item['pair_id'] ?? null) => ($item['match_id'] ?? null)]);
+
+                $totalPairs = $soal->pasanganMenjodohkans->count();
+                if ($totalPairs === 0) {
                     return false;
-                })->count();
+                }
+
+                return $soal->pasanganMenjodohkans->every(
+                    fn ($pair) => (int) $mapped->get($pair->id) === (int) $pair->id
+                );
+            })->count();
 
             return [
-                'nomor'   => $soal->nomor_soal,
+                'nomor' => $soal->nomor_soal,
                 'correct' => $correctCount,
-                'percent' => $sessions->count() > 0 ? round(($correctCount / $sessions->count()) * 100, 1) : 0,
+                'percent' => $sessionIds->count() > 0 ? round(($correctCount / $sessionIds->count()) * 100, 1) : 0,
             ];
         });
 
@@ -148,7 +160,7 @@ class ExamResultController extends Controller
         $session->load([
             'mapelPaket.soals.pilihanJawabans',
             'mapelPaket.soals.pasanganMenjodohkans',
-            'jawabanSiswas'
+            'jawabanSiswas',
         ]);
 
         $answers = $session->jawabanSiswas->keyBy('soal_id');
@@ -166,10 +178,11 @@ class ExamResultController extends Controller
         $sessions = UjianSesi::where('exam_id', $exam->id)
             ->where('mapel_paket_id', $mapel->id)
             ->where('status', 'selesai')
+            ->whereNull('user_id')
             ->orderBy('skor', 'desc')
             ->get();
 
-        $fileName = 'Hasil_' . ($exam->judul ?? $exam->nama ?? 'ujian') . '_' . $mapel->nama_label . '.csv';
+        $fileName = 'Hasil_'.($exam->judul ?? $exam->nama ?? 'ujian').'_'.$mapel->nama_label.'.csv';
 
         $headers = [
             'Content-type' => 'text/csv',

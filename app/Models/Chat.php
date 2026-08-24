@@ -1,12 +1,22 @@
 <?php
-namespace App\Models;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
-class Chat extends Model {
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Chat extends Model
+{
     protected $guarded = [];
-    public function fromUser() { return $this->belongsTo(User::class, 'from_user_id'); }
-    public function toUser() { return $this->belongsTo(User::class, 'to_user_id'); }
+
+    public function fromUser()
+    {
+        return $this->belongsTo(User::class, 'from_user_id');
+    }
+
+    public function toUser()
+    {
+        return $this->belongsTo(User::class, 'to_user_id');
+    }
 
     protected static function booted(): void
     {
@@ -17,10 +27,10 @@ class Chat extends Model {
 
             $filesystem = app('filesystem');
             if (method_exists($filesystem, 'forgetDisk')) {
-                $filesystem->forgetDisk('public');
+                $filesystem->forgetDisk('local');
             }
 
-            $filesystem->disk('public')->delete($chat->image_path);
+            $filesystem->disk('local')->delete($chat->image_path);
         });
     }
 }

@@ -11,6 +11,7 @@ use App\Models\MaterialPracticeSession;
 use App\Models\MaterialPracticeToken;
 use App\Models\MaterialTelaahAnswer;
 use App\Models\MaterialTelaahQuestion;
+use App\Support\NameMatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -39,6 +40,7 @@ class MaterialPracticeController extends Controller
                 ->withErrors(['token' => 'Token latihan tidak valid atau tidak aktif.']);
         }
 
+        // Resume hanya jika WA + nama keduanya cocok (anti impersonasi antar siswa).
         $existing = null;
         if ($request->wa) {
             $existing = MaterialPracticeSession::query()
@@ -46,10 +48,15 @@ class MaterialPracticeController extends Controller
                 ->where('nomor_wa', $request->wa)
                 ->latest('id')
                 ->first();
+
+            if ($existing && ! NameMatcher::matches($existing->nama, $request->nama)) {
+                $existing = null;
+            }
         }
 
         if ($existing) {
             session(['material_practice_session_token' => $existing->session_token]);
+
             return redirect()->route('materi.dashboard');
         }
 
@@ -122,7 +129,7 @@ class MaterialPracticeController extends Controller
         }
 
         $validated = $request->validate([
-            'jawaban' => ['required', 'string', 'max:255'],
+            'jawaban' => ['required', 'string', 'max:191'],
         ]);
 
         $jawaban = trim((string) $validated['jawaban']);
@@ -176,13 +183,22 @@ class MaterialPracticeController extends Controller
         }
 
         if (! $attempt) {
-            $attempt = MaterialPracticePackageAttempt::create([
-                'material_practice_session_id' => $session->id,
-                'material_practice_package_id' => $package->id,
-                'status' => 'mengerjakan',
-                'waktu_mulai' => Carbon::now(),
-                'total_soal' => $package->questions->count(),
-            ]);
+            $attempt = DB::transaction(function () use ($session, $package): MaterialPracticePackageAttempt {
+                $existing = MaterialPracticePackageAttempt::query()
+                    ->where('material_practice_session_id', $session->id)
+                    ->where('material_practice_package_id', $package->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                return $existing ?? MaterialPracticePackageAttempt::create([
+                    'material_practice_session_id' => $session->id,
+                    'material_practice_package_id' => $package->id,
+                    'paket_no' => $package->paket_no,
+                    'status' => 'mengerjakan',
+                    'waktu_mulai' => Carbon::now(),
+                    'total_soal' => $package->questions->count(),
+                ]);
+            });
         }
 
         if ($session->status === 'menunggu') {
@@ -229,11 +245,21 @@ class MaterialPracticeController extends Controller
 
         $validated = $request->validate([
             'answers' => ['nullable', 'array'],
+            'answers.*' => ['nullable', 'string', 'max:191'],
         ]);
 
         $answers = is_array($validated['answers'] ?? null) ? $validated['answers'] : [];
 
-        DB::transaction(function () use ($package, $attempt, $answers, $session): void {
+        $alreadyFinished = DB::transaction(function () use ($package, $attempt, $answers, $session): bool {
+            $attempt = MaterialPracticePackageAttempt::query()
+                ->whereKey($attempt->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($attempt->status === 'selesai') {
+                return true;
+            }
+
             $benar = 0;
             $total = $package->questions->count();
 
@@ -270,6 +296,7 @@ class MaterialPracticeController extends Controller
 
             $allDone = MaterialPracticePackageAttempt::query()
                 ->where('material_practice_session_id', $session->id)
+                ->whereNotNull('material_practice_package_id')
                 ->where('status', 'selesai')
                 ->count() >= 3;
 
@@ -279,7 +306,16 @@ class MaterialPracticeController extends Controller
                     'waktu_selesai' => Carbon::now(),
                 ]);
             }
+
+            return false;
         });
+
+        if ($alreadyFinished) {
+            return redirect()->route('materi.dashboard')->with('flash', [
+                'type' => 'warning',
+                'message' => 'Paket ini sudah diselesaikan dan tidak dapat dikerjakan ulang.',
+            ]);
+        }
 
         return redirect()->route('materi.dashboard')->with('flash', [
             'type' => 'success',

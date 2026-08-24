@@ -18,7 +18,7 @@ class PhoneNumber
         }
 
         if (str_starts_with($digits, '620')) {
-            return '62' . ltrim(substr($digits, 2), '0');
+            return '62'.ltrim(substr($digits, 2), '0');
         }
 
         if (str_starts_with($digits, '62')) {
@@ -26,11 +26,11 @@ class PhoneNumber
         }
 
         if (str_starts_with($digits, '0')) {
-            return '62' . substr($digits, 1);
+            return '62'.substr($digits, 1);
         }
 
         if (str_starts_with($digits, '8')) {
-            return '62' . $digits;
+            return '62'.$digits;
         }
 
         return $digits;
@@ -58,7 +58,7 @@ class PhoneNumber
         }
 
         if (str_starts_with($digits, '62')) {
-            return '0' . substr($digits, 2);
+            return '0'.substr($digits, 2);
         }
 
         return $digits;

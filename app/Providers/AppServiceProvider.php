@@ -2,15 +2,16 @@
 
 namespace App\Providers;
 
+use App\Models\GlobalQuestion;
 use App\Models\MapelPaket;
 use App\Models\PaketSoal;
 use App\Models\Soal;
-use App\Models\GlobalQuestion;
 use App\Models\User;
 use App\Policies\GlobalQuestionPolicy;
 use App\Policies\PaketSoalPolicy;
 use App\Policies\SoalPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,6 +32,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Schema::defaultStringLength(191);
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }

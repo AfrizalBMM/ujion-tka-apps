@@ -19,11 +19,11 @@ use App\Models\Soal;
 use App\Models\TeksBacaan;
 use App\Models\UjianSesi;
 use App\Models\User;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Http\Request;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class RemainingFlowsHardeningTest extends TestCase
@@ -173,7 +173,7 @@ class RemainingFlowsHardeningTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('questions.csv', implode("\n", [
             'material_id,question_type,question_text,option_a,option_b,option_c,option_d,answer_key,explanation,is_active',
-            $material->id . ',multiple_choice,Pertanyaan contoh,Jakarta,Bandung,Surabaya,Medan,A,Pembahasan,1',
+            $material->id.',multiple_choice,Pertanyaan contoh,Jakarta,Bandung,Surabaya,Medan,A,Pembahasan,1',
         ]));
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.global-questions.import'), [
@@ -198,7 +198,7 @@ class RemainingFlowsHardeningTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('exams.csv', implode("\n", [
             'paket_soal_id,judul,tanggal_terbit,max_peserta,timer,status,is_active',
-            $paket->id . ',Tryout TKA SMP,2026-05-10 08:00,120,90,terbit,1',
+            $paket->id.',Tryout TKA SMP,2026-05-10 08:00,120,90,terbit,1',
         ]));
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.exams.import'), [
@@ -415,9 +415,9 @@ class RemainingFlowsHardeningTest extends TestCase
 
     public function test_personal_question_builder_accepts_existing_uploaded_image_paths(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $this->withoutMiddleware();
-        Storage::disk('public')->put('personal-question-images/contoh.png', 'fake-image');
+        Storage::disk('local')->put('personal-question-images/contoh.png', 'fake-image');
 
         $guru = $this->createGuru();
 
