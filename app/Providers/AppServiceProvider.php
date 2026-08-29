@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Policies\GlobalQuestionPolicy;
 use App\Policies\PaketSoalPolicy;
 use App\Policies\SoalPolicy;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
@@ -33,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+        Carbon::setLocale('id');
 
         if ($this->app->environment('production')) {
             URL::forceScheme('https');

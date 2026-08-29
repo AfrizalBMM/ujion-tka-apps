@@ -345,8 +345,8 @@
     }
 
     .app-topbar-panel {
-        @apply flex flex-col gap-4 border-b border-white/70 bg-white/90 px-4 py-4 shadow-card backdrop-blur-xl;
-        @apply md:flex-row md:items-center md:justify-between md:px-6;
+        @apply flex flex-row items-center justify-between gap-4 border-b border-white/70 bg-white/90 px-4 py-2.5 shadow-card backdrop-blur-xl;
+        @apply md:px-6 md:py-4;
         @apply dark:border-slate-800/90 dark:bg-slate-950/80;
     }
 
@@ -355,7 +355,8 @@
     }
 
     .app-brand-mark {
-        @apply flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-primary text-lg font-bold text-white shadow-glow;
+        @apply flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary text-base font-bold text-white shadow-glow;
+        @apply md:h-12 md:w-12 md:rounded-2xl md:text-lg;
     }
 
     .app-brand-copy {
@@ -363,17 +364,18 @@
     }
 
     .app-brand-title {
-        @apply text-lg font-bold tracking-tight text-slate-900;
+        @apply text-sm font-bold tracking-tight text-slate-900;
+        @apply md:text-lg;
         @apply dark:text-white;
     }
 
     .app-brand-subtitle {
-        @apply text-xs font-medium uppercase tracking-[0.22em] text-textSecondary;
-        @apply dark:text-slate-400;
+        @apply hidden text-xs font-medium uppercase tracking-[0.22em] text-textSecondary;
+        @apply md:block dark:text-slate-400;
     }
 
     .app-topbar-actions {
-        @apply flex flex-wrap items-center justify-end gap-2 md:gap-3;
+        @apply flex flex-wrap items-center justify-end gap-1.5 md:gap-3;
     }
 
     .app-topbar-meta {
@@ -386,7 +388,8 @@
     }
 
     .icon-button {
-        @apply inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/90 text-slate-500 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-sm;
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/80 bg-white/90 text-sm text-slate-500 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-sm;
+        @apply md:h-10 md:w-10 md:rounded-2xl md:text-base;
         @apply dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-primary/40 dark:hover:text-primary;
     }
 
@@ -395,12 +398,14 @@
     }
 
     .app-user-trigger {
-        @apply flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/90 px-2.5 py-2 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-card;
+        @apply flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-1.5 py-1.5 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-card;
+        @apply md:gap-3 md:px-2.5 md:py-2;
         @apply dark:border-slate-800 dark:bg-slate-900/70;
     }
 
     .app-user-avatar {
-        @apply h-10 w-10 rounded-2xl border border-white/70 object-cover shadow-sm;
+        @apply h-9 w-9 rounded-xl border border-white/70 object-cover shadow-sm;
+        @apply md:h-10 md:w-10 md:rounded-2xl;
         @apply dark:border-slate-800;
     }
 
@@ -553,7 +558,7 @@
     }
 
     .page-content {
-        @apply min-w-0 flex-1 px-4 py-5 md:px-6 md:py-6;
+        @apply min-w-0 flex-1 px-4 py-5 pb-24 md:px-6 md:py-6 md:pb-6;
     }
 
     .page-content-inner {
@@ -566,8 +571,8 @@
     }
 
     .page-hero {
-        @apply relative overflow-hidden rounded-[28px] border border-white/80 bg-slate-900 px-4 py-5 text-white shadow-modal;
-        @apply sm:px-5 sm:py-6 md:rounded-[32px] md:px-8 md:py-7;
+        @apply relative overflow-hidden rounded-[20px] border border-white/80 bg-slate-900 px-4 py-3.5 text-white shadow-modal;
+        @apply sm:rounded-[28px] sm:px-5 sm:py-6 md:rounded-[32px] md:px-8 md:py-7;
     }
 
     .page-hero::before {
@@ -584,20 +589,24 @@
     }
 
     .page-title {
-        @apply mt-4 text-2xl leading-tight sm:text-3xl md:text-4xl;
+        @apply mt-2 text-xl leading-tight sm:mt-4 sm:text-2xl md:text-3xl lg:text-4xl;
     }
 
     .page-description {
         @apply mt-3 max-w-2xl text-sm leading-6 text-slate-200;
-        @apply md:text-base;
+        @apply hidden md:block md:text-base;
     }
 
     .page-actions {
-        @apply mt-5 flex flex-wrap gap-3;
+        @apply mt-3 flex flex-wrap gap-2 md:mt-5 md:gap-3;
     }
 
     .hero-chip {
         @apply inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/10 px-4 py-3 text-sm font-medium text-white/90 backdrop-blur-sm;
+    }
+
+    .page-hero .hero-chip {
+        @apply hidden md:inline-flex;
     }
 
     .section-heading {
@@ -886,7 +895,7 @@
 
     /* Alerts */
     .alert {
-        @apply rounded-[22px] border p-4 shadow-sm;
+        @apply relative overflow-hidden rounded-[22px] border p-4 shadow-sm;
         @apply bg-white/85 border-white/70 backdrop-blur-md;
         @apply dark:bg-slate-900/70 dark:border-slate-800;
     }
@@ -909,6 +918,15 @@
     .alert-info {
         @apply bg-primary/10 text-primary border-primary/20;
         @apply dark:bg-primary/15 dark:border-primary/30;
+    }
+
+    .flash-countdown {
+        @apply flex h-6 min-w-6 items-center justify-center rounded-full bg-current/10 px-1 text-xs font-bold tabular-nums leading-none;
+    }
+
+    .flash-progress {
+        @apply absolute bottom-0 left-0 h-1 w-full bg-current opacity-25;
+        transform-origin: left center;
     }
 
     .quick-action {
@@ -947,7 +965,7 @@
     }
 
     .guest-showcase {
-        @apply relative overflow-hidden bg-slate-900 px-6 py-8 text-white md:px-8 md:py-10;
+        @apply relative hidden overflow-hidden bg-slate-900 px-6 py-8 text-white md:block md:px-8 md:py-10;
     }
 
     .guest-showcase::before {
@@ -961,6 +979,86 @@
 
     .guest-content {
         @apply px-4 py-5 md:px-6 md:py-6;
+    }
+
+    /* ================= MOBILE APP-LIKE COMPONENTS ================= */
+
+    .bottom-nav {
+        @apply fixed bottom-0 left-0 right-0 z-50 border-t border-white/70 bg-white/95 backdrop-blur-xl md:hidden;
+        @apply dark:border-slate-800/90 dark:bg-slate-950/95;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .bottom-nav-track {
+        @apply flex items-stretch justify-around px-1 pt-1.5 pb-1.5;
+    }
+
+    .bottom-nav-item {
+        @apply relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-medium text-textSecondary transition-all duration-200;
+        @apply dark:text-slate-400;
+    }
+
+    .bottom-nav-item i {
+        @apply text-lg transition-transform duration-200;
+    }
+
+    .bottom-nav-item.active {
+        @apply text-primary;
+        @apply dark:text-primary;
+    }
+
+    .bottom-nav-item.active i {
+        @apply scale-110;
+    }
+
+    .bottom-nav-item.active::before {
+        content: '';
+        @apply absolute -top-1.5 left-1/2 h-1 w-1.5 -translate-x-1/2 rounded-full bg-primary;
+    }
+
+    .bottom-nav-badge {
+        @apply absolute right-0 top-0 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-danger px-1 text-[8px] font-bold text-white ring-2 ring-white;
+        @apply dark:ring-slate-950;
+    }
+
+    .mobile-menu-grid {
+        @apply grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:hidden;
+    }
+
+    .mobile-menu-card {
+        @apply flex flex-col items-center gap-2 rounded-2xl border border-white/80 bg-white/84 p-3 shadow-card backdrop-blur-md transition-all duration-300 active:scale-95 hover:border-primary/20 hover:shadow-hover;
+        @apply dark:border-slate-800/90 dark:bg-slate-900/70;
+    }
+
+    .mobile-menu-card-icon {
+        @apply flex h-11 w-11 items-center justify-center rounded-2xl text-base text-white shadow-glow;
+    }
+
+    .mobile-menu-card-label {
+        @apply text-center text-[11px] font-semibold leading-tight text-slate-700;
+        @apply dark:text-slate-300;
+    }
+
+    .mobile-menu-card-sub {
+        @apply text-center text-[9px] leading-tight text-textSecondary;
+        @apply dark:text-slate-400;
+    }
+
+    .mobile-section-label {
+        @apply mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-muted md:hidden;
+        @apply dark:text-slate-500;
+    }
+
+    .mobile-page-title-bar {
+        @apply mb-4 flex items-center gap-3 md:hidden;
+    }
+
+    .mobile-page-title-bar h2 {
+        @apply text-lg font-bold text-slate-900 dark:text-white;
+    }
+
+    .mobile-page-title-bar i {
+        @apply text-lg text-primary;
     }
 }
 

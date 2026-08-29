@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Guru/Operator') - Ujion</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -20,6 +21,43 @@
   $currentGuru = auth()->user();
   $guruAvatarUrl = $currentGuru?->avatar_url
     ?? 'https://ui-avatars.com/api/?name=Guru&background=22C1C3&color=fff';
+
+  $waGroupLink = \App\Models\AppSetting::getValue('wa_group_link');
+
+  $routeLabels = [
+    'login' => 'Login berhasil',
+    'guru.profile.update' => 'Profil diperbarui',
+    'guru.profile.password' => 'Password diubah',
+    'guru.profile.avatar.delete' => 'Foto profil dihapus',
+    'guru.exams.join' => 'Memulai simulasi ujian',
+    'guru.chat.store' => 'Pesan terkirim ke admin',
+    'guru.personal-questions.store' => 'Soal pribadi ditambahkan',
+    'guru.personal-questions.update' => 'Soal pribadi diperbarui',
+    'guru.personal-questions.destroy' => 'Soal pribadi dihapus',
+    'guru.soal.store' => 'Soal paket ditambahkan',
+    'guru.soal.update' => 'Soal paket diperbarui',
+    'guru.soal.destroy' => 'Soal paket dihapus',
+    'guru.soal.import-ujion' => 'Soal diimpor dari Ujion',
+    'guru.teks-bacaan.store' => 'Teks bacaan ditambahkan',
+    'guru.teks-bacaan.destroy' => 'Teks bacaan dihapus',
+    'guru.materials.bookmark' => 'Materi disimpan',
+    'guru.materials.unbookmark' => 'Bookmark materi dihapus',
+    'guru.soal-ujion.bookmark' => 'Soal Ujion disimpan',
+    'guru.soal-ujion.unbookmark' => 'Bookmark soal dihapus',
+    'guru.mapel.update' => 'Konfigurasi mapel diperbarui',
+  ];
+
+  $notifLogs = collect();
+  if ($currentGuru) {
+    try {
+      $notifLogs = \App\Models\AuditLog::where('user_id', $currentGuru->id)
+        ->where('method', '!=', 'GET')
+        ->whereNotNull('route_name')
+        ->latest()
+        ->limit(8)
+        ->get();
+    } catch (\Throwable) {}
+  }
 @endphp
 
 <body class="app-shell flex flex-col" data-dashboard-shell="guru">
@@ -49,6 +87,37 @@
         <button class="icon-button hidden md:inline-flex" title="Ganti Tema" data-theme-toggle>
           <i class="fa-solid fa-moon"></i>
         </button>
+        <div class="app-user-menu">
+          <button class="icon-button relative" title="Notifikasi">
+            <i class="fa-solid fa-bell"></i>
+            @php $unreadCount = $notifLogs->filter(fn($l) => isset($routeLabels[$l->route_name]))->count(); @endphp
+            @if($unreadCount > 0)
+              <span class="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-primary ring-2 ring-white dark:ring-slate-950"></span>
+            @endif
+          </button>
+          <div class="app-dropdown min-w-72 max-w-80">
+            <div class="border-b border-slate-200/70 px-3 py-2 dark:border-slate-700/60">
+              <span class="text-sm font-bold text-slate-900 dark:text-white">Notifikasi</span>
+            </div>
+            <div class="max-h-80 overflow-y-auto py-1">
+              @foreach($notifLogs as $log)
+                @php $label = $routeLabels[$log->route_name] ?? null; @endphp
+                @if($label)
+                  <div class="flex flex-col gap-0.5 px-3 py-2 transition hover:bg-primary/8 dark:hover:bg-slate-900/70">
+                    <div class="text-sm font-medium text-slate-700 dark:text-slate-200">{{ $label }}</div>
+                    <div class="text-xs text-textSecondary dark:text-slate-400">{{ $log->created_at?->diffForHumans() }}</div>
+                  </div>
+                @endif
+              @endforeach
+              @if($notifLogs->filter(fn($l) => isset($routeLabels[$l->route_name]))->isEmpty())
+                <div class="px-3 py-6 text-center text-sm text-textSecondary dark:text-slate-400">
+                  <i class="fa-solid fa-bell-slash mb-1 block text-lg text-muted"></i>
+                  Belum ada notifikasi
+                </div>
+              @endif
+            </div>
+          </div>
+        </div>
         <div class="app-user-menu">
           <button class="app-user-trigger">
             <img
@@ -97,43 +166,27 @@
     </div>
   </header>
 
-  <nav class="mobile-nav">
-    <div class="mobile-nav-track">
-      <a href="{{ route('guru.dashboard') }}" class="mobile-nav-link {{ request()->routeIs('guru.dashboard') ? 'active' : '' }}">
-        <i class="fa-solid fa-gauge-high"></i>
-        Dashboard
+  <nav class="bottom-nav">
+    <div class="bottom-nav-track">
+      <a href="{{ route('guru.dashboard') }}" class="bottom-nav-item {{ request()->routeIs('guru.dashboard') ? 'active' : '' }}">
+        <i class="fa-solid fa-house"></i>
+        Beranda
       </a>
-      <a href="{{ route('guru.chat') }}" class="mobile-nav-link {{ request()->routeIs('guru.chat') ? 'active' : '' }}">
-        <i class="fa-solid fa-comments"></i>
-        Chat
-      </a>
-      <a href="{{ route('guru.materials') }}" class="mobile-nav-link {{ request()->routeIs('guru.materials') ? 'active' : '' }}">
+      <a href="{{ route('guru.materials') }}" class="bottom-nav-item {{ request()->routeIs('guru.materials*') ? 'active' : '' }}">
         <i class="fa-solid fa-book"></i>
         Materi
       </a>
-      <a href="{{ route('guru.soal-ujion.index') }}" class="mobile-nav-link {{ request()->routeIs('guru.soal-ujion*') ? 'active' : '' }}">
+      <a href="{{ route('guru.paket-soal.index') }}" class="bottom-nav-item {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
         <i class="fa-solid fa-layer-group"></i>
-        Soal dari Ujion
+        Soal
       </a>
-      <a href="{{ route('guru.personal-questions') }}" class="mobile-nav-link {{ request()->routeIs('guru.personal-questions*') ? 'active' : '' }}">
-        <i class="fa-solid fa-database"></i>
-        Bank Soal
+      <a href="{{ route('guru.exams') }}" class="bottom-nav-item {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
+        <i class="fa-solid fa-file-pen"></i>
+        Ujian
       </a>
-      <a href="{{ route('guru.paket-soal.index') }}" class="mobile-nav-link {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
-        <i class="fa-solid fa-database"></i>
-        Paket Soal
-      </a>
-      <a href="{{ route('guru.exams') }}" class="mobile-nav-link {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
-        <i class="fa-solid fa-file-lines"></i>
-        Simulasi
-      </a>
-      <a href="{{ route('guru.results.index') }}" class="mobile-nav-link {{ request()->routeIs('guru.results.*') ? 'active' : '' }}">
-        <i class="fa-solid fa-chart-line"></i>
-        Hasil Siswa
-      </a>
-      <a href="{{ route('guru.profile') }}" class="mobile-nav-link {{ request()->routeIs('guru.profile*') ? 'active' : '' }}">
+      <a href="{{ route('guru.profile') }}" class="bottom-nav-item {{ request()->routeIs('guru.profile*') ? 'active' : '' }}">
         <i class="fa-solid fa-user"></i>
-        Profil
+        Akun
       </a>
     </div>
   </nav>
@@ -205,6 +258,12 @@
           <i class="fa-solid fa-user w-5"></i>
           <span class="sidebar-link-label">Profil</span>
         </a>
+        @if($waGroupLink)
+        <a href="{{ $waGroupLink }}" target="_blank" rel="noopener" class="sidebar-link">
+          <i class="fa-brands fa-whatsapp w-5"></i>
+          <span class="sidebar-link-label">Gabung Saluran WA</span>
+        </a>
+        @endif
       </nav>
 
     </aside>
@@ -214,6 +273,7 @@
         <div class="page-content">
           <div class="page-content-inner">
             @include('components.ui.flash')
+            @include('components.ui.confirm-modal')
             @yield('content')
           </div>
         </div>

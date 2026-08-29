@@ -29,6 +29,14 @@
         'danger' => 'fa-solid fa-circle-xmark',
         default => 'fa-solid fa-circle-info',
     };
+
+    $hasCopyContent = $token || $copyBlock;
+    $flashDuration = $hasCopyContent ? 15000 : match ($type) {
+        'danger' => 8000,
+        'warning' => 7000,
+        default => 5000,
+    };
+    $flashSeconds = (int) ceil($flashDuration / 1000);
 @endphp
 
 @if ($errors->any())
@@ -41,10 +49,14 @@
                     <div class="mt-1 text-sm">{{ $errors->first() }}</div>
                 </div>
             </div>
-            <button type="button" class="btn-secondary px-3" data-flash-close aria-label="Close">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="flash-countdown" data-flash-countdown data-flash-duration="8000">8</span>
+                <button type="button" class="btn-secondary px-3" data-flash-close aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
         </div>
+        <div class="flash-progress" data-flash-progress></div>
     </div>
 @endif
 
@@ -73,9 +85,13 @@
                     @endif
                 </div>
             </div>
-            <button type="button" class="btn-secondary px-3" data-flash-close aria-label="Close">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="flash-countdown" data-flash-countdown data-flash-duration="{{ $flashDuration }}">{{ $flashSeconds }}</span>
+                <button type="button" class="btn-secondary px-3" data-flash-close aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
         </div>
+        <div class="flash-progress" data-flash-progress></div>
     </div>
 @endif

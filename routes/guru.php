@@ -37,7 +37,9 @@ Route::post('/register/guru/pending/payment-proof', [RegisterGuruController::cla
 Route::middleware(['auth', 'role:guru', 'guru.active', 'audit'])->prefix('guru')->name('guru.')->scopeBindings()->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar/delete', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
     Route::post('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials');
     Route::get('/materials/{material}', [MaterialController::class, 'show'])->name('materials.show');

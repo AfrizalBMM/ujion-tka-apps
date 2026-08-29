@@ -52,14 +52,14 @@ FASE 9 → A  (Landing & halaman publik)
 | ---- | ----------------------------- | ---------- | ------------------------------------------------------------------ |
 | 0    | J — Cross-cutting & Fondasi   | ✅ Selesai | 18 (1 kritis, 6 tinggi, 9 sedang, 2 rendah) — SEMUA FIX DITERAPKAN |
 | 1    | C — Auth Semua Role           | ✅ Selesai | 9 (0 kritis, 2 tinggi, 4 sedang, 3 rendah) — SEMUA FIX DITERAPKAN  |
-| 2 | B — Registrasi Guru & Payment | ✅ Selesai | 8 (0 kritis, 2 tinggi, 4 sedang, 2 rendah) — SEMUA FIX DITERAPKAN |
-| 3 | F — Ujian Siswa | ✅ Selesai | 7 (1 kritis, 2 tinggi, 3 sedang, 1 rendah) — SEMUA FIX DITERAPKAN |
-| 4 | G — Latihan Materi Siswa | ✅ Selesai | 6 (0 kritis, 2 tinggi, 3 sedang, 1 rendah) — SEMUA FIX DITERAPKAN |
-| 5 | D — Operasional Guru | ✅ Selesai | 7 (0 kritis, 2 tinggi, 4 sedang, 1 rendah) — SEMUA FIX DITERAPKAN |
-| 6 | E — Operasional Superadmin | ✅ Selesai | 7 (0 kritis, 2 tinggi, 4 sedang, 1 rendah) — SEMUA FIX DITERAPKAN |
-| 7 | H — Chat Guru ↔ Superadmin | ✅ Selesai | 4 (0 kritis, 1 tinggi, 2 sedang, 1 rendah) |
-| 8 | I — Integrasi WhatsApp | ✅ Selesai | 2 (0 kritis, 0 tinggi, 1 sedang, 1 rendah) |
-| 9 | A — Landing & Publik | ✅ Selesai | 3 (0 kritis, 0 tinggi, 2 sedang, 1 rendah) |
+| 2    | B — Registrasi Guru & Payment | ✅ Selesai | 8 (0 kritis, 2 tinggi, 4 sedang, 2 rendah) — SEMUA FIX DITERAPKAN  |
+| 3    | F — Ujian Siswa               | ✅ Selesai | 7 (1 kritis, 2 tinggi, 3 sedang, 1 rendah) — SEMUA FIX DITERAPKAN  |
+| 4    | G — Latihan Materi Siswa      | ✅ Selesai | 6 (0 kritis, 2 tinggi, 3 sedang, 1 rendah) — SEMUA FIX DITERAPKAN  |
+| 5    | D — Operasional Guru          | ✅ Selesai | 7 (0 kritis, 2 tinggi, 4 sedang, 1 rendah) — SEMUA FIX DITERAPKAN  |
+| 6    | E — Operasional Superadmin    | ✅ Selesai | 7 (0 kritis, 2 tinggi, 4 sedang, 1 rendah) — SEMUA FIX DITERAPKAN  |
+| 7    | H — Chat Guru ↔ Superadmin    | ✅ Selesai | 4 (0 kritis, 1 tinggi, 2 sedang, 1 rendah)                         |
+| 8    | I — Integrasi WhatsApp        | ✅ Selesai | 2 (0 kritis, 0 tinggi, 1 sedang, 1 rendah)                         |
+| 9    | A — Landing & Publik          | ✅ Selesai | 3 (0 kritis, 0 tinggi, 2 sedang, 1 rendah)                         |
 | 2    | B — Registrasi Guru & Payment | ⬜ Belum   | —                                                                  |
 | 3    | F — Ujian Siswa               | ⬜ Belum   | —                                                                  |
 | 4    | G — Latihan Materi Siswa      | ⬜ Belum   | —                                                                  |
@@ -689,18 +689,19 @@ Fondasi flow pembayaran sudah kuat setelah Fase 0 (IDOR tertutup, approval atomi
 
 ### Rekomendasi Perbaikan — SEMUA FIX SUDAH DIIMPLEMENTASIKAN ✅
 
-| Prioritas | Fix | Status |
-|---|---|---|
-| P1 | **F2-01**: `resolvePlanForJenjang` kini: plan jenjang → **plan global (jenjang NULL)** → tolak. Semua fallback bebas (`PricingPlan::where('is_active')->first()`) di 6 caller dihapus. Guru SMA tidak akan pernah ditagih tarif SD/SMP | ✅ |
-| P1 | **F2-02**: generate QRIS dibungkus try/catch di 3 titik — `payments/show` tampil kartu "QR belum tersedia, hubungi admin", `paymentData` return JSON 503 dengan pesan ramah, `printLabel` abort 503 dengan instruksi ke admin | ✅ |
-| P2 | **F2-03**: validasi `price` → `required\|numeric\|min:1000\|max:100000000` dengan pesan error Indonesia di store & update | ✅ |
-| P2 | **F2-04**: update proof dibungkus `DB::transaction`; plan kosong → upload DITOLAK dengan flash "Tarif jenjang belum tersedia" (tidak ada lagi status SUBMITTED tanpa transaksi) | ✅ |
-| P2 | **F2-05**: helper baru `resolveOrCreatePendingTransaction()` (DB::transaction + lockForUpdate): reuse transaksi pending nominal sama; transaksi pending nominal beda otomatis dibatalkan (`failed` + alasan "Dibatalkan otomatis karena tarif berubah") sebelum create yang baru | ✅ |
-| P2 | **F2-06**: `payments/show` render per status: SUCCESS → kartu hijau "Sudah Diverifikasi" + tombol login; FAILED → kartu merah "Perlu Dikirim Ulang" + catatan admin (QR tidak dirender); PENDING → QR seperti biasa | ✅ |
-| P3 | **F2-07**: `latestTransaction` difilter ke status PENDING/SUCCESS | ✅ |
-| P3 | **F2-08**: diterima (sudah throttled 30/menit) | 📄 diterima |
+| Prioritas | Fix                                                                                                                                                                                                                                                                              | Status      |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| P1        | **F2-01**: `resolvePlanForJenjang` kini: plan jenjang → **plan global (jenjang NULL)** → tolak. Semua fallback bebas (`PricingPlan::where('is_active')->first()`) di 6 caller dihapus. Guru SMA tidak akan pernah ditagih tarif SD/SMP                                           | ✅          |
+| P1        | **F2-02**: generate QRIS dibungkus try/catch di 3 titik — `payments/show` tampil kartu "QR belum tersedia, hubungi admin", `paymentData` return JSON 503 dengan pesan ramah, `printLabel` abort 503 dengan instruksi ke admin                                                    | ✅          |
+| P2        | **F2-03**: validasi `price` → `required\|numeric\|min:1000\|max:100000000` dengan pesan error Indonesia di store & update                                                                                                                                                        | ✅          |
+| P2        | **F2-04**: update proof dibungkus `DB::transaction`; plan kosong → upload DITOLAK dengan flash "Tarif jenjang belum tersedia" (tidak ada lagi status SUBMITTED tanpa transaksi)                                                                                                  | ✅          |
+| P2        | **F2-05**: helper baru `resolveOrCreatePendingTransaction()` (DB::transaction + lockForUpdate): reuse transaksi pending nominal sama; transaksi pending nominal beda otomatis dibatalkan (`failed` + alasan "Dibatalkan otomatis karena tarif berubah") sebelum create yang baru | ✅          |
+| P2        | **F2-06**: `payments/show` render per status: SUCCESS → kartu hijau "Sudah Diverifikasi" + tombol login; FAILED → kartu merah "Perlu Dikirim Ulang" + catatan admin (QR tidak dirender); PENDING → QR seperti biasa                                                              | ✅          |
+| P3        | **F2-07**: `latestTransaction` difilter ke status PENDING/SUCCESS                                                                                                                                                                                                                | ✅          |
+| P3        | **F2-08**: diterima (sudah throttled 30/menit)                                                                                                                                                                                                                                   | 📄 diterima |
 
 **Catatan implementasi:**
+
 - 2 test lama diupdate dengan fixture `PricingPlan` (perilaku "tolak upload tanpa tarif" memang baru).
 - `resolveOrCreatePendingTransaction` memakai `lockForUpdate` agar race dua request tidak menghasilkan dobel transaksi.
 
@@ -726,15 +727,15 @@ Fondasi ujian sudah matang: timer di-enforce server-side, jawaban PG tidak bocor
 
 ### Temuan
 
-| # | Severity | Aspek | Lokasi | Deskripsi | Dampak |
-|---|---|---|---|---|---|
-| F3-01 | 🔴 KRITIS | 🔒 | `Siswa/ExamController@showUjian` payload + `pengerjaan.blade.php` renderMatching | **Kunci jawaban menjodohkan bocor di payload.** Payload mengirim `pasangan: [{id, teks_kiri, teks_kanan}]` (baris soal) dan `matching_options: [{id, label}]` (opsi jawaban) — keduanya memuat `pair.id` mentah. Skor benar = `match_id === pair_id` (pasangan dengan id sama). Siswa yang membuka DevTools → Network → payload JSON tinggal mencocokkan baris dengan opsi **ber-ID sama** → skor 100% tanpa berpikir. | Kecurangan menjodohkan total — bisa dilakukan siswa mana pun yang paham DevTools. |
-| F3-02 | 🟠 TINGGI | ⚙️🎨 | `pengerjaan.blade.php:292-328` (`postAnswer`) | **Auto-save gagal senyap.** `fetch(...).catch(() => {})` — error network ditelan tanpa retry, tanpa indikator. Indikator soal langsung hijau (optimistic) padahal jawaban belum sampai server. Auto-save 30 detik juga hanya mengirim soal aktif. | Siswa yakin jawaban tersimpan padahal hilang saat koneksi lab/warnet drop — kehilangan jawaban di ujian sungguhan tanpa sadar. |
-| F3-03 | 🟠 TINGGI | 🗄️ | `Guru/ExamResultController@mapel/export/show` + `Guru/ExamController@join` | **Skor simulasi guru tercampur hasil siswa.** Sesi simulasi guru disimpan dengan `user_id` terisi, tapi query hasil siswa (`mapel()`, `export()`, heatmap, `withCount('ujianSesis')`) tidak memfilter `user_id` → skor simulasi guru ikut ranking, rata-rata, dan CSV export siswa. | Analisis & export terkontaminasi; ranking siswa tidak valid. |
-| F3-04 | 🟡 SEDANG | 🗄️ | `Siswa/ExamController@submitSelesai`/`finalizeSession` | **Submit double tanpa lock.** Dua POST bersamaan (double-click atau dua tab) → keduanya lolos cek `status !== selesai` dan sama-sama menjalankan finalize (hitung skor + update). Nilai idempotent tapi tetap race; WA notifikasi (jika ditambahkan nanti) bisa dobel. | Race minor hari ini, landmine untuk fitur masa depan. |
-| F3-05 | 🟡 SEDANG | ⚙️ | `Guru/ExamResultController@mapel` heatmap | **Analisis soal menjodohkan selalu 0%.** Kode heatmap `return false` untuk tipe menjodohkan (berkomentar "Simplified for now") — statistik benar per soal tidak pernah dihitung untuk menjodohkan. | Guru melihat heatmap menyesatkan untuk soal menjodohkan. |
-| F3-06 | 🟡 SEDANG | 🎨 | `pengerjaan.blade.php` renderMatching | `matching_options` di-`shuffle()` per request — refresh halaman mengubah urutan opsi. Jawaban tetap valid (berdasar id), tapi posisi opsi "melompat" saat refresh bisa membingungkan siswa yang sedang memeriksa. | Minor UX; terkait erat dengan fix F3-01. |
-| F3-07 | 🟢 RENDAH | ⚙️ | `Siswa/ExamController@showUjian` | Timer mulai saat `waktu_mulai` diset (status mengerjakan) — siswa bisa buka petunjuk berlama-lama tanpa timer jalan. By design (petunjuk ≠ mengerjakan), tapi tidak didokumentasikan. | Intended behavior — dokumentasikan. |
+| #     | Severity  | Aspek | Lokasi                                                                           | Deskripsi                                                                                                                                                                                                                                                                                                                                                                                                              | Dampak                                                                                                                         |
+| ----- | --------- | ----- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| F3-01 | 🔴 KRITIS | 🔒    | `Siswa/ExamController@showUjian` payload + `pengerjaan.blade.php` renderMatching | **Kunci jawaban menjodohkan bocor di payload.** Payload mengirim `pasangan: [{id, teks_kiri, teks_kanan}]` (baris soal) dan `matching_options: [{id, label}]` (opsi jawaban) — keduanya memuat `pair.id` mentah. Skor benar = `match_id === pair_id` (pasangan dengan id sama). Siswa yang membuka DevTools → Network → payload JSON tinggal mencocokkan baris dengan opsi **ber-ID sama** → skor 100% tanpa berpikir. | Kecurangan menjodohkan total — bisa dilakukan siswa mana pun yang paham DevTools.                                              |
+| F3-02 | 🟠 TINGGI | ⚙️🎨  | `pengerjaan.blade.php:292-328` (`postAnswer`)                                    | **Auto-save gagal senyap.** `fetch(...).catch(() => {})` — error network ditelan tanpa retry, tanpa indikator. Indikator soal langsung hijau (optimistic) padahal jawaban belum sampai server. Auto-save 30 detik juga hanya mengirim soal aktif.                                                                                                                                                                      | Siswa yakin jawaban tersimpan padahal hilang saat koneksi lab/warnet drop — kehilangan jawaban di ujian sungguhan tanpa sadar. |
+| F3-03 | 🟠 TINGGI | 🗄️    | `Guru/ExamResultController@mapel/export/show` + `Guru/ExamController@join`       | **Skor simulasi guru tercampur hasil siswa.** Sesi simulasi guru disimpan dengan `user_id` terisi, tapi query hasil siswa (`mapel()`, `export()`, heatmap, `withCount('ujianSesis')`) tidak memfilter `user_id` → skor simulasi guru ikut ranking, rata-rata, dan CSV export siswa.                                                                                                                                    | Analisis & export terkontaminasi; ranking siswa tidak valid.                                                                   |
+| F3-04 | 🟡 SEDANG | 🗄️    | `Siswa/ExamController@submitSelesai`/`finalizeSession`                           | **Submit double tanpa lock.** Dua POST bersamaan (double-click atau dua tab) → keduanya lolos cek `status !== selesai` dan sama-sama menjalankan finalize (hitung skor + update). Nilai idempotent tapi tetap race; WA notifikasi (jika ditambahkan nanti) bisa dobel.                                                                                                                                                 | Race minor hari ini, landmine untuk fitur masa depan.                                                                          |
+| F3-05 | 🟡 SEDANG | ⚙️    | `Guru/ExamResultController@mapel` heatmap                                        | **Analisis soal menjodohkan selalu 0%.** Kode heatmap `return false` untuk tipe menjodohkan (berkomentar "Simplified for now") — statistik benar per soal tidak pernah dihitung untuk menjodohkan.                                                                                                                                                                                                                     | Guru melihat heatmap menyesatkan untuk soal menjodohkan.                                                                       |
+| F3-06 | 🟡 SEDANG | 🎨    | `pengerjaan.blade.php` renderMatching                                            | `matching_options` di-`shuffle()` per request — refresh halaman mengubah urutan opsi. Jawaban tetap valid (berdasar id), tapi posisi opsi "melompat" saat refresh bisa membingungkan siswa yang sedang memeriksa.                                                                                                                                                                                                      | Minor UX; terkait erat dengan fix F3-01.                                                                                       |
+| F3-07 | 🟢 RENDAH | ⚙️    | `Siswa/ExamController@showUjian`                                                 | Timer mulai saat `waktu_mulai` diset (status mengerjakan) — siswa bisa buka petunjuk berlama-lama tanpa timer jalan. By design (petunjuk ≠ mengerjakan), tapi tidak didokumentasikan.                                                                                                                                                                                                                                  | Intended behavior — dokumentasikan.                                                                                            |
 
 ### Yang Sudah Baik (jangan diubah saat perbaikan)
 
@@ -751,17 +752,18 @@ Fondasi ujian sudah matang: timer di-enforce server-side, jawaban PG tidak bocor
 
 ### Rekomendasi Perbaikan — SEMUA FIX SUDAH DIIMPLEMENTASIKAN ✅
 
-| Prioritas | Fix | Status |
-|---|---|---|
-| P0 | **F3-01**: class baru `App\Support\MatchingKey` — baris soal & opsi menjodohkan dikirim sebagai key opaque (`sha1` 16-char dengan salt beda per role + seed `session_token`). Payload tidak lagi memuat `pair.id` mentah maupun `teks_kanan` di baris soal; jawaban tersimpan dikonversi balik ke key saat render. `apiSaveAnswer` menerima `{row_key, opt_key}`, resolve ke pair id via lookup, tolak 422 untuk key tak dikenal, tetap simpan `pair_id/match_id` di DB (skema tidak berubah). Kesamaan string antar baris-opsi tidak lagi membocorkan jawaban | ✅ |
-| P1 | **F3-02**: badge status simpan di header ("Tersimpan" hijau / "Menyimpan..." / "Koneksi terputus — mencoba lagi..." merah) + **auto-retry** dengan backoff eksponensial (3s→30s) untuk jawaban gagal; guard `beforeunload` saat ada jawaban belum tersimpan; tombol "Ya, Selesai" flush pending dulu & blokir dengan peringatan jika masih gagal; auto-save 30 detik hanya kirim soal yang berisi jawaban | ✅ |
-| P1 | **F3-03**: hasil siswa kini murni — `mapel()`, `export()`, `show()`, `withCount` semuanya difilter `whereNull('user_id')`. Sesi simulasi guru (user_id terisi) tidak pernah masuk ranking/rata-rata/CSV siswa. Aturan ini didokumentasikan di AGENTS.md | ✅ |
-| P2 | **F3-04**: `finalizeSession` dibungkus `DB::transaction` + `lockForUpdate` + re-check status di dalam lock — submit double/thread race aman | ✅ |
-| P2 | **F3-05**: heatmap menjodohkan kini dihitung (soal dianggap benar jika semua pasangan tepat) — sebelumnya selalu 0% | ✅ |
-| P3 | **F3-06**: urutan opsi menjodohkan distabilkan per sesi (sort by `sha1('shuffle:'.pairId.seed)`) — refresh tidak mengacak posisi lagi | ✅ |
-| P3 | **F3-07**: intended behavior timer didokumentasikan di AGENTS.md ("timer mulai saat pertama membuka halaman pengerjaan") | ✅ |
+| Prioritas | Fix                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Status |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P0        | **F3-01**: class baru `App\Support\MatchingKey` — baris soal & opsi menjodohkan dikirim sebagai key opaque (`sha1` 16-char dengan salt beda per role + seed `session_token`). Payload tidak lagi memuat `pair.id` mentah maupun `teks_kanan` di baris soal; jawaban tersimpan dikonversi balik ke key saat render. `apiSaveAnswer` menerima `{row_key, opt_key}`, resolve ke pair id via lookup, tolak 422 untuk key tak dikenal, tetap simpan `pair_id/match_id` di DB (skema tidak berubah). Kesamaan string antar baris-opsi tidak lagi membocorkan jawaban | ✅     |
+| P1        | **F3-02**: badge status simpan di header ("Tersimpan" hijau / "Menyimpan..." / "Koneksi terputus — mencoba lagi..." merah) + **auto-retry** dengan backoff eksponensial (3s→30s) untuk jawaban gagal; guard `beforeunload` saat ada jawaban belum tersimpan; tombol "Ya, Selesai" flush pending dulu & blokir dengan peringatan jika masih gagal; auto-save 30 detik hanya kirim soal yang berisi jawaban                                                                                                                                                      | ✅     |
+| P1        | **F3-03**: hasil siswa kini murni — `mapel()`, `export()`, `show()`, `withCount` semuanya difilter `whereNull('user_id')`. Sesi simulasi guru (user_id terisi) tidak pernah masuk ranking/rata-rata/CSV siswa. Aturan ini didokumentasikan di AGENTS.md                                                                                                                                                                                                                                                                                                        | ✅     |
+| P2        | **F3-04**: `finalizeSession` dibungkus `DB::transaction` + `lockForUpdate` + re-check status di dalam lock — submit double/thread race aman                                                                                                                                                                                                                                                                                                                                                                                                                    | ✅     |
+| P2        | **F3-05**: heatmap menjodohkan kini dihitung (soal dianggap benar jika semua pasangan tepat) — sebelumnya selalu 0%                                                                                                                                                                                                                                                                                                                                                                                                                                            | ✅     |
+| P3        | **F3-06**: urutan opsi menjodohkan distabilkan per sesi (sort by `sha1('shuffle:'.pairId.seed)`) — refresh tidak mengacak posisi lagi                                                                                                                                                                                                                                                                                                                                                                                                                          | ✅     |
+| P3        | **F3-07**: intended behavior timer didokumentasikan di AGENTS.md ("timer mulai saat pertama membuka halaman pengerjaan")                                                                                                                                                                                                                                                                                                                                                                                                                                       | ✅     |
 
 **Catatan implementasi:**
+
 - Guru simulasi melewati jalur render yang sama → key opaque otomatis berlaku juga untuk simulasi.
 - Jawaban menjodohkan lama (format pair_id dari sesi sebelum deploy) tidak bisa di-render ulang ke key — dikonversi saat payload dibangun, jadi tetap kompatibel (dev-stage, tidak ada data produksi).
 
@@ -786,14 +788,14 @@ Berbeda dengan ujian (F3), **tidak ada kebocoran kunci jawaban di latihan** — 
 
 ### Temuan
 
-| # | Severity | Aspek | Lokasi | Deskripsi | Dampak |
-|---|---|---|---|---|---|
-| F4-01 | 🟠 TINGGI | ⚙️🎨 | `showPaket` + `paket.blade.php` | **Draft jawaban tidak tersimpan.** Pilihan radio hanya hidup di HTML — tidak ada auto-save ke server (attempt answers hanya dibuat saat submit) dan tidak ada draft lokal. Siswa kerjakan 10 soal → refresh/tak sengaja back → **semua pilihan hilang**, mulai dari nol. | Frustrasi nyata siswa; untuk latihan 10–15 soal ini kehilangan kerja signifikan. |
-| F4-02 | 🟠 TINGGI | 🗄️ | `showPaket` (pembuatan attempt) | **Race GET dobel → 500.** Dua request bersamaan (double-click "Kerjakan", dua tab) → keduanya `first()` null → keduanya `create` → unique constraint `(session_id, package_id)` → salah satu kena `QueryException` tak tertangani. | Error 500 sesekali; siswa harus refresh manual. |
-| F4-03 | 🟡 SEDANG | 🗄️ | `submitPaket` | **Race submit dobel.** Dua POST bersamaan (double-click "Ya, Kumpulkan" atau dua tab) → keduanya lolos cek `status === selesai` → skor dihitung & disimpan dua kali dari payload yang berbeda — skor akhir tidak deterministik. | Skor bisa tercatat dari payload yang tidak lengkap. |
-| F4-04 | 🟡 SEDANG | 🗄️ | `MaterialPracticeResultController@show` telaahStats | **Statistik telaah menghitung jawaban orphan.** Saat admin mengganti soal telaah, jawaban siswa lama tetap ada di `material_telaah_answers` → `telaahStats` group by `global_question_id` TANPA filter ke soal telaah aktif → soal yang sudah diganti tetap muncul di analisis guru. | Analisis telaah menampilkan soal yang bukan lagi bagian latihan. |
-| F4-05 | 🟡 SEDANG | ⚙️ | `submitTelaah` (`max:255`) + `submitPaket` (tanpa max) | **Validasi panjang jawaban vs kolom DB.** Kolom `jawaban` VARCHAR(191), tapi validasi telaah max:255 & paket tanpa max — teks opsi panjang (>255) gagal validasi, antara 192–255 lolos validasi lalu **QueryException** saat insert. | Siswa tidak bisa menjawab soal yang opsinya panjang; atau error 500. |
-| F4-06 | 🟢 RENDAH | 🎨 | `dashboard.blade.php` badge `{{ $telaahQuestions->count() }}/2` | Hardcoded "/2" — kalau admin menyetel >2 soal telaah, badge salah. | Kosmetik. |
+| #     | Severity  | Aspek | Lokasi                                                          | Deskripsi                                                                                                                                                                                                                                                                            | Dampak                                                                           |
+| ----- | --------- | ----- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| F4-01 | 🟠 TINGGI | ⚙️🎨  | `showPaket` + `paket.blade.php`                                 | **Draft jawaban tidak tersimpan.** Pilihan radio hanya hidup di HTML — tidak ada auto-save ke server (attempt answers hanya dibuat saat submit) dan tidak ada draft lokal. Siswa kerjakan 10 soal → refresh/tak sengaja back → **semua pilihan hilang**, mulai dari nol.             | Frustrasi nyata siswa; untuk latihan 10–15 soal ini kehilangan kerja signifikan. |
+| F4-02 | 🟠 TINGGI | 🗄️    | `showPaket` (pembuatan attempt)                                 | **Race GET dobel → 500.** Dua request bersamaan (double-click "Kerjakan", dua tab) → keduanya `first()` null → keduanya `create` → unique constraint `(session_id, package_id)` → salah satu kena `QueryException` tak tertangani.                                                   | Error 500 sesekali; siswa harus refresh manual.                                  |
+| F4-03 | 🟡 SEDANG | 🗄️    | `submitPaket`                                                   | **Race submit dobel.** Dua POST bersamaan (double-click "Ya, Kumpulkan" atau dua tab) → keduanya lolos cek `status === selesai` → skor dihitung & disimpan dua kali dari payload yang berbeda — skor akhir tidak deterministik.                                                      | Skor bisa tercatat dari payload yang tidak lengkap.                              |
+| F4-04 | 🟡 SEDANG | 🗄️    | `MaterialPracticeResultController@show` telaahStats             | **Statistik telaah menghitung jawaban orphan.** Saat admin mengganti soal telaah, jawaban siswa lama tetap ada di `material_telaah_answers` → `telaahStats` group by `global_question_id` TANPA filter ke soal telaah aktif → soal yang sudah diganti tetap muncul di analisis guru. | Analisis telaah menampilkan soal yang bukan lagi bagian latihan.                 |
+| F4-05 | 🟡 SEDANG | ⚙️    | `submitTelaah` (`max:255`) + `submitPaket` (tanpa max)          | **Validasi panjang jawaban vs kolom DB.** Kolom `jawaban` VARCHAR(191), tapi validasi telaah max:255 & paket tanpa max — teks opsi panjang (>255) gagal validasi, antara 192–255 lolos validasi lalu **QueryException** saat insert.                                                 | Siswa tidak bisa menjawab soal yang opsinya panjang; atau error 500.             |
+| F4-06 | 🟢 RENDAH | 🎨    | `dashboard.blade.php` badge `{{ $telaahQuestions->count() }}/2` | Hardcoded "/2" — kalau admin menyetel >2 soal telaah, badge salah.                                                                                                                                                                                                                   | Kosmetik.                                                                        |
 
 ### Yang Sudah Baik (jangan diubah saat perbaikan)
 
@@ -809,14 +811,14 @@ Berbeda dengan ujian (F3), **tidak ada kebocoran kunci jawaban di latihan** — 
 
 ### Rekomendasi Perbaikan — SEMUA FIX SUDAH DIIMPLEMENTASIKAN ✅
 
-| Prioritas | Fix | Status |
-|---|---|---|
-| P1 | **F4-01**: draft jawaban paket latihan disimpan otomatis ke **localStorage** per (sesi, paket-no) — dipulihkan saat halaman dibuka kembali (dengan toast "Pilihan jawaban terakhir Anda dipulihkan"), flag ragu ikut tersimpan, draft dibersihkan saat submit. Tanpa perubahan server | ✅ |
-| P1 | **F4-02**: pembuatan attempt dibungkus `DB::transaction` + `lockForUpdate` + re-fetch — double-click "Kerjakan"/dua tab tidak lagi menyebabkan QueryException 500 | ✅ |
-| P2 | **F4-03**: `submitPaket` dibungkus transaction + `lockForUpdate` attempt + re-check status di dalam lock — submit dobel idempotent dan deterministik (yang pertama menang, yang kedua flash "sudah diselesaikan") | ✅ |
-| P2 | **F4-04**: `telaahStats` guru kini hanya menghitung jawaban untuk soal telaah **aktif** (`MaterialTelaahQuestion` materi tsb) — jawaban orphan soal yang sudah diganti admin dikecualikan dari relasi sebelum agregasi | ✅ |
-| P2 | **F4-05**: validasi jawaban telaah `max:191` (sesuai kolom DB) + validasi per-item jawaban paket `max:191` | ✅ |
-| P3 | **F4-06**: badge telaah kini dinamis ("N soal", bukan hardcoded "/2") | ✅ |
+| Prioritas | Fix                                                                                                                                                                                                                                                                                   | Status |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P1        | **F4-01**: draft jawaban paket latihan disimpan otomatis ke **localStorage** per (sesi, paket-no) — dipulihkan saat halaman dibuka kembali (dengan toast "Pilihan jawaban terakhir Anda dipulihkan"), flag ragu ikut tersimpan, draft dibersihkan saat submit. Tanpa perubahan server | ✅     |
+| P1        | **F4-02**: pembuatan attempt dibungkus `DB::transaction` + `lockForUpdate` + re-fetch — double-click "Kerjakan"/dua tab tidak lagi menyebabkan QueryException 500                                                                                                                     | ✅     |
+| P2        | **F4-03**: `submitPaket` dibungkus transaction + `lockForUpdate` attempt + re-check status di dalam lock — submit dobel idempotent dan deterministik (yang pertama menang, yang kedua flash "sudah diselesaikan")                                                                     | ✅     |
+| P2        | **F4-04**: `telaahStats` guru kini hanya menghitung jawaban untuk soal telaah **aktif** (`MaterialTelaahQuestion` materi tsb) — jawaban orphan soal yang sudah diganti admin dikecualikan dari relasi sebelum agregasi                                                                | ✅     |
+| P2        | **F4-05**: validasi jawaban telaah `max:191` (sesuai kolom DB) + validasi per-item jawaban paket `max:191`                                                                                                                                                                            | ✅     |
+| P3        | **F4-06**: badge telaah kini dinamis ("N soal", bukan hardcoded "/2")                                                                                                                                                                                                                 | ✅     |
 
 ### Regresi Test (3 test baru di `tests/Feature/MaterialPracticeHardeningTest.php`, semua PASS)
 
@@ -838,15 +840,15 @@ Otorisasi area guru sangat solid (policy per-aksi, `abort_if` konsistensi relasi
 
 ### Temuan
 
-| # | Severity | Aspek | Lokasi | Deskripsi | Dampak |
-|---|---|---|---|---|---|
-| F5-01 | 🟠 TINGGI | ⚙️🗄️ | `SoalGuruController@importFromUjion:160-167` | **Import menjodohkan gagal diam-diam.** `pasanganMenjodohkans()->create(['pernyataan' => ..., 'jawaban' => ...])` — kolom ini TIDAK ada (schema & `$fillable`: `teks_kiri/teks_kanan`). Mass assignment mengabaikan key asing → baris pasangan tersimpan tapi **teks kosong**. Guru melihat soal menjodohkan import yang isinya blank. | Fitur rusak total untuk tipe menjodohkan; guru harus isi ulang manual. |
-| F5-02 | 🟠 TINGGI | ⚙️🔒 | `Guru/ProfileController` (hanya `show` & `update`) | **Tidak ada fitur ubah password.** Guru tidak pernah bisa ganti password (registrasi membuat password random 24-char yang tidak diketahui guru; login pakai WA+token). Password random itu jadi rahasia abadi. Superadmin PUNYA fitur password, guru tidak. | Asimetri fitur; password user tidak bisa dirotasi/dikelola; jika email bocor, tidak ada mitigasi mandiri. |
-| F5-03 | 🟡 SEDANG | 🎨 | `DashboardController:26-31` | **Statistik dashboard menyesatkan.** `totalPeserta` = sesi SELESAI milik guru sendiri (semuanya simulasi); `rataRataKelas` = rata-rata skor simulasi guru sendiri. Label view kemungkinan menyebutnya peserta/kelas. Guru mengira ini data siswa. | Angka dashboard salah interpretasi. |
-| F5-04 | 🟡 SEDANG | ⚡ | `SoalUjionController@index:48`, `MaterialController@index:56` | **List tanpa pagination.** Bank soal Ujion & materi di-load `->get()` semua baris (dengan filter search LIKE). Bank soal ratusan-ribuan baris → halaman berat, query LIKE lambat. | Performa menurun seiring pertumbuhan data. |
-| F5-05 | 🟡 SEDANG | 🗄️ | `Guru/ProfileController@update` + `user_id` chat | **Email bisa diubah tanpa validasi dampak.** Email dipakai sebagai identitas unik; ubah email aman-ish (login pakai WA), tapi tidak ada verifikasi email baru — konsisten dengan baseline (tidak ada email verification di mana pun). Dicatat sebagai keputusan produk. | Diterima dengan catatan. |
-| F5-06 | 🟡 SEDANG | ⚙️ | `DashboardController:33` | Dashboard menampilkan **AuditLog milik guru** ("Aktivitas terakhir") — setelah fix F0-07 (audit middleware di guru group), ini kini berfungsi (sebelumnya selalu kosong). Namun log audit berisi PATH yang disanitasi — tidak human-readable untuk guru. | Nilai informasi rendah; perlu label ramah atau diganti aktivitas domain. |
-| F5-07 | 🟢 RENDAH | 🎨 | `SoalUjionController@index` | Query builder `$mapels` & `$curriculums` duplikat kondisi (3 query terpisah) — bisa digabung, tapi bukan masalah besar. | Kosmetik. |
+| #     | Severity  | Aspek | Lokasi                                                        | Deskripsi                                                                                                                                                                                                                                                                                                                              | Dampak                                                                                                    |
+| ----- | --------- | ----- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| F5-01 | 🟠 TINGGI | ⚙️🗄️  | `SoalGuruController@importFromUjion:160-167`                  | **Import menjodohkan gagal diam-diam.** `pasanganMenjodohkans()->create(['pernyataan' => ..., 'jawaban' => ...])` — kolom ini TIDAK ada (schema & `$fillable`: `teks_kiri/teks_kanan`). Mass assignment mengabaikan key asing → baris pasangan tersimpan tapi **teks kosong**. Guru melihat soal menjodohkan import yang isinya blank. | Fitur rusak total untuk tipe menjodohkan; guru harus isi ulang manual.                                    |
+| F5-02 | 🟠 TINGGI | ⚙️🔒  | `Guru/ProfileController` (hanya `show` & `update`)            | **Tidak ada fitur ubah password.** Guru tidak pernah bisa ganti password (registrasi membuat password random 24-char yang tidak diketahui guru; login pakai WA+token). Password random itu jadi rahasia abadi. Superadmin PUNYA fitur password, guru tidak.                                                                            | Asimetri fitur; password user tidak bisa dirotasi/dikelola; jika email bocor, tidak ada mitigasi mandiri. |
+| F5-03 | 🟡 SEDANG | 🎨    | `DashboardController:26-31`                                   | **Statistik dashboard menyesatkan.** `totalPeserta` = sesi SELESAI milik guru sendiri (semuanya simulasi); `rataRataKelas` = rata-rata skor simulasi guru sendiri. Label view kemungkinan menyebutnya peserta/kelas. Guru mengira ini data siswa.                                                                                      | Angka dashboard salah interpretasi.                                                                       |
+| F5-04 | 🟡 SEDANG | ⚡    | `SoalUjionController@index:48`, `MaterialController@index:56` | **List tanpa pagination.** Bank soal Ujion & materi di-load `->get()` semua baris (dengan filter search LIKE). Bank soal ratusan-ribuan baris → halaman berat, query LIKE lambat.                                                                                                                                                      | Performa menurun seiring pertumbuhan data.                                                                |
+| F5-05 | 🟡 SEDANG | 🗄️    | `Guru/ProfileController@update` + `user_id` chat              | **Email bisa diubah tanpa validasi dampak.** Email dipakai sebagai identitas unik; ubah email aman-ish (login pakai WA), tapi tidak ada verifikasi email baru — konsisten dengan baseline (tidak ada email verification di mana pun). Dicatat sebagai keputusan produk.                                                                | Diterima dengan catatan.                                                                                  |
+| F5-06 | 🟡 SEDANG | ⚙️    | `DashboardController:33`                                      | Dashboard menampilkan **AuditLog milik guru** ("Aktivitas terakhir") — setelah fix F0-07 (audit middleware di guru group), ini kini berfungsi (sebelumnya selalu kosong). Namun log audit berisi PATH yang disanitasi — tidak human-readable untuk guru.                                                                               | Nilai informasi rendah; perlu label ramah atau diganti aktivitas domain.                                  |
+| F5-07 | 🟢 RENDAH | 🎨    | `SoalUjionController@index`                                   | Query builder `$mapels` & `$curriculums` duplikat kondisi (3 query terpisah) — bisa digabung, tapi bukan masalah besar.                                                                                                                                                                                                                | Kosmetik.                                                                                                 |
 
 ### Yang Sudah Baik (jangan diubah saat perbaikan)
 
@@ -861,17 +863,18 @@ Otorisasi area guru sangat solid (policy per-aksi, `abort_if` konsistensi relasi
 
 ### Rekomendasi Perbaikan — SEMUA FIX SUDAH DIIMPLEMENTASIKAN ✅
 
-| Prioritas | Fix | Status |
-|---|---|---|
-| P1 | **F5-01**: import menjodohkan diperbaiki — kolom benar `teks_kiri`/`teks_kanan` (sebelumnya `pernyataan`/`jawaban` yang tidak ada di schema → soal import kosong). Saat eksekusi ditemukan & difix 2 bug tambahan di jalur yang sama: `indikator` NOT NULL (sekarang fallback "Diimpor dari bank soal Ujion"), `bobot` NOT NULL (fallback 1), `arah_skor` ber-default (null eksplisit menimpa default → `'positif'`) | ✅ |
-| P1 | **F5-02**: fitur password guru — method `password()` di Guru/ProfileController (set bebas + konfirmasi, min 8, tidak boleh sama dengan token akses) + route `guru.profile.password` + kartu form password di halaman profil dengan penjelasan "login utama tetap WA+token" | ✅ |
-| P2 | **F5-03**: dashboard guru kini pakai **data siswa nyata**: "Peserta Selesai" = siswa unik (non-simulasi) yang selesai ujian di paket jenjang guru, "Rata-rata Skor" = rerata skor siswa, + kartu baru "Simulasi Selesai" (simulasi guru sendiri, terpisah jujur) | ✅ |
-| P2 | **F5-04**: pagination di index bank soal Ujion (24/halaman) & materi guru (30/halaman) + `withQueryString()` + render links | ✅ |
-| P3 | F5-05: email tanpa verifikasi — diterima (baseline produk) | 📄 diterima |
-| P3 | F5-06: aktivitas terakhir (AuditLog) dibiarkan — nilai jaringan kecil, dicatat tech-debt | 📄 ditunda |
-| P3 | F5-07: query mapels/curriculums dirapikan (format konsisten) | ✅ |
+| Prioritas | Fix                                                                                                                                                                                                                                                                                                                                                                                                                  | Status      |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| P1        | **F5-01**: import menjodohkan diperbaiki — kolom benar `teks_kiri`/`teks_kanan` (sebelumnya `pernyataan`/`jawaban` yang tidak ada di schema → soal import kosong). Saat eksekusi ditemukan & difix 2 bug tambahan di jalur yang sama: `indikator` NOT NULL (sekarang fallback "Diimpor dari bank soal Ujion"), `bobot` NOT NULL (fallback 1), `arah_skor` ber-default (null eksplisit menimpa default → `'positif'`) | ✅          |
+| P1        | **F5-02**: fitur password guru — method `password()` di Guru/ProfileController (set bebas + konfirmasi, min 8, tidak boleh sama dengan token akses) + route `guru.profile.password` + kartu form password di halaman profil dengan penjelasan "login utama tetap WA+token"                                                                                                                                           | ✅          |
+| P2        | **F5-03**: dashboard guru kini pakai **data siswa nyata**: "Peserta Selesai" = siswa unik (non-simulasi) yang selesai ujian di paket jenjang guru, "Rata-rata Skor" = rerata skor siswa, + kartu baru "Simulasi Selesai" (simulasi guru sendiri, terpisah jujur)                                                                                                                                                     | ✅          |
+| P2        | **F5-04**: pagination di index bank soal Ujion (24/halaman) & materi guru (30/halaman) + `withQueryString()` + render links                                                                                                                                                                                                                                                                                          | ✅          |
+| P3        | F5-05: email tanpa verifikasi — diterima (baseline produk)                                                                                                                                                                                                                                                                                                                                                           | 📄 diterima |
+| P3        | F5-06: aktivitas terakhir (AuditLog) dibiarkan — nilai jaringan kecil, dicatat tech-debt                                                                                                                                                                                                                                                                                                                             | 📄 ditunda  |
+| P3        | F5-07: query mapels/curriculums dirapikan (format konsisten)                                                                                                                                                                                                                                                                                                                                                         | ✅          |
 
 **Catatan implementasi:**
+
 - 3 test dashboard lama diupdate ke perilaku baru (statistik siswa nyata + label simulasi terpisah).
 - Test lama "guru profile does not show password form" dibalik menjadi 3 test baru (form tampil, set password sukses, konfirmasi mismatch ditolak).
 - Import Ujion kini teruji end-to-end untuk soal menjodohkan — sebelumnya jalur ini tidak pernah ada test-nya (makanya bug kolom lolos bertahun-tahun... relatif).
@@ -897,15 +900,15 @@ Area superadmin sudah banyak yang diperkuat oleh fix fase sebelumnya (approval a
 
 ### Temuan
 
-| # | Severity | Aspek | Lokasi | Deskripsi | Dampak |
-|---|---|---|---|---|---|
-| F6-01 | 🟠 TINGGI | 🗄️ | `Superadmin/ExamController@destroy` + FK `ujian_sesis.exam_id cascadeOnDelete` | **Hapus ujian = hapus semua hasil siswa.** `destroy()` menghapus exam; FK cascade menghapus semua `ujian_sesis` → semua `jawaban_siswas` ikut terhapus. Tidak ada peringatan jumlah peserta terdampak. Test hanya melindungi PAKET dari penghapusan bila dipakai exam — exam sendiri bebas dihapus walau berisi ratusan hasil. | Kehilangan data hasil ujian siswa secara massal & permanen karena satu klik. |
-| F6-02 | 🟠 TINGGI | ⚙️ | `WhatsAppGatewayController@sendBlast` target `siswa_all`/`siswa_paket` | **Blast siswa pakai tabel legacy `participants`** — siswa nyata sejak schema baru tersimpan di `ujian_sesis.nomor_wa`. Tabel legacy tidak lagi terisi → blast siswa mengirim ke daftar kosong/stale. | Fitur blast siswa tidak berfungsi; superadmin mengira pesan terkirim. |
-| F6-03 | 🟡 SEDANG | 🎨 | `ExamController@store` (blast `event_exam_published`) | **Publikasi ujian blast ke SEMUA guru aktif tanpa filter jenjang.** Guru SD menerima notifikasi ujian paket SMA. Tidak ada filter `paketSoal.jenjang == guru.jenjang`. | Spam notifikasi lintas jenjang; guru menganggap WA admin berisik → abaikan notifikasi penting. |
-| F6-04 | 🟡 SEDANG | 🗄️ | `DashboardController@buildMetrics` | **"Total Revenue" = estimasi** (jumlah guru aktif × harga plan per jenjang), bukan penjumlahan transaksi `STATUS_SUCCESS` nyata. Guru yang bayar di harga lama tetap dihitung harga baru. | Angka keuangan dashboard menyesatkan pengambil keputusan. |
-| F6-05 | 🟡 SEDANG | 🔒 | `WhatsAppGatewayController@connection` | `env('WA_GATEWAY_URL')` + `env('WA_SENDER_ID')` dibaca langsung di controller — **rusak saat `config:cache`** (pola sama dengan F0-02 yang sudah di-fix di webhook). | Halaman koneksi WA menampilkan default salah di production. |
-| F6-06 | 🟢 RENDAH | ⚙️ | `ExamController@store` validasi `max_peserta` | `required|integer` tanpa `min:0` — nilai negatif tersimpan; negatif berarti unlimited (count >= negatif selalu true). Efek sama dengan 0, jadi kosmetik. | Minor. |
-| F6-07 | 🟢 RENDAH | ⚙️ | `GlobalQuestionController@destroyAll` | Menghapus semua soal global walau dipakai paket latihan aktif — snapshot `material_practice_package_questions` aman karena FK ke id (soft delete tidak memicu FK), tapi paket latihan akan kehilangan akses ke konten jika soal di-hard-delete. Confirm text "HAPUS SEMUA" sudah ada. | Risiko rendah (soft delete); dicatat. |
+| #     | Severity  | Aspek | Lokasi                                                                         | Deskripsi                                                                                                                                                                                                                                                                                                                      | Dampak                                                                                                                                       |
+| ----- | --------- | ----- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| F6-01 | 🟠 TINGGI | 🗄️    | `Superadmin/ExamController@destroy` + FK `ujian_sesis.exam_id cascadeOnDelete` | **Hapus ujian = hapus semua hasil siswa.** `destroy()` menghapus exam; FK cascade menghapus semua `ujian_sesis` → semua `jawaban_siswas` ikut terhapus. Tidak ada peringatan jumlah peserta terdampak. Test hanya melindungi PAKET dari penghapusan bila dipakai exam — exam sendiri bebas dihapus walau berisi ratusan hasil. | Kehilangan data hasil ujian siswa secara massal & permanen karena satu klik.                                                                 |
+| F6-02 | 🟠 TINGGI | ⚙️    | `WhatsAppGatewayController@sendBlast` target `siswa_all`/`siswa_paket`         | **Blast siswa pakai tabel legacy `participants`** — siswa nyata sejak schema baru tersimpan di `ujian_sesis.nomor_wa`. Tabel legacy tidak lagi terisi → blast siswa mengirim ke daftar kosong/stale.                                                                                                                           | Fitur blast siswa tidak berfungsi; superadmin mengira pesan terkirim.                                                                        |
+| F6-03 | 🟡 SEDANG | 🎨    | `ExamController@store` (blast `event_exam_published`)                          | **Publikasi ujian blast ke SEMUA guru aktif tanpa filter jenjang.** Guru SD menerima notifikasi ujian paket SMA. Tidak ada filter `paketSoal.jenjang == guru.jenjang`.                                                                                                                                                         | Spam notifikasi lintas jenjang; guru menganggap WA admin berisik → abaikan notifikasi penting.                                               |
+| F6-04 | 🟡 SEDANG | 🗄️    | `DashboardController@buildMetrics`                                             | **"Total Revenue" = estimasi** (jumlah guru aktif × harga plan per jenjang), bukan penjumlahan transaksi `STATUS_SUCCESS` nyata. Guru yang bayar di harga lama tetap dihitung harga baru.                                                                                                                                      | Angka keuangan dashboard menyesatkan pengambil keputusan.                                                                                    |
+| F6-05 | 🟡 SEDANG | 🔒    | `WhatsAppGatewayController@connection`                                         | `env('WA_GATEWAY_URL')` + `env('WA_SENDER_ID')` dibaca langsung di controller — **rusak saat `config:cache`** (pola sama dengan F0-02 yang sudah di-fix di webhook).                                                                                                                                                           | Halaman koneksi WA menampilkan default salah di production.                                                                                  |
+| F6-06 | 🟢 RENDAH | ⚙️    | `ExamController@store` validasi `max_peserta`                                  | `required                                                                                                                                                                                                                                                                                                                      | integer`tanpa`min:0` — nilai negatif tersimpan; negatif berarti unlimited (count >= negatif selalu true). Efek sama dengan 0, jadi kosmetik. | Minor. |
+| F6-07 | 🟢 RENDAH | ⚙️    | `GlobalQuestionController@destroyAll`                                          | Menghapus semua soal global walau dipakai paket latihan aktif — snapshot `material_practice_package_questions` aman karena FK ke id (soft delete tidak memicu FK), tapi paket latihan akan kehilangan akses ke konten jika soal di-hard-delete. Confirm text "HAPUS SEMUA" sudah ada.                                          | Risiko rendah (soft delete); dicatat.                                                                                                        |
 
 ### Yang Sudah Baik (jangan diubah saat perbaikan)
 
@@ -921,17 +924,18 @@ Area superadmin sudah banyak yang diperkuat oleh fix fase sebelumnya (approval a
 
 ### Rekomendasi Perbaikan — SEMUA FIX SUDAH DIIMPLEMENTASIKAN ✅
 
-| Prioritas | Fix | Status |
-|---|---|---|
-| P1 | **F6-01 (konfirmasi ketik)**: `destroy` exam kini cek jumlah sesi — bila ada hasil peserta, wajib input `confirm_text = HAPUS`; tanpa/salah konfirmasi → error dengan jumlah peserta terdampak. UI: tombol berubah "Hapus (N hasil)" + input konfirmasi + dialog JS; index exam eager-load `withCount('ujianSesis')`. Ujian tanpa hasil tetap hapus sekali klik | ✅ |
-| P1 | **F6-02**: target siswa blast (`siswa_all`/`siswa_paket`) kini query `UjianSesi` (`whereNull('user_id')`, `whereNotNull('nomor_wa')`, distinct; filter paket via `paket_soal_id`) — tabel legacy `participants` tidak lagi dipakai | ✅ |
-| P2 | **F6-03**: blast `event_exam_published` kini hanya ke guru dengan jenjang = jenjang paket ujian ybs | ✅ |
-| P2 | **F6-04**: "Total Revenue" = `SUM(transactions.amount WHERE status=success)` — angka nyata; logika estimasi (guru × harga plan) & `normalizeCurrency` dihapus | ✅ |
-| P2 | **F6-05**: `WA_GATEWAY_URL` & `WA_SENDER_ID` pindah ke `config/services.php` (`services.wa_gateway.*`) — dipakai oleh `WhatsAppGatewayController@connection` **dan** `WhatsAppService` (pemakaian `env()` tersisa di seluruh `app/` kini nol — aman `config:cache`) + masuk `.env.example` | ✅ |
-| P3 | **F6-06**: validasi `max_peserta` → `integer|min:0` | ✅ |
-| P3 | F6-07: diterima (soft delete melindungi snapshot latihan) | 📄 diterima |
+| Prioritas | Fix                                                                                                                                                                                                                                                                                                                                                             | Status      |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | --- |
+| P1        | **F6-01 (konfirmasi ketik)**: `destroy` exam kini cek jumlah sesi — bila ada hasil peserta, wajib input `confirm_text = HAPUS`; tanpa/salah konfirmasi → error dengan jumlah peserta terdampak. UI: tombol berubah "Hapus (N hasil)" + input konfirmasi + dialog JS; index exam eager-load `withCount('ujianSesis')`. Ujian tanpa hasil tetap hapus sekali klik | ✅          |
+| P1        | **F6-02**: target siswa blast (`siswa_all`/`siswa_paket`) kini query `UjianSesi` (`whereNull('user_id')`, `whereNotNull('nomor_wa')`, distinct; filter paket via `paket_soal_id`) — tabel legacy `participants` tidak lagi dipakai                                                                                                                              | ✅          |
+| P2        | **F6-03**: blast `event_exam_published` kini hanya ke guru dengan jenjang = jenjang paket ujian ybs                                                                                                                                                                                                                                                             | ✅          |
+| P2        | **F6-04**: "Total Revenue" = `SUM(transactions.amount WHERE status=success)` — angka nyata; logika estimasi (guru × harga plan) & `normalizeCurrency` dihapus                                                                                                                                                                                                   | ✅          |
+| P2        | **F6-05**: `WA_GATEWAY_URL` & `WA_SENDER_ID` pindah ke `config/services.php` (`services.wa_gateway.*`) — dipakai oleh `WhatsAppGatewayController@connection` **dan** `WhatsAppService` (pemakaian `env()` tersisa di seluruh `app/` kini nol — aman `config:cache`) + masuk `.env.example`                                                                      | ✅          |
+| P3        | **F6-06**: validasi `max_peserta` → `integer                                                                                                                                                                                                                                                                                                                    | min:0`      | ✅  |
+| P3        | F6-07: diterima (soft delete melindungi snapshot latihan)                                                                                                                                                                                                                                                                                                       | 📄 diterima |
 
 **Catatan implementasi:**
+
 - Test dashboard superadmin diupdate: revenue kini dari transaksi `STATUS_SUCCESS` nyata (fixture menambah transaksi).
 - Bonus saat sweep `env()`: `WhatsAppService` ternyata juga baca `env()` langsung (jalur pengiriman WA aktual!) — ikut dipindah ke config. Tanpa ini, semua blast WA produksi akan gagal diam-diam setelah `config:cache`.
 
@@ -950,14 +954,15 @@ Area superadmin sudah banyak yang diperkuat oleh fix fase sebelumnya (approval a
 
 ### Temuan
 
-| # | Severity | Aspek | Lokasi | Deskripsi | Dampak |
-|---|---|---|---|---|---|
-| F7-01 | 🟠 TINGGI | 🔒 | `Superadmin/ChatController@markRead`, `@destroy` | **Tanpa ownership check.** `markRead(Chat $chat)` dan `destroy(Chat $chat)` menerima ID chat apa pun — superadmin bisa mark-read/hapus chat yang bukan percakapannya. Dalam praktik hanya superadmin yang akses route ini (middleware role), jadi dampaknya superadmin-superadmin lain. Diturunkan dari kritis karena single-admin assumption, tapi bila ada >1 superadmin jadi masalah nyata. | Manipulasi state chat lintas admin. |
-| F7-02 | 🟡 SEDANG | ⚙️ | `Guru/ChatController@index` | **History chat tanpa pagination** — semua pesan guru↔admin diload. Percakapan panjang (ratusan pesan berisi teks 2000 char) → halaman berat. | Performa menurun seiring usia percakapan. |
-| F7-03 | 🟡 SEDANG | ⚙️🔒 | `Superadmin/ChatController@store` | `to_user_id` divalidasi `exists:users,id` saja — superadmin bisa mengirim chat ke user superadmin lain / dirinya (percakapan aneh muncul di list). Tidak diverifikasi target adalah guru. | Data percakapan tidak bersih. |
-| F7-04 | 🟢 RENDAH | ⚙️ | config `BROADCAST_CONNECTION=log` | Realtime Pusher tidak aktif default (log fallback); chat berjalan polling/refresh manual. Ini keputusan setup (env), bukan bug — didokumentasikan. | UX chat bukan realtime; intended per setup. |
+| #     | Severity  | Aspek | Lokasi                                           | Deskripsi                                                                                                                                                                                                                                                                                                                                                                                      | Dampak                                      |
+| ----- | --------- | ----- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| F7-01 | 🟠 TINGGI | 🔒    | `Superadmin/ChatController@markRead`, `@destroy` | **Tanpa ownership check.** `markRead(Chat $chat)` dan `destroy(Chat $chat)` menerima ID chat apa pun — superadmin bisa mark-read/hapus chat yang bukan percakapannya. Dalam praktik hanya superadmin yang akses route ini (middleware role), jadi dampaknya superadmin-superadmin lain. Diturunkan dari kritis karena single-admin assumption, tapi bila ada >1 superadmin jadi masalah nyata. | Manipulasi state chat lintas admin.         |
+| F7-02 | 🟡 SEDANG | ⚙️    | `Guru/ChatController@index`                      | **History chat tanpa pagination** — semua pesan guru↔admin diload. Percakapan panjang (ratusan pesan berisi teks 2000 char) → halaman berat.                                                                                                                                                                                                                                                   | Performa menurun seiring usia percakapan.   |
+| F7-03 | 🟡 SEDANG | ⚙️🔒  | `Superadmin/ChatController@store`                | `to_user_id` divalidasi `exists:users,id` saja — superadmin bisa mengirim chat ke user superadmin lain / dirinya (percakapan aneh muncul di list). Tidak diverifikasi target adalah guru.                                                                                                                                                                                                      | Data percakapan tidak bersih.               |
+| F7-04 | 🟢 RENDAH | ⚙️    | config `BROADCAST_CONNECTION=log`                | Realtime Pusher tidak aktif default (log fallback); chat berjalan polling/refresh manual. Ini keputusan setup (env), bukan bug — didokumentasikan.                                                                                                                                                                                                                                             | UX chat bukan realtime; intended per setup. |
 
 ### Yang Sudah Baik
+
 1. `ChatImageController` private + participant check (fix F0-05) — kunci IDOR tertutup.
 2. Chat image disimpan disk private + cleanup saat delete (model event).
 3. Guru chat store: target otomatis superadmin (tidak bisa pilih penerima) — tidak ada celah kirim ke guru lain dari sisi guru.
@@ -965,6 +970,7 @@ Area superadmin sudah banyak yang diperkuat oleh fix fase sebelumnya (approval a
 5. Pesan divalidasi max 2000 (fix F0-13), image max 2MB.
 
 ### Fix yang Diimplementasikan
+
 - **F7-01**: `markRead` & `destroy` kini cek `auth()->id()` adalah salah satu participant chat → 403 jika bukan (helper `authorizeChatParticipant`).
 - **F7-03**: `to_user_id` divalidasi `Rule::exists('users','id')->where('role','guru')` — chat superadmin hanya bisa ditujukan ke guru.
 - **F7-02**: index guru chat dibatasi 200 pesan terakhir (order desc lalu sort asc) — tech-debt pagination penuh dicatat.
@@ -978,12 +984,13 @@ Area superadmin sudah banyak yang diperkuat oleh fix fase sebelumnya (approval a
 
 ### Temuan
 
-| # | Severity | Aspek | Lokasi | Deskripsi | Dampak |
-|---|---|---|---|---|---|
-| F8-01 | 🟡 SEDANG | 🗄️ | `SendWhatsAppBlast` (tries=3, backoff 60/180/300s) | Job retry 3x — tapi `sendMessage` sudah menandai failed di `whatsapp_logs` untuk SETIAP percobaan → satu pesan gagal menghasilkan hingga 3 baris log "failed" + 1 baris sukses (jika retry berhasil). Statistik dashboard WA (terkirim/gagal) menghitung percobaan, bukan pesan. | Statistik blast menyesatkan. |
-| F8-02 | 🟢 RENDAH | 🔒 | `WhatsAppService::sendMessage` | Request ke gateway TANPA auth (API key) — siapa pun di jaringan yang bisa reach gateway:3000 bisa kirim pesan. Mitigasi: gateway hanya listen localhost di setup lokal; di produksi harus di-firewall/localhost-only. | Tergantung hardening infra gateway. |
+| #     | Severity  | Aspek | Lokasi                                             | Deskripsi                                                                                                                                                                                                                                                                        | Dampak                              |
+| ----- | --------- | ----- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| F8-01 | 🟡 SEDANG | 🗄️    | `SendWhatsAppBlast` (tries=3, backoff 60/180/300s) | Job retry 3x — tapi `sendMessage` sudah menandai failed di `whatsapp_logs` untuk SETIAP percobaan → satu pesan gagal menghasilkan hingga 3 baris log "failed" + 1 baris sukses (jika retry berhasil). Statistik dashboard WA (terkirim/gagal) menghitung percobaan, bukan pesan. | Statistik blast menyesatkan.        |
+| F8-02 | 🟢 RENDAH | 🔒    | `WhatsAppService::sendMessage`                     | Request ke gateway TANPA auth (API key) — siapa pun di jaringan yang bisa reach gateway:3000 bisa kirim pesan. Mitigasi: gateway hanya listen localhost di setup lokal; di produksi harus di-firewall/localhost-only.                                                            | Tergantung hardening infra gateway. |
 
 ### Yang Sudah Baik
+
 1. Webhook fail-closed + `hash_equals` + via config (fix F0) — account takeover tertutup.
 2. `env()` bebas di seluruh `app/` (fix F6-05) — aman `config:cache`.
 3. Normalisasi nomor konsisten + timeout 15s + try/catch lengkap dengan log kontekstual.
@@ -992,6 +999,7 @@ Area superadmin sudah banyak yang diperkuat oleh fix fase sebelumnya (approval a
 6. WA bot webhook: LID mapping + fallback suffix-9 + template terpusat — matang.
 
 ### Fix yang Diimplementasikan
+
 - **F8-01**: statistik dashboard WA blast kini dihitung per pesan — `MAX(id) GROUP BY phone, message` lalu agregasi status dari log terbaru saja; pesan yang sukses saat retry tidak lagi tercatat "gagal" di statistik.
 - **F8-02**: checklist deployment AGENTS.md ditambah aturan **gateway wajib localhost-only / firewall** (endpoint gateway tanpa auth sendiri).
 
@@ -1003,19 +1011,21 @@ Area superadmin sudah banyak yang diperkuat oleh fix fase sebelumnya (approval a
 
 ### Temuan
 
-| # | Severity | Aspek | Lokasi | Deskripsi | Dampak |
-|---|---|---|---|---|---|
-| F9-01 | 🟡 SEDANG | 🔒 | `LandingClickController@store` | **IP address penuh disimpan tanpa masking** di `landing_click_logs` — inkonsisten dengan AuditRequest yang mem-mask IP. Data PII pengunjung publik tersimpan plain. | Privasi: kepatuhan data pengunjung (trafik landing bisa sangat besar). |
-| F9-02 | 🟡 SEDANG | ⚡ | `LandingController@index` | Landing query stats (material + question GROUP BY) + semua section setiap request tanpa cache. Landing adalah halaman tersering publik — tiap visit memicu query agregasi. | Performa landing menurun seiring trafik. |
-| F9-03 | 🟢 RENDAH | ⚙️ | `SitemapController` | Sitemap hanya 2 URL statis — memang pas (tidak ada konten publik lain). | — |
+| #     | Severity  | Aspek | Lokasi                         | Deskripsi                                                                                                                                                                  | Dampak                                                                 |
+| ----- | --------- | ----- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| F9-01 | 🟡 SEDANG | 🔒    | `LandingClickController@store` | **IP address penuh disimpan tanpa masking** di `landing_click_logs` — inkonsisten dengan AuditRequest yang mem-mask IP. Data PII pengunjung publik tersimpan plain.        | Privasi: kepatuhan data pengunjung (trafik landing bisa sangat besar). |
+| F9-02 | 🟡 SEDANG | ⚡    | `LandingController@index`      | Landing query stats (material + question GROUP BY) + semua section setiap request tanpa cache. Landing adalah halaman tersering publik — tiap visit memicu query agregasi. | Performa landing menurun seiring trafik.                               |
+| F9-03 | 🟢 RENDAH | ⚙️    | `SitemapController`            | Sitemap hanya 2 URL statis — memang pas (tidak ada konten publik lain).                                                                                                    | —                                                                      |
 
 ### Yang Sudah Baik
+
 1. Landing click API: validasi ketat + throttle 120/menit + `noindex` di halaman pembayaran.
 2. Sitemap & OG image dinamis dengan fallback aman.
 3. Section toggle via `landing_contents` — admin bisa sembunyikan section tanpa deploy.
 4. Pricing landing dari DB live (is_active) — konsisten dengan flow registrasi.
 
 ### Fix yang Diimplementasikan
+
 - **F9-01**: IP dimasking sebelum disimpan (IPv4: oktet terakhir jadi `x`; IPv6: 4 blok pertama) — pola sama dengan AuditRequest.
 - **F9-02**: stats landing di-cache 10 menit via `Cache::remember` — agregasi berat tidak lagi per-request.
 
@@ -1030,19 +1040,19 @@ Area superadmin sudah banyak yang diperkuat oleh fix fase sebelumnya (approval a
 
 # REKAP AKHIR AUDIT — SEMUA FASE SELESAI
 
-| Fase | Flow | Temuan | Fix | Diterima |
-|---|---|---|---|---|
-| 0 | Fondasi keamanan | 18 | 18 | — |
-| 1 | Auth semua role | 9 | 8 | 1 |
-| 2 | Registrasi & payment | 8 | 7 | 1 |
-| 3 | Ujian siswa | 7 | 7 | — |
-| 4 | Latihan materi | 6 | 6 | — |
-| 5 | Operasional guru | 7 | 7 | — |
-| 6 | Operasional superadmin | 7 | 7 | — |
-| 7 | Chat realtime | 4 | 3 | 1 |
-| 8 | Integrasi WA | 2 | 1 | 1 |
-| 9 | Landing & publik | 3 | 3 | — |
-| **TOTAL** | | **71** | **67** | **4** |
+| Fase      | Flow                   | Temuan | Fix    | Diterima |
+| --------- | ---------------------- | ------ | ------ | -------- |
+| 0         | Fondasi keamanan       | 18     | 18     | —        |
+| 1         | Auth semua role        | 9      | 8      | 1        |
+| 2         | Registrasi & payment   | 8      | 7      | 1        |
+| 3         | Ujian siswa            | 7      | 7      | —        |
+| 4         | Latihan materi         | 6      | 6      | —        |
+| 5         | Operasional guru       | 7      | 7      | —        |
+| 6         | Operasional superadmin | 7      | 7      | —        |
+| 7         | Chat realtime          | 4      | 3      | 1        |
+| 8         | Integrasi WA           | 2      | 1      | 1        |
+| 9         | Landing & publik       | 3      | 3      | —        |
+| **TOTAL** |                        | **71** | **67** | **4**    |
 
 **Hasil test akhir: 112 PASS (437 assertions), Pint bersih.**
 

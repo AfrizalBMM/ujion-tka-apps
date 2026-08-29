@@ -103,6 +103,99 @@
         </div>
     </section>
 
+    <div>
+        <div class="mobile-section-label">Akademik</div>
+        <div class="mobile-menu-grid">
+            <a href="{{ route('superadmin.teachers.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-blue-500 to-blue-600">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+                <div class="mobile-menu-card-label">Guru</div>
+            </a>
+            <a href="{{ route('superadmin.materials.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-teal-500 to-cyan-600">
+                    <i class="fa-solid fa-book"></i>
+                </div>
+                <div class="mobile-menu-card-label">Materi</div>
+            </a>
+            <a href="{{ route('superadmin.global-questions.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-purple-500 to-violet-600">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div class="mobile-menu-card-label">Bank Soal</div>
+            </a>
+            <a href="{{ route('superadmin.paket-soal.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-indigo-500 to-blue-600">
+                    <i class="fa-solid fa-cubes"></i>
+                </div>
+                <div class="mobile-menu-card-label">Paket Soal</div>
+            </a>
+            <a href="{{ route('superadmin.exams.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-amber-500 to-orange-600">
+                    <i class="fa-solid fa-file-pen"></i>
+                </div>
+                <div class="mobile-menu-card-label">Ujian</div>
+            </a>
+        </div>
+    </div>
+
+    <div>
+        <div class="mobile-section-label">Keuangan & Sistem</div>
+        <div class="mobile-menu-grid">
+            <a href="{{ route('superadmin.finance.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-emerald-500 to-green-600">
+                    <i class="fa-solid fa-credit-card"></i>
+                </div>
+                <div class="mobile-menu-card-label">Keuangan</div>
+            </a>
+            <a href="{{ route('superadmin.payment-confirmations.index') }}" class="mobile-menu-card relative">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-red-500 to-rose-600">
+                    <i class="fa-solid fa-money-check-dollar"></i>
+                </div>
+                <div class="mobile-menu-card-label">Konfirmasi</div>
+                @if($pendingPaymentCount > 0)
+                    <span class="bottom-nav-badge" style="right: -2px; top: -2px;">{{ $pendingPaymentCount }}</span>
+                @endif
+            </a>
+            <a href="{{ route('superadmin.chat.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-rose-500 to-pink-600">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+                <div class="mobile-menu-card-label">Live Chat</div>
+            </a>
+            <a href="{{ route('superadmin.landing-settings.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-sky-500 to-blue-500">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <div class="mobile-menu-card-label">Landing</div>
+            </a>
+            <a href="{{ route('superadmin.audit-logs.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-slate-500 to-slate-600">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="mobile-menu-card-label">Audit Log</div>
+            </a>
+            <a href="{{ route('superadmin.wa-koneksi') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-violet-500 to-purple-600">
+                    <i class="fa-solid fa-qrcode"></i>
+                </div>
+                <div class="mobile-menu-card-label">WA Koneksi</div>
+            </a>
+            <a href="{{ route('superadmin.wa-templates.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-fuchsia-500 to-pink-600">
+                    <i class="fa-solid fa-message"></i>
+                </div>
+                <div class="mobile-menu-card-label">Pesan WA</div>
+            </a>
+            <a href="{{ route('superadmin.wa-blast') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-orange-500 to-amber-600">
+                    <i class="fa-solid fa-bullhorn"></i>
+                </div>
+                <div class="mobile-menu-card-label">Blast</div>
+            </a>
+        </div>
+    </div>
+
     <section class="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)]">
         <div class="card">
             <div class="section-heading mb-6">
@@ -172,7 +265,7 @@
         </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="hidden grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 md:grid">
         <a href="{{ route('superadmin.teachers.index') }}" class="quick-action">
             <div class="quick-action-icon"><i class="fa-solid fa-users"></i></div>
             <div class="quick-action-title">Kelola Guru</div>

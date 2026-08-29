@@ -1,17 +1,72 @@
-function closestFlash(el) {
-	return el?.closest?.('[role="alert"]') || el?.closest?.('.alert');
-}
-
 function initFlashDismiss() {
-	document.addEventListener('click', (e) => {
-		const target = e.target;
-		if (!(target instanceof Element)) return;
+	document.querySelectorAll('[role="alert"]').forEach((alert) => {
+		const closeBtn = alert.querySelector('[data-flash-close]');
+		const countdownEl = alert.querySelector('[data-flash-countdown]');
+		const progressEl = alert.querySelector('[data-flash-progress]');
 
-		const btn = target.closest('[data-flash-close]');
-		if (!btn) return;
+		if (!countdownEl) {
+			closeBtn?.addEventListener('click', () => {
+				alert.classList.add('hidden');
+			});
+			return;
+		}
 
-		const alert = closestFlash(btn);
-		alert?.classList?.add('hidden');
+		const duration = parseInt(countdownEl.dataset.flashDuration || '5000', 10);
+		let startTime = Date.now();
+		let pausedAt = null;
+		let pausedTotal = 0;
+		let rafId = null;
+
+		const dismiss = () => {
+			if (rafId) cancelAnimationFrame(rafId);
+			alert.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+			alert.style.opacity = '0';
+			alert.style.transform = 'translateY(-8px)';
+			setTimeout(() => {
+				alert.classList.add('hidden');
+				alert.style.opacity = '';
+				alert.style.transform = '';
+				alert.style.transition = '';
+			}, 320);
+		};
+
+		const tick = () => {
+			if (pausedAt !== null) {
+				rafId = requestAnimationFrame(tick);
+				return;
+			}
+
+			const elapsed = Date.now() - startTime - pausedTotal;
+			const remaining = Math.max(0, duration - elapsed);
+
+			if (countdownEl) {
+				countdownEl.textContent = Math.ceil(remaining / 1000);
+			}
+			if (progressEl) {
+				progressEl.style.transform = `scaleX(${remaining / duration})`;
+			}
+
+			if (remaining <= 0) {
+				dismiss();
+				return;
+			}
+
+			rafId = requestAnimationFrame(tick);
+		};
+
+		alert.addEventListener('mouseenter', () => {
+			pausedAt = Date.now();
+		});
+		alert.addEventListener('mouseleave', () => {
+			if (pausedAt !== null) {
+				pausedTotal += Date.now() - pausedAt;
+				pausedAt = null;
+			}
+		});
+
+		closeBtn?.addEventListener('click', () => dismiss());
+
+		rafId = requestAnimationFrame(tick);
 	});
 }
 
@@ -92,7 +147,8 @@ function initConfirmModal() {
 		const trigger = target.closest('[data-confirm]');
 		if (!trigger) return;
 
-		const form = trigger.closest('form');
+		const formId = trigger.getAttribute('data-confirm-form');
+		const form = formId ? document.getElementById(formId) : trigger.closest('form');
 		if (!form) return;
 
 		e.preventDefault();

@@ -80,50 +80,85 @@
         </div>
     </div>
 
-    <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div class="card p-5">
-            <div class="section-heading mb-4">
-                <div>
-                    <h2 class="section-title">Aktivitas Terbaru</h2>
-                    <p class="section-description">Jejak aktivitas akun guru yang terakhir tercatat.</p>
+    <div>
+        <div class="mobile-section-label">Menu Cepat</div>
+        <div class="mobile-menu-grid">
+            <a href="{{ route('guru.materials') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-blue-500 to-blue-600">
+                    <i class="fa-solid fa-book"></i>
                 </div>
-            </div>
-            <ul class="divide-y divide-slate-200/80 dark:divide-slate-800">
-            @if(count($logs) > 0)
-                @foreach ($logs as $log)
-                    <li class="flex items-start gap-3 py-3 text-sm text-gray-700 dark:text-slate-300">
-                        <span class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
-                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-                        </span>
-                        <div>
-                            <div class="font-semibold text-slate-800 dark:text-white">{{ $log->route_name }}</div>
-                            <div class="mt-1 text-xs text-textSecondary dark:text-slate-400">{{ $log->created_at }} · {{ $log->ip_address }}</div>
-                        </div>
-                    </li>
-                @endforeach
-            @else
-                <li class="empty-state mt-2 text-gray-400">Belum ada aktivitas.</li>
+                <div class="mobile-menu-card-label">Materi</div>
+            </a>
+            <a href="{{ route('guru.soal-ujion.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-teal-500 to-cyan-600">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div class="mobile-menu-card-label">Soal Ujion</div>
+            </a>
+            <a href="{{ route('guru.personal-questions') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-purple-500 to-violet-600">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div class="mobile-menu-card-label">Bank Soal</div>
+            </a>
+            <a href="{{ route('guru.paket-soal.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-indigo-500 to-blue-600">
+                    <i class="fa-solid fa-cubes"></i>
+                </div>
+                <div class="mobile-menu-card-label">Paket Soal</div>
+            </a>
+            <a href="{{ route('guru.exams') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-amber-500 to-orange-600">
+                    <i class="fa-solid fa-file-pen"></i>
+                </div>
+                <div class="mobile-menu-card-label">Simulasi</div>
+            </a>
+            <a href="{{ route('guru.results.index') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-emerald-500 to-green-600">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div class="mobile-menu-card-label">Hasil Siswa</div>
+            </a>
+            <a href="{{ route('guru.chat') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-rose-500 to-pink-600">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+                <div class="mobile-menu-card-label">Live Chat</div>
+            </a>
+            <a href="{{ route('guru.guide') }}" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-slate-500 to-slate-600">
+                    <i class="fa-solid fa-circle-info"></i>
+                </div>
+                <div class="mobile-menu-card-label">Panduan</div>
+            </a>
+            @php $waGroupLink = \App\Models\AppSetting::getValue('wa_group_link'); @endphp
+            @if($waGroupLink)
+            <a href="{{ $waGroupLink }}" target="_blank" rel="noopener" class="mobile-menu-card">
+                <div class="mobile-menu-card-icon bg-gradient-to-br from-green-500 to-green-600">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </div>
+                <div class="mobile-menu-card-label">Saluran WA</div>
+            </a>
             @endif
-            </ul>
         </div>
+    </div>
 
-        <div class="card p-5">
-            <div class="section-heading mb-4">
-                <div>
-                    <h2 class="section-title">Pengumuman Penting</h2>
-                    <p class="section-description">Info yang perlu diperhatikan untuk operasional mengajar.</p>
-                </div>
+    <div class="card p-5">
+        <div class="section-heading mb-4">
+            <div>
+                <h2 class="section-title">Pengumuman Penting</h2>
+                <p class="section-description">Info yang perlu diperhatikan untuk operasional mengajar.</p>
             </div>
-            <ul class="space-y-3">
-            @if(count($pengumuman) > 0)
-                @foreach ($pengumuman as $info)
-                    <li class="rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3 text-sm text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-200">{{ $info }}</li>
-                @endforeach
-            @else
-                <li class="empty-state text-gray-400">Tidak ada pengumuman.</li>
-            @endif
-            </ul>
         </div>
+        <ul class="space-y-3">
+        @if(count($pengumuman) > 0)
+            @foreach ($pengumuman as $info)
+                <li class="rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3 text-sm text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-200">{{ $info }}</li>
+            @endforeach
+        @else
+            <li class="empty-state text-gray-400">Tidak ada pengumuman.</li>
+        @endif
+        </ul>
     </div>
 </div>
 @endsection

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuditLog;
 use App\Models\Exam;
 use App\Models\Material;
 use App\Models\UjianSesi;
@@ -43,7 +42,6 @@ class DashboardController extends Controller
             ->where('status', 'selesai')
             ->count();
 
-        $logs = AuditLog::where('user_id', $user->id)->latest()->limit(10)->get();
         $materialsCount = Material::query()
             ->when(
                 Schema::hasColumn('materials', 'jenjang') && $user->jenjang,
@@ -62,6 +60,6 @@ class DashboardController extends Controller
                 : null,
         ]));
 
-        return view('guru.dashboard', compact('totalPeserta', 'rataRataKelas', 'simulasiSelesai', 'logs', 'pengumuman'));
+        return view('guru.dashboard', compact('totalPeserta', 'rataRataKelas', 'simulasiSelesai', 'pengumuman'));
     }
 }

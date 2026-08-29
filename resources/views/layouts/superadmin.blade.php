@@ -97,66 +97,35 @@
         </div>
     </header>
 
-    <nav class="mobile-nav">
-        <div class="mobile-nav-track">
+    <nav class="bottom-nav">
+        <div class="bottom-nav-track">
             <a href="{{ route('superadmin.dashboard') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                <i class="fa-solid fa-gauge-high"></i>
-                Dashboard
-            </a>
-            <a href="{{ route('superadmin.landing-settings.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.landing-settings.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-globe"></i>
-                Landing
-            </a>
-            <a href="{{ route('superadmin.finance.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
-                <i class="fa-solid fa-credit-card"></i>
-                Keuangan
-            </a>
-            <a href="{{ route('superadmin.payment-confirmations.index') }}"
-                class="mobile-nav-link relative {{ request()->routeIs('superadmin.payment-confirmations.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-money-check-dollar"></i>
-                Konfirmasi
-                @if($pendingPaymentCount > 0)
-                    <span
-                        class="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-950">{{ $pendingPaymentCount }}</span>
-                @endif
-            </a>
-            <a href="{{ route('superadmin.chat.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.chat.index') ? 'active' : '' }}">
-                <i class="fa-solid fa-comments"></i>
-                Chat
+                class="bottom-nav-item {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
+                <i class="fa-solid fa-house"></i>
+                Beranda
             </a>
             <a href="{{ route('superadmin.teachers.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.teachers.index') ? 'active' : '' }}">
+                class="bottom-nav-item {{ request()->routeIs('superadmin.teachers.index') ? 'active' : '' }}">
                 <i class="fa-solid fa-chalkboard-user"></i>
                 Guru
             </a>
-            <a href="{{ route('superadmin.materials.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.materials.index') ? 'active' : '' }}">
-                <i class="fa-solid fa-book"></i>
-                Materi
-            </a>
             <a href="{{ route('superadmin.global-questions.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.global-questions.*') ? 'active' : '' }}">
+                class="bottom-nav-item {{ request()->routeIs('superadmin.global-questions.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-database"></i>
-                Bank Soal
-            </a>
-            <a href="{{ route('superadmin.paket-soal.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.paket-soal.*') || request()->routeIs('superadmin.soal.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-database"></i>
-                Paket Soal
+                Soal
             </a>
             <a href="{{ route('superadmin.exams.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
-                <i class="fa-solid fa-file-lines"></i>
+                class="bottom-nav-item {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
+                <i class="fa-solid fa-file-pen"></i>
                 Ujian
             </a>
-            <a href="{{ route('superadmin.audit-logs.index') }}"
-                class="mobile-nav-link {{ request()->routeIs('superadmin.audit-logs.index') ? 'active' : '' }}">
-                <i class="fa-solid fa-shield-halved"></i>
-                Audit
+            <a href="{{ route('superadmin.finance.index') }}"
+                class="bottom-nav-item relative {{ request()->routeIs('superadmin.finance.*') || request()->routeIs('superadmin.payment-confirmations.*') || request()->routeIs('superadmin.wa-*') || request()->routeIs('superadmin.audit-logs.*') || request()->routeIs('superadmin.landing-settings.*') || request()->routeIs('superadmin.guide') ? 'active' : '' }}">
+                <i class="fa-solid fa-gear"></i>
+                Sistem
+                @if($pendingPaymentCount > 0)
+                    <span class="bottom-nav-badge">{{ $pendingPaymentCount }}</span>
+                @endif
             </a>
         </div>
     </nav>

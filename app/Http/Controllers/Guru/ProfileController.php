@@ -22,6 +22,13 @@ class ProfileController extends Controller
         return view('guru.profile', compact('user'));
     }
 
+    public function edit(): View
+    {
+        $user = Auth::user();
+
+        return view('guru.profile-edit', compact('user'));
+    }
+
     public function update(Request $request)
     {
         $user = Auth::user();
@@ -71,7 +78,20 @@ class ProfileController extends Controller
 
         $user->update($data);
 
-        return back()->with('flash', ['type' => 'success', 'message' => 'Profil berhasil diperbarui.']);
+        return redirect()->route('guru.profile')->with('flash', ['type' => 'success', 'message' => 'Profil berhasil diperbarui.']);
+    }
+
+    public function deleteAvatar(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user, 401);
+
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+            $user->update(['avatar' => null]);
+        }
+
+        return redirect()->route('guru.profile.edit')->with('flash', ['type' => 'success', 'message' => 'Foto profil berhasil dihapus.']);
     }
 
     public function password(Request $request)

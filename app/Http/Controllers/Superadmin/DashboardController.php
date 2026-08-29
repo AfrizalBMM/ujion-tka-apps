@@ -115,6 +115,10 @@ class DashboardController extends Controller
             ->where('status', Transaction::STATUS_SUCCESS)
             ->sum('amount');
 
+        $pendingPaymentCount = Transaction::where('status', Transaction::STATUS_PENDING)
+            ->whereNotNull('payment_submitted_at')
+            ->count();
+
         $topTeacher = User::query()
             ->where('role', User::ROLE_GURU)
             ->withCount(['personalQuestions as contributed_questions_count' => function ($query) {
@@ -132,6 +136,7 @@ class DashboardController extends Controller
             'totalRevenue' => $totalRevenue,
             'topTeacherName' => $topTeacher?->name,
             'latestAuditLogs' => $latestAuditLogs,
+            'pendingPaymentCount' => $pendingPaymentCount,
         ];
     }
 }
