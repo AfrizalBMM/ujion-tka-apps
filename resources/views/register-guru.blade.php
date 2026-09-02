@@ -1,5 +1,13 @@
 @extends('layouts.guest')
 
+@section('title', 'Daftar Akun Guru/Operator - Ujion TKA')
+@section('robots', 'index,follow')
+
+@section('head')
+    <meta name="description" content="Daftar akun guru/operator Ujion TKA untuk memantau progres, mengelola paket soal dan ujian, serta menyiapkan siswa menghadapi Tes Kemampuan Akademik (TKA).">
+    <link rel="canonical" href="{{ route('register.guru.form') }}">
+@endsection
+
 @php
     $fullscreenGuest = true;
 @endphp

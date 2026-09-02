@@ -13,6 +13,8 @@ class LandingContent extends Model
         'body',
         'button_text',
         'button_url',
+        'seo_title',
+        'seo_description',
         'is_active',
         'sort_order',
     ];

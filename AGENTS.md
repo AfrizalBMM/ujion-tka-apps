@@ -108,7 +108,7 @@ Model utama per domain:
 - **Latihan materi**: `MaterialPracticeToken`, `MaterialTelaahQuestion`, `MaterialPracticePackage`, `MaterialPracticePackageQuestion`, `MaterialPracticeSession`, `MaterialTelaahAnswer`, `MaterialPracticePackageAttempt`, `MaterialPracticePackageAnswer`
 - **Chat**: `Chat`
 - **WhatsApp**: `WhatsAppLog`, `WaMessageTemplate`
-- **Landing**: `LandingContent`, `LandingFaq`, `LandingBranding`, `LandingHeroMockup`, `LandingClickLog`
+- **Landing**: `LandingContent`, `LandingFaq`, `LandingBranding`, `LandingHeroMockup`, `LandingClickLog`, `BlogPost`
 - **Lain**: `AuditLog`, `AppSetting`, `Participant` (legacy), `ParticipantAnswer` (legacy)
 
 ### Policies
@@ -189,6 +189,8 @@ Pola frontend: script halaman dipisah ke `resources/js/pages/`, helper ke `utils
 - **Ujian menjodohkan**: payload ke client memakai key opaque (`App\Support\MatchingKey`, seed = session_token) — ID pasangan mentah TIDAK boleh dikirim ke browser (kunci jawaban tersirat). Urutan opsi di-seed per sesi agar stabil saat refresh.
 - **Timer ujian**: mulai berjalan saat siswa pertama kali membuka halaman pengerjaan (`waktu_mulai`), bukan saat isi identitas — intended behavior. Sisa waktu selalu dihitung server-side dari `started_at`.
 - **Sesi simulasi guru**: ditandai `ujian_sesis.user_id` terisi (siswa asli = NULL). Semua statistik hasil siswa WAJIB filter `whereNull('user_id')`.
+- **SEO landing**: meta title/description landing dikelola superadmin via kolom `seo_title`/`seo_description` pada row `landing_contents` section `hero` (kosong = fallback ke nama aplikasi + judul/kicker hero). `robots.txt` di-serve dinamis oleh `RobotsController` (BUKAN file statis di `public/`) — daftar path privat yang di-disallow ada di konstanta `DISALLOWED_PATHS`. Semua layout privat (`guru`, `superadmin`, `ujian`, `guest`) mengirim `noindex,nofollow`; halaman guest yang boleh ter-index (misal register guru) opt-out via `@section('robots', 'index,follow')`.
+- **Konten publik SEO**: dua modul halaman publik yang indexable — `/kisi-kisi/{jenjang}/{mapel}` (direktori topik dari tabel `materials`, termasuk kolom `link` sebagai referensi; slug mapel = `Str::slug(mapel)`) dan `/artikel/{slug}` (blog; model `BlogPost` dengan `getRouteKeyName() = 'slug'`, hanya `is_published = true` yang tampil publik). CRUD blog di superadmin `/superadmin/blog` (menu "Blog / Artikel"); konten ditulis **Markdown**, di-render via `Str::markdown`, distyling kelas `.article-content` di `app.css`. Keduanya memakai `layouts/public.blade.php` (index,follow + canonical + OG + BreadcrumbList/Article JSON-LD) dan otomatis masuk `sitemap.xml` — jika menambah halaman publik baru, tambahkan juga ke `SitemapController`.
 
 ## Testing
 

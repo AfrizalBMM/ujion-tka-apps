@@ -1077,3 +1077,70 @@
 .modal-overlay {
     @apply !bg-gray-900/50 !backdrop-blur-sm;
 }
+
+/* ================= ARTICLE CONTENT (Blog markdown output) ================= */
+.article-content {
+    @apply text-base leading-8 text-slate-700 dark:text-slate-300;
+}
+
+.article-content h2 {
+    @apply mt-10 mb-3 text-2xl font-bold text-slate-900 dark:text-white;
+}
+
+.article-content h3 {
+    @apply mt-8 mb-2 text-xl font-bold text-slate-900 dark:text-white;
+}
+
+.article-content h4 {
+    @apply mt-6 mb-2 text-lg font-bold text-slate-900 dark:text-white;
+}
+
+.article-content p {
+    @apply my-4;
+}
+
+.article-content ul {
+    @apply my-4 list-disc space-y-2 pl-6;
+}
+
+.article-content ol {
+    @apply my-4 list-decimal space-y-2 pl-6;
+}
+
+.article-content a {
+    @apply font-semibold text-primary hover:underline;
+}
+
+.article-content blockquote {
+    @apply my-4 border-l-4 border-primary/40 pl-4 italic text-slate-600 dark:text-slate-400;
+}
+
+.article-content code {
+    @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-sm dark:bg-slate-800;
+}
+
+.article-content pre {
+    @apply my-4 overflow-x-auto rounded-2xl bg-slate-100 p-4 dark:bg-slate-800;
+}
+
+.article-content pre code {
+    @apply bg-transparent p-0 dark:bg-transparent;
+}
+
+.article-content img {
+    @apply my-6 rounded-2xl;
+}
+
+.article-content hr {
+    @apply my-8 border-slate-200 dark:border-slate-700;
+}
+
+.article-content table {
+    @apply my-4 w-full text-sm;
+}
+
+.article-content th,
+.article-content td {
+    @apply border border-slate-200 px-3 py-2 text-left dark:border-slate-700;
+}
+

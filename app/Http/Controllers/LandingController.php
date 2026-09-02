@@ -8,7 +8,6 @@ use App\Models\LandingContent;
 use App\Models\LandingFaq;
 use App\Models\LandingHeroMockup;
 use App\Models\Material;
-use App\Models\PricingPlan;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +21,6 @@ class LandingController extends Controller
         $sectionActives = [
             'hero' => true,
             'faq' => true,
-            'pricing' => true,
             'stats' => true,
         ];
 
@@ -37,27 +35,6 @@ class LandingController extends Controller
                     $sectionActives[$sectionKey] = (bool) $sectionRows[$sectionKey]->is_active;
                 }
             }
-        }
-
-        $tarifJenjangs = config('landing.pricing', []);
-
-        if (Schema::hasTable('pricing_plans')) {
-            $tarifQuery = PricingPlan::query()->where('is_active', true);
-
-            if (Schema::hasColumn('pricing_plans', 'jenjang')) {
-                $tarifQuery->orderByRaw("case when jenjang = 'SD' then 1 when jenjang = 'SMP' then 2 when jenjang = 'SMA' then 3 else 4 end");
-            }
-
-            $tarifJenjangs = $tarifQuery->get()
-                ->map(fn ($plan) => [
-                    'id' => $plan->id,
-                    'jenjang' => $plan->jenjang ?? null,
-                    'name' => $plan->name,
-                    'subtitle' => $plan->subtitle,
-                    'description' => $plan->description,
-                    'price' => $plan->price,
-                ])
-                ->all();
         }
 
         // Fetch counts for materials and questions (cached 10 minutes — aggregate queries)
@@ -108,6 +85,8 @@ class LandingController extends Controller
             'body' => 'Ujion TKA dirancang untuk guru/operator yang ingin melihat perkembangan akademik siswa dengan lebih jelas. Mulai dari latihan, paket soal, sesi ujian, sampai hasil akhir, semua disusun agar guru lebih mudah membaca kesiapan siswa, menemukan kelemahan belajar, dan mengambil langkah pembinaan sebelum TKA berlangsung.',
             'button_text' => 'Coba Sebagai Guru',
             'button_url' => null,
+            'seo_title' => null,
+            'seo_description' => null,
         ];
 
         if (Schema::hasTable('landing_contents')) {
@@ -121,6 +100,8 @@ class LandingController extends Controller
                 $hero['body'] = $heroContent->body ?: $hero['body'];
                 $hero['button_text'] = $heroContent->button_text ?: $hero['button_text'];
                 $hero['button_url'] = $heroContent->button_url ?: null;
+                $hero['seo_title'] = $heroContent->seo_title ?: null;
+                $hero['seo_description'] = $heroContent->seo_description ?: null;
             }
         }
 
@@ -189,7 +170,6 @@ class LandingController extends Controller
         $heroCtaUrl = $hero['button_url'] ? url($hero['button_url']) : route('register.guru.form');
 
         return view('landing', [
-            'tarifJenjangs' => $tarifJenjangs,
             'stats' => $stats,
             'logoUrl' => $logoUrl,
             'hero' => $hero,

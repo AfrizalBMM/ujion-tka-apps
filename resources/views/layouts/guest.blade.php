@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="@yield('robots', 'noindex,nofollow')">
     <title>@yield('title', 'Ujion - Registrasi Guru/Operator')</title>
     @yield('head')
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -17,6 +18,7 @@
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <style>
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%); }
+        .dark body { background: linear-gradient(135deg, #020617 0%, #1e1b4b 100%); }
     </style>
 </head>
 @php
@@ -34,6 +36,10 @@
     }
 @endphp
 <body class="{{ $guestFullscreen ? 'min-h-screen' : 'min-h-screen flex flex-col items-center justify-center p-4' }}">
+    <button type="button" data-theme-toggle aria-label="Ganti tema" title="Ganti tema"
+        class="fixed right-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 shadow-sm backdrop-blur transition hover:text-primary dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:text-white">
+        <i class="fa-solid fa-moon"></i>
+    </button>
     <div class="guest-shell {{ $guestFullscreen ? '!max-w-none !w-full !px-0 !py-0 !min-h-screen flex flex-col' : 'mx-auto' }} {{ isset($hideShowcase) && $hideShowcase ? ($guestWide ? 'w-full max-w-6xl' : 'max-w-lg') : '' }}">
         <div class="guest-panel {{ $guestFullscreen ? '!rounded-none !border-0 !bg-transparent !shadow-none flex-1 min-h-0 md:!grid-cols-[40%_60%]' : '' }} {{ isset($hideShowcase) && $hideShowcase ? '!grid-cols-1' : '' }}">
             @if(!isset($hideShowcase) || !$hideShowcase)

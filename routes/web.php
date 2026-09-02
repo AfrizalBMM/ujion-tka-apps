@@ -1,16 +1,20 @@
 <?php
 
+use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController as GeneralAuthController;
 use App\Http\Controllers\ChatImageController;
+use App\Http\Controllers\KisiKisiController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\OgImageController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\Siswa\AuthController as SiswaAuthController;
 use App\Http\Controllers\Siswa\ExamController;
 use App\Http\Controllers\Siswa\MaterialPracticeAuthController;
 use App\Http\Controllers\Siswa\MaterialPracticeController as SiswaMaterialPracticeController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Superadmin\AuditLogController;
+use App\Http\Controllers\Superadmin\BlogPostController;
 use App\Http\Controllers\Superadmin\ChatController;
 use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\ExamAnalysisController;
@@ -37,7 +41,15 @@ Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::get('/payments/{referenceCode}', [PaymentController::class, 'show'])->name('payments.show');
 
 Route::get('/og-image.png', OgImageController::class)->name('og.image');
+Route::get('/robots.txt', RobotsController::class)->name('robots');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+
+Route::get('/kisi-kisi', [KisiKisiController::class, 'index'])->name('kisi-kisi.index');
+Route::get('/kisi-kisi/{jenjang}', [KisiKisiController::class, 'jenjang'])->name('kisi-kisi.jenjang');
+Route::get('/kisi-kisi/{jenjang}/{mapel}', [KisiKisiController::class, 'mapel'])->name('kisi-kisi.mapel');
+
+Route::get('/artikel', [ArticleController::class, 'index'])->name('artikel.index');
+Route::get('/artikel/{post}', [ArticleController::class, 'show'])->name('artikel.show');
 // Auth routes for Guru
 Route::get('/login', [GeneralAuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [GeneralAuthController::class, 'login'])->middleware('throttle:5,1');
@@ -126,6 +138,14 @@ Route::prefix('superadmin')
         Route::post('/landing-settings/faq/{landingFaq}', [LandingSettingsController::class, 'updateFaq'])->name('landing-settings.faq.update');
         Route::post('/landing-settings/faq/{landingFaq}/toggle', [LandingSettingsController::class, 'toggleFaq'])->name('landing-settings.faq.toggle');
         Route::post('/landing-settings/faq/{landingFaq}/delete', [LandingSettingsController::class, 'destroyFaq'])->name('landing-settings.faq.destroy');
+
+        Route::get('/blog', [BlogPostController::class, 'index'])->name('blog.index');
+        Route::get('/blog/tambah', [BlogPostController::class, 'create'])->name('blog.create');
+        Route::post('/blog', [BlogPostController::class, 'store'])->name('blog.store');
+        Route::get('/blog/{blogPost}/edit', [BlogPostController::class, 'edit'])->name('blog.edit');
+        Route::post('/blog/{blogPost}', [BlogPostController::class, 'update'])->name('blog.update');
+        Route::post('/blog/{blogPost}/toggle', [BlogPostController::class, 'toggle'])->name('blog.toggle');
+        Route::post('/blog/{blogPost}/delete', [BlogPostController::class, 'destroy'])->name('blog.destroy');
         Route::get('/profile', [SuperadminProfileController::class, 'show'])->name('profile');
         Route::post('/profile', [SuperadminProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/password', [SuperadminProfileController::class, 'password'])->name('profile.password');

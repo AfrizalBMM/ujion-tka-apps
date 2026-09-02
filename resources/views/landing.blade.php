@@ -6,12 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     @php
-        $seoTitle = config('app.name', 'Ujion TKA');
-        if (!empty($hero['title'] ?? null)) {
-            $seoTitle = $seoTitle . ' — ' . $hero['title'];
+        $seoTitle = $hero['seo_title'] ?? null;
+        if (empty($seoTitle)) {
+            $seoTitle = config('app.name', 'Ujion TKA');
+            if (!empty($hero['title'] ?? null)) {
+                $seoTitle = $seoTitle . ' — ' . $hero['title'];
+            }
         }
 
-        $seoDescription = $hero['kicker']
+        $seoDescription = $hero['seo_description']
+            ?? $hero['kicker']
             ?? 'Platform pendamping guru/operator untuk memantau progres, menganalisis hasil, dan menyiapkan siswa menghadapi TKA.';
 
         $canonicalUrl = route('landing');
@@ -92,6 +96,8 @@
         $navItems = [
             ['label' => 'Solusi', 'href' => '#solusi'],
             ['label' => 'Flow', 'href' => '#flow'],
+            ['label' => 'Kisi-Kisi', 'href' => route('kisi-kisi.index')],
+            ['label' => 'Artikel', 'href' => route('artikel.index')],
         ];
 
         if (($sectionActives['faq'] ?? true) === true) {
@@ -130,13 +136,13 @@
                     <i class="fa-solid fa-moon"></i>
                 </button>
                 @if (Route::has('login'))
-                    <a href="{{ route('login') }}" class="btn-secondary hidden sm:inline-flex"
+                    <a href="{{ route('login') }}" class="btn-secondary"
                         data-track="landing_login_header">
                         Masuk
                     </a>
                 @endif
                 @if (Route::has('register.guru.form'))
-                    <a href="{{ route('register.guru.form') }}" class="btn-primary" data-track="landing_register_header">
+                    <a href="{{ route('register.guru.form') }}" class="btn-primary hidden sm:inline-flex" data-track="landing_register_header">
                         Daftar Gratis
                         <i class="fa-solid fa-arrow-right"></i>
                     </a>
@@ -296,8 +302,8 @@
                         class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition-transform group-hover:scale-110">
                         <i class="fa-solid fa-desktop"></i>
                     </div>
-                    <div class="mt-5 text-xl font-bold text-slate-900">Guru bisa memantau</div>
-                    <div class="mt-3 text-sm leading-7 text-slate-600">Setiap sesi latihan dan ujian membantu guru
+                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Guru bisa memantau</div>
+                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">Setiap sesi latihan dan ujian membantu guru
                         membaca
                         sejauh mana kesiapan siswa menuju TKA.</div>
                 </div>
@@ -308,8 +314,8 @@
                         class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-200 transition-transform group-hover:scale-110">
                         <i class="fa-solid fa-chart-pie"></i>
                     </div>
-                    <div class="mt-5 text-xl font-bold text-slate-900">Guru bisa menganalisis</div>
-                    <div class="mt-3 text-sm leading-7 text-slate-600">Hasil yang tersusun rapi membantu guru melihat
+                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Guru bisa menganalisis</div>
+                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">Hasil yang tersusun rapi membantu guru melihat
                         area
                         lemah siswa dan menentukan tindak lanjut belajar.</div>
                 </div>
@@ -320,8 +326,8 @@
                         class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-200 transition-transform group-hover:scale-110">
                         <i class="fa-solid fa-user-graduate"></i>
                     </div>
-                    <div class="mt-5 text-xl font-bold text-slate-900">Siswa bisa dipersiapkan</div>
-                    <div class="mt-3 text-sm leading-7 text-slate-600">Sekolah tidak hanya menjalankan ujian, tetapi
+                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Siswa bisa dipersiapkan</div>
+                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">Sekolah tidak hanya menjalankan ujian, tetapi
                         juga
                         membangun kesiapan siswa secara bertahap sebelum TKA.</div>
                 </div>
@@ -332,7 +338,7 @@
             <section class="mx-auto max-w-7xl px-4 py-12 sm:py-20">
                 <div class="mb-10 text-center">
                     <div class="landing-section-kicker mb-3">Data Terkini</div>
-                    <h2 class="text-3xl font-bold text-slate-900">Bank Soal & Materi</h2>
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Bank Soal & Materi</h2>
 
                     <div class="mx-auto mt-8 max-w-4xl animate-fade-in-up">
                         <div
@@ -349,13 +355,13 @@
                                     <p class="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-primary">Standar
                                         Kurikulum
                                         Nasional</p>
-                                    <p class="text-base leading-relaxed text-slate-600">
+                                    <p class="text-base leading-relaxed text-slate-600 dark:text-slate-300">
                                         Seluruh soal dan materi telah disesuaikan dengan kerangka asesmen berdasarkan:
-                                        <span class="block mt-2 font-bold text-slate-900">
+                                        <span class="block mt-2 font-bold text-slate-900 dark:text-white">
                                             Peraturan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan Kementerian
                                             Pendidikan Dasar dan Menengah Republik Indonesia Nomor 047/H/AN/2025
                                         </span>
-                                        <span class="mt-1 block text-sm italic text-slate-500">
+                                        <span class="mt-1 block text-sm italic text-slate-500 dark:text-slate-400">
                                             Tentang Kerangka Asesmen Tes Kemampuan Akademik Jenjang SD/MI/Sederajat,
                                             SMP/MTs/Sederajat dan SMA/MA/SMK/Sederajat
                                         </span>
@@ -372,30 +378,30 @@
                             <h3 class="mb-8 flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
                                 <span
                                     class="inline-flex items-center rounded-full bg-slate-900 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white shadow-lg">{{ $jenjang }}</span>
-                                <span class="text-xl font-bold text-slate-800">Materi & Soal {{ $jenjang }}</span>
+                                <span class="text-xl font-bold text-slate-800 dark:text-slate-100">Materi & Soal {{ $jenjang }}</span>
                             </h3>
                             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 @foreach ($mapels as $mapel => $data)
                                     <div class="landing-trust-card group overflow-hidden transition-all hover:border-primary/30">
                                         <div class="mb-5 flex items-center justify-between">
-                                            <h4 class="font-bold leading-tight text-slate-800">{{ $mapel }}</h4>
+                                            <h4 class="font-bold leading-tight text-slate-800 dark:text-slate-100">{{ $mapel }}</h4>
                                             <div
-                                                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-50 transition-colors group-hover:bg-primary/10">
+                                                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-50 transition-colors group-hover:bg-primary/10 dark:bg-slate-800">
                                                 <i class="fa-solid fa-book-bookmark text-slate-400 group-hover:text-primary"></i>
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-2 gap-3">
                                             <div
-                                                class="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-center transition-colors group-hover:bg-white">
-                                                <div class="text-[11px] font-bold uppercase tracking-widest text-slate-500">Materi
+                                                class="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-center transition-colors group-hover:bg-white dark:border-slate-700/70 dark:bg-slate-800/50 dark:group-hover:bg-slate-800">
+                                                <div class="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Materi
                                                 </div>
                                                 <div class="mt-1 text-2xl font-bold text-primary">
                                                     {{ $data['materials'] ?? 0 }}
                                                 </div>
                                             </div>
                                             <div
-                                                class="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-center transition-colors group-hover:bg-white">
-                                                <div class="text-[11px] font-bold uppercase tracking-widest text-slate-500">Soal
+                                                class="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-center transition-colors group-hover:bg-white dark:border-slate-700/70 dark:bg-slate-800/50 dark:group-hover:bg-slate-800">
+                                                <div class="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Soal
                                                 </div>
                                                 <div class="mt-1 text-2xl font-bold text-primary">
                                                     {{ $data['questions'] ?? 0 }}
@@ -485,52 +491,6 @@
                 </div>
             </div>
         </section>
-
-        @if (($sectionActives['pricing'] ?? true) === true && !empty($tarifJenjangs))
-            <section class="mx-auto max-w-7xl px-4 py-12">
-                <div class="section-heading">
-                    <div>
-                        <div class="landing-section-kicker">Biaya Aktivasi</div>
-                        <h2 class="landing-section-title">Pilih jenjang, lalu lanjutkan ke flow daftar guru dan pembayaran
-                            QRIS sesuai nominalnya.</h2>
-                        <p class="landing-section-copy">Nominal aktivasi sekarang mengikuti jenjang SD, SMP, atau SMA agar
-                            alurnya tetap satu dan mudah dipahami admin maupun guru.</p>
-                    </div>
-                </div>
-
-                <div class="mt-8 grid gap-5 lg:grid-cols-3">
-                    @foreach ($tarifJenjangs as $tarifJenjang)
-                        <article class="landing-solution-card">
-                            <div class="flex items-start justify-between gap-3">
-                                <h3 class="landing-solution-title">{{ $tarifJenjang['name'] }}</h3>
-                                <span class="badge-info">{{ $tarifJenjang['jenjang'] ?: 'Jenjang' }}</span>
-                            </div>
-                            @if (!empty($tarifJenjang['description']))
-                                <p class="landing-solution-copy">{{ $tarifJenjang['description'] }}</p>
-                            @elseif (!empty($tarifJenjang['subtitle']))
-                                <p class="landing-solution-copy">{{ $tarifJenjang['subtitle'] }}</p>
-                            @endif
-
-                            <div class="mt-5">
-                                <div class="text-3xl font-bold text-slate-900">
-                                    Rp{{ number_format((int) $tarifJenjang['price'], 0, ',', '.') }}</div>
-                                <div class="mt-1 text-sm text-textSecondary dark:text-slate-400">Aktivasi
-                                    {{ $tarifJenjang['jenjang'] ?: 'guru' }}
-                                </div>
-                            </div>
-
-                            <div class="mt-6">
-                                <a href="{{ route('register.guru.form', ['jenjang' => $tarifJenjang['jenjang']]) }}"
-                                    class="btn-primary w-full justify-center" data-track="landing_register_pricing">
-                                    Daftar {{ $tarifJenjang['jenjang'] ?: 'Sekarang' }}
-                                    <i class="fa-solid fa-arrow-right"></i>
-                                </a>
-                            </div>
-                        </article>
-                    @endforeach
-                </div>
-            </section>
-        @endif
 
         <section id="flow" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
 

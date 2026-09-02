@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
 
 class LandingSettingsController extends Controller
 {
-    private const SECTIONS = ['hero', 'faq', 'pricing', 'stats'];
+    private const SECTIONS = ['hero', 'faq', 'stats'];
 
     public function index(Request $request): View
     {
@@ -47,7 +47,6 @@ class LandingSettingsController extends Controller
         $sectionActives = [
             'hero' => true,
             'faq' => true,
-            'pricing' => true,
             'stats' => true,
         ];
 
@@ -70,6 +69,8 @@ class LandingSettingsController extends Controller
             'body' => 'Ujion TKA dirancang untuk guru/operator yang ingin melihat perkembangan akademik siswa dengan lebih jelas. Mulai dari latihan, paket soal, sesi ujian, sampai hasil akhir, semua disusun agar guru lebih mudah membaca kesiapan siswa, menemukan kelemahan belajar, dan mengambil langkah pembinaan sebelum TKA berlangsung.',
             'button_text' => 'Coba Sebagai Guru',
             'button_url' => null,
+            'seo_title' => null,
+            'seo_description' => null,
         ];
 
         if (Schema::hasTable('landing_contents')) {
@@ -83,6 +84,8 @@ class LandingSettingsController extends Controller
                 $hero['body'] = $heroContent->body ?: $hero['body'];
                 $hero['button_text'] = $heroContent->button_text ?: $hero['button_text'];
                 $hero['button_url'] = $heroContent->button_url ?: null;
+                $hero['seo_title'] = $heroContent->seo_title ?: null;
+                $hero['seo_description'] = $heroContent->seo_description ?: null;
             }
         }
 
@@ -235,7 +238,6 @@ class LandingSettingsController extends Controller
         $tab = match ($section) {
             'hero' => 'content',
             'faq' => 'faq',
-            'pricing' => 'pricing',
             'stats' => 'stats',
             default => 'content',
         };
@@ -263,6 +265,8 @@ class LandingSettingsController extends Controller
             'body' => ['nullable', 'string', 'max:5000'],
             'button_text' => ['nullable', 'string', 'max:80'],
             'button_url' => ['nullable', 'string', 'max:255'],
+            'seo_title' => ['nullable', 'string', 'max:120'],
+            'seo_description' => ['nullable', 'string', 'max:300'],
         ]);
 
         LandingContent::query()->updateOrCreate(
@@ -273,6 +277,8 @@ class LandingSettingsController extends Controller
                 'body' => $validated['body'] ?? null,
                 'button_text' => $validated['button_text'] ?? null,
                 'button_url' => $validated['button_url'] ?? null,
+                'seo_title' => $validated['seo_title'] ?? null,
+                'seo_description' => $validated['seo_description'] ?? null,
                 'is_active' => true,
                 'sort_order' => 0,
             ]

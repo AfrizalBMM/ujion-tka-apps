@@ -2,10 +2,6 @@
 
 @section('title', 'Pembayaran QRIS')
 
-@section('head')
-    <meta name="robots" content="noindex,nofollow">
-@endsection
-
 @section('content')
 <div class="mx-auto max-w-3xl space-y-6">
     <div class="card text-center">

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
     <title>@yield('title', 'Superadmin') - Ujion</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -149,6 +150,11 @@
                     class="sidebar-link {{ request()->routeIs('superadmin.landing-settings.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-globe w-5"></i>
                     <span class="sidebar-link-label">Pengaturan Landing</span>
+                </a>
+                <a href="{{ route('superadmin.blog.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.blog.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-newspaper w-5"></i>
+                    <span class="sidebar-link-label">Blog / Artikel</span>
                 </a>
                 <a href="{{ route('superadmin.finance.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">

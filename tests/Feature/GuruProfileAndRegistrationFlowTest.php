@@ -27,6 +27,17 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         );
     }
 
+    public function test_guest_pages_have_theme_toggle(): void
+    {
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('data-theme-toggle', false);
+
+        $this->get(route('register.guru.form'))
+            ->assertOk()
+            ->assertSee('data-theme-toggle', false);
+    }
+
     public function test_login_links_to_guru_token_request_form(): void
     {
         $this->assertTrue(Route::has('guru.token-request.form'));

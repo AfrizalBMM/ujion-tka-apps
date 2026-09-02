@@ -247,6 +247,22 @@
                     </div>
                 </div>
 
+                <div class="rounded-2xl border border-slate-200/70 p-4 dark:border-slate-700/60">
+                    <div class="text-xs font-bold uppercase tracking-wide text-textSecondary dark:text-slate-300">SEO &amp; Meta (Google)</div>
+                    <div class="mt-3 space-y-4">
+                        <div>
+                            <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Meta Title (opsional)</label>
+                            <input class="input mt-1 w-full" name="seo_title" value="{{ old('seo_title', $hero['seo_title'] ?? '') }}" placeholder="Contoh: Platform Ujian TKA Online untuk Guru &amp; Sekolah" maxlength="120">
+                            <div class="mt-1 text-xs text-muted">Ideal 50-60 karakter. Kosongkan untuk memakai nama aplikasi + judul hero.</div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Meta Description (opsional)</label>
+                            <textarea class="input mt-1 min-h-20 w-full" name="seo_description" placeholder="Deskripsi yang tampil di hasil pencarian Google" maxlength="300">{{ old('seo_description', $hero['seo_description'] ?? '') }}</textarea>
+                            <div class="mt-1 text-xs text-muted">Ideal 150-160 karakter. Kosongkan untuk memakai kicker hero.</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex items-center justify-end gap-3">
                     <button class="btn-primary" type="submit">
                         <i class="fa-solid fa-floppy-disk"></i>
@@ -454,24 +470,9 @@
 
     @if ($tab === 'pricing')
         <div class="card">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <h2 class="text-lg font-bold">Pricing / Tarif Jenjang</h2>
-                    <p class="mt-1 text-sm text-textSecondary dark:text-slate-300">Tab ini memakai tabel pricing_plans yang sama dengan menu Keuangan.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    @if (($sectionActives['pricing'] ?? true) === true)
-                        <span class="badge-success">Aktif</span>
-                    @else
-                        <span class="badge-danger">Nonaktif</span>
-                    @endif
-                    <form method="POST" action="{{ route('superadmin.landing-settings.sections.toggle', ['section' => 'pricing']) }}">
-                        @csrf
-                        <button type="submit" class="btn-secondary px-3" title="Aktifkan / Nonaktifkan section pricing">
-                            <i class="fa-solid fa-power-off"></i>
-                        </button>
-                    </form>
-                </div>
+            <div>
+                <h2 class="text-lg font-bold">Pricing / Tarif Jenjang</h2>
+                <p class="mt-1 text-sm text-textSecondary dark:text-slate-300">Tab ini memakai tabel pricing_plans yang sama dengan menu Keuangan. Tarif hanya dipakai untuk flow aktivasi guru dan tidak lagi ditampilkan di landing publik.</p>
             </div>
 
             <form method="POST" action="{{ route('superadmin.tarif-jenjang.store') }}" enctype="multipart/form-data" class="mt-5 grid gap-4 md:grid-cols-2">
