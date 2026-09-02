@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController as GeneralAuthController;
 use App\Http\Controllers\ChatImageController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\KisiKisiController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\OgImageController;
@@ -32,6 +33,7 @@ use App\Http\Controllers\Superadmin\ProfileController as SuperadminProfileContro
 use App\Http\Controllers\Superadmin\SoalController as SuperadminSoalController;
 use App\Http\Controllers\Superadmin\TeacherController;
 use App\Http\Controllers\Superadmin\TeksBacaanController as SuperadminTeksBacaanController;
+use App\Http\Controllers\Superadmin\TestimonialController;
 use App\Http\Controllers\Superadmin\WhatsAppAutoMessageController;
 use App\Http\Controllers\Superadmin\WhatsAppGatewayController;
 use Illuminate\Http\RedirectResponse;
@@ -56,6 +58,12 @@ Route::post('/login', [GeneralAuthController::class, 'login'])->middleware('thro
 Route::get('/lupa-token', [GeneralAuthController::class, 'showForgotTokenForm'])->name('guru.token-request.form');
 Route::post('/lupa-token', [GeneralAuthController::class, 'requestForgotToken'])->middleware('throttle:10,1')->name('guru.token-request.send');
 Route::post('/logout', [GeneralAuthController::class, 'logout'])->name('logout');
+
+// Auth via Google (Guru)
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:10,1')->name('auth.google.callback');
+Route::get('/auth/google/lengkapi-data', [GoogleAuthController::class, 'showComplete'])->name('auth.google.complete');
+Route::post('/auth/google/lengkapi-data', [GoogleAuthController::class, 'complete'])->middleware('throttle:10,1')->name('auth.google.complete.store');
 
 // Auth routes for Superadmin (Ngadimin)
 Route::get('/ngadimin/login', [GeneralAuthController::class, 'showAdminLoginForm'])->name('admin.login');
@@ -146,6 +154,14 @@ Route::prefix('superadmin')
         Route::post('/blog/{blogPost}', [BlogPostController::class, 'update'])->name('blog.update');
         Route::post('/blog/{blogPost}/toggle', [BlogPostController::class, 'toggle'])->name('blog.toggle');
         Route::post('/blog/{blogPost}/delete', [BlogPostController::class, 'destroy'])->name('blog.destroy');
+
+        Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
+        Route::get('/testimonials/tambah', [TestimonialController::class, 'create'])->name('testimonials.create');
+        Route::post('/testimonials', [TestimonialController::class, 'store'])->name('testimonials.store');
+        Route::get('/testimonials/{testimonial}/edit', [TestimonialController::class, 'edit'])->name('testimonials.edit');
+        Route::post('/testimonials/{testimonial}', [TestimonialController::class, 'update'])->name('testimonials.update');
+        Route::post('/testimonials/{testimonial}/toggle', [TestimonialController::class, 'toggle'])->name('testimonials.toggle');
+        Route::post('/testimonials/{testimonial}/delete', [TestimonialController::class, 'destroy'])->name('testimonials.destroy');
         Route::get('/profile', [SuperadminProfileController::class, 'show'])->name('profile');
         Route::post('/profile', [SuperadminProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/password', [SuperadminProfileController::class, 'password'])->name('profile.password');

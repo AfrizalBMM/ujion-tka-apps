@@ -605,6 +605,56 @@
             </div>
         </section>
 
+        @if (($testimonials ?? collect())->isNotEmpty())
+            <section class="mx-auto max-w-7xl px-4 py-12">
+                <div class="section-heading">
+                    <div>
+                        <div class="landing-section-kicker">Testimoni</div>
+                        <h2 class="landing-section-title">Mereka sudah mencoba</h2>
+                        <p class="landing-section-copy">Cerita dan pengalaman dari guru serta operator yang memakai Ujion TKA dalam keseharian mereka.</p>
+                    </div>
+                </div>
+
+                <div class="mt-8" data-testimonial-slider>
+                    <div class="overflow-hidden">
+                        <div class="flex transition-transform duration-500 ease-out" data-testimonial-track>
+                            @foreach ($testimonials as $testimonial)
+                                <div class="w-full shrink-0 px-1" data-testimonial-slide>
+                                    <div class="landing-faq-card mx-auto flex h-full max-w-3xl flex-col items-center gap-5 p-8 text-center md:p-10">
+                                        <div class="flex gap-1 text-lg text-amber-400">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <i class="fa-solid fa-star {{ $i <= $testimonial->rating ? '' : 'opacity-25' }}"></i>
+                                            @endfor
+                                        </div>
+                                        <p class="text-base leading-8 text-textSecondary dark:text-slate-300">
+                                            &ldquo;{{ $testimonial->content }}&rdquo;
+                                        </p>
+                                        <div class="flex items-center gap-3">
+                                            @if ($testimonial->photo_path)
+                                                <img src="{{ $testimonial->photo_url }}" alt="{{ $testimonial->name }}"
+                                                    class="h-14 w-14 rounded-full border-2 border-primary/20 object-cover">
+                                            @else
+                                                <div class="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-lg text-white">
+                                                    <i class="fa-solid fa-user"></i>
+                                                </div>
+                                            @endif
+                                            <div class="text-left">
+                                                <div class="font-bold text-slate-900 dark:text-white">{{ $testimonial->name }}</div>
+                                                @if (!blank($testimonial->role))
+                                                    <div class="text-sm text-textSecondary dark:text-slate-400">{{ $testimonial->role }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-center gap-2" data-testimonial-dots></div>
+                </div>
+            </section>
+        @endif
+
         @if (($sectionActives['faq'] ?? true) === true)
             <section id="faq" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
                 <div class="section-heading">

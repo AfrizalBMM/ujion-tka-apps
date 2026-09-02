@@ -8,6 +8,7 @@ use App\Models\LandingContent;
 use App\Models\LandingFaq;
 use App\Models\LandingHeroMockup;
 use App\Models\Material;
+use App\Models\Testimonial;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -169,6 +170,16 @@ class LandingController extends Controller
 
         $heroCtaUrl = $hero['button_url'] ? url($hero['button_url']) : route('register.guru.form');
 
+        $testimonials = collect();
+
+        if (Schema::hasTable('testimonials')) {
+            $testimonials = Testimonial::query()
+                ->active()
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get();
+        }
+
         return view('landing', [
             'stats' => $stats,
             'logoUrl' => $logoUrl,
@@ -177,6 +188,7 @@ class LandingController extends Controller
             'heroMockups' => $heroMockups,
             'faqs' => $faqs,
             'sectionActives' => $sectionActives,
+            'testimonials' => $testimonials,
         ]);
     }
 }

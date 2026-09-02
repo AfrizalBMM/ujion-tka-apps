@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChatImageController as SharedChatImageController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\Guru\ChatController;
 use App\Http\Controllers\Guru\DashboardController;
 use App\Http\Controllers\Guru\ExamController;
@@ -41,6 +42,8 @@ Route::middleware(['auth', 'role:guru', 'guru.active', 'audit'])->prefix('guru')
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/avatar/delete', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
     Route::post('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
+    Route::get('/profile/google/connect', [GoogleAuthController::class, 'connectRedirect'])->name('profile.google.connect');
+    Route::post('/profile/google/disconnect', [GoogleAuthController::class, 'disconnect'])->name('profile.google.disconnect');
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials');
     Route::get('/materials/{material}', [MaterialController::class, 'show'])->name('materials.show');
     Route::post('/materials/{material}/bookmark', [MaterialController::class, 'bookmark'])->name('materials.bookmark');

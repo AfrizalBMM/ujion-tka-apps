@@ -56,6 +56,8 @@ class User extends Authenticatable
         'satuan_pendidikan',
         'no_wa',
         'avatar',
+        'google_id',
+        'google_avatar',
     ];
 
     /**
@@ -108,6 +110,10 @@ class User extends Authenticatable
 
     public function getAvatarUrlAttribute(): string
     {
+        if ($this->google_avatar) {
+            return $this->google_avatar;
+        }
+
         if ($this->avatar) {
             return Storage::url($this->avatar);
         }

@@ -57,11 +57,13 @@ composer dev                                # server + queue + pail + vite
 Tiga role dengan constant di `App\Models\User`:
 
 - `User::ROLE_SUPERADMIN` — login via `/ngadumin/login` (email + password)
-- `User::ROLE_GURU` — login via `/login` (nomor WhatsApp + access token)
+- `User::ROLE_GURU` — login via `/login` (nomor WhatsApp + access token) atau **Google OAuth** (`/auth/google`)
 - `User::ROLE_SISWA` — login via `/siswa/login` (token ujian)
 
 Status akun: `pending`, `active`, `suspend`.
 Payment status: `awaiting_payment`, `submitted`, `approved`, `rejected`.
+
+**Login Google (guru)** — `GoogleAuthController` (`/auth/google`, `/auth/google/callback`, `/auth/google/lengkapi-data`). Pakai `laravel/socialite`. Env: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (wajib sama dengan Authorized redirect URI di Google Cloud Console). Pencocokan akun by `email` atau `google_id` (kolom baru di `users`), role guru saja. Alur: akun aktif → langsung dashboard; pending → resume halaman pembayaran; belum ada → simpan data Google ke session `google_registration` → halaman "Lengkapi Data" (jenjang, satuan pendidikan, no WA) → buat akun pending → bayar. Avatar Google disimpan di kolom `google_avatar` dan diprioritaskan di accessor `avatar_url`.
 
 ### Routes
 
@@ -108,7 +110,7 @@ Model utama per domain:
 - **Latihan materi**: `MaterialPracticeToken`, `MaterialTelaahQuestion`, `MaterialPracticePackage`, `MaterialPracticePackageQuestion`, `MaterialPracticeSession`, `MaterialTelaahAnswer`, `MaterialPracticePackageAttempt`, `MaterialPracticePackageAnswer`
 - **Chat**: `Chat`
 - **WhatsApp**: `WhatsAppLog`, `WaMessageTemplate`
-- **Landing**: `LandingContent`, `LandingFaq`, `LandingBranding`, `LandingHeroMockup`, `LandingClickLog`, `BlogPost`
+- **Landing**: `LandingContent`, `LandingFaq`, `LandingBranding`, `LandingHeroMockup`, `LandingClickLog`, `BlogPost`, `Testimonial`
 - **Lain**: `AuditLog`, `AppSetting`, `Participant` (legacy), `ParticipantAnswer` (legacy)
 
 ### Policies

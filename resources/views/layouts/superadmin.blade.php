@@ -156,6 +156,11 @@
                     <i class="fa-solid fa-newspaper w-5"></i>
                     <span class="sidebar-link-label">Blog / Artikel</span>
                 </a>
+                <a href="{{ route('superadmin.testimonials.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.testimonials.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-quote-right w-5"></i>
+                    <span class="sidebar-link-label">Testimoni</span>
+                </a>
                 <a href="{{ route('superadmin.finance.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-credit-card w-5"></i>

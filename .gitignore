@@ -4,6 +4,11 @@
 .env.*
 .env.backup
 .env.production
+.env-copy
+.env_copy
+.env copy
+.env-copy.*
+.env_copy.*
 !.env.example
 .phpactor.json
 .phpunit.result.cache
@@ -14,6 +19,7 @@
 /.vscode
 /.zed
 /auth.json
+/google-auth.json
 /node_modules
 /public/build
 /public/hot
