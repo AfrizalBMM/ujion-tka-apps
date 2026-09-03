@@ -46,11 +46,18 @@
                 </div>
             </div>
             <div class="metric-meta">
-                <span class="inline-flex items-center gap-1">
-                    <i class="fa-solid fa-arrow-trend-up text-green-500"></i>
-                    +2% dari minggu lalu
-                </span>
-                <span class="badge-info">Stabil</span>
+                @if ($pendingRegistrationCount > 0)
+                    <a href="{{ route('superadmin.teachers.index', ['account_status' => \App\Models\User::STATUS_PENDING]) }}" class="inline-flex items-center gap-1 hover:underline" title="Lihat guru yang menunggu pembayaran">
+                        <i class="fa-solid fa-hourglass-half text-[10px] text-amber-500"></i>
+                        {{ $pendingRegistrationCount }} menunggu pembayaran
+                    </a>
+                @else
+                    <span class="inline-flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check text-[10px] text-green-500"></i>
+                        Tidak ada pendaftar pending
+                    </span>
+                @endif
+                <span class="badge-info">Guru</span>
             </div>
         </div>
 
@@ -81,7 +88,16 @@
                 </div>
             </div>
             <div class="metric-meta">
-                <span>Bulan ini (Gross Revenue)</span>
+                <a href="{{ route('superadmin.payment-confirmations.index', ['status' => 'success']) }}" class="inline-flex items-center gap-x-3 gap-y-1 hover:underline" title="Lihat riwayat transaksi">
+                    <span class="inline-flex items-center gap-1" title="Pendapatan via Midtrans (otomatis)">
+                        <i class="fa-solid fa-bolt text-[10px] text-blue-600"></i>
+                        Midtrans: Rp {{ number_format($revenueBreakdown['midtrans'] ?? 0, 0, ',', '.') }}
+                    </span>
+                    <span class="inline-flex items-center gap-1" title="Pendapatan tercatat manual oleh admin">
+                        <i class="fa-solid fa-user-gear text-[10px] text-amber-600"></i>
+                        Manual: Rp {{ number_format($revenueBreakdown['manual_qris'] ?? 0, 0, ',', '.') }}
+                    </span>
+                </a>
                 <span class="font-semibold text-green-600">Finance</span>
             </div>
         </div>
@@ -152,7 +168,7 @@
                 <div class="mobile-menu-card-icon bg-gradient-to-br from-red-500 to-rose-600">
                     <i class="fa-solid fa-money-check-dollar"></i>
                 </div>
-                <div class="mobile-menu-card-label">Konfirmasi</div>
+                <div class="mobile-menu-card-label">Transaksi</div>
                 @if($pendingPaymentCount > 0)
                     <span class="bottom-nav-badge" style="right: -2px; top: -2px;">{{ $pendingPaymentCount }}</span>
                 @endif
@@ -273,8 +289,8 @@
         </a>
         <a href="{{ route('superadmin.finance.index') }}" class="quick-action">
             <div class="quick-action-icon"><i class="fa-solid fa-credit-card"></i></div>
-            <div class="quick-action-title">Pengaturan Harga</div>
-            <div class="quick-action-copy">Atur paket, promo, dan QR pembayaran tanpa membuat dashboard terasa berat.</div>
+            <div class="quick-action-title">Pengaturan Pembayaran</div>
+            <div class="quick-action-copy">Atur tarif per jenjang dan payment gateway Midtrans dari satu panel kerja.</div>
         </a>
         <a href="{{ route('superadmin.questions.index') }}" class="quick-action">
             <div class="quick-action-icon"><i class="fa-solid fa-database"></i></div>

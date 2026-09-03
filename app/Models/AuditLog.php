@@ -10,5 +10,12 @@ class AuditLog extends Model
 
     protected $casts = [
         'user_id' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

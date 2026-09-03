@@ -4,14 +4,9 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PricingPlan;
-use App\Services\QrisService;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PricingPlanController extends Controller
 {
@@ -22,7 +17,6 @@ class PricingPlanController extends Controller
             'subtitle' => ['nullable', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:500'],
             'price' => ['required', 'numeric', 'min:1000', 'max:100000000'],
-            'image' => ['nullable', 'image', 'max:4096'],
         ];
 
         if (Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang')) {
@@ -50,16 +44,6 @@ class PricingPlanController extends Controller
             'is_active' => true,
         ]);
 
-        if ($request->hasFile('image')) {
-            $newPath = $request->file('image')->store('qris-jenjang', 'public');
-
-            if (! blank($pricingPlan->qris_image_path)) {
-                Storage::disk('public')->delete($pricingPlan->qris_image_path);
-            }
-
-            $pricingPlan->qris_image_path = $newPath;
-        }
-
         $pricingPlan->save();
 
         return back()->with('flash', [
@@ -76,7 +60,6 @@ class PricingPlanController extends Controller
             'subtitle' => ['nullable', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:500'],
             'price' => ['required', 'numeric', 'min:1000', 'max:100000000'],
-            'image' => ['nullable', 'image', 'max:4096'],
         ];
 
         if (Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang')) {
@@ -97,14 +80,6 @@ class PricingPlanController extends Controller
             'price' => $validated['price'],
             'is_active' => true,
         ]);
-
-        if ($request->hasFile('image')) {
-            $newPath = $request->file('image')->store('qris-jenjang', 'public');
-            if (! blank($pricingPlan->qris_image_path)) {
-                Storage::disk('public')->delete($pricingPlan->qris_image_path);
-            }
-            $pricingPlan->qris_image_path = $newPath;
-        }
 
         $pricingPlan->save();
 
@@ -132,10 +107,6 @@ class PricingPlanController extends Controller
 
     public function destroy(PricingPlan $pricingPlan): RedirectResponse
     {
-        if (! blank($pricingPlan->qris_image_path)) {
-            Storage::disk('public')->delete($pricingPlan->qris_image_path);
-        }
-
         $pricingPlan->delete();
 
         return back()->with('flash', [
@@ -143,44 +114,5 @@ class PricingPlanController extends Controller
             'title' => 'Tarif jenjang dihapus',
             'message' => 'Tarif ini tidak lagi tersedia untuk alur pendaftaran baru.',
         ]);
-    }
-
-    public function printLabel(PricingPlan $pricingPlan, QrisService $qrisService): View
-    {
-        $amount = $this->sanitizeAmount($pricingPlan->price);
-
-        try {
-            $qrisPayload = $qrisService->generateFixedAmountPayload($amount);
-        } catch (\RuntimeException $e) {
-            abort(503, 'Konfigurasi QRIS belum selesai. Isi GOPAY_MASTER_PAYLOAD terlebih dahulu.');
-        }
-
-        $qrisImageUrl = null;
-        if (! blank($pricingPlan->qris_image_path)) {
-            $qrisImageUrl = route('superadmin.tarif-jenjang.image', $pricingPlan);
-        }
-
-        return view('superadmin.pricing-plans.print', [
-            'tarifJenjang' => $pricingPlan,
-            'formattedPrice' => number_format((int) $amount, 0, ',', '.'),
-            'qrCodeSvg' => QrCode::format('svg')->size(250)->margin(1)->generate($qrisPayload),
-            'qrisImageUrl' => $qrisImageUrl,
-        ]);
-    }
-
-    public function image(PricingPlan $pricingPlan): StreamedResponse
-    {
-        if (blank($pricingPlan->qris_image_path)) {
-            abort(404);
-        }
-
-        return Storage::disk('public')->response($pricingPlan->qris_image_path);
-    }
-
-    private function sanitizeAmount(string|int|float|null $amount): string
-    {
-        $normalized = preg_replace('/\D+/', '', (string) $amount) ?? '0';
-
-        return $normalized !== '' ? $normalized : '0';
     }
 }

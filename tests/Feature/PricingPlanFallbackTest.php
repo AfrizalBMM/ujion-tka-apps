@@ -2,16 +2,33 @@
 
 namespace Tests\Feature;
 
+use App\Models\AppSetting;
 use App\Models\PricingPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class PricingPlanFallbackTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        AppSetting::putValue('midtrans_enabled', '1');
+        AppSetting::putValue('midtrans_environment', 'sandbox');
+        AppSetting::putValue('midtrans_server_key', 'SB-Mid-server-testkey');
+        AppSetting::putValue('midtrans_client_key', 'SB-Mid-client-testkey');
+
+        Http::fake([
+            '*/snap/v1/transactions' => Http::response([
+                'token' => 'snap-token-plan',
+                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v2/snap-token-plan',
+            ], 201),
+        ]);
+    }
 
     public function test_teacher_is_not_charged_plan_from_other_jenjang(): void
     {
@@ -29,12 +46,11 @@ class PricingPlanFallbackTest extends TestCase
             'jenjang' => 'SMA',
         ]);
 
-        $response = $this->from(route('register.guru.pending'))->withSession([
+        $response = $this->withSession([
             'pending_registration' => ['teacher_id' => $guru->id],
-        ])->post(route('register.guru.create-payment'));
+        ])->postJson(route('payments.midtrans.start'));
 
-        $response->assertRedirect(route('register.guru.pending'));
-        $response->assertSessionHas('flash');
+        $response->assertStatus(422);
         $this->assertSame(0, $guru->transactions()->count());
     }
 
@@ -63,9 +79,9 @@ class PricingPlanFallbackTest extends TestCase
 
         $response = $this->withSession([
             'pending_registration' => ['teacher_id' => $guru->id],
-        ])->post(route('register.guru.create-payment'));
+        ])->postJson(route('payments.midtrans.start'));
 
-        $response->assertRedirect();
+        $response->assertOk()->assertJsonPath('ok', true);
         $transaction = $guru->transactions()->firstOrFail();
         $this->assertSame($smaPlan->id, $transaction->pricing_plan_id);
         $this->assertSame(150000.0, (float) $transaction->amount);
@@ -96,18 +112,15 @@ class PricingPlanFallbackTest extends TestCase
 
         $response = $this->withSession([
             'pending_registration' => ['teacher_id' => $guru->id],
-        ])->post(route('register.guru.create-payment'));
+        ])->postJson(route('payments.midtrans.start'));
 
-        $response->assertRedirect();
+        $response->assertOk()->assertJsonPath('ok', true);
         $transaction = $guru->transactions()->firstOrFail();
         $this->assertSame($globalPlan->id, $transaction->pricing_plan_id);
     }
 
-    public function test_upload_proof_rejected_when_no_plan_available(): void
+    public function test_start_payment_rejected_when_no_plan_available(): void
     {
-        Storage::fake('local');
-        config(['services.qris.admin_whatsapp' => '']);
-
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
@@ -117,11 +130,9 @@ class PricingPlanFallbackTest extends TestCase
 
         $response = $this->withSession([
             'pending_registration' => ['teacher_id' => $guru->id],
-        ])->post(route('register.guru.payment-proof'), [
-            'payment_proof' => UploadedFile::fake()->image('proof.png'),
-        ]);
+        ])->postJson(route('payments.midtrans.start'));
 
-        $response->assertRedirect();
+        $response->assertStatus(422);
         $guru->refresh();
         $this->assertSame(User::PAYMENT_AWAITING, $guru->payment_status);
         $this->assertSame(0, $guru->transactions()->count());
@@ -155,7 +166,7 @@ class PricingPlanFallbackTest extends TestCase
 
         $this->withSession([
             'pending_registration' => ['teacher_id' => $guru->id],
-        ])->post(route('register.guru.create-payment'));
+        ])->postJson(route('payments.midtrans.start'));
 
         $stale->refresh();
         $this->assertSame('failed', $stale->status);

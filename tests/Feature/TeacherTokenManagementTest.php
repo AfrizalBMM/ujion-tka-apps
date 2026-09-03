@@ -68,7 +68,6 @@ class TeacherTokenManagementTest extends TestCase
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_SUBMITTED,
-            'payment_proof_path' => 'payment-proofs/proof.png',
             'access_token' => null,
         ]);
 
@@ -94,7 +93,6 @@ class TeacherTokenManagementTest extends TestCase
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_SUBMITTED,
-            'payment_proof_path' => 'payment-proofs/proof.png',
         ]);
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.teachers.reject-payment', $teacher), [
@@ -121,7 +119,6 @@ class TeacherTokenManagementTest extends TestCase
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_SUBMITTED,
-            'payment_proof_path' => 'payment-proofs/proof.png',
             'access_token' => null,
         ]);
 

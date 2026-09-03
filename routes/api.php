@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\LandingClickController;
 use App\Http\Controllers\Api\WebhookController;
+use App\Http\Controllers\MidtransPaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,3 +28,7 @@ Route::post('/landing-click', [LandingClickController::class, 'store'])
 Route::post('/wa-webhook', [WebhookController::class, 'handle'])
     ->middleware('throttle:120,1')
     ->name('api.wa-webhook');
+
+Route::post('/payments/midtrans/notification', [MidtransPaymentController::class, 'notification'])
+    ->middleware('throttle:120,1')
+    ->name('api.payments.midtrans.notification');

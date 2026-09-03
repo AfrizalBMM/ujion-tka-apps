@@ -46,8 +46,6 @@ class User extends Authenticatable
         'role',
         'account_status',
         'payment_status',
-        'payment_proof_path',
-        'payment_submitted_at',
         'payment_verified_at',
         'payment_reviewed_by',
         'payment_rejection_reason',
@@ -83,7 +81,6 @@ class User extends Authenticatable
             'password' => 'hashed',
             'bookmarks' => 'array',
             'global_question_bookmarks' => 'array',
-            'payment_submitted_at' => 'datetime',
             'payment_verified_at' => 'datetime',
         ];
     }
@@ -96,6 +93,11 @@ class User extends Authenticatable
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function auditLogs()
+    {
+        return $this->hasMany(AuditLog::class);
     }
 
     public function isSuperadmin(): bool

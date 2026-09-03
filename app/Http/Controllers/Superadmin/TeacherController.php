@@ -96,11 +96,11 @@ class TeacherController extends Controller
 
     public function approvePayment(User $teacher, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
-        if (blank($teacher->payment_proof_path) && $teacher->payment_status !== User::PAYMENT_SUBMITTED) {
+        if ($teacher->payment_status === User::PAYMENT_APPROVED && $teacher->account_status === User::STATUS_ACTIVE) {
             return back()->with('flash', [
                 'type' => 'warning',
-                'title' => 'Pembayaran belum bisa disetujui',
-                'message' => 'Guru ini belum mengirim bukti pembayaran. Minta guru mengunggah bukti terlebih dahulu.',
+                'title' => 'Pembayaran sudah diproses',
+                'message' => 'Pembayaran guru ini sudah diverifikasi sebelumnya. Tidak ada perubahan yang dilakukan.',
             ]);
         }
 
@@ -137,11 +137,11 @@ class TeacherController extends Controller
 
     public function rejectPayment(Request $request, User $teacher, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
-        if (blank($teacher->payment_proof_path) && $teacher->payment_status !== User::PAYMENT_SUBMITTED) {
+        if ($teacher->payment_status === User::PAYMENT_APPROVED) {
             return back()->with('flash', [
                 'type' => 'warning',
-                'title' => 'Pembayaran belum bisa ditolak',
-                'message' => 'Belum ada bukti pembayaran yang bisa direview untuk guru ini.',
+                'title' => 'Pembayaran sudah diproses',
+                'message' => 'Pembayaran guru ini sudah diverifikasi sebelumnya. Tidak ada perubahan yang dilakukan.',
             ]);
         }
 

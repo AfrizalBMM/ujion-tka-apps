@@ -27,8 +27,11 @@ class DashboardController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ['metric', 'value']);
             fputcsv($out, ['active_teachers', $metrics['activeTeachersCount']]);
+            fputcsv($out, ['pending_registrations', $metrics['pendingRegistrationCount']]);
             fputcsv($out, ['ongoing_exams', $metrics['ongoingExamsCount']]);
             fputcsv($out, ['total_revenue', $metrics['totalRevenue']]);
+            fputcsv($out, ['revenue_midtrans', $metrics['revenueBreakdown']['midtrans'] ?? 0]);
+            fputcsv($out, ['revenue_manual_qris', $metrics['revenueBreakdown']['manual_qris'] ?? 0]);
             fputcsv($out, ['top_teacher', $metrics['topTeacherName'] ?? '-']);
             fputcsv($out, []);
             fputcsv($out, ['date', 'activity_count']);
@@ -53,6 +56,12 @@ class DashboardController extends Controller
     private function buildMetrics(): array
     {
         $activeTeachersCount = User::where('role', User::ROLE_GURU)->where('account_status', User::STATUS_ACTIVE)->count();
+
+        $pendingRegistrationCount = User::query()
+            ->where('role', User::ROLE_GURU)
+            ->where('account_status', User::STATUS_PENDING)
+            ->where('payment_status', User::PAYMENT_AWAITING)
+            ->count();
 
         $dailyActivity = [
             'labels' => [],
@@ -115,8 +124,18 @@ class DashboardController extends Controller
             ->where('status', Transaction::STATUS_SUCCESS)
             ->sum('amount');
 
+        $revenueByMethod = Transaction::query()
+            ->where('status', Transaction::STATUS_SUCCESS)
+            ->selectRaw('payment_method, COALESCE(SUM(amount), 0) as total')
+            ->groupBy('payment_method')
+            ->pluck('total', 'payment_method');
+
+        $revenueBreakdown = [
+            'midtrans' => (int) ($revenueByMethod[Transaction::PAYMENT_METHOD_MIDTRANS] ?? 0),
+            'manual_qris' => (int) ($revenueByMethod[Transaction::PAYMENT_METHOD_MANUAL_QRIS] ?? 0),
+        ];
+
         $pendingPaymentCount = Transaction::where('status', Transaction::STATUS_PENDING)
-            ->whereNotNull('payment_submitted_at')
             ->count();
 
         $topTeacher = User::query()
@@ -132,8 +151,10 @@ class DashboardController extends Controller
             'dailyActivity' => $dailyActivity,
             'landingTraffic' => $landingTraffic,
             'activeTeachersCount' => $activeTeachersCount,
+            'pendingRegistrationCount' => $pendingRegistrationCount,
             'ongoingExamsCount' => $ongoingExamsCount,
             'totalRevenue' => $totalRevenue,
+            'revenueBreakdown' => $revenueBreakdown,
             'topTeacherName' => $topTeacher?->name,
             'latestAuditLogs' => $latestAuditLogs,
             'pendingPaymentCount' => $pendingPaymentCount,

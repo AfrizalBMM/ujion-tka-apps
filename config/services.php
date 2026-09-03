@@ -52,7 +52,6 @@ return [
     ],
 
     'qris' => [
-        'master_payload' => env('GOPAY_MASTER_PAYLOAD'),
         'admin_whatsapp' => env('QRIS_ADMIN_WHATSAPP'),
     ],
 

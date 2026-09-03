@@ -6,8 +6,8 @@ use App\Http\Controllers\ChatImageController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\KisiKisiController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\MidtransPaymentController;
 use App\Http\Controllers\OgImageController;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\Siswa\AuthController as SiswaAuthController;
 use App\Http\Controllers\Siswa\ExamController;
@@ -27,7 +27,6 @@ use App\Http\Controllers\Superadmin\MaterialController;
 use App\Http\Controllers\Superadmin\MaterialPracticeController;
 use App\Http\Controllers\Superadmin\PaketSoalController;
 use App\Http\Controllers\Superadmin\PaymentConfirmationController;
-use App\Http\Controllers\Superadmin\PaymentProofController;
 use App\Http\Controllers\Superadmin\PricingPlanController;
 use App\Http\Controllers\Superadmin\ProfileController as SuperadminProfileController;
 use App\Http\Controllers\Superadmin\SoalController as SuperadminSoalController;
@@ -40,7 +39,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
-Route::get('/payments/{referenceCode}', [PaymentController::class, 'show'])->name('payments.show');
+Route::post('/payments/midtrans/start', [MidtransPaymentController::class, 'start'])->name('payments.midtrans.start');
+Route::get('/payments/midtrans/finish', [MidtransPaymentController::class, 'finish'])->name('payments.midtrans.finish');
+Route::get('/payments/midtrans/status', [MidtransPaymentController::class, 'status'])->name('payments.midtrans.status');
 
 Route::get('/og-image.png', OgImageController::class)->name('og.image');
 Route::get('/robots.txt', RobotsController::class)->name('robots');
@@ -169,14 +170,10 @@ Route::prefix('superadmin')
         Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
         Route::post('/finance/settings', [FinanceController::class, 'saveSettings'])->name('finance.settings');
         Route::get('/payment-confirmations', [PaymentConfirmationController::class, 'index'])->name('payment-confirmations.index');
-        Route::post('/payment-confirmations/{transaction}/approve', [PaymentConfirmationController::class, 'approve'])->name('payment-confirmations.approve');
-        Route::post('/payment-confirmations/{transaction}/reject', [PaymentConfirmationController::class, 'reject'])->name('payment-confirmations.reject');
 
         Route::post('/tarif-jenjang', [PricingPlanController::class, 'store'])->name('tarif-jenjang.store');
         Route::post('/tarif-jenjang/{pricingPlan}', [PricingPlanController::class, 'update'])->name('tarif-jenjang.update');
         Route::post('/tarif-jenjang/{pricingPlan}/toggle-active', [PricingPlanController::class, 'toggleActive'])->name('tarif-jenjang.toggle-active');
-        Route::get('/tarif-jenjang/{pricingPlan}/print', [PricingPlanController::class, 'printLabel'])->name('tarif-jenjang.print');
-        Route::get('/tarif-jenjang/{pricingPlan}/image', [PricingPlanController::class, 'image'])->name('tarif-jenjang.image');
         Route::post('/tarif-jenjang/{pricingPlan}/delete', [PricingPlanController::class, 'destroy'])->name('tarif-jenjang.destroy');
 
         Route::post('/teachers/{teacher}/activate', [TeacherController::class, 'activate'])->name('teachers.activate');
@@ -210,9 +207,7 @@ Route::prefix('superadmin')
         Route::post('/global-questions/{globalQuestion}/delete', [GlobalQuestionController::class, 'destroy'])->name('global-questions.destroy');
 
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
-        Route::get('/payment-proofs/{path}', [PaymentProofController::class, 'show'])
-            ->where('path', '.*')
-            ->name('payment-proofs.show');
+        Route::post('/audit-logs/cleanup', [AuditLogController::class, 'cleanup'])->name('audit-logs.cleanup');
         Route::get('/dashboard/export/csv', [DashboardController::class, 'exportCsv'])->name('dashboard.export-csv');
         Route::get('/dashboard/print', [DashboardController::class, 'print'])->name('dashboard.print');
 

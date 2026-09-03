@@ -515,13 +515,6 @@
                     <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Subtitle (opsional)</label>
                     <input class="input mt-1 w-full" name="subtitle" value="{{ old('subtitle') }}" placeholder="Contoh: Akses akun guru / operator">
                 </div>
-                <div class="md:col-span-2">
-                    <label class="text-xs font-bold text-textSecondary dark:text-slate-300">Gambar QRIS (opsional)</label>
-                    <input type="file" class="input mt-1 w-full" name="image" accept="image/*" {{ $hasQrisImageColumn ? '' : 'disabled' }}>
-                    @if (! $hasQrisImageColumn)
-                        <div class="mt-1 text-xs text-muted">Kolom `qris_image_path` belum ada di DB. Upload gambar dinonaktifkan.</div>
-                    @endif
-                </div>
 
                 <div class="md:col-span-2 flex items-center justify-end">
                     <button class="btn-primary" type="submit">
@@ -562,9 +555,6 @@
                                 </td>
                                 <td class="text-right">
                                     <div class="flex justify-end gap-2">
-                                        <a href="{{ route('superadmin.tarif-jenjang.print', $tarif) }}" target="_blank" class="btn-secondary px-3" title="Print label">
-                                            <i class="fa-solid fa-print"></i>
-                                        </a>
                                         <form method="POST" action="{{ route('superadmin.tarif-jenjang.toggle-active', $tarif) }}">
                                             @csrf
                                             <button type="submit" class="btn-secondary px-3" title="Aktif/Nonaktif">

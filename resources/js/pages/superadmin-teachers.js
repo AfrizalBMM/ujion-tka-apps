@@ -54,47 +54,7 @@ function initSuperadminTeachers() {
 		});
 	});
 
-	const proofModal = document.getElementById('payment-proof-modal');
-	const proofImage = document.getElementById('payment-proof-image');
-	const proofTitle = document.getElementById('payment-proof-title');
 	const adminFlowModal = document.getElementById('admin-flow-modal');
-	const rejectPaymentModal = document.getElementById('reject-payment-modal');
-	const rejectPaymentForm = document.getElementById('reject-payment-form');
-	const rejectPaymentTitle = document.getElementById('reject-payment-title');
-	const rejectPaymentReason = document.getElementById('payment_rejection_reason');
-
-	document.querySelectorAll('[data-payment-proof-open]').forEach((button) => {
-		button.addEventListener('click', () => {
-			if (proofImage) {
-				proofImage.src = button.getAttribute('data-payment-proof-src') || '';
-			}
-			if (proofTitle) {
-				proofTitle.textContent = button.getAttribute('data-payment-proof-name') || 'Guru';
-			}
-			proofModal?.classList.remove('hidden');
-			proofModal?.classList.add('flex');
-		});
-	});
-
-	document.querySelectorAll('[data-payment-proof-close]').forEach((button) => {
-		button.addEventListener('click', () => {
-			proofModal?.classList.add('hidden');
-			proofModal?.classList.remove('flex');
-			if (proofImage) {
-				proofImage.src = '';
-			}
-		});
-	});
-
-	proofModal?.addEventListener('click', (event) => {
-		if (event.target === proofModal) {
-			proofModal.classList.add('hidden');
-			proofModal.classList.remove('flex');
-			if (proofImage) {
-				proofImage.src = '';
-			}
-		}
-	});
 
 	document.querySelectorAll('[data-admin-flow-open]').forEach((button) => {
 		button.addEventListener('click', () => {
@@ -117,57 +77,14 @@ function initSuperadminTeachers() {
 		}
 	});
 
-	document.querySelectorAll('[data-reject-payment-open]').forEach((button) => {
-		button.addEventListener('click', () => {
-			const action = button.getAttribute('data-reject-payment-action') || '';
-			const name = button.getAttribute('data-reject-payment-name') || 'Guru';
-
-			if (rejectPaymentForm) {
-				rejectPaymentForm.setAttribute('action', action);
-			}
-
-			if (rejectPaymentTitle) {
-				rejectPaymentTitle.textContent = name;
-			}
-
-			if (rejectPaymentReason) {
-				rejectPaymentReason.value = '';
-			}
-
-			rejectPaymentModal?.classList.remove('hidden');
-			rejectPaymentModal?.classList.add('flex');
-			rejectPaymentReason?.focus();
-		});
-	});
-
-	document.querySelectorAll('[data-reject-payment-close]').forEach((button) => {
-		button.addEventListener('click', () => {
-			rejectPaymentModal?.classList.add('hidden');
-			rejectPaymentModal?.classList.remove('flex');
-		});
-	});
-
-	rejectPaymentModal?.addEventListener('click', (event) => {
-		if (event.target === rejectPaymentModal) {
-			rejectPaymentModal.classList.add('hidden');
-			rejectPaymentModal.classList.remove('flex');
-		}
-	});
-
 	document.addEventListener('keydown', (event) => {
 		if (event.key !== 'Escape') return;
 
 		closeAllActionMenus();
 
-		[proofModal, adminFlowModal, rejectPaymentModal].forEach((modal) => {
-			if (modal && !modal.classList.contains('hidden')) {
-				modal.classList.add('hidden');
-				modal.classList.remove('flex');
-			}
-		});
-
-		if (proofImage) {
-			proofImage.src = '';
+		if (adminFlowModal && !adminFlowModal.classList.contains('hidden')) {
+			adminFlowModal.classList.add('hidden');
+			adminFlowModal.classList.remove('flex');
 		}
 	});
 }

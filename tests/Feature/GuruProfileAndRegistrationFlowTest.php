@@ -2,14 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\AppSetting;
 use App\Models\PersonalQuestion;
 use App\Models\PricingPlan;
+use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -17,6 +19,16 @@ use Tests\TestCase;
 class GuruProfileAndRegistrationFlowTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        AppSetting::putValue('midtrans_enabled', '1');
+        AppSetting::putValue('midtrans_environment', 'sandbox');
+        AppSetting::putValue('midtrans_server_key', 'SB-Mid-server-testkey');
+        AppSetting::putValue('midtrans_client_key', 'SB-Mid-client-testkey');
+    }
 
     public function test_landing_points_to_guru_registration_route(): void
     {
@@ -164,10 +176,14 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->assertFalse(Hash::check('password', $user->password));
     }
 
-    public function test_guru_can_upload_payment_proof_from_pending_page(): void
+    public function test_guru_can_start_payment_from_pending_page(): void
     {
-        Storage::fake('local');
-        config(['services.qris.admin_whatsapp' => '']);
+        Http::fake([
+            '*/snap/v1/transactions' => Http::response([
+                'token' => 'snap-token-123',
+                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v2/snap-token-123',
+            ], 201),
+        ]);
 
         PricingPlan::create([
             'name' => 'Aktivasi SMP',
@@ -185,25 +201,26 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
         $response = $this->withSession([
             'pending_registration' => ['teacher_id' => $guru->id],
-        ])->post(route('register.guru.payment-proof'), [
-            'payment_proof' => UploadedFile::fake()->image('proof.png'),
-        ]);
+        ])->postJson(route('payments.midtrans.start'));
 
-        $response->assertRedirect(route('login'));
-        $response->assertSessionMissing('pending_registration');
+        $response->assertOk()->assertJsonPath('ok', true)->assertJsonPath('snap_token', 'snap-token-123');
+
         $guru->refresh();
+        $transaction = $guru->transactions()->first();
 
-        $this->assertSame(User::PAYMENT_SUBMITTED, $guru->payment_status);
-        $this->assertNotNull($guru->payment_proof_path);
-        $this->assertNotNull($guru->payment_submitted_at);
-        Storage::disk('local')->assertExists($guru->payment_proof_path);
+        $this->assertNotNull($transaction);
+        $this->assertSame(Transaction::STATUS_PENDING, $transaction->status);
+        $this->assertSame(100000.0, (float) $transaction->amount);
     }
 
-    public function test_pending_registration_session_persists_for_upload_after_pending_page_is_opened(): void
+    public function test_pending_registration_session_persists_for_payment_after_pending_page_is_opened(): void
     {
-        Storage::fake('local');
-        Queue::fake();
-        config(['services.qris.admin_whatsapp' => '']);
+        Http::fake([
+            '*/snap/v1/transactions' => Http::response([
+                'token' => 'snap-token-persist',
+                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v2/snap-token-persist',
+            ], 201),
+        ]);
 
         PricingPlan::create([
             'name' => 'Aktivasi SMP',
@@ -224,16 +241,14 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
         $this->get(route('register.guru.pending'))->assertOk();
 
-        $uploadResponse = $this->post(route('register.guru.payment-proof'), [
-            'payment_proof' => UploadedFile::fake()->image('proof.png'),
-        ]);
+        $paymentResponse = $this->postJson(route('payments.midtrans.start'));
 
-        $uploadResponse->assertRedirect(route('login'));
+        $paymentResponse->assertOk()->assertJsonPath('ok', true);
 
         $guru = User::where('email', 'guru.persist@example.com')->firstOrFail();
-        $this->assertSame(User::PAYMENT_SUBMITTED, $guru->payment_status);
-        $this->assertNotNull($guru->payment_proof_path);
-        Storage::disk('local')->assertExists($guru->payment_proof_path);
+        $transaction = $guru->transactions()->first();
+
+        $this->assertNotNull($transaction);
     }
 
     public function test_duplicate_pending_registration_redirects_back_to_pending_page(): void

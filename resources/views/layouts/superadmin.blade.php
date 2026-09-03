@@ -22,7 +22,7 @@
         $superadminUser = auth()->user();
         $materialFilter = request()->query('jenjang');
         $globalQuestionFilter = request()->query('jenjang_id');
-        $pendingPaymentCount = \App\Models\Transaction::where('status', \App\Models\Transaction::STATUS_PENDING)->whereNotNull('payment_submitted_at')->count();
+        $pendingPaymentCount = \App\Models\Transaction::where('status', \App\Models\Transaction::STATUS_PENDING)->count();
     @endphp
     <header class="app-topbar">
         <div class="app-topbar-panel">
@@ -164,12 +164,12 @@
                 <a href="{{ route('superadmin.finance.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.finance.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-credit-card w-5"></i>
-                    <span class="sidebar-link-label">Keuangan & QR</span>
+                    <span class="sidebar-link-label">Keuangan</span>
                 </a>
                 <a href="{{ route('superadmin.payment-confirmations.index') }}"
                     class="sidebar-link {{ request()->routeIs('superadmin.payment-confirmations.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-money-check-dollar w-5"></i>
-                    <span class="sidebar-link-label flex-1">Konfirmasi Bayar</span>
+                    <span class="sidebar-link-label flex-1">Riwayat Transaksi</span>
                     @if($pendingPaymentCount > 0)
                         <span
                             class="inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white shrink-0">{{ $pendingPaymentCount }}</span>

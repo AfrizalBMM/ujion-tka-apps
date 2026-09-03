@@ -31,7 +31,6 @@ class LandingSettingsController extends Controller
 
         $hasPricingTable = Schema::hasTable('pricing_plans');
         $hasJenjangColumn = $hasPricingTable && Schema::hasColumn('pricing_plans', 'jenjang');
-        $hasQrisImageColumn = $hasPricingTable && Schema::hasColumn('pricing_plans', 'qris_image_path');
 
         $tarifJenjangs = collect();
         if ($hasPricingTable) {
@@ -198,7 +197,6 @@ class LandingSettingsController extends Controller
             'tab' => $tab,
             'tarifJenjangs' => $tarifJenjangs,
             'hasJenjangColumn' => $hasJenjangColumn,
-            'hasQrisImageColumn' => $hasQrisImageColumn,
             'sectionActives' => $sectionActives,
             'hero' => $hero,
             'faqs' => $faqs,

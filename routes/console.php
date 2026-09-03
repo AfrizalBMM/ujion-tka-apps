@@ -2,6 +2,7 @@
 
 use App\Jobs\SendWhatsAppBlast;
 use App\Models\AppSetting;
+use App\Models\AuditLog;
 use App\Models\User;
 use App\Services\WaMessageTemplateService;
 use Carbon\Carbon;
@@ -22,7 +23,21 @@ Artisan::command('inspire', function () {
 // even when the default cache store is database (e.g., local dev without MySQL).
 Schedule::useCache('file');
 
-Schedule::command('storage:cleanup-payment-proofs --days=90')->dailyAt('02:30');
+Schedule::call(function (): void {
+    if (! Schema::hasTable('audit_logs')) {
+        return;
+    }
+
+    $deleted = AuditLog::query()
+        ->where('created_at', '<', now()->subDays(30))
+        ->delete();
+
+    if ($deleted > 0) {
+        Log::info('Audit log cleanup: deleted '.$deleted.' entries older than 30 days.');
+    }
+})
+    ->name('audit-log-cleanup')
+    ->dailyAt('03:00');
 
 Schedule::call(function (): void {
     $templates = app(WaMessageTemplateService::class);
@@ -253,38 +268,6 @@ Schedule::call(function (): void {
                 ->delay(now()->addSeconds(random_int(2, 7)));
         }
     });
-
-    // Follow-up: belum upload bukti > 2 jam (opsional, hanya jika kolomnya ada).
-    if (Schema::hasColumn('users', 'payment_proof_path')) {
-        $noProof = (clone $teacherQuery)
-            ->where('payment_status', User::PAYMENT_AWAITING)
-            ->where('created_at', '<=', now()->subHours(2))
-            ->where(function ($query) {
-                $query->whereNull('payment_proof_path')->orWhere('payment_proof_path', '');
-            })
-            ->orderBy('id');
-
-        if (Schema::hasColumn('users', 'payment_submitted_at')) {
-            $noProof->whereNull('payment_submitted_at');
-        }
-
-        $noProof->chunkById(200, function ($teachers) use ($templates) {
-            foreach ($teachers as $teacher) {
-                $key = 'wa:followup:noproof2h:'.$teacher->id;
-                if (! Cache::add($key, '1', now()->addDays(2))) {
-                    continue;
-                }
-
-                $message = $templates->render('followup_payment_no_proof_2h', [
-                    'name' => $teacher->name,
-                ]);
-
-                SendWhatsAppBlast::dispatch($teacher->no_wa, $message)
-                    ->onQueue('low')
-                    ->delay(now()->addSeconds(random_int(2, 7)));
-            }
-        });
-    }
 })
     ->name('wa-payment-followups')
     ->withoutOverlapping(10)

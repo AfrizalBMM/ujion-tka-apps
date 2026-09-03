@@ -31,9 +31,6 @@ Route::get('/register/guru/check-email', [RegisterGuruController::class, 'checkE
     ->middleware('throttle:30,1')
     ->name('register.guru.check-email');
 Route::post('/register/guru/pending/resume', [RegisterGuruController::class, 'resumePending'])->name('register.guru.pending.resume');
-Route::post('/register/guru/pending/payment', [RegisterGuruController::class, 'createPayment'])->name('register.guru.create-payment');
-Route::post('/register/guru/pending/payment-data', [RegisterGuruController::class, 'paymentData'])->name('register.guru.payment-data');
-Route::post('/register/guru/pending/payment-proof', [RegisterGuruController::class, 'uploadPaymentProof'])->name('register.guru.payment-proof');
 
 Route::middleware(['auth', 'role:guru', 'guru.active', 'audit'])->prefix('guru')->name('guru.')->scopeBindings()->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

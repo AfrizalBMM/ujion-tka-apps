@@ -761,7 +761,7 @@
             <div
                 class="mt-10 flex flex-col gap-2 border-t border-white/70 pt-6 text-sm text-textSecondary dark:border-slate-800/80 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
                 <div>© {{ date('Y') }} Ujion TKA by Reditech</div>
-                <div>Simulai mengelola pembelajaran siswa</div>
+                <div>Simulai mengelola persiapan TKA</div>
             </div>
         </div>
     </footer>

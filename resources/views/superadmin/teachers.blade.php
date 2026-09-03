@@ -113,7 +113,6 @@
                         <th>Email</th>
                         <th>Status Akun</th>
                         <th>Token</th>
-                        <th>Bukti Bayar</th>
                         <th class="text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -157,7 +156,7 @@
                                     @elseif ($teacher->payment_status === \App\Models\User::PAYMENT_REJECTED)
                                         <span class="badge-danger">Pembayaran Ditolak</span>
                                     @else
-                                        <span class="badge-warning">Belum Upload Bukti</span>
+                                        <span class="badge-warning">Belum Bayar</span>
                                     @endif
                                 </div>
                                 @if (! blank($teacher->payment_rejection_reason))
@@ -181,26 +180,6 @@
                                     <span class="text-muted italic">Belum aktif</span>
                                 @endif
                             </td>
-                            <td>
-                                @if (! blank($teacher->payment_proof_path))
-                                    <div class="space-y-2">
-                                        <button
-                                            type="button"
-                                            class="btn-secondary text-xs"
-                                            data-payment-proof-open
-                                            data-payment-proof-src="{{ route('superadmin.payment-proofs.show', ['path' => $teacher->payment_proof_path]) }}"
-                                            data-payment-proof-name="{{ $teacher->name }}"
-                                        >
-                                            Bukti
-                                        </button>
-                                        <div>
-                                            <a href="{{ route('superadmin.payment-proofs.show', ['path' => $teacher->payment_proof_path]) }}" target="_blank" class="text-xs font-semibold text-primary hover:underline">Buka file asli</a>
-                                        </div>
-                                    </div>
-                                @else
-                                    <span class="text-xs italic text-muted">Belum ada bukti</span>
-                                @endif
-                            </td>
                             <td class="text-right">
                                 <div class="relative inline-block text-left" data-action-menu>
                                     <button
@@ -217,28 +196,7 @@
                                         class="invisible absolute right-0 top-full z-20 mt-2 min-w-56 translate-y-2 rounded-2xl border border-slate-200/80 bg-white p-2 opacity-0 shadow-modal transition-all duration-200 dark:border-slate-800 dark:bg-slate-950"
                                         data-action-menu-panel
                                     >
-                                        @if($teacher->payment_status === \App\Models\User::PAYMENT_SUBMITTED)
-                                        <form method="POST" action="{{ route('superadmin.teachers.approve-payment', $teacher) }}">
-                                            @csrf
-                                            <button type="submit" class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-200 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300">
-                                                <i class="fa-solid fa-circle-check w-4"></i>
-                                                Setujui pembayaran
-                                            </button>
-                                        </form>
-
-                                        <button
-                                            type="button"
-                                            class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-rose-50 hover:text-rose-700 dark:text-slate-200 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
-                                            data-reject-payment-open
-                                            data-reject-payment-action="{{ route('superadmin.teachers.reject-payment', $teacher) }}"
-                                            data-reject-payment-name="{{ $teacher->name }}"
-                                        >
-                                            <i class="fa-solid fa-reply w-4"></i>
-                                            Tolak pembayaran
-                                        </button>
-                                        @endif
-
-                                        @if($teacher->account_status !== \App\Models\User::STATUS_ACTIVE && $teacher->payment_status !== \App\Models\User::PAYMENT_SUBMITTED)
+                                        @if($teacher->account_status !== \App\Models\User::STATUS_ACTIVE)
                                         <form method="POST" action="{{ route('superadmin.teachers.activate', $teacher) }}">
                                             @csrf
                                             <button type="submit" class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-primary/8 hover:text-primary dark:text-slate-200 dark:hover:bg-primary/10">
@@ -272,7 +230,7 @@
                     @endforeach
                     @else
                         <tr>
-                            <td colspan="6" class="text-center py-12">
+                            <td colspan="5" class="text-center py-12">
                                 <i class="fa-solid fa-users-slash text-4xl text-slate-200 mb-3 block"></i>
                                 <span class="text-muted dark:text-slate-400 italic text-lg">Belum ada user dengan role guru untuk saat ini.</span>
                             </td>
@@ -315,21 +273,6 @@
     </div>
 </div>
 
-<div id="payment-proof-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 px-4">
-    <div class="w-full max-w-3xl rounded-2xl bg-white p-4 shadow-2xl dark:bg-slate-900">
-        <div class="mb-4 flex items-center justify-between gap-4">
-            <div>
-                <div class="text-sm font-semibold text-muted">Preview bukti pembayaran</div>
-                <div id="payment-proof-title" class="text-lg font-bold text-slate-900 dark:text-slate-100">Guru</div>
-            </div>
-            <button type="button" class="btn-secondary" data-payment-proof-close>Tutup</button>
-        </div>
-        <div class="overflow-hidden rounded-xl border border-border bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
-            <img id="payment-proof-image" src="" alt="Bukti pembayaran" class="max-h-[70vh] w-full object-contain">
-        </div>
-    </div>
-</div>
-
 <div id="admin-flow-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 px-4">
     <div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900">
         <div class="flex items-start justify-between gap-4">
@@ -345,60 +288,25 @@
                 <i class="fa-solid fa-circle-info mt-0.5"></i>
                 <div>
                     <p class="font-semibold">Urutan kerja yang paling aman</p>
-                    <p class="mt-1">Aktifkan akun setelah pembayaran terverifikasi, lalu kirim token akses terbaru melalui kanal yang aman seperti WhatsApp resmi admin.</p>
+                    <p class="mt-1">Pembayaran guru via Midtrans terverifikasi otomatis. Untuk kasus khusus, aktifkan akun manual lewat menu aksi, lalu kirim token akses melalui kanal yang aman seperti WhatsApp resmi admin.</p>
                 </div>
             </div>
         </div>
 
         <div class="mt-4 space-y-3 text-sm text-textSecondary dark:text-slate-300">
             <div class="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-950/40">
-                <div class="font-semibold text-slate-900 dark:text-slate-100">1. Review pembayaran</div>
-                <div class="mt-1">Pastikan bukti transfer jelas dan nominal sesuai sebelum akun diaktifkan.</div>
+                <div class="font-semibold text-slate-900 dark:text-slate-100">1. Cek status pembayaran</div>
+                <div class="mt-1">Pembayaran Midtrans yang sukses otomatis mengaktifkan akun guru. Cek menu Riwayat Transaksi untuk detailnya.</div>
             </div>
             <div class="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-950/40">
-                <div class="font-semibold text-slate-900 dark:text-slate-100">2. Setujui atau tolak dengan alasan</div>
-                <div class="mt-1">Jika ditolak, berikan catatan yang spesifik agar guru tahu apa yang harus diperbaiki.</div>
+                <div class="font-semibold text-slate-900 dark:text-slate-100">2. Aktivasi manual bila perlu</div>
+                <div class="mt-1">Untuk kasus khusus (misal pembayaran di luar sistem), gunakan menu aksi "Aktifkan akun".</div>
             </div>
             <div class="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-950/40">
                 <div class="font-semibold text-slate-900 dark:text-slate-100">3. Bagikan token lewat kanal aman</div>
                 <div class="mt-1">Setelah aktif, kirim token terbaru dan minta guru memakai token yang paling baru saat login.</div>
             </div>
         </div>
-    </div>
-</div>
-
-<div id="reject-payment-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 px-4">
-    <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <div class="text-sm font-semibold text-muted">Tolak pembayaran</div>
-                <div id="reject-payment-title" class="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">Guru</div>
-                <p class="mt-2 text-sm text-textSecondary dark:text-slate-300">Masukkan alasan penolakan agar guru tahu apa yang perlu diperbaiki.</p>
-            </div>
-            <button type="button" class="btn-secondary" data-reject-payment-close>Tutup</button>
-        </div>
-
-        <form id="reject-payment-form" method="POST" class="mt-5 space-y-4">
-            @csrf
-            <div>
-                <label for="payment_rejection_reason" class="mb-2 block text-xs font-bold uppercase tracking-wide text-muted">Alasan penolakan</label>
-                <textarea
-                    id="payment_rejection_reason"
-                    name="payment_rejection_reason"
-                    class="input min-h-32 w-full"
-                    placeholder="Contoh: Bukti transfer belum jelas, nominal tidak sesuai, atau data pengirim belum terlihat."
-                    required
-                ></textarea>
-            </div>
-
-            <div class="flex justify-end gap-3">
-                <button type="button" class="btn-secondary" data-reject-payment-close>Batal</button>
-                <button type="submit" class="btn-danger">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    Kirim Penolakan
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 

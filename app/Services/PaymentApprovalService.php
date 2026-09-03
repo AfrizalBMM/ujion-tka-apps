@@ -49,8 +49,6 @@ class PaymentApprovalService
                     'payment_verified_at' => now(),
                     'payment_reviewed_by' => Auth::id(),
                     'payment_rejection_reason' => null,
-                    'payment_proof_path' => $transaction->payment_proof_path,
-                    'payment_submitted_at' => $transaction->payment_submitted_at,
                     'access_token' => $token,
                 ]);
             } else {
