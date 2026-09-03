@@ -9,13 +9,17 @@ class RobotsController
     private const DISALLOWED_PATHS = [
         '/guru',
         '/superadmin',
-        '/ngadimin',
+        '/ngadumin',
         '/siswa',
         '/materi',
         '/payments',
         '/login',
         '/lupa-token',
         '/api',
+        '/ujian-online/pending',
+        '/ujian-online/start',
+        '/ujian-online/result',
+        '/ujian-online/pay',
     ];
 
     public function __invoke(): Response

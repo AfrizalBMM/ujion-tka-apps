@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendWhatsAppBlast;
+use App\Models\LandingExamOrder;
 use App\Models\PricingPlan;
 use App\Models\Transaction;
 use App\Models\User;
@@ -171,6 +172,12 @@ class MidtransPaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid signature'], 401);
         }
 
+        if (str_starts_with($orderId, 'PUJ-')) {
+            $order = $this->processPublicExamStatusPayload($payload);
+
+            return response()->json(['success' => $order !== null]);
+        }
+
         $transaction = $this->processStatusPayload($payload);
 
         return response()->json(['success' => $transaction !== null]);
@@ -297,6 +304,93 @@ class MidtransPaymentController extends Controller
         ]);
 
         return $transaction->refresh();
+    }
+
+    public function processPublicExamStatusPayload(array $payload): ?LandingExamOrder
+    {
+        $orderId = (string) ($payload['order_id'] ?? '');
+        $order = app(MidtransService::class)->findOrder($orderId);
+
+        if (! $order) {
+            Log::warning('Midtrans notification for unknown public exam order', ['order_id' => $orderId]);
+
+            return null;
+        }
+
+        if ($order->isPaid()) {
+            return $order;
+        }
+
+        $grossAmount = (float) ($payload['gross_amount'] ?? 0);
+        if (abs($grossAmount - (float) $order->amount) > 0.01) {
+            Log::critical('Midtrans public exam amount mismatch', [
+                'order_id' => $orderId,
+                'expected' => $order->amount,
+                'received' => $payload['gross_amount'] ?? null,
+            ]);
+
+            return $order;
+        }
+
+        $midtransStatus = (string) ($payload['transaction_status'] ?? '');
+        $fraudStatus = (string) ($payload['fraud_status'] ?? '');
+        $paymentType = (string) ($payload['payment_type'] ?? '');
+
+        if ($midtransStatus === 'settlement'
+            || ($midtransStatus === 'capture' && $fraudStatus === 'accept')) {
+            $this->markPublicExamPaid($order, $midtransStatus, $paymentType);
+
+            return $order->refresh();
+        }
+
+        if (in_array($midtransStatus, ['deny', 'cancel', 'expire'], true)) {
+            $order->update([
+                'status' => LandingExamOrder::STATUS_FAILED,
+                'midtrans_transaction_status' => $midtransStatus,
+                'midtrans_payment_type' => $paymentType,
+            ]);
+
+            return $order->refresh();
+        }
+
+        $order->update([
+            'midtrans_transaction_status' => $midtransStatus,
+            'midtrans_payment_type' => $paymentType,
+        ]);
+
+        return $order->refresh();
+    }
+
+    private function markPublicExamPaid(LandingExamOrder $order, string $midtransStatus, string $paymentType): void
+    {
+        $order->update([
+            'status' => LandingExamOrder::STATUS_PAID,
+            'midtrans_transaction_status' => $midtransStatus,
+            'midtrans_payment_type' => $paymentType,
+            'paid_at' => now(),
+        ]);
+
+        $mapel = $order->landingExamMapel;
+        $landingExam = $mapel?->landingExam;
+        $exam = $landingExam?->exam;
+        $mapelPaket = $mapel?->mapelPaket;
+
+        if (! $exam || ! $mapelPaket) {
+            Log::critical('Public exam paid but exam/mapel missing', ['order_id' => $order->id]);
+
+            return;
+        }
+
+        if (! blank($order->nomor_wa)) {
+            $waBody = app(WaMessageTemplateService::class)->render('event_public_exam_paid', [
+                'name' => $order->nama,
+                'exam_title' => $exam->judul,
+                'mapel_label' => $mapelPaket->nama_label,
+                'exam_url' => route('ujian-online.start', $order->session_token),
+            ]);
+
+            SendWhatsAppBlast::dispatch($order->nomor_wa, $waBody)->onQueue('high');
+        }
     }
 
     private function markSuccess(Transaction $transaction, string $midtransStatus, string $paymentType): void

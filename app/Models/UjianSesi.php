@@ -13,6 +13,7 @@ class UjianSesi extends Model
         'paket_soal_id',
         'mapel_paket_id',
         'user_id',
+        'landing_exam_order_id',
         'nama',
         'nomor_wa',
         'session_token',
@@ -55,5 +56,10 @@ class UjianSesi extends Model
     public function jawabanSiswas(): HasMany
     {
         return $this->hasMany(JawabanSiswa::class);
+    }
+
+    public function landingExamOrder(): BelongsTo
+    {
+        return $this->belongsTo(LandingExamOrder::class);
     }
 }

@@ -21,6 +21,7 @@ class Soal extends Model
         'kategori_profil',
         'arah_skor',
         'pertanyaan',
+        'pembahasan',
         'gambar',
         'bobot',
     ];

@@ -22,8 +22,8 @@
     </style>
 </head>
 @php
-    // Otomatis sembunyikan showcase untuk halaman siswa dan latihan materi.
-    if (request()->is('siswa*') || request()->is('materi*')) {
+    // Otomatis sembunyikan showcase untuk halaman siswa, latihan materi, dan ujian publik.
+    if (request()->is('siswa*') || request()->is('materi*') || request()->is('ujian-online/pending*') || request()->is('ujian-online/result*')) {
         $hideShowcase = true;
     }
 
@@ -31,7 +31,7 @@
     $hideGuestFooter = isset($hideFooterGuest) && $hideFooterGuest;
     $guestWide = isset($wideGuest) && $wideGuest;
 
-    if (request()->routeIs('materi.dashboard', 'materi.paket.*', 'siswa.practice.dashboard', 'siswa.practice.paket.*')) {
+    if (request()->routeIs('materi.dashboard', 'materi.paket.*', 'siswa.practice.dashboard', 'siswa.practice.paket.*', 'ujian-online.result*')) {
         $guestWide = true;
     }
 @endphp

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BlogPost;
 use App\Models\Jenjang;
 use App\Models\LandingContent;
+use App\Models\LandingExam;
 use App\Models\LandingFaq;
 use App\Models\LandingHeroMockup;
 use App\Models\Material;
@@ -42,6 +43,10 @@ class SitemapController
         }
 
         foreach ($this->articleUrls() as $url) {
+            $urls[] = $url;
+        }
+
+        foreach ($this->publicExamUrls() as $url) {
             $urls[] = $url;
         }
 
@@ -134,6 +139,53 @@ class SitemapController
                 'loc' => route('artikel.show', ['post' => $post->slug]),
                 'lastmod' => $post->updated_at?->toAtomString(),
                 'changefreq' => 'monthly',
+                'priority' => '0.6',
+            ];
+        }
+
+        return $urls;
+    }
+
+    private function publicExamUrls(): array
+    {
+        $urls = [];
+
+        if (Route::has('ujian-online.index')) {
+            $urls[] = [
+                'loc' => route('ujian-online.index'),
+                'lastmod' => null,
+                'changefreq' => 'weekly',
+                'priority' => '0.8',
+            ];
+        }
+
+        if (! Schema::hasTable('landing_exams')) {
+            return $urls;
+        }
+
+        foreach (['sd', 'smp', 'sma'] as $jenjang) {
+            if (Route::has('ujian-online.jenjang')) {
+                $urls[] = [
+                    'loc' => route('ujian-online.jenjang', ['jenjang' => $jenjang]),
+                    'lastmod' => null,
+                    'changefreq' => 'weekly',
+                    'priority' => '0.7',
+                ];
+            }
+        }
+
+        $exams = LandingExam::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['slug', 'jenjang', 'updated_at']);
+
+        foreach ($exams as $exam) {
+            $urls[] = [
+                'loc' => route('ujian-online.show', [
+                    'jenjang' => strtolower($exam->jenjang),
+                    'landingExam' => $exam->slug,
+                ]),
+                'lastmod' => $exam->updated_at?->toAtomString(),
+                'changefreq' => 'weekly',
                 'priority' => '0.6',
             ];
         }

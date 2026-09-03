@@ -146,6 +146,33 @@ class WaMessageTemplateService
             'alert_gateway_down' => "[Ujion] WA Gateway DOWN\nURL: {url}\nTime: {time}\nError: {error}",
 
             'alert_queue_backlog' => "[Ujion] Queue menumpuk\nJobs: {jobs}\nOldest: {oldest}\nTime: {time}",
+
+            'event_public_exam_paid' => trim(implode("\n", [
+                'Halo {name},',
+                '',
+                'Pembayaran ujian *{exam_title} — {mapel_label}* berhasil.',
+                '',
+                'Klik link berikut untuk mulai mengerjakan ujian:',
+                '{exam_url}',
+                '',
+                'Link ini bersifat pribadi. Jangan dibagikan ke orang lain.',
+                '',
+                'Salam,',
+                'Admin Ujion',
+            ])),
+
+            'event_public_exam_completed' => trim(implode("\n", [
+                'Halo {name},',
+                '',
+                'Ujian *{exam_title} — {mapel_label}* telah selesai.',
+                'Skor: *{score}*',
+                '',
+                'Lihat hasil lengkap, kunci jawaban, dan pembahasan di:',
+                '{result_url}',
+                '',
+                'Salam,',
+                'Admin Ujion',
+            ])),
         ];
     }
 

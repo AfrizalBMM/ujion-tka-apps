@@ -54,6 +54,9 @@
             <nav class="hidden items-center gap-6 lg:flex">
                 <a href="{{ route('kisi-kisi.index') }}" class="landing-nav-link">Kisi-Kisi</a>
                 <a href="{{ route('artikel.index') }}" class="landing-nav-link">Artikel</a>
+                @if(\Illuminate\Support\Facades\Route::has('ujian-online.index'))
+                    <a href="{{ route('ujian-online.index') }}" class="landing-nav-link">Ujian Online</a>
+                @endif
                 <a href="{{ route('landing') }}#faq" class="landing-nav-link">FAQ</a>
             </nav>
 
@@ -71,6 +74,9 @@
             <nav class="flex items-center gap-5">
                 <a href="{{ route('kisi-kisi.index') }}" class="hover:text-slate-900 dark:hover:text-white">Kisi-Kisi</a>
                 <a href="{{ route('artikel.index') }}" class="hover:text-slate-900 dark:hover:text-white">Artikel</a>
+                @if(\Illuminate\Support\Facades\Route::has('ujian-online.index'))
+                    <a href="{{ route('ujian-online.index') }}" class="hover:text-slate-900 dark:hover:text-white">Ujian Online</a>
+                @endif
                 <a href="{{ route('register.guru.form') }}" class="hover:text-slate-900 dark:hover:text-white">Daftar Guru</a>
             </nav>
         </div>

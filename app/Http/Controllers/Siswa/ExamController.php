@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppBlast;
 use App\Models\Exam;
 use App\Models\JawabanSiswa;
+use App\Models\LandingExamOrder;
 use App\Models\MapelPaket;
 use App\Models\Soal;
 use App\Models\UjianSesi;
+use App\Services\WaMessageTemplateService;
 use App\Support\MatchingKey;
 use App\Support\NameMatcher;
 use App\Support\SurveyAnalytics;
@@ -344,7 +347,7 @@ class ExamController extends Controller
         }
 
         if ($sesi && $sesi->status === 'selesai' && ! $sesi->relationLoaded('mapelPaket')) {
-            $sesi->load(['mapelPaket.soals', 'jawabanSiswas']);
+            $sesi->load(['mapelPaket.soals', 'jawabanSiswas', 'landingExamOrder']);
         }
 
         return view('ujian.selesai', ['session' => $sesi]);
@@ -395,6 +398,8 @@ class ExamController extends Controller
 
             session()->forget(['siswa_mapel_token', 'siswa_exam_id', 'siswa_mapel_id']);
 
+            $this->handlePublicExamCompletion($locked);
+
             return $locked->refresh();
         });
     }
@@ -409,6 +414,39 @@ class ExamController extends Controller
         }
 
         return UjianSesi::where('session_token', $participantToken)->first();
+    }
+
+    private function handlePublicExamCompletion(UjianSesi $sesi): void
+    {
+        if (! $sesi->landing_exam_order_id) {
+            return;
+        }
+
+        $order = LandingExamOrder::with(['landingExamMapel.landingExam.exam', 'landingExamMapel.mapelPaket'])
+            ->find($sesi->landing_exam_order_id);
+
+        if (! $order) {
+            return;
+        }
+
+        $order->update(['status' => LandingExamOrder::STATUS_EXAM_COMPLETED]);
+
+        $exam = $order->landingExamMapel?->landingExam?->exam;
+        $mapelPaket = $order->landingExamMapel?->mapelPaket;
+
+        if (! $exam || ! $mapelPaket || blank($order->nomor_wa)) {
+            return;
+        }
+
+        $waBody = app(WaMessageTemplateService::class)->render('event_public_exam_completed', [
+            'name' => $order->nama,
+            'exam_title' => $exam->judul,
+            'mapel_label' => $mapelPaket->nama_label,
+            'score' => number_format((float) $sesi->skor, 1),
+            'result_url' => route('ujian-online.result', $order->session_token),
+        ]);
+
+        SendWhatsAppBlast::dispatch($order->nomor_wa, $waBody)->onQueue('high');
     }
 
     private function calculateScore(UjianSesi $sesi): float

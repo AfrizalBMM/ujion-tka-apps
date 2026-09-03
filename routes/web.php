@@ -6,6 +6,8 @@ use App\Http\Controllers\ChatImageController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\KisiKisiController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LandingExamController;
+use App\Http\Controllers\LandingExamPaymentController;
 use App\Http\Controllers\MidtransPaymentController;
 use App\Http\Controllers\OgImageController;
 use App\Http\Controllers\RobotsController;
@@ -21,6 +23,7 @@ use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\ExamAnalysisController;
 use App\Http\Controllers\Superadmin\FinanceController;
 use App\Http\Controllers\Superadmin\GlobalQuestionController;
+use App\Http\Controllers\Superadmin\LandingExamController as SuperadminLandingExamController;
 use App\Http\Controllers\Superadmin\LandingSettingsController;
 use App\Http\Controllers\Superadmin\MapelPaketController as SuperadminMapelPaketController;
 use App\Http\Controllers\Superadmin\MaterialController;
@@ -42,6 +45,22 @@ Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::post('/payments/midtrans/start', [MidtransPaymentController::class, 'start'])->name('payments.midtrans.start');
 Route::get('/payments/midtrans/finish', [MidtransPaymentController::class, 'finish'])->name('payments.midtrans.finish');
 Route::get('/payments/midtrans/status', [MidtransPaymentController::class, 'status'])->name('payments.midtrans.status');
+
+// Ujian Online Publik (per jenjang)
+Route::prefix('ujian-online')->name('ujian-online.')->group(function () {
+    Route::get('/', [LandingExamController::class, 'index'])->name('index');
+    Route::get('/{jenjang}', [LandingExamController::class, 'jenjang'])->where('jenjang', 'sd|smp|sma')->name('jenjang');
+    Route::get('/{jenjang}/{landingExam}', [LandingExamController::class, 'show'])->where('jenjang', 'sd|smp|sma')->name('show');
+    Route::post('/{jenjang}/{landingExam}/daftar', [LandingExamController::class, 'register'])->where('jenjang', 'sd|smp|sma')->name('register');
+
+    Route::get('/pending/{orderToken}', [LandingExamController::class, 'pending'])->name('pending');
+    Route::get('/start/{orderToken}', [LandingExamController::class, 'startExam'])->name('start');
+    Route::get('/result/{orderToken}', [LandingExamController::class, 'result'])->name('result');
+
+    Route::post('/pay/{orderToken}', [LandingExamPaymentController::class, 'start'])->name('pay.start');
+    Route::get('/pay/status', [LandingExamPaymentController::class, 'status'])->name('pay.status');
+    Route::get('/pay/finish', [LandingExamPaymentController::class, 'finish'])->name('pay.finish');
+});
 
 Route::get('/og-image.png', OgImageController::class)->name('og.image');
 Route::get('/robots.txt', RobotsController::class)->name('robots');
@@ -271,4 +290,14 @@ Route::prefix('superadmin')
             return view('superadmin.guide');
         }
         )->name('guide');
+
+        Route::get('/landing-exams', [SuperadminLandingExamController::class, 'index'])->name('landing-exams.index');
+        Route::get('/landing-exams/create', [SuperadminLandingExamController::class, 'create'])->name('landing-exams.create');
+        Route::post('/landing-exams', [SuperadminLandingExamController::class, 'store'])->name('landing-exams.store');
+        Route::get('/landing-exams/{landingExam}', [SuperadminLandingExamController::class, 'show'])->name('landing-exams.show');
+        Route::post('/landing-exams/{landingExam}', [SuperadminLandingExamController::class, 'update'])->name('landing-exams.update');
+        Route::post('/landing-exams/{landingExam}/toggle', [SuperadminLandingExamController::class, 'toggle'])->name('landing-exams.toggle');
+        Route::post('/landing-exams/{landingExam}/delete', [SuperadminLandingExamController::class, 'destroy'])->name('landing-exams.destroy');
+        Route::post('/landing-exams/{landingExam}/mapel/{landingExamMapel}/toggle', [SuperadminLandingExamController::class, 'toggleMapel'])->name('landing-exams.mapel.toggle');
+        Route::get('/landing-exams/{landingExam}/orders', [SuperadminLandingExamController::class, 'orders'])->name('landing-exams.orders');
     });

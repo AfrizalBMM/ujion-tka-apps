@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AppSetting;
+use App\Models\LandingExamOrder;
 use App\Models\Transaction;
 use App\Support\PhoneNumber;
 use Illuminate\Http\Client\PendingRequest;
@@ -131,6 +132,113 @@ class MidtransService
         $expected = hash('sha512', $orderId.$statusCode.$grossAmount.$serverKey);
 
         return hash_equals($expected, (string) $signatureKey);
+    }
+
+    public function createSnapTransactionForOrder(LandingExamOrder $order): array
+    {
+        $serverKey = $this->serverKey();
+        abort_if(blank($serverKey), 503, 'Midtrans belum dikonfigurasi.');
+
+        $mapel = $order->landingExamMapel;
+        $landingExam = $mapel?->landingExam;
+        $exam = $landingExam?->exam;
+        $mapelPaket = $mapel?->mapelPaket;
+
+        $amount = (int) round((float) $order->amount);
+        $orderId = $order->midtrans_order_id ?: $this->generatePublicExamReferenceCode();
+
+        $itemName = Str::limit(
+            ($exam?->judul ?? 'Ujian Publik').' — '.($mapelPaket?->nama_label ?? 'Mapel'),
+            50,
+            '',
+        );
+
+        $buildPayload = function (string $oid) use ($order, $amount, $itemName): array {
+            return [
+                'transaction_details' => [
+                    'order_id' => $oid,
+                    'gross_amount' => $amount,
+                ],
+                'customer_details' => [
+                    'first_name' => Str::limit($order->nama, 50, ''),
+                    'phone' => PhoneNumber::normalizeIndonesian($order->nomor_wa) ?: null,
+                ],
+                'item_details' => [
+                    [
+                        'id' => 'public-exam-'.$order->id,
+                        'price' => $amount,
+                        'quantity' => 1,
+                        'name' => $itemName,
+                    ],
+                ],
+                'callbacks' => [
+                    'finish' => route('ujian-online.pay.finish'),
+                ],
+            ];
+        };
+
+        $response = $this->snapClient()->post(
+            $this->baseUrl().'/snap/v1/transactions',
+            $buildPayload($orderId),
+        );
+
+        if ($response->status() === 409) {
+            $orderId = $this->generatePublicExamReferenceCode().'-R'.strtoupper(Str::random(4));
+
+            $response = $this->snapClient()->post(
+                $this->baseUrl().'/snap/v1/transactions',
+                $buildPayload($orderId),
+            );
+        }
+
+        if (! $response->successful()) {
+            Log::error('Midtrans Snap create failed (public exam)', [
+                'order_id' => $order->id,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            throw new \RuntimeException('Gagal membuat transaksi Midtrans. Silakan coba lagi.');
+        }
+
+        $snapToken = (string) $response->json('token');
+        $redirectUrl = (string) $response->json('redirect_url');
+
+        if ($snapToken === '' || $redirectUrl === '') {
+            throw new \RuntimeException('Midtrans tidak mengembalikan token pembayaran.');
+        }
+
+        $order->update(['midtrans_order_id' => $orderId]);
+
+        return [
+            'token' => $snapToken,
+            'redirect_url' => $redirectUrl,
+            'order_id' => $orderId,
+        ];
+    }
+
+    public function generatePublicExamReferenceCode(): string
+    {
+        for ($i = 0; $i < 10; $i++) {
+            $candidate = 'PUJ-'.now()->format('ymd').'-'.strtoupper(Str::random(8));
+
+            if (! LandingExamOrder::query()->where('midtrans_order_id', $candidate)->exists()) {
+                return $candidate;
+            }
+        }
+
+        abort(500, 'Gagal generate reference code.');
+    }
+
+    public function findOrder(string $orderId): ?LandingExamOrder
+    {
+        if ($orderId === '') {
+            return null;
+        }
+
+        return LandingExamOrder::query()
+            ->where('midtrans_order_id', $orderId)
+            ->first();
     }
 
     public function status(string $orderId): ?array

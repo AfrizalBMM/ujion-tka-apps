@@ -33,6 +33,7 @@ class StoreSoalRequest extends FormRequest
             'kategori_profil' => 'nullable|string|max:255',
             'arah_skor' => [$isSurvey ? 'required' : 'nullable', Rule::in(['positif', 'negatif'])],
             'pertanyaan' => 'required|string',
+            'pembahasan' => 'nullable|string',
             'gambar' => 'nullable|image|max:2048',
             'teks_bacaan_id' => ['nullable', $teksBacaanRule],
             'bobot' => 'nullable|integer|min:1|max:100',

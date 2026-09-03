@@ -100,6 +100,10 @@
             ['label' => 'Artikel', 'href' => route('artikel.index')],
         ];
 
+        if (\Illuminate\Support\Facades\Route::has('ujian-online.index')) {
+            $navItems[] = ['label' => 'Ujian Online', 'href' => route('ujian-online.index')];
+        }
+
         if (($sectionActives['faq'] ?? true) === true) {
             $navItems[] = ['label' => 'FAQ', 'href' => '#faq'];
         }
@@ -736,6 +740,11 @@
                                 <li><a href="#faq"
                                         class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">FAQ</a>
                                 </li>
+                            @endif
+                            @if (\Illuminate\Support\Facades\Route::has('ujian-online.index'))
+                                <li><a href="{{ route('ujian-online.index') }}"
+                                        class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Ujian
+                                        Online</a></li>
                             @endif
                         </ul>
                     </div>

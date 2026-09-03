@@ -14,6 +14,8 @@
             return false;
         })->count();
     }
+    $isPublicExam = isset($session) && $session && $session->landing_exam_order_id;
+    $publicOrder = $isPublicExam ? $session->landingExamOrder : null;
 @endphp
 
 <div class="w-full max-w-md space-y-5">
@@ -52,16 +54,24 @@
             </div>
         @endif
 
-        <div class="mt-6 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-left text-xs text-amber-800">
-            <p class="font-semibold">Jika ada mapel berikutnya:</p>
-            <p class="mt-1">Tunggu token mapel berikutnya dari guru/pengawas, kemudian masukkan token tersebut di halaman masuk ujian.</p>
-        </div>
+        @if($isPublicExam && $publicOrder)
+            <div class="mt-6">
+                <a href="{{ route('ujian-online.result', $publicOrder->session_token) }}" class="btn-primary inline-flex px-8 py-3">
+                    Lihat Hasil & Pembahasan
+                </a>
+            </div>
+        @else
+            <div class="mt-6 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-left text-xs text-amber-800">
+                <p class="font-semibold">Jika ada mapel berikutnya:</p>
+                <p class="mt-1">Tunggu token mapel berikutnya dari guru/pengawas, kemudian masukkan token tersebut di halaman masuk ujian.</p>
+            </div>
 
-        <div class="mt-6">
-            <a href="{{ route('siswa.login') }}" class="btn-primary inline-flex px-8 py-3">
-                Masuk Mapel Berikutnya
-            </a>
-        </div>
+            <div class="mt-6">
+                <a href="{{ route('siswa.login') }}" class="btn-primary inline-flex px-8 py-3">
+                    Masuk Mapel Berikutnya
+                </a>
+            </div>
+        @endif
         <div class="mt-3">
             <a href="/" class="text-sm text-textSecondary underline underline-offset-2">Kembali ke Beranda</a>
         </div>

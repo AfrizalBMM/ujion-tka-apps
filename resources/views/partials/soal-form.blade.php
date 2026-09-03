@@ -134,6 +134,13 @@
         <textarea name="pertanyaan" class="input min-h-36" required>{{ old('pertanyaan', $question->pertanyaan ?? '') }}</textarea>
     </div>
 
+    @unless($isSurvey)
+        <div class="input-group">
+            <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Pembahasan <span class="text-textSecondary font-normal normal-case tracking-normal">(opsional — tampil di halaman hasil ujian publik)</span></label>
+            <textarea name="pembahasan" class="input min-h-28">{{ old('pembahasan', $question->pembahasan ?? '') }}</textarea>
+        </div>
+    @endunless
+
     <div class="grid gap-4 md:grid-cols-[1fr_auto]">
         <div class="input-group">
             <label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Gambar Soal</label>

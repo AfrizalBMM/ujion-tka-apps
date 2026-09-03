@@ -116,7 +116,7 @@
                 Soal
             </a>
             <a href="{{ route('superadmin.exams.index') }}"
-                class="bottom-nav-item {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
+                class="bottom-nav-item {{ request()->routeIs('superadmin.exams.index') || request()->routeIs('superadmin.landing-exams.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-file-pen"></i>
                 Ujian
             </a>
@@ -262,6 +262,11 @@
                     class="sidebar-link {{ request()->routeIs('superadmin.exams.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-file-lines w-5"></i>
                     <span class="sidebar-link-label">Manajemen Ujian</span>
+                </a>
+                <a href="{{ route('superadmin.landing-exams.index') }}"
+                    class="sidebar-link {{ request()->routeIs('superadmin.landing-exams.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-store w-5"></i>
+                    <span class="sidebar-link-label">Ujian Publik Langsung</span>
                 </a>
 
                 <div class="sidebar-section-title">Sistem</div>

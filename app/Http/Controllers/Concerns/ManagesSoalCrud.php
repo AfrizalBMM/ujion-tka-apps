@@ -49,6 +49,7 @@ trait ManagesSoalCrud
                 'kategori_profil' => $request->string('kategori_profil')->toString() ?: null,
                 'arah_skor' => $request->string('arah_skor')->toString() ?: 'positif',
                 'pertanyaan' => $request->string('pertanyaan')->toString(),
+                'pembahasan' => $request->string('pembahasan')->toString() ?: null,
                 'bobot' => $bobot,
             ];
 

@@ -47,4 +47,9 @@ class Exam extends Model
     {
         return $this->paketSoal->mapels();
     }
+
+    public function landingExam()
+    {
+        return $this->hasOne(LandingExam::class);
+    }
 }
