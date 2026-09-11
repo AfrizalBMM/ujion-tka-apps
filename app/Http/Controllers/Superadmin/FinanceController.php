@@ -32,55 +32,52 @@ class FinanceController extends Controller
         }
 
         $hasJenjangColumn = Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang');
-        $adminWhatsapp = AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'));
+        $adminWhatsapp = AppSetting::getValue('admin_whatsapp', config('services.admin.whatsapp'));
 
-        $midtransSettings = [
-            'enabled' => AppSetting::getValue('midtrans_enabled') === '1',
-            'environment' => AppSetting::getValue('midtrans_environment', 'sandbox'),
-            'server_key' => (string) AppSetting::getValue('midtrans_server_key', ''),
-            'client_key' => (string) AppSetting::getValue('midtrans_client_key', ''),
+        $dokuSettings = [
+            'enabled' => AppSetting::getValue('doku_enabled') === '1',
+            'client_id' => (string) AppSetting::getValue('doku_client_id', ''),
+            'secret_key' => (string) AppSetting::getValue('doku_secret_key', ''),
         ];
 
-        return view('superadmin.finance', compact('tarifJenjangs', 'hasJenjangColumn', 'adminWhatsapp', 'midtransSettings'));
+        return view('superadmin.finance', compact('tarifJenjangs', 'hasJenjangColumn', 'adminWhatsapp', 'dokuSettings'));
     }
 
     public function saveSettings(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'admin_whatsapp' => ['nullable', 'string', 'max:40'],
-            'midtrans_enabled' => ['nullable', 'boolean'],
-            'midtrans_environment' => ['nullable', 'in:sandbox,production'],
-            'midtrans_server_key' => ['nullable', 'string', 'max:255'],
-            'midtrans_client_key' => ['nullable', 'string', 'max:255'],
+            'doku_enabled' => ['nullable', 'boolean'],
+            'doku_client_id' => ['nullable', 'string', 'max:255'],
+            'doku_secret_key' => ['nullable', 'string', 'max:255'],
         ]);
 
         $rawWa = (string) ($validated['admin_whatsapp'] ?? '');
         $digits = PhoneNumber::normalizeIndonesian($rawWa);
         $digits = $digits !== '' ? $digits : null;
 
-        AppSetting::putValue('qris_admin_whatsapp', $digits);
+        AppSetting::putValue('admin_whatsapp', $digits);
 
-        $midtransEnabled = (bool) ($validated['midtrans_enabled'] ?? false);
-        $midtransServerKey = trim((string) ($validated['midtrans_server_key'] ?? ''));
-        $midtransClientKey = trim((string) ($validated['midtrans_client_key'] ?? ''));
+        $dokuEnabled = (bool) ($validated['doku_enabled'] ?? false);
+        $dokuClientId = trim((string) ($validated['doku_client_id'] ?? ''));
+        $dokuSecretKey = trim((string) ($validated['doku_secret_key'] ?? ''));
 
-        if ($midtransEnabled && $midtransServerKey === '') {
+        if ($dokuEnabled && ($dokuClientId === '' || $dokuSecretKey === '')) {
             return back()->with('flash', [
                 'type' => 'warning',
-                'title' => 'Server Key Midtrans wajib diisi',
-                'message' => 'Aktivasi Midtrans memerlukan Server Key. Isi kredensial dari dashboard Midtrans Anda, lalu centang kembali aktivasinya.',
+                'title' => 'Kredensial Doku wajib diisi',
+                'message' => 'Aktivasi Doku memerlukan Client-Id dan Secret-Key. Isi kredensial dari dashboard Doku Anda, lalu centang kembali aktivasinya.',
             ]);
         }
 
-        AppSetting::putValue('midtrans_enabled', $midtransEnabled ? '1' : '0');
-        AppSetting::putValue('midtrans_environment', (string) ($validated['midtrans_environment'] ?? 'sandbox'));
-        AppSetting::putValue('midtrans_server_key', $midtransServerKey !== '' ? $midtransServerKey : null);
-        AppSetting::putValue('midtrans_client_key', $midtransClientKey !== '' ? $midtransClientKey : null);
+        AppSetting::putValue('doku_enabled', $dokuEnabled ? '1' : '0');
+        AppSetting::putValue('doku_client_id', $dokuClientId !== '' ? $dokuClientId : null);
+        AppSetting::putValue('doku_secret_key', $dokuSecretKey !== '' ? $dokuSecretKey : null);
 
         return back()->with('flash', [
             'type' => 'success',
             'title' => 'Pengaturan Keuangan disimpan',
-            'message' => 'Konfigurasi WhatsApp admin dan Payment Gateway Midtrans berhasil diperbarui.',
+            'message' => 'Konfigurasi WhatsApp admin dan Payment Gateway Doku berhasil diperbarui.',
         ]);
     }
 }

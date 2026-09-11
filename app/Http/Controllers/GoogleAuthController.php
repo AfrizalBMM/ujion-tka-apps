@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PricingPlan;
 use App\Models\User;
 use App\Support\PhoneNumber;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -93,12 +91,13 @@ class GoogleAuthController extends Controller
             }
 
             if ($user->account_status === User::STATUS_PENDING) {
-                $this->storePendingSession($request, $user);
+                Auth::login($user, true);
+                $request->session()->regenerate();
 
-                return redirect()->route('register.guru.pending')->with('flash', [
+                return redirect()->route('guru.dashboard')->with('flash', [
                     'type' => 'info',
                     'title' => 'Akun ditemukan, masih pending',
-                    'message' => 'Akun Anda terhubung dengan Google namun masih menunggu pembayaran aktivasi. Lanjutkan pembayaran di bawah ini.',
+                    'message' => 'Akun Anda terhubung dengan Google namun masih menunggu pembayaran aktivasi. Selesaikan pembayaran dari dashboard untuk mengaktifkan akun.',
                 ]);
             }
 
@@ -184,12 +183,13 @@ class GoogleAuthController extends Controller
         ]);
 
         $request->session()->forget('google_registration');
-        $this->storePendingSession($request, $user);
+        Auth::login($user, true);
+        $request->session()->regenerate();
 
-        return redirect()->route('register.guru.pending')->with('flash', [
+        return redirect()->route('guru.dashboard')->with('flash', [
             'type' => 'success',
             'title' => 'Akun Google berhasil dihubungkan',
-            'message' => 'Lengkapi pembayaran aktivasi di bawah ini untuk mengaktifkan akun guru Anda.',
+            'message' => 'Selamat datang! Selesaikan pembayaran aktivasi dari dashboard untuk membuka semua fitur.',
         ]);
     }
 
@@ -281,39 +281,5 @@ class GoogleAuthController extends Controller
         if ($updates !== []) {
             $user->update($updates);
         }
-    }
-
-    private function storePendingSession(Request $request, User $teacher): void
-    {
-        $plan = $this->resolvePlanForJenjang($teacher->jenjang);
-
-        $request->session()->put('pending_registration', [
-            'teacher_id' => $teacher->id,
-            'pricing_plan_id' => $plan?->id,
-            'harga' => $plan?->price,
-        ]);
-    }
-
-    private function resolvePlanForJenjang(?string $jenjang): ?PricingPlan
-    {
-        $query = PricingPlan::query()->where('is_active', true);
-
-        if ($jenjang && Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang')) {
-            $plan = (clone $query)
-                ->where('jenjang', $jenjang)
-                ->first();
-
-            if ($plan) {
-                return $plan;
-            }
-        }
-
-        if (Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang')) {
-            return (clone $query)
-                ->whereNull('jenjang')
-                ->first();
-        }
-
-        return $query->first();
     }
 }

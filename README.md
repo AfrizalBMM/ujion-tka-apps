@@ -404,20 +404,22 @@ Saat men-deploy ke server production (shared hosting atau VPS), pastikan langkah
 4.  **Aset**: Jalankan `npm run build` untuk memproses file CSS/JS.
 5.  **Environment**: Pastikan `APP_ENV=production` dan `APP_DEBUG=false` di file `.env` server.
 
-## Konfigurasi QRIS
+## Konfigurasi Pembayaran (Doku)
 
-Fitur pembayaran QRIS guru membutuhkan konfigurasi berikut di `.env`:
+Pembayaran otomatis (aktivasi guru & ujian publik) memakai **Doku Checkout**. Kredensial dikelola dari UI, bukan `.env`:
+
+1. Login sebagai superadmin → menu **Keuangan**.
+2. Centang **Aktifkan pembayaran Doku**, isi **Client-Id** (`BRN-...`) dan **Secret-Key** (`SK-...`) dari dashboard Doku (Settings → API Keys), lalu simpan.
+3. Saat deploy: daftarkan `{domain}/api/payments/doku/notification` sebagai **Notification URL** di dashboard Doku. Di lokal tanpa URL publik, pembayaran tetap terverifikasi via polling status.
+
+Env pendukung:
 
 ```env
-GOPAY_MASTER_PAYLOAD=
-QRIS_ADMIN_WHATSAPP=
+ADMIN_WHATSAPP=
 ```
 
-Catatan:
-
-- `GOPAY_MASTER_PAYLOAD` wajib diisi. Ini bukan API key GoPay, tetapi raw string QRIS statis dari merchant GoPay yang dipakai sistem untuk inject nominal dinamis.
-- `QRIS_ADMIN_WHATSAPP` opsional sebagai fallback nomor admin. Nilai ini juga bisa dioverride dari menu Superadmin > Keuangan & QR.
-- Jika Anda mengubah env di server lokal/production, jalankan `php artisan config:clear` agar konfigurasi terbaru terbaca.
+- `ADMIN_WHATSAPP` opsional sebagai fallback nomor WA admin (bisa dioverride dari menu Superadmin > Keuangan).
+- Semua kanal pembayaran yang aktif di akun Doku otomatis tampil di halaman checkout.
 
 ## Testing
 

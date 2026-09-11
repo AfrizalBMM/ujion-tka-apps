@@ -2,18 +2,18 @@ import { closeAllActionMenus } from '../core/action-menus';
 
 function initSuperadminFinance() {
 
-	const modal = document.getElementById('qris-modal');
-	const form = document.getElementById('qris-form');
-	const formTitle = document.getElementById('qris-form-title');
-	const inputName = document.getElementById('qris-name');
-	const inputJenjang = document.getElementById('qris-jenjang');
-	const inputPrice = document.getElementById('qris-price');
-	const inputSubtitle = document.getElementById('qris-subtitle');
-	const inputDescription = document.getElementById('qris-description');
-	const inputImage = document.getElementById('qris-image');
-	const imagePreviewWrap = document.getElementById('qris-image-preview-wrap');
-	const imagePreview = document.getElementById('qris-image-preview');
-	const submitButton = document.getElementById('qris-submit');
+	const modal = document.getElementById('tarif-modal');
+	const form = document.getElementById('tarif-form');
+	const formTitle = document.getElementById('tarif-form-title');
+	const inputName = document.getElementById('tarif-name');
+	const inputJenjang = document.getElementById('tarif-jenjang');
+	const inputPrice = document.getElementById('tarif-price');
+	const inputSubtitle = document.getElementById('tarif-subtitle');
+	const inputDescription = document.getElementById('tarif-description');
+	const inputImage = document.getElementById('tarif-image');
+	const imagePreviewWrap = document.getElementById('tarif-image-preview-wrap');
+	const imagePreview = document.getElementById('tarif-image-preview');
+	const submitButton = document.getElementById('tarif-submit');
 
 	if (
 		!modal ||
@@ -29,7 +29,7 @@ function initSuperadminFinance() {
 	}
 
 	const defaultAction = form.getAttribute('action') || '';
-	const defaultTitle = 'Tambah QRIS';
+	const defaultTitle = 'Tambah Tarif';
 	const defaultSubmitHtml = '<i class="fa-solid fa-floppy-disk mr-2"></i> Simpan';
 	const editSubmitHtml = '<i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Perubahan';
 	let objectUrl = null;
@@ -85,7 +85,7 @@ function initSuperadminFinance() {
 		setPreviewImage('');
 	};
 
-	document.querySelectorAll('[data-qris-form-open]').forEach((button) => {
+	document.querySelectorAll('[data-tarif-form-open]').forEach((button) => {
 		button.addEventListener('click', () => {
 			closeAllActionMenus();
 			resetForm();
@@ -94,38 +94,38 @@ function initSuperadminFinance() {
 		});
 	});
 
-	document.querySelectorAll('[data-qris-form-close]').forEach((button) => {
+	document.querySelectorAll('[data-tarif-form-close]').forEach((button) => {
 		button.addEventListener('click', closeModal);
 	});
 
-	document.querySelectorAll('[data-qris-form-reset]').forEach((button) => {
+	document.querySelectorAll('[data-tarif-form-reset]').forEach((button) => {
 		button.addEventListener('click', resetForm);
 	});
 
-	document.querySelectorAll('[data-qris-edit]').forEach((button) => {
+	document.querySelectorAll('[data-tarif-edit]').forEach((button) => {
 		button.addEventListener('click', () => {
 			closeAllActionMenus();
 			resetForm();
 			openModal();
 
-			const updateAction = button.getAttribute('data-qris-update-action') || '';
+			const updateAction = button.getAttribute('data-tarif-update-action') || '';
 			if (updateAction) {
 				form.action = updateAction;
 			}
 
-			formTitle.textContent = 'Edit QRIS';
+			formTitle.textContent = 'Edit Tarif';
 			submitButton.innerHTML = editSubmitHtml;
 
-			inputName.value = button.getAttribute('data-qris-name') || '';
+			inputName.value = button.getAttribute('data-tarif-name') || '';
 			if (inputJenjang && !inputJenjang.disabled) {
-				inputJenjang.value = button.getAttribute('data-qris-jenjang') || '';
+				inputJenjang.value = button.getAttribute('data-tarif-jenjang') || '';
 				inputJenjang.dispatchEvent(new Event('change'));
 			}
-			inputPrice.value = button.getAttribute('data-qris-price') || '';
-			inputSubtitle.value = button.getAttribute('data-qris-subtitle') || '';
-			inputDescription.value = button.getAttribute('data-qris-description') || '';
+			inputPrice.value = button.getAttribute('data-tarif-price') || '';
+			inputSubtitle.value = button.getAttribute('data-tarif-subtitle') || '';
+			inputDescription.value = button.getAttribute('data-tarif-description') || '';
 
-			const imageUrl = button.getAttribute('data-qris-image-url') || '';
+			const imageUrl = button.getAttribute('data-tarif-image-url') || '';
 			clearObjectUrl();
 			setPreviewImage(imageUrl);
 		});

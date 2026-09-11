@@ -713,6 +713,15 @@
         @apply truncate transition-all duration-200;
     }
 
+    .sidebar-token-card {
+        @apply mx-1 mt-1 rounded-xl border border-slate-200/80 bg-slate-50 p-2.5;
+        @apply dark:border-slate-800 dark:bg-slate-900/60;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar-token-card {
+        @apply hidden;
+    }
+
     .sidebar-submenu {
         @apply flex flex-col gap-1;
     }

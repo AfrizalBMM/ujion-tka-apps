@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Guru;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\Material;
+use App\Models\PricingPlan;
 use App\Models\UjianSesi;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -15,6 +17,17 @@ class DashboardController extends Controller
     public function index(): View
     {
         $user = Auth::user();
+
+        $paymentBanner = null;
+        if ($user->account_status === User::STATUS_PENDING) {
+            $plan = PricingPlan::resolveForJenjang($user->jenjang);
+
+            $paymentBanner = [
+                'planName' => $plan?->name,
+                'planDescription' => $plan?->description ?: $plan?->subtitle,
+                'amount' => $plan?->price,
+            ];
+        }
 
         $availableExamsCount = Exam::query()
             ->where('status', 'terbit')
@@ -60,6 +73,12 @@ class DashboardController extends Controller
                 : null,
         ]));
 
-        return view('guru.dashboard', compact('totalPeserta', 'rataRataKelas', 'simulasiSelesai', 'pengumuman'));
+        return view('guru.dashboard', compact(
+            'totalPeserta',
+            'rataRataKelas',
+            'simulasiSelesai',
+            'pengumuman',
+            'paymentBanner',
+        ));
     }
 }

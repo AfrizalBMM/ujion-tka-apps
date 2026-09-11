@@ -53,7 +53,7 @@ Schedule::call(function (): void {
         }
     }
 
-    $settingAdmin = (string) (AppSetting::getValue('qris_admin_whatsapp', '') ?? '');
+    $settingAdmin = (string) (AppSetting::getValue('admin_whatsapp', '') ?? '');
     if ($settingAdmin !== '') {
         foreach (explode(',', $settingAdmin) as $raw) {
             $raw = trim($raw);
@@ -205,7 +205,7 @@ Schedule::call(function (): void {
         }
     }
 
-    $settingAdmin = (string) (AppSetting::getValue('qris_admin_whatsapp', '') ?? '');
+    $settingAdmin = (string) (AppSetting::getValue('admin_whatsapp', '') ?? '');
     if ($settingAdmin !== '') {
         foreach (explode(',', $settingAdmin) as $raw) {
             $raw = trim($raw);

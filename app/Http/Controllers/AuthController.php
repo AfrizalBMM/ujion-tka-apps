@@ -44,7 +44,7 @@ class AuthController extends Controller
         }
 
         $adminNumber = PhoneNumber::normalizeIndonesian(
-            (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
+            (string) AppSetting::getValue('admin_whatsapp', config('services.admin.whatsapp'))
         );
 
         if ($adminNumber === '') {
@@ -95,7 +95,7 @@ class AuthController extends Controller
         if ($user && hash_equals(strtoupper(trim((string) $user->access_token)), $accessToken)) {
             if ($user->account_status !== User::STATUS_ACTIVE) {
                 $message = $user->account_status === User::STATUS_PENDING
-                    ? 'Akun Anda masih pending. Token akses akan bisa dipakai setelah pembayaran diverifikasi admin.'
+                    ? 'Akun Anda masih menunggu pembayaran. Silakan daftar ulang dengan email / nomor WhatsApp yang sama untuk melanjutkan pembayaran, atau masuk dengan Google.'
                     : 'Akun Anda sedang ditangguhkan. Silakan hubungi admin.';
 
                 throw ValidationException::withMessages([

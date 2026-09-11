@@ -12,9 +12,7 @@ class Transaction extends Model
 
     public const STATUS_FAILED = 'failed';
 
-    public const PAYMENT_METHOD_MANUAL_QRIS = 'manual_qris';
-
-    public const PAYMENT_METHOD_MIDTRANS = 'midtrans';
+    public const PAYMENT_METHOD_DOKU = 'doku';
 
     protected $guarded = [];
 

@@ -2,9 +2,11 @@ import './bootstrap';
 
 import 'flowbite';
 import './core/action-menus';
+import './core/doku-checkout';
 import './core/katex-render';
 import './core/layout-controls';
 import './pages/guru-chat';
+import './pages/guru-sidebar-token';
 import './pages/landing-testimonials';
 import './pages/guru-exams';import './pages/guru-paket-soal-show';
 import './pages/guru-teks-bacaan';

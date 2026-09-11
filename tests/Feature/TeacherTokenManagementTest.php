@@ -30,7 +30,7 @@ class TeacherTokenManagementTest extends TestCase
         $response->assertRedirect();
         $teacher->refresh();
 
-        $this->assertMatchesRegularExpression('/^[A-Z0-9]{10}$/', (string) $teacher->access_token);
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6}$/', (string) $teacher->access_token);
         $response->assertSessionHas('flash', fn (array $flash) => ($flash['token'] ?? null) === $teacher->access_token);
     }
 
@@ -44,7 +44,7 @@ class TeacherTokenManagementTest extends TestCase
         $teacher = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_ACTIVE,
-            'access_token' => 'ABCDEF1234',
+            'access_token' => 'ABC123',
         ]);
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.teachers.refresh-token', $teacher));
@@ -52,8 +52,8 @@ class TeacherTokenManagementTest extends TestCase
         $response->assertRedirect();
         $teacher->refresh();
 
-        $this->assertNotSame('ABCDEF1234', $teacher->access_token);
-        $this->assertMatchesRegularExpression('/^[A-Z0-9]{10}$/', (string) $teacher->access_token);
+        $this->assertNotSame('ABC123', $teacher->access_token);
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6}$/', (string) $teacher->access_token);
         $response->assertSessionHas('flash', fn (array $flash) => ($flash['token'] ?? null) === $teacher->access_token);
     }
 
@@ -79,7 +79,7 @@ class TeacherTokenManagementTest extends TestCase
         $this->assertSame(User::STATUS_ACTIVE, $teacher->account_status);
         $this->assertSame(User::PAYMENT_APPROVED, $teacher->payment_status);
         $this->assertSame($superadmin->id, $teacher->payment_reviewed_by);
-        $this->assertMatchesRegularExpression('/^[A-Z0-9]{10}$/', (string) $teacher->access_token);
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6}$/', (string) $teacher->access_token);
     }
 
     public function test_superadmin_can_reject_submitted_payment_with_reason(): void

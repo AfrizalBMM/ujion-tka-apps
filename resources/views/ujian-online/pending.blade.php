@@ -52,18 +52,19 @@
     </div>
 
     @if($order->status === \App\Models\LandingExamOrder::STATUS_PENDING_PAYMENT || $order->status === \App\Models\LandingExamOrder::STATUS_FAILED)
-        <div id="payment-flow" class="space-y-4" data-start-url="{{ route('ujian-online.pay.start', $order->session_token) }}" data-status-url="{{ route('ujian-online.pay.status') }}" data-csrf="{{ csrf_token() }}">
+        <div id="payment-flow" class="space-y-4" data-start-url="{{ route('ujian-online.pay.start', $order->session_token) }}" data-status-url="{{ route('ujian-online.pay.status') }}" data-csrf="{{ csrf_token() }}" data-poll-order-id="{{ $order->status === \App\Models\LandingExamOrder::STATUS_PENDING_PAYMENT ? (string) $order->doku_invoice_number : '' }}">
             <div data-flow-panel="idle">
                 <button type="button" class="btn-primary w-full" data-flow-start>
                     <i class="fa-solid fa-bolt mr-2"></i>
                     Bayar Sekarang
                 </button>
-                <p class="mt-2 text-xs text-slate-500">GoPay, QRIS, Virtual Account, e-wallet, dan lainnya.</p>
+                <p class="mt-2 text-xs text-slate-500">QRIS, Virtual Account, e-wallet, kartu, dan lainnya.</p>
             </div>
 
-            <div data-flow-panel="loading-snap" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-5">
+            <div data-flow-panel="loading" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-5">
                 <i class="fa-solid fa-spinner fa-spin mb-2 block text-2xl text-slate-400"></i>
                 <p class="text-sm font-semibold text-slate-900">Menyiapkan pembayaran...</p>
+                <p class="mt-1 text-xs text-slate-500">Jendela pembayaran Doku akan terbuka di tab baru.</p>
             </div>
 
             <div data-flow-panel="polling" class="hidden rounded-xl border border-blue-100 bg-blue-50 p-5">
@@ -123,17 +124,6 @@
         panels().forEach((panel) => panel.classList.toggle('hidden', panel.dataset.flowPanel !== name));
     };
 
-    const loadSnapScript = (clientKey, isProduction) => new Promise((resolve, reject) => {
-        if (window.snap) { resolve(); return; }
-        const script = document.createElement('script');
-        const host = isProduction ? 'https://app.midtrans.com' : 'https://app.sandbox.midtrans.com';
-        script.src = host + '/snap/snap.js';
-        script.setAttribute('data-client-key', clientKey);
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Gagal memuat Midtrans Snap.'));
-        document.head.appendChild(script);
-    });
-
     const startPolling = () => {
         if (!currentOrderId) { showPanel('idle'); return; }
         showPanel('polling');
@@ -166,8 +156,9 @@
         if (pollAttempts >= 60) { window.clearInterval(pollTimer); showPanel('failed'); }
     };
 
-    const openSnap = async () => {
-        showPanel('loading-snap');
+    const openPayment = async () => {
+        showPanel('loading');
+        const popup = window.open('', '_blank');
         let data;
         try {
             const res = await fetch(startUrl, {
@@ -178,25 +169,44 @@
             data = await res.json();
             if (!res.ok || !data.ok) throw new Error(data.message || 'Gagal memulai pembayaran.');
         } catch (e) {
+            if (popup) popup.close();
             window.alert(e.message || 'Gagal memulai pembayaran.');
             showPanel('idle');
             return;
         }
+        if (popup) {
+            popup.location.href = data.payment_url;
+        } else {
+            window.location.href = data.payment_url;
+            return;
+        }
         currentOrderId = data.order_id;
-        try { await loadSnapScript(data.client_key, data.is_production); }
-        catch (e) { window.alert(e.message); showPanel('idle'); return; }
-        showPanel('idle');
-        window.snap.pay(data.snap_token, {
-            onSuccess: () => startPolling(),
-            onPending: () => startPolling(),
-            onError: () => showPanel('failed'),
-            onClose: () => startPolling(),
-        });
+        startPolling();
     };
 
-    flow.querySelectorAll('[data-flow-start], [data-flow-retry]').forEach((button) => {
-        button.addEventListener('click', () => { window.clearInterval(pollTimer); openSnap(); });
+    window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return;
+        if (!event.data || typeof event.data.type !== 'string') return;
+
+        if (event.data.type === 'doku-payment-finished' && currentOrderId) {
+            pollAttempts = 0;
+            pollStatus();
+        }
+
+        if (event.data.type === 'doku-payment-cancelled') {
+            showPanel('idle');
+        }
     });
+
+    flow.querySelectorAll('[data-flow-start], [data-flow-retry]').forEach((button) => {
+        button.addEventListener('click', () => { window.clearInterval(pollTimer); openPayment(); });
+    });
+
+    const autoPollOrderId = flow.dataset.pollOrderId || '';
+    if (autoPollOrderId) {
+        currentOrderId = autoPollOrderId;
+        startPolling();
+    }
 })();
 </script>
 @endsection

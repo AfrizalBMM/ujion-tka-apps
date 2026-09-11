@@ -51,8 +51,8 @@ return [
         'scheme' => env('PUSHER_SCHEME', 'https'),
     ],
 
-    'qris' => [
-        'admin_whatsapp' => env('QRIS_ADMIN_WHATSAPP'),
+    'admin' => [
+        'whatsapp' => env('ADMIN_WHATSAPP'),
     ],
 
     'wa_webhook' => [

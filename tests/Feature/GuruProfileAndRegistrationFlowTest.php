@@ -24,10 +24,9 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
     {
         parent::setUp();
 
-        AppSetting::putValue('midtrans_enabled', '1');
-        AppSetting::putValue('midtrans_environment', 'sandbox');
-        AppSetting::putValue('midtrans_server_key', 'SB-Mid-server-testkey');
-        AppSetting::putValue('midtrans_client_key', 'SB-Mid-client-testkey');
+        AppSetting::putValue('doku_enabled', '1');
+        AppSetting::putValue('doku_client_id', 'BRN-test-client-id');
+        AppSetting::putValue('doku_secret_key', 'SK-test-secret-key');
     }
 
     public function test_landing_points_to_guru_registration_route(): void
@@ -114,7 +113,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
     public function test_guru_token_request_redirects_to_admin_whatsapp(): void
     {
-        config(['services.qris.admin_whatsapp' => '62 812-3456-7890']);
+        config(['services.admin.whatsapp' => '62 812-3456-7890']);
 
         $response = $this->post(route('guru.token-request.send'), [
             'name' => 'Guru Lupa Token',
@@ -139,7 +138,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
     public function test_guru_token_request_shows_warning_when_admin_whatsapp_is_missing(): void
     {
-        config(['services.qris.admin_whatsapp' => '']);
+        config(['services.admin.whatsapp' => '']);
 
         $response = $this->post(route('guru.token-request.send'), [
             'name' => 'Guru Lupa Token',
@@ -151,7 +150,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $response->assertSessionHas('flash.type', 'warning');
     }
 
-    public function test_guru_registration_creates_pending_account(): void
+    public function test_guru_registration_creates_pending_account_and_logs_in(): void
     {
         $response = $this->withSession(['_token' => 'register-token'])->post(route('register.guru'), [
             '_token' => 'register-token',
@@ -162,7 +161,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'no_wa' => '0812-3456-789',
         ]);
 
-        $response->assertRedirect(route('register.guru.pending'));
+        $response->assertRedirect(route('guru.dashboard'));
         $this->assertDatabaseHas('users', [
             'name' => 'Guru Baru',
             'email' => 'guru.baru@example.com',
@@ -173,15 +172,19 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         ]);
 
         $user = User::where('email', 'guru.baru@example.com')->firstOrFail();
+        $this->assertAuthenticatedAs($user);
         $this->assertFalse(Hash::check('password', $user->password));
     }
 
-    public function test_guru_can_start_payment_from_pending_page(): void
+    public function test_guru_can_start_payment_from_dashboard(): void
     {
         Http::fake([
-            '*/snap/v1/transactions' => Http::response([
-                'token' => 'snap-token-123',
-                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v2/snap-token-123',
+            '*/checkout/v1/payment' => Http::response([
+                'response' => [
+                    'payment' => [
+                        'url' => 'https://checkout.doku.com/payment-url-123',
+                    ],
+                ],
             ], 201),
         ]);
 
@@ -199,11 +202,9 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'jenjang' => 'SMP',
         ]);
 
-        $response = $this->withSession([
-            'pending_registration' => ['teacher_id' => $guru->id],
-        ])->postJson(route('payments.midtrans.start'));
+        $response = $this->actingAs($guru)->postJson(route('payments.doku.start'));
 
-        $response->assertOk()->assertJsonPath('ok', true)->assertJsonPath('snap_token', 'snap-token-123');
+        $response->assertOk()->assertJsonPath('ok', true)->assertJsonPath('payment_url', 'https://checkout.doku.com/payment-url-123');
 
         $guru->refresh();
         $transaction = $guru->transactions()->first();
@@ -213,12 +214,15 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->assertSame(100000.0, (float) $transaction->amount);
     }
 
-    public function test_pending_registration_session_persists_for_payment_after_pending_page_is_opened(): void
+    public function test_registration_auto_login_allows_starting_payment_directly(): void
     {
         Http::fake([
-            '*/snap/v1/transactions' => Http::response([
-                'token' => 'snap-token-persist',
-                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v2/snap-token-persist',
+            '*/checkout/v1/payment' => Http::response([
+                'response' => [
+                    'payment' => [
+                        'url' => 'https://checkout.doku.com/payment-url-persist',
+                    ],
+                ],
             ], 201),
         ]);
 
@@ -237,11 +241,9 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'no_wa' => '0812-7777-9999',
         ]);
 
-        $response->assertRedirect(route('register.guru.pending'));
+        $response->assertRedirect(route('guru.dashboard'));
 
-        $this->get(route('register.guru.pending'))->assertOk();
-
-        $paymentResponse = $this->postJson(route('payments.midtrans.start'));
+        $paymentResponse = $this->postJson(route('payments.doku.start'));
 
         $paymentResponse->assertOk()->assertJsonPath('ok', true);
 
@@ -251,7 +253,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->assertNotNull($transaction);
     }
 
-    public function test_duplicate_pending_registration_redirects_back_to_pending_page(): void
+    public function test_duplicate_pending_registration_logs_user_back_in(): void
     {
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
@@ -270,65 +272,57 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'no_wa' => '0812-3456-789',
         ]);
 
-        $response->assertRedirect(route('register.guru.pending'));
-        $response->assertSessionHas('pending_registration.teacher_id', $guru->id);
-        $response->assertSessionHas('pending_registration');
-        $pendingRegistration = session('pending_registration');
-        $this->assertIsArray($pendingRegistration);
-        $this->assertArrayHasKey('pricing_plan_id', $pendingRegistration);
-        $this->assertArrayHasKey('harga', $pendingRegistration);
-        $this->assertNull($pendingRegistration['pricing_plan_id']);
-        $this->assertNull($pendingRegistration['harga']);
-        $response->assertSessionHas('flash.message', 'Kami menemukan data pendaftaran Anda yang masih pending. Silakan lanjutkan dari halaman aktivasi pembayaran.');
+        $response->assertRedirect(route('guru.dashboard'));
+        $this->assertAuthenticatedAs($guru);
+        $response->assertSessionHas('flash.message', 'Kami menemukan data pendaftaran Anda yang masih pending. Selesaikan pembayaran dari dashboard untuk mengaktifkan akun.');
         $this->assertDatabaseCount('users', 1);
     }
 
-    public function test_resume_pending_accepts_registered_name_without_titles(): void
+    public function test_pending_guru_can_access_dashboard_profile_and_chat_but_not_other_features(): void
     {
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_AWAITING,
-            'name' => 'Siti Rahayu, S.Pd.',
-            'email' => 'siti.pending@example.com',
-            'no_wa' => '08123456789',
             'jenjang' => 'SMP',
         ]);
 
-        $response = $this->withSession(['_token' => 'resume-token'])->post(route('register.guru.pending.resume'), [
-            '_token' => 'resume-token',
-            'name' => 'Siti Rahayu',
-            'no_wa' => '0812-3456-789',
-        ]);
+        $this->actingAs($guru)->get(route('guru.dashboard'))->assertOk();
+        $this->actingAs($guru)->get(route('guru.profile'))->assertOk();
+        $this->actingAs($guru)->get(route('guru.chat'))->assertOk();
 
-        $response->assertRedirect(route('register.guru.pending'));
-        $response->assertSessionHas('pending_registration.teacher_id', $guru->id);
+        $blocked = $this->actingAs($guru)->get(route('guru.materials'));
+        $blocked->assertRedirect(route('guru.dashboard'));
+        $blocked->assertSessionHas('flash.message', 'Fitur ini terbuka setelah pembayaran aktivasi berhasil. Silakan selesaikan pembayaran dari dashboard Anda.');
+        $this->assertAuthenticatedAs($guru);
+
+        $this->actingAs($guru)->get(route('guru.exams'))->assertRedirect(route('guru.dashboard'));
+        $this->actingAs($guru)->get(route('guru.paket-soal.index'))->assertRedirect(route('guru.dashboard'));
     }
 
-    public function test_resume_pending_rejects_partial_name_match_even_with_same_whatsapp(): void
+    public function test_dashboard_shows_payment_banner_with_locked_menus_for_pending_guru(): void
     {
-        User::factory()->create([
+        PricingPlan::create([
+            'name' => 'Aktivasi SMP',
+            'jenjang' => 'SMP',
+            'price' => 99000,
+            'is_active' => true,
+        ]);
+
+        $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_AWAITING,
-            'name' => 'Anastasia Putri',
-            'email' => 'anastasia.pending@example.com',
-            'no_wa' => '08123456789',
             'jenjang' => 'SMP',
         ]);
 
-        $response = $this->from(route('register.guru.pending'))
-            ->withSession(['_token' => 'resume-partial-token'])
-            ->post(route('register.guru.pending.resume'), [
-                '_token' => 'resume-partial-token',
-                'name' => 'Ana',
-                'no_wa' => '0812-3456-789',
-            ]);
+        $response = $this->actingAs($guru)->get(route('guru.dashboard'));
 
-        $response->assertRedirect(route('register.guru.pending'));
-        $response->assertSessionHasErrors([
-            'resume' => 'Data pending tidak ditemukan. Pastikan nomor WhatsApp sama seperti saat pendaftaran. Nama boleh tanpa gelar.',
-        ]);
+        $response->assertOk()
+            ->assertSee('Aktifkan Akun Anda')
+            ->assertSee('Bayar Sekarang')
+            ->assertSee('data-payment-locked')
+            ->assertSee('data-doku-config');
     }
 
     public function test_duplicate_active_registration_returns_clear_errors(): void
@@ -359,17 +353,17 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->assertDatabaseCount('users', 1);
     }
 
-    public function test_pending_guru_is_redirected_to_login_when_trying_to_open_guru_area(): void
+    public function test_suspended_guru_is_logged_out_when_trying_to_open_guru_area(): void
     {
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
-            'account_status' => User::STATUS_PENDING,
+            'account_status' => User::STATUS_SUSPEND,
         ]);
 
         $response = $this->actingAs($guru)->get(route('guru.dashboard'));
 
         $response->assertRedirect(route('login'));
-        $response->assertSessionHas('flash.message', 'Akun Anda masih menunggu verifikasi pembayaran. Silakan tunggu token akses dari admin.');
+        $response->assertSessionHas('flash.message', 'Akun Anda sedang ditangguhkan. Silakan hubungi admin.');
         $this->assertGuest();
     }
 
@@ -454,6 +448,37 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
         $guru->refresh();
         $this->assertSame($oldHash, $guru->password);
+    }
+
+    public function test_active_guru_sidebar_shows_access_token_with_copy_button(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_ACTIVE,
+            'no_wa' => '08123456789',
+            'access_token' => 'ABC123TOKEN',
+        ]);
+
+        $response = $this->actingAs($guru)->get(route('guru.dashboard'));
+
+        $response->assertOk()
+            ->assertSee('Token Akses')
+            ->assertSee('ABC123TOKEN')
+            ->assertSee('data-guru-token-copy="ABC123TOKEN"', false);
+    }
+
+    public function test_pending_guru_sidebar_does_not_show_access_token(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'access_token' => null,
+        ]);
+
+        $this->actingAs($guru)
+            ->get(route('guru.dashboard'))
+            ->assertOk()
+            ->assertDontSee('data-guru-token-copy', false);
     }
 
     public function test_uploaded_guru_avatar_is_used_in_header_dropdown(): void

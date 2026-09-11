@@ -89,13 +89,13 @@
             </div>
             <div class="metric-meta">
                 <a href="{{ route('superadmin.payment-confirmations.index', ['status' => 'success']) }}" class="inline-flex items-center gap-x-3 gap-y-1 hover:underline" title="Lihat riwayat transaksi">
-                    <span class="inline-flex items-center gap-1" title="Pendapatan via Midtrans (otomatis)">
+                    <span class="inline-flex items-center gap-1" title="Pendapatan via Doku (otomatis)">
                         <i class="fa-solid fa-bolt text-[10px] text-blue-600"></i>
-                        Midtrans: Rp {{ number_format($revenueBreakdown['midtrans'] ?? 0, 0, ',', '.') }}
+                        Doku: Rp {{ number_format($revenueBreakdown['doku'] ?? 0, 0, ',', '.') }}
                     </span>
                     <span class="inline-flex items-center gap-1" title="Pendapatan tercatat manual oleh admin">
                         <i class="fa-solid fa-user-gear text-[10px] text-amber-600"></i>
-                        Manual: Rp {{ number_format($revenueBreakdown['manual_qris'] ?? 0, 0, ',', '.') }}
+                        Manual: Rp {{ number_format($revenueBreakdown['manual'] ?? 0, 0, ',', '.') }}
                     </span>
                 </a>
                 <span class="font-semibold text-green-600">Finance</span>
@@ -290,7 +290,7 @@
         <a href="{{ route('superadmin.finance.index') }}" class="quick-action">
             <div class="quick-action-icon"><i class="fa-solid fa-credit-card"></i></div>
             <div class="quick-action-title">Pengaturan Pembayaran</div>
-            <div class="quick-action-copy">Atur tarif per jenjang dan payment gateway Midtrans dari satu panel kerja.</div>
+            <div class="quick-action-copy">Atur tarif per jenjang dan payment gateway Doku dari satu panel kerja.</div>
         </a>
         <a href="{{ route('superadmin.questions.index') }}" class="quick-action">
             <div class="quick-action-icon"><i class="fa-solid fa-database"></i></div>

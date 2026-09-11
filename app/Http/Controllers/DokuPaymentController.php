@@ -7,7 +7,7 @@ use App\Models\LandingExamOrder;
 use App\Models\PricingPlan;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Services\MidtransService;
+use App\Services\DokuService;
 use App\Services\PaymentApprovalService;
 use App\Services\WaMessageTemplateService;
 use Illuminate\Contracts\View\View;
@@ -19,34 +19,31 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-class MidtransPaymentController extends Controller
+class DokuPaymentController extends Controller
 {
-    public function start(Request $request, MidtransService $midtrans): JsonResponse
+    public function start(Request $request, DokuService $doku): JsonResponse
     {
-        if (! $midtrans->isEnabled()) {
+        if (! $doku->isEnabled()) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Pembayaran otomatis belum diaktifkan admin. Silakan hubungi admin.',
             ], 503);
         }
 
-        $pendingRegistration = $request->session()->get('pending_registration');
+        $teacher = $request->user();
 
-        if (! is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
+        if (! $teacher || $teacher->role !== User::ROLE_GURU) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Session pendaftaran tidak ditemukan. Silakan ulangi pendaftaran.',
-            ], 419);
+                'message' => 'Sesi tidak valid. Silakan daftar atau masuk kembali.',
+            ], 401);
         }
 
-        $teacher = User::query()->find($pendingRegistration['teacher_id']);
-        if (! $teacher) {
-            $request->session()->forget('pending_registration');
-
+        if ($teacher->account_status === User::STATUS_SUSPEND) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Data pendaftar tidak ditemukan. Silakan ulangi pendaftaran.',
-            ], 404);
+                'message' => 'Akun Anda ditangguhkan. Silakan hubungi admin.',
+            ], 403);
         }
 
         $existingSuccess = $teacher->transactions()
@@ -73,7 +70,7 @@ class MidtransPaymentController extends Controller
         $transaction = $this->createPendingTransactionFor($teacher, $plan);
 
         try {
-            $snap = $midtrans->createSnapTransaction($transaction);
+            $checkout = $doku->createCheckoutPayment($transaction);
         } catch (\RuntimeException $e) {
             return response()->json([
                 'ok' => false,
@@ -85,13 +82,11 @@ class MidtransPaymentController extends Controller
 
         return response()->json([
             'ok' => true,
-            'snap_token' => $snap['token'],
-            'order_id' => $snap['order_id'],
+            'payment_url' => $checkout['payment_url'],
+            'order_id' => $checkout['invoice_number'],
             'reference_code' => $transaction->reference_code,
             'plan_name' => $transaction->plan_name,
             'amount' => 'Rp'.number_format((float) $transaction->amount, 0, ',', '.'),
-            'client_key' => $midtrans->clientKey(),
-            'is_production' => $midtrans->isProduction(),
         ]);
     }
 
@@ -150,29 +145,28 @@ class MidtransPaymentController extends Controller
         abort(500, 'Gagal generate reference code.');
     }
 
-    public function notification(Request $request, MidtransService $midtrans): JsonResponse
+    public function notification(Request $request, DokuService $doku): JsonResponse
     {
-        if (! $midtrans->isEnabled()) {
-            return response()->json(['success' => false, 'message' => 'Midtrans not configured'], 503);
+        if (! $doku->isEnabled()) {
+            return response()->json(['success' => false, 'message' => 'Doku not configured'], 503);
         }
 
-        $payload = $request->all();
-        $orderId = (string) ($payload['order_id'] ?? '');
-        $statusCode = (string) ($payload['status_code'] ?? '');
-        $grossAmount = (string) ($payload['gross_amount'] ?? '');
-        $signatureKey = (string) ($payload['signature_key'] ?? '');
-
-        if ($orderId === '' || $statusCode === '' || $grossAmount === '') {
-            return response()->json(['success' => false, 'message' => 'Invalid payload'], 422);
-        }
-
-        if (! $midtrans->verifySignature($orderId, $statusCode, $grossAmount, $signatureKey)) {
-            Log::warning('Midtrans notification rejected: invalid signature', ['order_id' => $orderId]);
+        if (! $doku->verifyNotificationSignature($request)) {
+            Log::warning('Doku notification rejected: invalid signature', [
+                'invoice' => $request->input('order.invoice_number'),
+            ]);
 
             return response()->json(['success' => false, 'message' => 'Invalid signature'], 401);
         }
 
-        if (str_starts_with($orderId, 'PUJ-')) {
+        $payload = $request->all();
+        $invoiceNumber = $this->extractInvoiceNumber($payload);
+
+        if ($invoiceNumber === '') {
+            return response()->json(['success' => false, 'message' => 'Invalid payload'], 422);
+        }
+
+        if (str_starts_with($invoiceNumber, 'PUJ-')) {
             $order = $this->processPublicExamStatusPayload($payload);
 
             return response()->json(['success' => $order !== null]);
@@ -183,10 +177,10 @@ class MidtransPaymentController extends Controller
         return response()->json(['success' => $transaction !== null]);
     }
 
-    public function finish(Request $request, MidtransService $midtrans): RedirectResponse|View
+    public function finish(Request $request, DokuService $doku): RedirectResponse|View
     {
-        $orderId = trim((string) $request->query('order_id', ''));
-        $transaction = $this->findTransactionByOrderId($orderId);
+        $invoiceNumber = trim((string) $request->query('order_id', ''));
+        $transaction = $this->findTransactionByInvoiceNumber($invoiceNumber);
 
         if (! $transaction) {
             return redirect()
@@ -200,15 +194,15 @@ class MidtransPaymentController extends Controller
 
         $this->authorizeSessionAccess($transaction);
 
-        if ($transaction->status === Transaction::STATUS_PENDING && $transaction->payment_method === Transaction::PAYMENT_METHOD_MIDTRANS) {
-            $remoteStatus = $midtrans->status($orderId);
+        if ($transaction->status === Transaction::STATUS_PENDING && $transaction->payment_method === Transaction::PAYMENT_METHOD_DOKU) {
+            $remoteStatus = $doku->checkStatus($invoiceNumber);
 
             if (is_array($remoteStatus)) {
                 $transaction = $this->processStatusPayload($remoteStatus) ?? $transaction->refresh();
             }
         }
 
-        return view('payments.midtrans-success', [
+        return view('payments.doku-success', [
             'transaction' => $transaction,
             'token' => $transaction->status === Transaction::STATUS_SUCCESS
                 ? $transaction->user?->access_token
@@ -216,10 +210,10 @@ class MidtransPaymentController extends Controller
         ]);
     }
 
-    public function status(Request $request, MidtransService $midtrans): JsonResponse
+    public function status(Request $request, DokuService $doku): JsonResponse
     {
-        $orderId = trim((string) $request->query('order_id', ''));
-        $transaction = $this->findTransactionByOrderId($orderId);
+        $invoiceNumber = trim((string) $request->query('order_id', ''));
+        $transaction = $this->findTransactionByInvoiceNumber($invoiceNumber);
 
         if (! $transaction) {
             return response()->json(['ok' => false, 'message' => 'Transaksi tidak ditemukan.'], 404);
@@ -227,8 +221,8 @@ class MidtransPaymentController extends Controller
 
         $this->authorizeSessionAccess($transaction);
 
-        if ($transaction->status === Transaction::STATUS_PENDING && $transaction->payment_method === Transaction::PAYMENT_METHOD_MIDTRANS) {
-            $remoteStatus = $midtrans->status($orderId);
+        if ($transaction->status === Transaction::STATUS_PENDING && $transaction->payment_method === Transaction::PAYMENT_METHOD_DOKU) {
+            $remoteStatus = $doku->checkStatus($invoiceNumber);
 
             if (is_array($remoteStatus)) {
                 $transaction = $this->processStatusPayload($remoteStatus) ?? $transaction->refresh();
@@ -248,13 +242,27 @@ class MidtransPaymentController extends Controller
         ]);
     }
 
+    public function cancel(Request $request): View|RedirectResponse
+    {
+        if ($request->user()?->role === User::ROLE_GURU) {
+            return view('payments.doku-popup-close', [
+                'message' => [
+                    'type' => 'doku-payment-cancelled',
+                ],
+                'fallbackUrl' => route('guru.dashboard'),
+            ]);
+        }
+
+        return redirect()->route('login');
+    }
+
     private function processStatusPayload(array $payload): ?Transaction
     {
-        $orderId = (string) ($payload['order_id'] ?? '');
-        $transaction = $this->findTransactionByOrderId($orderId);
+        $invoiceNumber = $this->extractInvoiceNumber($payload);
+        $transaction = $this->findTransactionByInvoiceNumber($invoiceNumber);
 
         if (! $transaction) {
-            Log::warning('Midtrans notification for unknown order', ['order_id' => $orderId]);
+            Log::warning('Doku notification for unknown order', ['invoice_number' => $invoiceNumber]);
 
             return null;
         }
@@ -263,35 +271,33 @@ class MidtransPaymentController extends Controller
             return $transaction;
         }
 
-        $grossAmount = (float) ($payload['gross_amount'] ?? 0);
+        $grossAmount = (float) $this->extractAmount($payload);
         if (abs($grossAmount - (float) $transaction->amount) > 0.01) {
-            Log::critical('Midtrans notification amount mismatch', [
+            Log::critical('Doku notification amount mismatch', [
                 'reference_code' => $transaction->reference_code,
-                'order_id' => $orderId,
+                'invoice_number' => $invoiceNumber,
                 'expected' => $transaction->amount,
-                'received' => $payload['gross_amount'] ?? null,
+                'received' => $this->extractAmount($payload),
             ]);
 
             return $transaction;
         }
 
-        $midtransStatus = (string) ($payload['transaction_status'] ?? '');
-        $fraudStatus = (string) ($payload['fraud_status'] ?? '');
-        $paymentType = (string) ($payload['payment_type'] ?? '');
+        $dokuStatus = $this->extractStatus($payload);
+        $paymentChannel = $this->extractPaymentChannel($payload);
 
-        if ($midtransStatus === 'settlement'
-            || ($midtransStatus === 'capture' && $fraudStatus === 'accept')) {
-            $this->markSuccess($transaction, $midtransStatus, $paymentType);
+        if ($dokuStatus === 'SUCCESS') {
+            $this->markSuccess($transaction, $dokuStatus, $paymentChannel);
 
             return $transaction->refresh();
         }
 
-        if (in_array($midtransStatus, ['deny', 'cancel', 'expire'], true)) {
+        if (in_array($dokuStatus, ['FAILED', 'EXPIRED', 'CANCELLED'], true)) {
             $transaction->update([
                 'status' => Transaction::STATUS_FAILED,
-                'midtrans_transaction_status' => $midtransStatus,
-                'midtrans_payment_type' => $paymentType,
-                'rejection_reason' => 'Pembayaran Midtrans tidak selesai (status: '.$midtransStatus.').',
+                'doku_transaction_status' => $dokuStatus,
+                'doku_payment_channel' => $paymentChannel,
+                'rejection_reason' => 'Pembayaran Doku tidak selesai (status: '.strtolower($dokuStatus).').',
                 'reviewed_at' => now(),
             ]);
 
@@ -299,8 +305,8 @@ class MidtransPaymentController extends Controller
         }
 
         $transaction->update([
-            'midtrans_transaction_status' => $midtransStatus,
-            'midtrans_payment_type' => $paymentType,
+            'doku_transaction_status' => $dokuStatus,
+            'doku_payment_channel' => $paymentChannel,
         ]);
 
         return $transaction->refresh();
@@ -308,11 +314,11 @@ class MidtransPaymentController extends Controller
 
     public function processPublicExamStatusPayload(array $payload): ?LandingExamOrder
     {
-        $orderId = (string) ($payload['order_id'] ?? '');
-        $order = app(MidtransService::class)->findOrder($orderId);
+        $invoiceNumber = $this->extractInvoiceNumber($payload);
+        $order = app(DokuService::class)->findOrder($invoiceNumber);
 
         if (! $order) {
-            Log::warning('Midtrans notification for unknown public exam order', ['order_id' => $orderId]);
+            Log::warning('Doku notification for unknown public exam order', ['invoice_number' => $invoiceNumber]);
 
             return null;
         }
@@ -321,52 +327,50 @@ class MidtransPaymentController extends Controller
             return $order;
         }
 
-        $grossAmount = (float) ($payload['gross_amount'] ?? 0);
+        $grossAmount = (float) $this->extractAmount($payload);
         if (abs($grossAmount - (float) $order->amount) > 0.01) {
-            Log::critical('Midtrans public exam amount mismatch', [
-                'order_id' => $orderId,
+            Log::critical('Doku public exam amount mismatch', [
+                'invoice_number' => $invoiceNumber,
                 'expected' => $order->amount,
-                'received' => $payload['gross_amount'] ?? null,
+                'received' => $this->extractAmount($payload),
             ]);
 
             return $order;
         }
 
-        $midtransStatus = (string) ($payload['transaction_status'] ?? '');
-        $fraudStatus = (string) ($payload['fraud_status'] ?? '');
-        $paymentType = (string) ($payload['payment_type'] ?? '');
+        $dokuStatus = $this->extractStatus($payload);
+        $paymentChannel = $this->extractPaymentChannel($payload);
 
-        if ($midtransStatus === 'settlement'
-            || ($midtransStatus === 'capture' && $fraudStatus === 'accept')) {
-            $this->markPublicExamPaid($order, $midtransStatus, $paymentType);
+        if ($dokuStatus === 'SUCCESS') {
+            $this->markPublicExamPaid($order, $dokuStatus, $paymentChannel);
 
             return $order->refresh();
         }
 
-        if (in_array($midtransStatus, ['deny', 'cancel', 'expire'], true)) {
+        if (in_array($dokuStatus, ['FAILED', 'EXPIRED', 'CANCELLED'], true)) {
             $order->update([
                 'status' => LandingExamOrder::STATUS_FAILED,
-                'midtrans_transaction_status' => $midtransStatus,
-                'midtrans_payment_type' => $paymentType,
+                'doku_transaction_status' => $dokuStatus,
+                'doku_payment_channel' => $paymentChannel,
             ]);
 
             return $order->refresh();
         }
 
         $order->update([
-            'midtrans_transaction_status' => $midtransStatus,
-            'midtrans_payment_type' => $paymentType,
+            'doku_transaction_status' => $dokuStatus,
+            'doku_payment_channel' => $paymentChannel,
         ]);
 
         return $order->refresh();
     }
 
-    private function markPublicExamPaid(LandingExamOrder $order, string $midtransStatus, string $paymentType): void
+    private function markPublicExamPaid(LandingExamOrder $order, string $dokuStatus, string $paymentChannel): void
     {
         $order->update([
             'status' => LandingExamOrder::STATUS_PAID,
-            'midtrans_transaction_status' => $midtransStatus,
-            'midtrans_payment_type' => $paymentType,
+            'doku_transaction_status' => $dokuStatus,
+            'doku_payment_channel' => $paymentChannel,
             'paid_at' => now(),
         ]);
 
@@ -393,12 +397,12 @@ class MidtransPaymentController extends Controller
         }
     }
 
-    private function markSuccess(Transaction $transaction, string $midtransStatus, string $paymentType): void
+    private function markSuccess(Transaction $transaction, string $dokuStatus, string $paymentChannel): void
     {
         $transaction->update([
-            'payment_method' => Transaction::PAYMENT_METHOD_MIDTRANS,
-            'midtrans_transaction_status' => $midtransStatus,
-            'midtrans_payment_type' => $paymentType,
+            'payment_method' => Transaction::PAYMENT_METHOD_DOKU,
+            'doku_transaction_status' => $dokuStatus,
+            'doku_payment_channel' => $paymentChannel,
             'paid_at' => now(),
             'rejection_reason' => null,
         ]);
@@ -406,7 +410,7 @@ class MidtransPaymentController extends Controller
         $teacher = $transaction->user;
 
         if (! $teacher) {
-            Log::critical('Midtrans settlement without teacher account', [
+            Log::critical('Doku settlement without teacher account', [
                 'reference_code' => $transaction->reference_code,
             ]);
 
@@ -425,29 +429,58 @@ class MidtransPaymentController extends Controller
         }
     }
 
-    private function findTransactionByOrderId(string $orderId): ?Transaction
+    private function findTransactionByInvoiceNumber(string $invoiceNumber): ?Transaction
     {
-        if ($orderId === '') {
+        if ($invoiceNumber === '') {
             return null;
         }
 
         return Transaction::query()
-            ->where('midtrans_order_id', $orderId)
+            ->where('doku_invoice_number', $invoiceNumber)
             ->first()
             ?? Transaction::query()
-                ->where('reference_code', $orderId)
+                ->where('reference_code', $invoiceNumber)
                 ->first();
     }
 
     private function authorizeSessionAccess(Transaction $transaction): void
     {
-        if (Auth::check() && Auth::user()?->isSuperadmin()) {
+        $user = Auth::user();
+
+        if ($user && $user->isSuperadmin()) {
             return;
         }
 
-        $pendingRegistration = session('pending_registration');
-        $sessionTeacherId = is_array($pendingRegistration) ? ($pendingRegistration['teacher_id'] ?? null) : null;
+        abort_unless($user && (int) $user->id === (int) $transaction->user_id, 403);
+    }
 
-        abort_unless((int) $sessionTeacherId === (int) $transaction->user_id, 403);
+    private function extractInvoiceNumber(array $payload): string
+    {
+        return trim((string) ($payload['order']['invoice_number']
+            ?? $payload['order']['invoiceNumber']
+            ?? $payload['order_id']
+            ?? ''));
+    }
+
+    private function extractAmount(array $payload): string
+    {
+        return (string) ($payload['order']['amount']
+            ?? $payload['gross_amount']
+            ?? 0);
+    }
+
+    private function extractStatus(array $payload): string
+    {
+        return strtoupper(trim((string) ($payload['transaction']['status']
+            ?? $payload['transaction_status']
+            ?? '')));
+    }
+
+    private function extractPaymentChannel(array $payload): string
+    {
+        return trim((string) ($payload['payment']['channel']
+            ?? $payload['payment']['method']
+            ?? $payload['payment_type']
+            ?? ''));
     }
 }

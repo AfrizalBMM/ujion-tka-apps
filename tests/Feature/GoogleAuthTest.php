@@ -74,7 +74,7 @@ class GoogleAuthTest extends TestCase
         $this->assertSame('google-123', $user->fresh()->google_id);
     }
 
-    public function test_callback_existing_pending_user_resumes_payment(): void
+    public function test_callback_existing_pending_user_logs_in_and_redirects_to_dashboard(): void
     {
         $user = User::factory()->create([
             'role' => User::ROLE_GURU,
@@ -86,10 +86,9 @@ class GoogleAuthTest extends TestCase
 
         $response = $this->get(route('auth.google.callback'));
 
-        $response->assertRedirect(route('register.guru.pending'));
-        $response->assertSessionHas('pending_registration', function ($value) use ($user) {
-            return (int) $value['teacher_id'] === $user->id;
-        });
+        $response->assertRedirect(route('guru.dashboard'));
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame('google-123', $user->fresh()->google_id);
     }
 
     public function test_complete_data_creates_pending_teacher(): void
@@ -109,7 +108,8 @@ class GoogleAuthTest extends TestCase
             'no_wa' => '08123456789',
         ]);
 
-        $response->assertRedirect(route('register.guru.pending'));
+        $response->assertRedirect(route('guru.dashboard'));
+        $this->assertAuthenticated();
 
         $this->assertDatabaseHas('users', [
             'email' => 'siti@gmail.com',

@@ -63,7 +63,9 @@ Tiga role dengan constant di `App\Models\User`:
 Status akun: `pending`, `active`, `suspend`.
 Payment status: `awaiting_payment`, `submitted`, `approved`, `rejected`.
 
-**Login Google (guru)** — `GoogleAuthController` (`/auth/google`, `/auth/google/callback`, `/auth/google/lengkapi-data`). Pakai `laravel/socialite`. Env: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (wajib sama dengan Authorized redirect URI di Google Cloud Console). Pencocokan akun by `email` atau `google_id` (kolom baru di `users`), role guru saja. Alur: akun aktif → langsung dashboard; pending → resume halaman pembayaran; belum ada → simpan data Google ke session `google_registration` → halaman "Lengkapi Data" (jenjang, satuan pendidikan, no WA) → buat akun pending → bayar. Avatar Google disimpan di kolom `google_avatar` dan diprioritaskan di accessor `avatar_url`.
+**Login Google (guru)** — `GoogleAuthController` (`/auth/google`, `/auth/google/callback`, `/auth/google/lengkapi-data`). Pakai `laravel/socialite`. Env: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` (wajib sama dengan Authorized redirect URI di Google Cloud Console). Pencocokan akun by `email` atau `google_id` (kolom baru di `users`), role guru saja. Alur: akun aktif → langsung dashboard; pending → auto-login + dashboard (menu locked); belum ada → simpan data Google ke session `google_registration` → halaman "Lengkapi Data" (jenjang, satuan pendidikan, no WA) → buat akun pending + auto-login → bayar dari dashboard. Avatar Google disimpan di kolom `google_avatar` dan diprioritaskan di accessor `avatar_url`.
+
+**Flow pembayaran Doku (guru)** — setelah registrasi (manual/Google) guru pending **auto-login** dan masuk dashboard dengan menu terkunci (middleware `guru.active` hanya mengizinkan `guru.dashboard`, `guru.profile*`, `guru.chat*`, `guru.guide`; route lain → redirect dashboard + flash). Klik menu terkunci / tombol "Bayar Sekarang" (JS `core/doku-checkout.js`, config via `data-doku-config` di body layout guru) → checkout Doku terbuka di **window baru** (`window.open`) → halaman utama polling status tiap 3 detik → sukses → popup auto-close (postMessage `doku-payment-finished` + `window.close()`) → halaman utama redirect ke `payments/doku.finish` yang menampilkan token akses + menu terbuka. Batal → `callback_url_cancel` (`payments.doku.cancel`) → popup-close view. Halaman `pending-aktivasi` & resume dihapus — guru yang kehilangan session cukup daftar ulang dengan email/WA sama (deteksi akun pending → auto-login).
 
 ### Routes
 
@@ -123,9 +125,8 @@ Custom Gate: `manage-mapel-soal` (superadmin atau guru per jenjang).
 | Service | Tanggung jawab |
 |---|---|
 | `WhatsAppService` | Kirim WA via gateway (Node.js, port 3000) |
-| `QrisService` | Generate/parse QRIS dinamis dari GoPay master payload |
+| `DokuService` | Klien API Doku (checkout URL, cek status, verifikasi signature webhook) |
 | `PaymentApprovalService` | Approval/reject bukti pembayaran guru |
-| `PaymentProofStorage` | Simpan/ambil file bukti pembayaran |
 | `WaMessageTemplateService` | Manage template pesan otomatis WA |
 
 ### Jobs
@@ -204,7 +205,7 @@ Pola frontend: script halaman dipisah ke `resources/js/pages/`, helper ke `utils
 
 - **WhatsApp Gateway** (Node.js, `../WA_Gateway_v4`, port 3000) — kirim WA aktual. Harus running untuk fitur WA Blast.
 - **Pusher** — realtime chat. Konfigurasi di `.env` (`PUSHER_*`).
-- **GoPay QRIS** — `GOPAY_MASTER_PAYLOAD` di `.env` (raw string QRIS statis untuk inject nominal dinamis).
+- **Doku Payment Gateway** — kredensial (Client-Id `BRN-...`, Secret-Key `SK-...`) dikelola superadmin via menu Keuangan (disimpan di `app_settings`, bukan `.env`). Endpoint production `https://api.doku.com`. Webhook: `POST /api/payments/doku/notification` — **URL ini wajib didaftarkan sebagai Notification URL di dashboard Doku** saat deploy; di lokal (tanpa URL publik) flow tetap jalan via polling `GET /orders/v1/status/{invoice}`.
 
 ## Security
 

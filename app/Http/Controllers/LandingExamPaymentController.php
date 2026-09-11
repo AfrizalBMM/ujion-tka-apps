@@ -3,15 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\LandingExamOrder;
-use App\Services\MidtransService;
+use App\Services\DokuService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 
 class LandingExamPaymentController extends Controller
 {
-    public function start(string $orderToken, MidtransService $midtrans): JsonResponse
+    public function start(string $orderToken, DokuService $doku): JsonResponse
     {
-        if (! $midtrans->isEnabled()) {
+        if (! $doku->isEnabled()) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Pembayaran otomatis belum diaktifkan admin. Silakan hubungi admin.',
@@ -35,14 +34,14 @@ class LandingExamPaymentController extends Controller
         if ($order->status === LandingExamOrder::STATUS_FAILED) {
             $order->update([
                 'status' => LandingExamOrder::STATUS_PENDING_PAYMENT,
-                'midtrans_order_id' => null,
-                'midtrans_transaction_status' => null,
+                'doku_invoice_number' => null,
+                'doku_transaction_status' => null,
             ]);
             $order->refresh();
         }
 
         try {
-            $snap = $midtrans->createSnapTransactionForOrder($order);
+            $checkout = $doku->createCheckoutPaymentForOrder($order);
         } catch (\RuntimeException $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()], 502);
         }
@@ -51,28 +50,26 @@ class LandingExamPaymentController extends Controller
 
         return response()->json([
             'ok' => true,
-            'snap_token' => $snap['token'],
-            'order_id' => $snap['order_id'],
+            'payment_url' => $checkout['payment_url'],
+            'order_id' => $checkout['invoice_number'],
             'amount' => 'Rp'.number_format((float) $order->amount, 0, ',', '.'),
-            'client_key' => $midtrans->clientKey(),
-            'is_production' => $midtrans->isProduction(),
         ]);
     }
 
-    public function status(MidtransService $midtrans): JsonResponse
+    public function status(DokuService $doku): JsonResponse
     {
-        $orderId = trim((string) request()->query('order_id', ''));
-        $order = $midtrans->findOrder($orderId);
+        $invoiceNumber = trim((string) request()->query('order_id', ''));
+        $order = $doku->findOrder($invoiceNumber);
 
         if (! $order) {
             return response()->json(['ok' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
         }
 
-        if ($order->status === LandingExamOrder::STATUS_PENDING_PAYMENT && $order->midtrans_order_id) {
-            $remoteStatus = $midtrans->status($orderId);
+        if ($order->status === LandingExamOrder::STATUS_PENDING_PAYMENT && $order->doku_invoice_number) {
+            $remoteStatus = $doku->checkStatus($invoiceNumber);
 
             if (is_array($remoteStatus)) {
-                $order = app(MidtransPaymentController::class)
+                $order = app(DokuPaymentController::class)
                     ->processPublicExamStatusPayload($remoteStatus) ?? $order->refresh();
             }
         }
@@ -85,26 +82,32 @@ class LandingExamPaymentController extends Controller
         ]);
     }
 
-    public function finish(): RedirectResponse
+    public function finish()
     {
-        $orderId = trim((string) request()->query('order_id', ''));
-        $midtrans = app(MidtransService::class);
-        $order = $midtrans->findOrder($orderId);
+        $invoiceNumber = trim((string) request()->query('order_id', ''));
+        $doku = app(DokuService::class);
+        $order = $doku->findOrder($invoiceNumber);
 
         if (! $order) {
             return redirect()->route('landing');
         }
 
-        if ($order->status === LandingExamOrder::STATUS_PENDING_PAYMENT && $order->midtrans_order_id) {
-            $remoteStatus = $midtrans->status($orderId);
+        if ($order->status === LandingExamOrder::STATUS_PENDING_PAYMENT && $order->doku_invoice_number) {
+            $remoteStatus = $doku->checkStatus($invoiceNumber);
 
             if (is_array($remoteStatus)) {
-                app(MidtransPaymentController::class)
+                app(DokuPaymentController::class)
                     ->processPublicExamStatusPayload($remoteStatus);
                 $order = $order->refresh();
             }
         }
 
-        return redirect()->route('ujian-online.pending', $order->session_token);
+        return view('payments.doku-popup-close', [
+            'message' => [
+                'type' => 'doku-payment-finished',
+                'order_id' => $invoiceNumber,
+            ],
+            'fallbackUrl' => route('ujian-online.pending', $order->session_token),
+        ]);
     }
 }

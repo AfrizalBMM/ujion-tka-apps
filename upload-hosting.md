@@ -139,9 +139,12 @@ MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
 MAIL_FROM_NAME="${APP_NAME}"
 
-# Opsional - Payment Gateway (QRIS)
-GOPAY_MASTER_PAYLOAD=your_qris_payload_here
-QRIS_ADMIN_WHATSAPP=62xxxxx # nomor admin dengan kode negara
+# Opsional - Nomor WA admin (fallback)
+ADMIN_WHATSAPP=62xxxxx # nomor admin dengan kode negara
+
+# Catatan: kredensial Doku (Client-Id & Secret-Key) diatur dari UI
+# Superadmin > Keuangan, dan Notification URL webhook Doku didaftarkan
+# di dashboard Doku: https://{domain}/api/payments/doku/notification
 
 # Opsional - WhatsApp Gateway
 # Sesuaikan dengan URL gateway Anda

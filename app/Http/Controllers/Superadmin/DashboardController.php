@@ -30,8 +30,8 @@ class DashboardController extends Controller
             fputcsv($out, ['pending_registrations', $metrics['pendingRegistrationCount']]);
             fputcsv($out, ['ongoing_exams', $metrics['ongoingExamsCount']]);
             fputcsv($out, ['total_revenue', $metrics['totalRevenue']]);
-            fputcsv($out, ['revenue_midtrans', $metrics['revenueBreakdown']['midtrans'] ?? 0]);
-            fputcsv($out, ['revenue_manual_qris', $metrics['revenueBreakdown']['manual_qris'] ?? 0]);
+            fputcsv($out, ['revenue_doku', $metrics['revenueBreakdown']['doku'] ?? 0]);
+            fputcsv($out, ['revenue_manual', $metrics['revenueBreakdown']['manual'] ?? 0]);
             fputcsv($out, ['top_teacher', $metrics['topTeacherName'] ?? '-']);
             fputcsv($out, []);
             fputcsv($out, ['date', 'activity_count']);
@@ -131,8 +131,8 @@ class DashboardController extends Controller
             ->pluck('total', 'payment_method');
 
         $revenueBreakdown = [
-            'midtrans' => (int) ($revenueByMethod[Transaction::PAYMENT_METHOD_MIDTRANS] ?? 0),
-            'manual_qris' => (int) ($revenueByMethod[Transaction::PAYMENT_METHOD_MANUAL_QRIS] ?? 0),
+            'doku' => (int) ($revenueByMethod[Transaction::PAYMENT_METHOD_DOKU] ?? 0),
+            'manual' => (int) ($revenueByMethod['manual_qris'] ?? 0),
         ];
 
         $pendingPaymentCount = Transaction::where('status', Transaction::STATUS_PENDING)

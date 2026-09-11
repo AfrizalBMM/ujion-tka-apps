@@ -7,7 +7,7 @@
     <div class="flex items-start justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold">Riwayat Transaksi</h1>
-            <p class="mt-2 text-textSecondary dark:text-slate-300">Semua transaksi pembayaran aktivasi guru, termasuk pembayaran otomatis via Midtrans.</p>
+            <p class="mt-2 text-textSecondary dark:text-slate-300">Semua transaksi pembayaran aktivasi guru, termasuk pembayaran otomatis via Doku.</p>
         </div>
     </div>
 
@@ -31,7 +31,7 @@
 
     <div class="card">
         <form method="GET" action="{{ route('superadmin.payment-confirmations.index') }}" class="mb-6 flex flex-col gap-3 sm:flex-row">
-            <input type="text" name="q" value="{{ $search }}" class="input w-full" placeholder="Cari kode referensi, order Midtrans, nama guru, email, WA, atau paket">
+            <input type="text" name="q" value="{{ $search }}" class="input w-full" placeholder="Cari kode referensi, invoice Doku, nama guru, email, WA, atau paket">
             <select name="status" class="input sm:w-48">
                 <option value="">Semua status</option>
                 <option value="pending" @selected($statusFilter === 'pending')>Menunggu pembayaran</option>
@@ -59,8 +59,8 @@
                         <tr>
                             <td>
                                 <div class="font-bold">{{ $transaction->reference_code }}</div>
-                                @if (! blank($transaction->midtrans_order_id) && $transaction->midtrans_order_id !== $transaction->reference_code)
-                                    <div class="mt-1 text-xs text-muted">{{ $transaction->midtrans_order_id }}</div>
+                                @if (! blank($transaction->doku_invoice_number) && $transaction->doku_invoice_number !== $transaction->reference_code)
+                                    <div class="mt-1 text-xs text-muted">{{ $transaction->doku_invoice_number }}</div>
                                 @endif
                             </td>
                             <td>
@@ -73,10 +73,10 @@
                                 <div class="mt-1 text-sm text-muted">Rp{{ number_format((float) $transaction->amount, 0, ',', '.') }}</div>
                             </td>
                             <td>
-                                @if ($transaction->payment_method === \App\Models\Transaction::PAYMENT_METHOD_MIDTRANS)
-                                    <span class="badge-info">Midtrans</span>
-                                    @if (! blank($transaction->midtrans_payment_type))
-                                        <div class="mt-1 text-xs text-muted">{{ $transaction->midtrans_payment_type }}</div>
+                                @if ($transaction->payment_method === \App\Models\Transaction::PAYMENT_METHOD_DOKU)
+                                    <span class="badge-info">Doku</span>
+                                    @if (! blank($transaction->doku_payment_channel))
+                                        <div class="mt-1 text-xs text-muted">{{ $transaction->doku_payment_channel }}</div>
                                     @endif
                                 @else
                                     <span class="badge-warning">Manual</span>

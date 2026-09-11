@@ -25,7 +25,7 @@ class PaymentConfirmationController extends Controller
             $transactionsQuery->where(function ($query) use ($search) {
                 $query->where('reference_code', 'like', "%{$search}%")
                     ->orWhere('plan_name', 'like', "%{$search}%")
-                    ->orWhere('midtrans_order_id', 'like', "%{$search}%")
+                    ->orWhere('doku_invoice_number', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($userQuery) use ($search) {
                         $userQuery->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%")

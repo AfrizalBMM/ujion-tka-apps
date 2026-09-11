@@ -26,9 +26,9 @@ class LandingExamOrder extends Model
         'session_token',
         'status',
         'amount',
-        'midtrans_order_id',
-        'midtrans_transaction_status',
-        'midtrans_payment_type',
+        'doku_invoice_number',
+        'doku_transaction_status',
+        'doku_payment_channel',
         'paid_at',
     ];
 

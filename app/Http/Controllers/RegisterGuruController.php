@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AppSetting;
 use App\Models\PricingPlan;
-use App\Models\Transaction;
 use App\Models\User;
-use App\Services\MidtransService;
-use App\Support\NameMatcher;
 use App\Support\PhoneNumber;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -78,10 +76,12 @@ class RegisterGuruController extends Controller
 
         if ($existingByEmail && $existingByWa && $existingByEmail->id !== $existingByWa->id) {
             return back()
-                ->withErrors([
-                    'email' => 'Email ini sudah dipakai akun lain.',
-                    'no_wa' => 'Nomor WhatsApp ini sudah dipakai akun lain.',
-                ])
+                ->withErrors($this->buildDuplicateRegistrationErrors(
+                    $validated['email'],
+                    $normalizedWa,
+                    $existingByEmail,
+                    $existingByWa,
+                ))
                 ->withInput();
         }
 
@@ -89,13 +89,12 @@ class RegisterGuruController extends Controller
 
         if ($existingTeacher instanceof User) {
             if ($existingTeacher->role === User::ROLE_GURU && $existingTeacher->account_status === User::STATUS_PENDING) {
-                $selectedTarifJenjang = $this->resolvePlanForJenjang($validated['jenjang']);
-                $this->storePendingRegistrationSession($request, $existingTeacher, $selectedTarifJenjang);
+                $this->loginPendingTeacher($request, $existingTeacher);
 
-                return redirect()->route('register.guru.pending')->with('flash', [
+                return redirect()->route('guru.dashboard')->with('flash', [
                     'type' => 'info',
                     'title' => 'Pendaftaran sebelumnya masih aktif',
-                    'message' => 'Kami menemukan data pendaftaran Anda yang masih pending. Silakan lanjutkan dari halaman aktivasi pembayaran.',
+                    'message' => 'Kami menemukan data pendaftaran Anda yang masih pending. Selesaikan pembayaran dari dashboard untuk mengaktifkan akun.',
                 ]);
             }
 
@@ -147,13 +146,12 @@ class RegisterGuruController extends Controller
             if ($existingTeacher instanceof User
                 && $existingTeacher->role === User::ROLE_GURU
                 && $existingTeacher->account_status === User::STATUS_PENDING) {
-                $selectedTarifJenjang = $this->resolvePlanForJenjang($validated['jenjang']);
-                $this->storePendingRegistrationSession($request, $existingTeacher, $selectedTarifJenjang);
+                $this->loginPendingTeacher($request, $existingTeacher);
 
-                return redirect()->route('register.guru.pending')->with('flash', [
+                return redirect()->route('guru.dashboard')->with('flash', [
                     'type' => 'info',
                     'title' => 'Pendaftaran sebelumnya masih aktif',
-                    'message' => 'Kami menemukan data pendaftaran Anda yang masih pending. Silakan lanjutkan dari halaman aktivasi pembayaran.',
+                    'message' => 'Kami menemukan data pendaftaran Anda yang masih pending. Selesaikan pembayaran dari dashboard untuk mengaktifkan akun.',
                 ]);
             }
 
@@ -167,93 +165,19 @@ class RegisterGuruController extends Controller
                 ->withInput();
         }
 
-        $selectedTarifJenjang = $this->resolvePlanForJenjang($validated['jenjang']);
-        $this->storePendingRegistrationSession($request, $user, $selectedTarifJenjang);
+        $this->loginPendingTeacher($request, $user);
 
-        return redirect()->route('register.guru.pending');
-    }
-
-    public function showPending(Request $request): RedirectResponse|View
-    {
-        $pendingRegistration = $request->session()->get('pending_registration');
-
-        if (! is_array($pendingRegistration) || empty($pendingRegistration['teacher_id'])) {
-            return view('pending-aktivasi-resume', [
-                'adminWhatsappUrl' => $this->adminWhatsappUrl('Halo Admin Ujion, saya ingin melanjutkan aktivasi akun.'),
-            ]);
-        }
-
-        $teacher = User::query()->find($pendingRegistration['teacher_id']);
-        if (! $teacher) {
-            $request->session()->forget('pending_registration');
-
-            return redirect()->route('register.guru.pending')->with('flash', [
-                'type' => 'warning',
-                'title' => 'Session aktivasi tidak ditemukan',
-                'message' => 'Masukkan kembali nama lengkap dan nomor WhatsApp untuk melanjutkan aktivasi.',
-            ]);
-        }
-
-        $tarifJenjang = $this->resolvePlanForJenjang($teacher->jenjang);
-        $latestTransaction = $teacher->transactions()
-            ->whereIn('status', [Transaction::STATUS_PENDING, Transaction::STATUS_SUCCESS])
-            ->latest()
-            ->first();
-
-        return view('pending-aktivasi', [
-            'teacher' => $teacher,
-            'harga' => $tarifJenjang?->price,
-            'latestTransaction' => $latestTransaction,
-            'selectedTarifJenjang' => $tarifJenjang,
-            'midtransEnabled' => app(MidtransService::class)->isEnabled(),
-            'adminWhatsappUrl' => $this->adminWhatsappUrl('Halo Admin Ujion, saya ingin menyelesaikan pembayaran aktivasi akun guru.'),
+        return redirect()->route('guru.dashboard')->with('flash', [
+            'type' => 'success',
+            'title' => 'Pendaftaran berhasil',
+            'message' => 'Selamat datang! Selesaikan pembayaran aktivasi dari dashboard untuk membuka semua fitur.',
         ]);
     }
 
-    public function resumePending(Request $request): RedirectResponse
+    private function loginPendingTeacher(Request $request, User $teacher): void
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'no_wa' => ['required', 'string', 'max:20'],
-        ]);
-
-        $normalizedWa = $this->normalizePhoneNumber($validated['no_wa']);
-        $normalizedName = trim($validated['name']);
-
-        $teacher = User::query()
-            ->where('role', User::ROLE_GURU)
-            ->where('account_status', User::STATUS_PENDING)
-            ->whereIn('no_wa', PhoneNumber::variants($validated['no_wa']))
-            ->get()
-            ->first(fn (User $candidate) => NameMatcher::matches($candidate->name, $normalizedName));
-
-        if (! $teacher) {
-            return back()
-                ->withErrors([
-                    'resume' => 'Data pending tidak ditemukan. Pastikan nomor WhatsApp sama seperti saat pendaftaran. Nama boleh tanpa gelar.',
-                ])
-                ->withInput();
-        }
-
-        $selectedTarifJenjang = $this->resolvePlanForJenjang($teacher->jenjang);
-        $this->storePendingRegistrationSession($request, $teacher, $selectedTarifJenjang);
-
-        return redirect()->route('register.guru.pending')->with('flash', [
-            'type' => 'info',
-            'title' => 'Data pendaftaran ditemukan',
-            'message' => 'Silakan lanjutkan pembayaran aktivasi akun Anda.',
-        ]);
-    }
-
-    private function storePendingRegistrationSession(Request $request, User $teacher, ?PricingPlan $selectedTarifJenjang = null): void
-    {
-        $plan = $selectedTarifJenjang ?? $this->resolvePlanForJenjang($teacher->jenjang);
-
-        $request->session()->put('pending_registration', [
-            'teacher_id' => $teacher->id,
-            'pricing_plan_id' => $plan?->id,
-            'harga' => $plan?->price,
-        ]);
+        Auth::login($teacher);
+        $request->session()->regenerate();
     }
 
     private function normalizePhoneNumber(?string $phone): string
@@ -261,19 +185,6 @@ class RegisterGuruController extends Controller
         $normalized = PhoneNumber::normalizeIndonesian($phone);
 
         return PhoneNumber::toLocalFormat($normalized);
-    }
-
-    private function adminWhatsappUrl(string $message): ?string
-    {
-        $adminNumber = PhoneNumber::normalizeIndonesian(
-            (string) AppSetting::getValue('qris_admin_whatsapp', config('services.qris.admin_whatsapp'))
-        );
-
-        if ($adminNumber === '') {
-            return null;
-        }
-
-        return "https://wa.me/{$adminNumber}?text=".rawurlencode($message);
     }
 
     private function resolvePlanForJenjang(?string $jenjang): ?PricingPlan

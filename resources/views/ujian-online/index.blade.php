@@ -40,7 +40,7 @@
         </div>
         <div class="text-center">
             <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white font-bold">3</div>
-            <p class="mt-2 text-sm text-textSecondary">Bayar via Midtrans</p>
+            <p class="mt-2 text-sm text-textSecondary">Bayar via Doku</p>
         </div>
         <div class="text-center">
             <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white font-bold">4</div>

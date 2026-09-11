@@ -127,9 +127,9 @@
         </div>
 
         <div class="mt-7">
-            <p class="text-sm text-slate-600 dark:text-slate-300">
-                Sudah daftar tapi belum dapat token?
-                <a href="{{ route('register.guru.pending') }}" class="font-bold text-primary hover:underline">Lanjutkan aktivasi</a>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Sudah daftar tapi belum bayar? Daftar ulang dengan email / nomor WhatsApp yang sama
+                untuk melanjutkan pembayaran — data Anda tidak akan dobel.
             </p>
             <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Sudah punya akun?

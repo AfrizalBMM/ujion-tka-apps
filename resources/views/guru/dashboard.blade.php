@@ -2,6 +2,74 @@
 @section('title', 'Dashboard Guru')
 @section('content')
 <div class="space-y-6">
+    @if ($paymentBanner)
+        <div class="card border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <div id="doku-payment-banner" class="space-y-4">
+                <div data-doku-panel="idle">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-lock text-amber-500"></i>
+                                <span class="text-sm font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">Aktifkan Akun Anda</span>
+                            </div>
+                            <p class="mt-1 text-sm text-amber-900 dark:text-amber-100">
+                                Selesaikan pembayaran aktivasi
+                                @if ($paymentBanner['planName'])
+                                    <strong>{{ $paymentBanner['planName'] }}</strong>
+                                @endif
+                                untuk membuka semua fitur.
+                                @if ($paymentBanner['amount'])
+                                    Nominal: <strong>Rp{{ number_format((float) $paymentBanner['amount'], 0, ',', '.') }}</strong>
+                                @endif
+                            </p>
+                            @if ($paymentBanner['planDescription'])
+                                <p class="mt-1 text-xs text-amber-700/80 dark:text-amber-200/70">{{ $paymentBanner['planDescription'] }}</p>
+                            @endif
+                        </div>
+                        <button type="button" class="btn-primary shrink-0 whitespace-nowrap" data-doku-start>
+                            <i class="fa-solid fa-bolt mr-2"></i>
+                            Bayar Sekarang
+                        </button>
+                    </div>
+                </div>
+
+                <div data-doku-panel="loading" class="hidden">
+                    <div class="flex items-center gap-3 text-sm font-semibold text-amber-900 dark:text-amber-100">
+                        <i class="fa-solid fa-spinner fa-spin text-lg"></i>
+                        Menyiapkan pembayaran...
+                    </div>
+                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-200/70">Jendela pembayaran akan terbuka di tab baru.</p>
+                </div>
+
+                <div data-doku-panel="polling" class="hidden">
+                    <div class="flex items-center gap-3 text-sm font-semibold text-amber-900 dark:text-amber-100">
+                        <i class="fa-solid fa-spinner fa-spin text-lg"></i>
+                        Menunggu pembayaran...
+                    </div>
+                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-200/70">
+                        Selesaikan pembayaran di jendela checkout yang terbuka. Halaman ini akan diperbarui otomatis setelah pembayaran berhasil.
+                    </p>
+                    <button type="button" class="btn-secondary mt-3" data-doku-start>
+                        <i class="fa-solid fa-rotate-left mr-2"></i>
+                        Bayar Ulang / Coba Lagi
+                    </button>
+                </div>
+
+                <div data-doku-panel="failed" class="hidden">
+                    <div class="flex items-center gap-2 text-sm font-bold text-rose-700 dark:text-rose-300">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        Pembayaran Belum Selesai
+                    </div>
+                    <p class="mt-1 text-xs text-rose-700/80 dark:text-rose-200/70">Pembayaran tidak berhasil diselesaikan atau kedaluwarsa. Silakan coba lagi.</p>
+                    <button type="button" class="btn-primary mt-3" data-doku-start>
+                        <i class="fa-solid fa-rotate-left mr-2"></i>
+                        Coba Bayar Lagi
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <section class="page-hero">
         <span class="page-kicker">Dashboard Guru</span>
         <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -21,14 +89,21 @@
             </div>
         </div>
         <div class="page-actions">
-            <a href="{{ route('guru.materials') }}" class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
-                <i class="fa-solid fa-book"></i>
-                Buka Materi
-            </a>
-            <a href="{{ route('guru.exams') }}" class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
-                <i class="fa-solid fa-file-lines"></i>
-                Coba Simulasi
-            </a>
+            @if ($paymentBanner)
+                <button type="button" class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white" data-doku-start>
+                    <i class="fa-solid fa-bolt"></i>
+                    Bayar Sekarang
+                </button>
+            @else
+                <a href="{{ route('guru.materials') }}" class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
+                    <i class="fa-solid fa-book"></i>
+                    Buka Materi
+                </a>
+                <a href="{{ route('guru.exams') }}" class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
+                    <i class="fa-solid fa-file-lines"></i>
+                    Coba Simulasi
+                </a>
+            @endif
         </div>
     </section>
 

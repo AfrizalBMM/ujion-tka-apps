@@ -3,12 +3,12 @@
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController as GeneralAuthController;
 use App\Http\Controllers\ChatImageController;
+use App\Http\Controllers\DokuPaymentController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\KisiKisiController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LandingExamController;
 use App\Http\Controllers\LandingExamPaymentController;
-use App\Http\Controllers\MidtransPaymentController;
 use App\Http\Controllers\OgImageController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\Siswa\AuthController as SiswaAuthController;
@@ -42,9 +42,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
-Route::post('/payments/midtrans/start', [MidtransPaymentController::class, 'start'])->name('payments.midtrans.start');
-Route::get('/payments/midtrans/finish', [MidtransPaymentController::class, 'finish'])->name('payments.midtrans.finish');
-Route::get('/payments/midtrans/status', [MidtransPaymentController::class, 'status'])->name('payments.midtrans.status');
+Route::post('/payments/doku/start', [DokuPaymentController::class, 'start'])->name('payments.doku.start');
+Route::get('/payments/doku/finish', [DokuPaymentController::class, 'finish'])->name('payments.doku.finish');
+Route::get('/payments/doku/status', [DokuPaymentController::class, 'status'])->name('payments.doku.status');
+Route::get('/payments/doku/cancel', [DokuPaymentController::class, 'cancel'])->name('payments.doku.cancel');
 
 // Ujian Online Publik (per jenjang)
 Route::prefix('ujian-online')->name('ujian-online.')->group(function () {

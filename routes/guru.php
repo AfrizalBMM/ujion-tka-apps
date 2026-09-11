@@ -23,14 +23,12 @@ Route::get('/register/guru', [RegisterGuruController::class, 'showForm'])->name(
 Route::post('/register/guru', [RegisterGuruController::class, 'register'])
     ->middleware('throttle:10,1')
     ->name('register.guru');
-Route::get('/register/guru/pending', [RegisterGuruController::class, 'showPending'])->name('register.guru.pending');
 Route::get('/register/guru/check-wa', [RegisterGuruController::class, 'checkWa'])
     ->middleware('throttle:30,1')
     ->name('register.guru.check-wa');
 Route::get('/register/guru/check-email', [RegisterGuruController::class, 'checkEmail'])
     ->middleware('throttle:30,1')
     ->name('register.guru.check-email');
-Route::post('/register/guru/pending/resume', [RegisterGuruController::class, 'resumePending'])->name('register.guru.pending.resume');
 
 Route::middleware(['auth', 'role:guru', 'guru.active', 'audit'])->prefix('guru')->name('guru.')->scopeBindings()->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

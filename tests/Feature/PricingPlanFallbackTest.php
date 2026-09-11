@@ -17,15 +17,17 @@ class PricingPlanFallbackTest extends TestCase
     {
         parent::setUp();
 
-        AppSetting::putValue('midtrans_enabled', '1');
-        AppSetting::putValue('midtrans_environment', 'sandbox');
-        AppSetting::putValue('midtrans_server_key', 'SB-Mid-server-testkey');
-        AppSetting::putValue('midtrans_client_key', 'SB-Mid-client-testkey');
+        AppSetting::putValue('doku_enabled', '1');
+        AppSetting::putValue('doku_client_id', 'BRN-test-client-id');
+        AppSetting::putValue('doku_secret_key', 'SK-test-secret-key');
 
         Http::fake([
-            '*/snap/v1/transactions' => Http::response([
-                'token' => 'snap-token-plan',
-                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v2/snap-token-plan',
+            '*/checkout/v1/payment' => Http::response([
+                'response' => [
+                    'payment' => [
+                        'url' => 'https://checkout.doku.com/payment-url-plan',
+                    ],
+                ],
             ], 201),
         ]);
     }
@@ -46,9 +48,7 @@ class PricingPlanFallbackTest extends TestCase
             'jenjang' => 'SMA',
         ]);
 
-        $response = $this->withSession([
-            'pending_registration' => ['teacher_id' => $guru->id],
-        ])->postJson(route('payments.midtrans.start'));
+        $response = $this->actingAs($guru)->postJson(route('payments.doku.start'));
 
         $response->assertStatus(422);
         $this->assertSame(0, $guru->transactions()->count());
@@ -77,9 +77,7 @@ class PricingPlanFallbackTest extends TestCase
             'jenjang' => 'SMA',
         ]);
 
-        $response = $this->withSession([
-            'pending_registration' => ['teacher_id' => $guru->id],
-        ])->postJson(route('payments.midtrans.start'));
+        $response = $this->actingAs($guru)->postJson(route('payments.doku.start'));
 
         $response->assertOk()->assertJsonPath('ok', true);
         $transaction = $guru->transactions()->firstOrFail();
@@ -110,9 +108,7 @@ class PricingPlanFallbackTest extends TestCase
             'jenjang' => 'SMP',
         ]);
 
-        $response = $this->withSession([
-            'pending_registration' => ['teacher_id' => $guru->id],
-        ])->postJson(route('payments.midtrans.start'));
+        $response = $this->actingAs($guru)->postJson(route('payments.doku.start'));
 
         $response->assertOk()->assertJsonPath('ok', true);
         $transaction = $guru->transactions()->firstOrFail();
@@ -128,9 +124,7 @@ class PricingPlanFallbackTest extends TestCase
             'jenjang' => 'SMA',
         ]);
 
-        $response = $this->withSession([
-            'pending_registration' => ['teacher_id' => $guru->id],
-        ])->postJson(route('payments.midtrans.start'));
+        $response = $this->actingAs($guru)->postJson(route('payments.doku.start'));
 
         $response->assertStatus(422);
         $guru->refresh();
@@ -164,9 +158,7 @@ class PricingPlanFallbackTest extends TestCase
 
         $plan->update(['price' => 125000]);
 
-        $this->withSession([
-            'pending_registration' => ['teacher_id' => $guru->id],
-        ])->postJson(route('payments.midtrans.start'));
+        $this->actingAs($guru)->postJson(route('payments.doku.start'));
 
         $stale->refresh();
         $this->assertSame('failed', $stale->status);

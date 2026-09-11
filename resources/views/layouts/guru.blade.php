@@ -25,6 +25,40 @@
 
   $waGroupLink = \App\Models\AppSetting::getValue('wa_group_link');
 
+  $paymentLocked = $currentGuru
+    && $currentGuru->role === \App\Models\User::ROLE_GURU
+    && $currentGuru->account_status === \App\Models\User::STATUS_PENDING;
+
+  $activeDokuInvoice = null;
+  if ($paymentLocked) {
+    $activeDokuInvoice = $currentGuru->transactions()
+      ->where('status', \App\Models\Transaction::STATUS_PENDING)
+      ->where('payment_method', \App\Models\Transaction::PAYMENT_METHOD_DOKU)
+      ->latest()
+      ->value('doku_invoice_number');
+  }
+
+  $dokuConfig = $paymentLocked ? json_encode([
+    'startUrl' => route('payments.doku.start'),
+    'statusUrl' => route('payments.doku.status'),
+    'finishUrl' => route('payments.doku.finish'),
+    'csrfToken' => csrf_token(),
+    'pollOrderId' => $activeDokuInvoice,
+  ]) : null;
+
+  $lockedLink = function (string $routeName, string $icon, string $label, string $activePattern) use ($paymentLocked) {
+    if (! $paymentLocked) {
+      return '<a href="'.e(route($routeName)).'" class="sidebar-link '.(request()->routeIs($activePattern) ? 'active' : '').'">'
+        .'<i class="fa-solid '.$icon.' w-5"></i>'
+        .'<span class="sidebar-link-label">'.e($label).'</span></a>';
+    }
+
+    return '<a href="#" class="sidebar-link opacity-70" data-payment-locked title="Selesaikan pembayaran untuk membuka">'
+      .'<i class="fa-solid '.$icon.' w-5"></i>'
+      .'<span class="sidebar-link-label">'.e($label).'</span>'
+      .'<i class="fa-solid fa-lock ml-auto text-[10px] text-amber-500"></i></a>';
+  };
+
   $routeLabels = [
     'login' => 'Login berhasil',
     'guru.profile.update' => 'Profil diperbarui',
@@ -61,7 +95,7 @@
   }
 @endphp
 
-<body class="app-shell flex flex-col" data-dashboard-shell="guru">
+<body class="app-shell flex flex-col" data-dashboard-shell="guru" @if($dokuConfig) data-doku-config='{{ $dokuConfig }}' @endif>
   <header class="app-topbar">
     <div class="app-topbar-panel">
       <div class="app-brand">
@@ -173,18 +207,36 @@
         <i class="fa-solid fa-house"></i>
         Beranda
       </a>
-      <a href="{{ route('guru.materials') }}" class="bottom-nav-item {{ request()->routeIs('guru.materials*') ? 'active' : '' }}">
-        <i class="fa-solid fa-book"></i>
-        Materi
-      </a>
-      <a href="{{ route('guru.paket-soal.index') }}" class="bottom-nav-item {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
-        <i class="fa-solid fa-layer-group"></i>
-        Soal
-      </a>
-      <a href="{{ route('guru.exams') }}" class="bottom-nav-item {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
-        <i class="fa-solid fa-file-pen"></i>
-        Ujian
-      </a>
+      @if ($paymentLocked)
+        <a href="#" class="bottom-nav-item opacity-60" data-payment-locked>
+          <i class="fa-solid fa-book"></i>
+          Materi
+          <i class="fa-solid fa-lock absolute right-1 top-1 text-[9px] text-amber-500"></i>
+        </a>
+        <a href="#" class="bottom-nav-item opacity-60" data-payment-locked>
+          <i class="fa-solid fa-layer-group"></i>
+          Soal
+          <i class="fa-solid fa-lock absolute right-1 top-1 text-[9px] text-amber-500"></i>
+        </a>
+        <a href="#" class="bottom-nav-item opacity-60" data-payment-locked>
+          <i class="fa-solid fa-file-pen"></i>
+          Ujian
+          <i class="fa-solid fa-lock absolute right-1 top-1 text-[9px] text-amber-500"></i>
+        </a>
+      @else
+        <a href="{{ route('guru.materials') }}" class="bottom-nav-item {{ request()->routeIs('guru.materials*') ? 'active' : '' }}">
+          <i class="fa-solid fa-book"></i>
+          Materi
+        </a>
+        <a href="{{ route('guru.paket-soal.index') }}" class="bottom-nav-item {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
+          <i class="fa-solid fa-layer-group"></i>
+          Soal
+        </a>
+        <a href="{{ route('guru.exams') }}" class="bottom-nav-item {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
+          <i class="fa-solid fa-file-pen"></i>
+          Ujian
+        </a>
+      @endif
       <a href="{{ route('guru.profile') }}" class="bottom-nav-item {{ request()->routeIs('guru.profile*') ? 'active' : '' }}">
         <i class="fa-solid fa-user"></i>
         Akun
@@ -218,36 +270,12 @@
         </a>
 
         <div class="sidebar-section-title">Konten</div>
-        <a href="{{ route('guru.materials') }}"
-          class="sidebar-link {{ request()->routeIs('guru.materials') ? 'active' : '' }}">
-          <i class="fa-solid fa-book w-5"></i>
-          <span class="sidebar-link-label">Materi</span>
-        </a>
-        <a href="{{ route('guru.soal-ujion.index') }}"
-          class="sidebar-link {{ request()->routeIs('guru.soal-ujion*') ? 'active' : '' }}">
-          <i class="fa-solid fa-layer-group w-5"></i>
-          <span class="sidebar-link-label">Soal dari Ujion</span>
-        </a>
-        <a href="{{ route('guru.personal-questions') }}"
-          class="sidebar-link {{ request()->routeIs('guru.personal-questions*') ? 'active' : '' }}">
-          <i class="fa-solid fa-database w-5"></i>
-          <span class="sidebar-link-label">Soal Pribadi</span>
-        </a>
-        <a href="{{ route('guru.paket-soal.index') }}"
-          class="sidebar-link {{ request()->routeIs('guru.paket-soal.*') || request()->routeIs('guru.soal.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-database w-5"></i>
-          <span class="sidebar-link-label">Paket Soal TKA</span>
-        </a>
-        <a href="{{ route('guru.exams') }}"
-          class="sidebar-link {{ request()->routeIs('guru.exams*') ? 'active' : '' }}">
-          <i class="fa-solid fa-file-lines w-5"></i>
-          <span class="sidebar-link-label">Simulasi Ujian</span>
-        </a>
-        <a href="{{ route('guru.results.index') }}"
-          class="sidebar-link {{ request()->routeIs('guru.results.*') ? 'active' : '' }}">
-          <i class="fa-solid fa-chart-line w-5"></i>
-          <span class="sidebar-link-label">Hasil Siswa</span>
-        </a>
+        {!! $lockedLink('guru.materials', 'fa-book', 'Materi', 'guru.materials') !!}
+        {!! $lockedLink('guru.soal-ujion.index', 'fa-layer-group', 'Soal dari Ujion', 'guru.soal-ujion*') !!}
+        {!! $lockedLink('guru.personal-questions', 'fa-database', 'Soal Pribadi', 'guru.personal-questions*') !!}
+        {!! $lockedLink('guru.paket-soal.index', 'fa-database', 'Paket Soal TKA', 'guru.paket-soal.*') !!}
+        {!! $lockedLink('guru.exams', 'fa-file-lines', 'Simulasi Ujian', 'guru.exams*') !!}
+        {!! $lockedLink('guru.results.index', 'fa-chart-line', 'Hasil Siswa', 'guru.results.*') !!}
 
         <div class="sidebar-section-title">Akun</div>
         <a href="{{ route('guru.guide') }}" class="sidebar-link {{ request()->routeIs('guru.guide') ? 'active' : '' }}">
@@ -259,6 +287,25 @@
           <i class="fa-solid fa-user w-5"></i>
           <span class="sidebar-link-label">Profil</span>
         </a>
+        @if ($currentGuru
+            && $currentGuru->account_status === \App\Models\User::STATUS_ACTIVE
+            && ! blank($currentGuru->access_token))
+          <div class="sidebar-token-card" title="Token akses untuk login guru">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-bold uppercase tracking-wide text-muted">Token Akses</span>
+              <button
+                type="button"
+                class="icon-button h-6 w-6 text-xs"
+                data-guru-token-copy="{{ $currentGuru->access_token }}"
+                title="Salin token"
+              >
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+            <code class="block break-all font-mono text-xs font-bold text-slate-900 dark:text-slate-100">{{ $currentGuru->access_token }}</code>
+            <p class="mt-1 text-[10px] text-muted">Pakai nomor WA + token ini untuk login.</p>
+          </div>
+        @endif
         @if($waGroupLink)
         <a href="{{ $waGroupLink }}" target="_blank" rel="noopener" class="sidebar-link">
           <i class="fa-brands fa-whatsapp w-5"></i>

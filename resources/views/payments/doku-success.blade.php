@@ -10,6 +10,21 @@
         </div>
     @endif
 
+    <script>
+        (function () {
+            if (! window.opener) return;
+
+            try {
+                window.opener.postMessage({
+                    type: 'doku-payment-finished',
+                    order_id: "{{ addslashes((string) request('order_id', $transaction->doku_invoice_number ?? $transaction->reference_code)) }}",
+                }, window.location.origin);
+            } catch (e) {}
+
+            window.setTimeout(function () { window.close(); }, 300);
+        })();
+    </script>
+
     @if ($transaction->status === \App\Models\Transaction::STATUS_SUCCESS)
         <div class="card text-center">
             <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl">✅</div>
@@ -31,7 +46,7 @@
                 </div>
                 <div class="flex items-center justify-between gap-3">
                     <span class="text-slate-500">Metode</span>
-                    <span class="font-semibold text-slate-900">Midtrans (Otomatis)</span>
+                    <span class="font-semibold text-slate-900">Doku (Otomatis)</span>
                 </div>
             </div>
 
@@ -39,8 +54,8 @@
                 <div class="mt-4 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-left">
                     <div class="text-xs font-semibold uppercase tracking-wide text-blue-700">Token Akses Anda</div>
                     <div class="mt-2 flex items-center gap-3">
-                        <code id="midtrans-access-token" class="flex-1 break-all rounded-lg bg-white px-3 py-2 font-mono text-sm font-bold text-slate-900 ring-1 ring-blue-100">{{ $token }}</code>
-                        <button type="button" id="midtrans-copy-token" class="btn-secondary shrink-0" data-token="{{ $token }}">
+                        <code id="doku-access-token" class="flex-1 break-all rounded-lg bg-white px-3 py-2 font-mono text-sm font-bold text-slate-900 ring-1 ring-blue-100">{{ $token }}</code>
+                        <button type="button" id="doku-copy-token" class="btn-secondary shrink-0" data-token="{{ $token }}">
                             <i class="fa-solid fa-copy mr-1"></i> Copy
                         </button>
                     </div>
@@ -48,9 +63,9 @@
                 </div>
             @endif
 
-            <a href="{{ route('login') }}" class="btn-primary mt-6 w-full text-center">
-                <i class="fa-solid fa-right-to-bracket mr-2"></i>
-                Masuk Sekarang
+            <a href="{{ route('guru.dashboard') }}" class="btn-primary mt-6 w-full text-center">
+                <i class="fa-solid fa-gauge-high mr-1"></i>
+                Ke Dashboard
             </a>
         </div>
     @elseif ($transaction->status === \App\Models\Transaction::STATUS_FAILED)
@@ -60,18 +75,18 @@
             <p class="mt-2 text-sm text-rose-800">
                 {{ $transaction->rejection_reason ?: 'Pembayaran tidak berhasil diselesaikan.' }}
             </p>
-            <a href="{{ route('register.guru.pending') }}" class="btn-primary mt-6 w-full text-center">
+            <a href="{{ route('guru.dashboard') }}" class="btn-primary mt-6 w-full text-center">
                 Coba Bayar Lagi
             </a>
         </div>
     @else
-        <div class="card text-center" id="midtrans-waiting">
+        <div class="card text-center" id="doku-waiting">
             <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
                 <i class="fa-solid fa-spinner fa-spin text-2xl text-blue-600"></i>
             </div>
             <h1 class="text-xl font-bold text-slate-900">Memproses Pembayaran...</h1>
             <p class="mt-2 text-sm text-slate-600">Kami sedang mengonfirmasi pembayaran Anda. Halaman ini akan diperbarui otomatis, mohon jangan ditutup.</p>
-            <p id="midtrans-waiting-error" class="mt-3 hidden text-xs text-rose-600">Gagal memeriksa status. <button type="button" id="midtrans-retry" class="font-semibold underline">Coba lagi</button></p>
+            <p id="doku-waiting-error" class="mt-3 hidden text-xs text-rose-600">Gagal memeriksa status. <button type="button" id="doku-retry" class="font-semibold underline">Coba lagi</button></p>
         </div>
     @endif
 </div>
@@ -79,8 +94,8 @@
 @if ($transaction->status === \App\Models\Transaction::STATUS_PENDING)
     <script>
         (function () {
-            const orderId = "{{ addslashes((string) request('order_id', $transaction->midtrans_order_id ?? $transaction->reference_code)) }}";
-            const retryButton = document.getElementById('midtrans-retry');
+            const orderId = "{{ addslashes((string) request('order_id', $transaction->doku_invoice_number ?? $transaction->reference_code)) }}";
+            const retryButton = document.getElementById('doku-retry');
             let attempts = 0;
             let timer = null;
 
@@ -88,7 +103,7 @@
                 attempts += 1;
 
                 try {
-                    const res = await fetch("{{ route('payments.midtrans.status') }}?order_id=" + encodeURIComponent(orderId), {
+                    const res = await fetch("{{ route('payments.doku.status') }}?order_id=" + encodeURIComponent(orderId), {
                         headers: { 'Accept': 'application/json' },
                     });
 
@@ -108,9 +123,9 @@
                         return;
                     }
 
-                    document.getElementById('midtrans-waiting-error')?.classList.add('hidden');
+                    document.getElementById('doku-waiting-error')?.classList.add('hidden');
                 } catch (e) {
-                    document.getElementById('midtrans-waiting-error')?.classList.remove('hidden');
+                    document.getElementById('doku-waiting-error')?.classList.remove('hidden');
                 }
 
                 if (attempts >= 60) {
@@ -132,14 +147,14 @@
     </script>
 @elseif ($transaction->status === \App\Models\Transaction::STATUS_SUCCESS)
     <script>
-        document.getElementById('midtrans-copy-token')?.addEventListener('click', async (event) => {
+        document.getElementById('doku-copy-token')?.addEventListener('click', async (event) => {
             const token = event.currentTarget.dataset.token || '';
             try {
                 await navigator.clipboard.writeText(token);
                 event.currentTarget.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Tersalin';
             } catch (e) {
                 const range = document.createRange();
-                range.selectNodeContents(document.getElementById('midtrans-access-token'));
+                range.selectNodeContents(document.getElementById('doku-access-token'));
                 const selection = window.getSelection();
                 selection?.removeAllRanges();
                 selection?.addRange(range);
