@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\MaterialPracticeToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class MaterialPracticeAuthController extends Controller
 {
-    public function showLoginForm(): View
+    public function showLoginForm(): Response
     {
-        return view('siswa.practice.login');
+        return Inertia::render('Siswa/Practice/Login');
     }
 
     public function validateToken(Request $request): RedirectResponse

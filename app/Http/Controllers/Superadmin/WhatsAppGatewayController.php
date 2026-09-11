@@ -11,18 +11,22 @@ use App\Models\WhatsAppLog;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class WhatsAppGatewayController extends Controller
 {
-    public function connection()
+    public function connection(): Response
     {
         $waGatewayUrl = rtrim((string) config('services.wa_gateway.url'), '/');
         $senderId = (string) config('services.wa_gateway.sender_id');
+        $webhookUrl = url('/api/wa-webhook');
 
-        return view('superadmin.wa-koneksi', compact('waGatewayUrl', 'senderId'));
+        return Inertia::render('Superadmin/WaKoneksi', compact('waGatewayUrl', 'senderId', 'webhookUrl'));
     }
 
-    public function blastForm(Request $request)
+    public function blastForm(Request $request): Response
     {
         $jenjangOptions = User::query()
             ->where('role', User::ROLE_GURU)
@@ -73,7 +77,12 @@ class WhatsAppGatewayController extends Controller
             ->limit(10)
             ->get();
 
-        return view('superadmin.wa-blast', [
+        $blastLogs->each(function (WhatsAppLog $log) {
+            $log->created_at_formatted = $log->created_at?->format('Y-m-d H:i');
+            $log->message_limited = Str::limit($log->message, 80);
+        });
+
+        return Inertia::render('Superadmin/WaBlast', [
             'jenjangOptions' => $jenjangOptions,
             'schoolOptions' => $schoolOptions,
             'paketSoalOptions' => $paketSoalOptions,

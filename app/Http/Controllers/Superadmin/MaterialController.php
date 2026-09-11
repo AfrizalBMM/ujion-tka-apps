@@ -10,7 +10,9 @@ use App\Support\SpreadsheetTemplateExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -82,7 +84,7 @@ class MaterialController extends Controller
         $this->authorize('manage', Material::class);
 
         $validated = $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,xlsx,xls', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls,xml', 'max:5120'],
             'default_jenjang' => ['nullable', 'in:SD,SMP,SMA'],
         ]);
 
@@ -185,7 +187,7 @@ class MaterialController extends Controller
         return back()->with('flash', ['type' => 'success', 'message' => 'Materi berhasil dihapus.']);
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): InertiaResponse
     {
         $filter = $request->query('jenjang');
         $mapel = $request->query('mapel');
@@ -270,11 +272,35 @@ class MaterialController extends Controller
         $units = $baseQuery->clone()->distinct()->pluck('unit')->sort()->values();
         $subUnits = $baseQuery->clone()->distinct()->pluck('sub_unit')->sort()->values();
 
-        return view('superadmin.materials', compact(
-            'materials', 'filter',
-            'mapel', 'curriculum', 'subelement', 'unit', 'subUnit', 'search',
-            'mapels', 'curriculums', 'subelements', 'units', 'subUnits'
-        ));
+        $materials = $materials->map(fn (Material $m) => [
+            'id' => $m->id,
+            'curriculum' => $m->curriculum,
+            'mapel' => $m->mapel,
+            'jenjang' => $m->jenjang,
+            'subelement' => $m->subelement,
+            'unit' => $m->unit,
+            'sub_unit' => $m->sub_unit,
+            'bank_question_count' => (int) ($m->bank_question_count ?? 0),
+        ])->values()->all();
+
+        return Inertia::render('Superadmin/Materials', [
+            'materials' => $materials,
+            'filter' => $filter,
+            'mapel' => $mapel,
+            'curriculum' => $curriculum,
+            'subelement' => $subelement,
+            'subelementLimited' => $subelement ? Str::limit($subelement, 26) : null,
+            'unit' => $unit,
+            'unitLimited' => $unit ? Str::limit($unit, 26) : null,
+            'subUnit' => $subUnit,
+            'subUnitLimited' => $subUnit ? Str::limit($subUnit, 26) : null,
+            'search' => $search,
+            'mapels' => $mapels,
+            'curriculums' => $curriculums,
+            'subelements' => $subelements,
+            'units' => $units,
+            'subUnits' => $subUnits,
+        ]);
     }
 
     private function normalizeJenjang(?string $value): ?string

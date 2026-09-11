@@ -8,11 +8,12 @@ use App\Models\LandingExam;
 use App\Models\LandingExamMapel;
 use App\Models\LandingExamOrder;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LandingExamController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
         $landingExams = LandingExam::with([
             'exam.paketSoal.jenjang',
@@ -29,10 +30,10 @@ class LandingExamController extends Controller
 
         $totalOrders = LandingExamOrder::count();
 
-        return view('superadmin.landing-exams.index', compact('landingExams', 'totalRevenue', 'totalOrders'));
+        return Inertia::render('Superadmin/LandingExams/Index', compact('landingExams', 'totalRevenue', 'totalOrders'));
     }
 
-    public function create(): View
+    public function create(): Response
     {
         $exams = Exam::with(['paketSoal.jenjang', 'paketSoal.mapelPakets', 'examMapelTokens'])
             ->where('is_active', true)
@@ -41,7 +42,24 @@ class LandingExamController extends Controller
             ->orderBy('judul')
             ->get();
 
-        return view('superadmin.landing-exams.create', compact('exams'));
+        $examOptions = $exams->map(fn (Exam $exam) => [
+            'id' => $exam->id,
+            'judul' => $exam->judul,
+            'jenjang_kode' => $exam->paketSoal?->jenjang?->kode ?? '—',
+            'mapels' => $exam->paketSoal->mapelPakets
+                ->map(fn ($m) => [
+                    'id' => $m->id,
+                    'label' => $m->nama_label,
+                    'durasi' => $m->durasi_menit,
+                    'jumlah' => $m->jumlah_soal,
+                ])
+                ->values(),
+        ])->values();
+
+        return Inertia::render('Superadmin/LandingExams/Create', [
+            'examOptions' => $examOptions,
+            'hasExams' => $exams->isNotEmpty(),
+        ]);
     }
 
     public function store(Request $request)
@@ -94,7 +112,7 @@ class LandingExamController extends Controller
             ->with('flash', ['type' => 'success', 'message' => 'Ujian publik berhasil dibuat.']);
     }
 
-    public function show(LandingExam $landingExam): View
+    public function show(LandingExam $landingExam): Response
     {
         $landingExam->load([
             'exam.paketSoal.jenjang',
@@ -113,7 +131,22 @@ class LandingExamController extends Controller
             ->where('status', '!=', LandingExamOrder::STATUS_FAILED)
             ->sum('amount');
 
-        return view('superadmin.landing-exams.show', compact('landingExam', 'ordersCount', 'paidOrdersCount', 'revenue'));
+        $mapelItems = $landingExam->mapels->map(fn ($m) => [
+            'id' => $m->id,
+            'label' => $m->mapelPaket?->nama_label ?? '—',
+            'jumlah_soal' => $m->mapelPaket?->jumlah_soal ?? 0,
+            'durasi_menit' => $m->mapelPaket?->durasi_menit ?? 0,
+            'price' => $m->price,
+            'original_price' => $m->original_price,
+            'is_active' => $m->is_active,
+        ])->values();
+
+        $tokenItems = collect($landingExam->exam?->examMapelTokens ?? [])->map(fn ($token) => [
+            'label' => $token->mapelPaket?->nama_label ?? '—',
+            'token' => $token->token,
+        ])->values();
+
+        return Inertia::render('Superadmin/LandingExams/Show', compact('landingExam', 'ordersCount', 'paidOrdersCount', 'revenue', 'mapelItems', 'tokenItems'));
     }
 
     public function update(Request $request, LandingExam $landingExam)
@@ -184,18 +217,23 @@ class LandingExamController extends Controller
             ->with('flash', ['type' => 'success', 'message' => 'Ujian publik dihapus.']);
     }
 
-    public function orders(LandingExam $landingExam): View
+    public function orders(LandingExam $landingExam): Response
     {
         $orders = $landingExam->orders()
             ->with(['landingExamMapel.mapelPaket'])
             ->latest()
             ->paginate(20);
 
+        $orders->getCollection()->each(function (LandingExamOrder $order) {
+            $order->mapel_label = $order->landingExamMapel?->mapelPaket?->nama_label ?? '—';
+            $order->created_at_formatted = $order->created_at?->format('d M Y, H:i');
+        });
+
         $revenue = $landingExam->orders()
             ->where('status', '!=', LandingExamOrder::STATUS_PENDING_PAYMENT)
             ->where('status', '!=', LandingExamOrder::STATUS_FAILED)
             ->sum('amount');
 
-        return view('superadmin.landing-exams.orders', compact('landingExam', 'orders', 'revenue'));
+        return Inertia::render('Superadmin/LandingExams/Orders', compact('landingExam', 'orders', 'revenue'));
     }
 }

@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class BlogPostController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
         $posts = BlogPost::query()
             ->orderByDesc('is_published')
@@ -20,14 +21,19 @@ class BlogPostController extends Controller
             ->orderByDesc('id')
             ->paginate(15);
 
-        return view('superadmin.blog.index', [
+        $posts->getCollection()->each(function (BlogPost $post) {
+            $post->excerpt_limited = Str::limit($post->excerpt, 100);
+            $post->published_at_formatted = $post->published_at?->format('d M Y H:i');
+        });
+
+        return Inertia::render('Superadmin/Blog/Index', [
             'posts' => $posts,
         ]);
     }
 
-    public function create(): View
+    public function create(): Response
     {
-        return view('superadmin.blog.form', [
+        return Inertia::render('Superadmin/Blog/Form', [
             'post' => new BlogPost,
         ]);
     }
@@ -57,9 +63,9 @@ class BlogPostController extends Controller
         ]);
     }
 
-    public function edit(BlogPost $blogPost): View
+    public function edit(BlogPost $blogPost): Response
     {
-        return view('superadmin.blog.form', [
+        return Inertia::render('Superadmin/Blog/Form', [
             'post' => $blogPost,
         ]);
     }

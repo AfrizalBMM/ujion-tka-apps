@@ -1,0 +1,127 @@
+<script setup>
+import { inject } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import GuruLayout from '@/Layouts/GuruLayout.vue';
+
+const props = defineProps({
+	material: {
+		type: Object,
+		required: true,
+	},
+	globalQuestionCount: {
+		type: Number,
+		required: true,
+	},
+	examSnapshotCount: {
+		type: Number,
+		required: true,
+	},
+	isBookmarked: {
+		type: Boolean,
+		default: false,
+	},
+	practiceToken: {
+		type: Object,
+		default: null,
+	},
+});
+
+const route = inject('route');
+
+const toggleBookmark = () => {
+	router.post(
+		route(props.isBookmarked ? 'guru.materials.unbookmark' : 'guru.materials.bookmark', props.material.id),
+		{},
+		{ preserveScroll: true }
+	);
+};
+</script>
+
+<template>
+	<Head title="Detail Materi" />
+
+	<GuruLayout>
+		<div class="space-y-6">
+			<section class="page-hero">
+				<span class="page-kicker">Materi Detail &middot; {{ material.mapel }}</span>
+				<h1 class="page-title">{{ material.subelement }}</h1>
+				<p class="page-description">{{ material.unit }} &middot; {{ material.sub_unit }}</p>
+				<div class="page-actions">
+					<span class="badge-info border-white/20 bg-white/10 text-white">dari Ujion</span>
+					<Link :href="route('guru.materials')" class="btn-secondary border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white">Kembali</Link>
+					<a v-if="material.link" :href="material.link" class="btn-primary" target="_blank" rel="noopener">Buka Link</a>
+				</div>
+			</section>
+
+			<section class="grid gap-4 lg:grid-cols-3">
+				<div class="card lg:col-span-2">
+					<div class="section-heading mb-4">
+						<div>
+							<h2 class="section-title">Ringkasan</h2>
+							<p class="section-description">Informasi materi yang dipakai sebagai referensi pembuatan soal.</p>
+						</div>
+					</div>
+					<div class="grid gap-3 sm:grid-cols-2">
+						<div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+							<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Jenjang</div>
+							<div class="mt-2 font-semibold">{{ material.jenjang ?? 'Semua' }}</div>
+						</div>
+						<div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+							<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Mata Pelajaran</div>
+							<div class="mt-2 font-semibold">{{ material.mapel }}</div>
+						</div>
+						<div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+							<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Kurikulum</div>
+							<div class="mt-2 font-semibold">{{ material.curriculum }}</div>
+						</div>
+						<div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60 sm:col-span-2">
+							<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Unit</div>
+							<div class="mt-2 font-semibold">{{ material.unit }}</div>
+							<div class="mt-2 text-sm text-textSecondary">Sub unit: {{ material.sub_unit }}</div>
+						</div>
+					</div>
+				</div>
+
+				<aside class="card">
+					<div class="section-heading mb-4">
+						<div>
+							<h2 class="section-title">Aksi</h2>
+							<p class="section-description">Bookmark dan statistik singkat.</p>
+						</div>
+					</div>
+
+					<div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+						<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Latihan Materi</div>
+						<template v-if="practiceToken">
+							<div class="mt-2 flex flex-wrap items-center gap-2">
+								<code class="rounded bg-indigo-50 px-2 py-1 text-sm font-black text-indigo-700">{{ practiceToken.token }}</code>
+								<span class="badge-success">Aktif</span>
+							</div>
+							<div class="mt-3 grid grid-cols-1 gap-2">
+								<a v-for="no in [1, 2, 3]" :key="no" class="btn-secondary w-full justify-center" :href="route('guru.materials.practice.pdf', { material: material.id, paketNo: no })">
+									Download PDF Paket {{ no }}
+								</a>
+							</div>
+						</template>
+						<div v-else class="mt-2 text-sm text-textSecondary">Token latihan belum disiapkan oleh admin.</div>
+					</div>
+
+					<div class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+						<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Bank Soal Global</div>
+						<div class="mt-2 text-3xl font-bold">{{ globalQuestionCount }}</div>
+						<div class="mt-2 text-xs text-textSecondary">Snapshot builder ujian: {{ examSnapshotCount }}</div>
+					</div>
+
+					<div class="mt-4">
+						<form v-if="isBookmarked" method="POST" :action="route('guru.materials.unbookmark', material.id)" @submit.prevent="toggleBookmark">
+							<button class="btn-danger w-full" type="submit">Hapus Bookmark</button>
+						</form>
+						<form v-else method="POST" :action="route('guru.materials.bookmark', material.id)" @submit.prevent="toggleBookmark">
+							<button class="btn-secondary w-full" type="submit">Bookmark</button>
+						</form>
+					</div>
+				</aside>
+			</section>
+		</div>
+	</GuruLayout>
+</template>

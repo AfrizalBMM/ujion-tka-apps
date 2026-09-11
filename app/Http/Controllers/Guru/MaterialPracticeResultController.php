@@ -11,7 +11,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class MaterialPracticeResultController extends Controller
 {
@@ -20,7 +22,7 @@ class MaterialPracticeResultController extends Controller
         return redirect()->route('guru.results.index', ['tab' => 'materi']);
     }
 
-    public function show(Material $material): View
+    public function show(Material $material): Response
     {
         $user = Auth::user();
         $this->ensureAccessibleMaterial($material, $user?->jenjang ?? null);
@@ -158,19 +160,40 @@ class MaterialPracticeResultController extends Controller
                 ->values();
         }
 
-        return view('guru.results.practice-show', compact(
-            'material',
-            'token',
-            'sessions',
-            'stats',
-            'packageStats',
-            'questionStats',
-            'telaahStats',
-            'rankings'
-        ));
+        return Inertia::render('Guru/Results/PracticeShow', [
+            'material' => [
+                'id' => $material->id,
+                'sub_unit' => $material->sub_unit,
+                'subelement' => $material->subelement,
+                'unit' => $material->unit,
+            ],
+            'token' => $token ? [
+                'token' => $token->token,
+                'is_active' => (bool) $token->is_active,
+            ] : null,
+            'stats' => $stats,
+            'packageStats' => $packageStats->values(),
+            'questionStats' => $questionStats->map(fn ($q) => [
+                'percent' => $q['percent'],
+            ])->values(),
+            'telaahStats' => $telaahStats->map(fn ($q) => [
+                'percent' => $q['percent'],
+                'correct' => $q['correct'],
+                'total' => $q['total'],
+                'question_text' => Str::limit(strip_tags($q['question']?->question_text ?? '-'), 120),
+            ])->values(),
+            'rankings' => $rankings->map(fn ($session) => [
+                'id' => $session->id,
+                'nama' => $session->nama,
+                'nomor_wa' => $session->nomor_wa,
+                'status' => $session->status,
+                'packages_done' => $session->packages_done,
+                'avg_score' => $session->avg_score,
+            ])->values(),
+        ]);
     }
 
-    public function student(Material $material, MaterialPracticeSession $session): View
+    public function student(Material $material, MaterialPracticeSession $session): Response
     {
         $user = Auth::user();
         $this->ensureAccessibleMaterial($material, $user?->jenjang ?? null);
@@ -195,14 +218,58 @@ class MaterialPracticeResultController extends Controller
         ]);
         $avgScore = $attempts->where('status', 'selesai')->avg('skor');
 
-        return view('guru.results.practice-student', compact(
-            'material',
-            'token',
-            'session',
-            'attempts',
-            'answersByAttempt',
-            'avgScore'
-        ));
+        $attemptCards = $attempts
+            ->map(function ($attempt) use ($answersByAttempt) {
+                $paketNo = $attempt->paket_no ?? $attempt->package?->paket_no;
+                $answers = $answersByAttempt[$attempt->id] ?? collect();
+                $answeredCount = $answers->filter(fn ($answer) => filled($answer?->jawaban))->count();
+                $totalSoal = (int) ($attempt->total_soal ?: ($attempt->package?->questions->count() ?? 0));
+                $correctCount = (int) $attempt->benar;
+                $wrongCount = max($answeredCount - $correctCount, 0);
+                $emptyCount = max($totalSoal - $answeredCount, 0);
+                $progress = $totalSoal > 0 ? (int) round(($answeredCount / $totalSoal) * 100) : 0;
+
+                return [
+                    'id' => $attempt->id,
+                    'paket_no' => $paketNo,
+                    'status' => $attempt->status,
+                    'skor' => $attempt->skor !== null ? (float) $attempt->skor : null,
+                    'answered_count' => $answeredCount,
+                    'total_soal' => $totalSoal,
+                    'correct_count' => $correctCount,
+                    'wrong_count' => $wrongCount,
+                    'empty_count' => $emptyCount,
+                    'progress' => $progress,
+                    'waktu_mulai' => $attempt->waktu_mulai?->format('d M Y H:i'),
+                    'waktu_selesai' => $attempt->waktu_selesai?->format('d M Y H:i'),
+                    'has_package' => (bool) $attempt->package,
+                ];
+            })
+            ->values();
+
+        return Inertia::render('Guru/Results/PracticeStudent', [
+            'material' => [
+                'id' => $material->id,
+                'sub_unit' => $material->sub_unit,
+                'subelement' => $material->subelement,
+                'unit' => $material->unit,
+            ],
+            'session' => [
+                'id' => $session->id,
+                'nama' => $session->nama,
+                'nomor_wa' => $session->nomor_wa,
+                'status' => $session->status,
+            ],
+            'attempts' => $attemptCards,
+            'telaahAnswers' => $session->telaahAnswers
+                ->map(fn ($answer) => [
+                    'is_correct' => (bool) $answer->is_correct,
+                    'question_text' => $answer->globalQuestion?->question_text,
+                    'jawaban' => $answer->jawaban,
+                ])
+                ->values(),
+            'avgScore' => $avgScore !== null ? (float) $avgScore : null,
+        ]);
     }
 
     private function ensureAccessibleMaterial(Material $material, ?string $jenjangUser): void

@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PaymentConfirmationController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $search = trim((string) $request->string('q'));
         $statusFilter = (string) $request->string('status');
@@ -45,6 +46,11 @@ class PaymentConfirmationController extends Controller
             'failed' => Transaction::query()->where('status', Transaction::STATUS_FAILED)->count(),
         ];
 
-        return view('superadmin.payment-confirmations', compact('transactions', 'summary', 'search', 'statusFilter'));
+        $transactions->each(function (Transaction $transaction) {
+            $transaction->paid_at_formatted = $transaction->paid_at?->format('d M Y H:i');
+            $transaction->created_at_formatted = $transaction->created_at?->format('d M Y H:i');
+        });
+
+        return Inertia::render('Superadmin/PaymentConfirmations', compact('transactions', 'summary', 'search', 'statusFilter'));
     }
 }

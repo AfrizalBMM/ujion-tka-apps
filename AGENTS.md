@@ -11,7 +11,7 @@ Platform ujian terintegrasi berbasis Laravel 12 untuk tiga role: **superadmin**,
 | Framework | Laravel 12 |
 | PHP | ^8.3 |
 | Database | MySQL 8.0+ (via Laragon) |
-| Frontend | Vite 7, Tailwind CSS 4, Flowbite, KaTeX, Chart.js |
+| Frontend | Inertia.js 2 + Vue 3 (app), Blade (halaman publik SEO), Vite 7, Tailwind CSS 4, Flowbite, KaTeX, Chart.js, Ziggy |
 | Testing | PHPUnit 11 (SQLite in-memory) |
 | Code Style | Laravel Pint (preset default) |
 | Local Dev | Laragon (Apache/MySQL), `php artisan serve` |
@@ -147,40 +147,49 @@ Custom Gate: `manage-mapel-soal` (superadmin atau guru per jenjang).
 
 ## Frontend Structure
 
+Arsitektur hybrid: **halaman aplikasi (auth, guru, superadmin, siswa/ujian) dirender Inertia.js + Vue 3**; **halaman publik SEO (landing, ujian-online, kisi-kisi, artikel, register-guru) + PDF/print/export + error pages tetap Blade**.
+
 ```
 resources/
   css/app.css                     # Entry CSS (Tailwind 4)
   js/
-    app.js                         # Entry JS (Vite)
+    app.js                         # Entry Inertia (createInertiaApp + glob Pages)
+    public.js                      # Entry untuk halaman Blade yang tersisa
     bootstrap.js                   # Axios setup, Echo, Pusher
-    superadmin.js                  # Superadmin-specific bundle
-    ui.js                          # UI helpers
-    core/                          # Script global (katex, layout, action-menus)
+    ziggy.js                       # Route config Ziggy (generate: php artisan ziggy:generate)
+    Layouts/                       # GuestLayout, GuruLayout, SuperadminLayout, UjianLayout (Vue)
+    Pages/                         # Halaman Inertia per modul (Auth/, Guru/, Siswa/, Superadmin/, Ujian/)
+    Components/                    # Komponen Vue (Ui/, Guru/, Superadmin/)
+    core/                          # Script global (legacy-init, katex, ssd, theme, doku-checkout, dsb)
     utils/                         # Helper reusable (copy-text, live-filter)
-    pages/                         # Script per-halaman (17 files)
   views/
-    layouts/                       # guest, guru, superadmin, ujian
-    components/ui/                 # confirm-modal, flash
-    guru/                          # View guru
-    superadmin/                    # View superadmin
-    siswa/                         # View siswa
-    ujian/                         # View ujian
-    auth/                          # Login forms
-    payments/                      # Payment views
-    partials/                      # Partial views
+    app.blade.php                  # Root Inertia
+    landing.blade.php              # Landing (SEO)
+    layouts/                       # guest, public (Blade, untuk halaman yang tersisa)
+    components/ui/                 # confirm-modal, flash (untuk halaman Blade tersisa)
+    guru/material-practice/        # PDF views
+    superadmin/exports/            # Print views
+    ujian-online/, kisi-kisi/, artikel/, payments/, errors/
 ```
 
-Pola frontend: script halaman dipisah ke `resources/js/pages/`, helper ke `utils/`, global ke `core/`. Jangan numpuk script inline di Blade.
+Pola penting:
+- Controller mengembalikan `Inertia::render('Guru/Dashboard', [...])` — nama komponen cocok dengan path `resources/js/Pages/Guru/Dashboard.vue`.
+- Shared props via `App\Http\Middleware\HandleInertiaRequests`: `auth.user`, `csrf_token`, `flash`, `status`, `guruLayout`, `superadminLayout`.
+- `route()` di JS disediakan Ziggy (`ZiggyVue` plugin) — selalu tersedia di template & via `inject('route')` di script setup.
+- Form: `useForm` untuk form biasa; form yang submitnya lewat confirm-modal (`data-confirm`) WAJIB native form + hidden `_token` (confirm modal memanggil `form.submit()` native).
+- Perilaku DOM global (SSD, katex, flash countdown, action menus) di-init ulang per navigasi Inertia via `core/legacy-init.js`.
+- Konvensi lengkap migrasi ada di `MIGRASI-INERTIA.md`.
 
 ## Code Conventions
 
 - **Tidak ada komentar** di kode PHP/JS kecuali diminta.
 - **PHP**: Laravel Pint preset default. Gunakan `composer pint` sebelum commit.
 - **Naming**: PascalCase untuk class, camelCase untuk method/variable, snake_case untuk tabel/kolom DB.
-- **Controller**: satu method per aksi, return `view()` atau `redirect()`. Validasi di controller atau FormRequest.
+- **Controller**: satu method per aksi, return `Inertia::render()` atau `redirect()`. Validasi di controller atau FormRequest.
 - **Model**: define `$fillable`, `$casts`, `$hidden`. Constant untuk enum-like values.
 - **Migration**: penamaan `YYYY_MM_DD_HHMMSS_deskripsi_table.php`.
-- **Blade**: gunakan `@extends` / `@section` atau component. Layout per role.
+- **Vue**: Composition API `<script setup>`; markup Tailwind disalin apa adanya dari desain; tanpa komentar.
+- **Blade**: hanya untuk halaman publik SEO/PDF/print/error; layout `guest`/`public`.
 - **JS**: modular per halaman, import via `Vite`. Hindari inline `<script>` di Blade.
 
 ## Database Notes

@@ -5,16 +5,18 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
-use Illuminate\Contracts\View\View;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AuditLogController extends Controller
 {
     private const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $auditLogs = collect();
         $summary = [
@@ -89,8 +91,16 @@ class AuditLogController extends Controller
                 ->get(['id', 'name', 'role']);
         }
 
-        return view('superadmin.audit-logs', [
-            'auditLogs' => $auditLogs,
+        $auditPaginator = $auditLogs instanceof LengthAwarePaginator ? $auditLogs : null;
+        $auditLogsData = $auditPaginator !== null ? $auditPaginator->getCollection() : $auditLogs;
+
+        $auditLogsData->each(function (AuditLog $log) {
+            $log->created_at_formatted = $log->created_at?->format('d M Y H:i:s');
+        });
+
+        return Inertia::render('Superadmin/AuditLogs', [
+            'auditLogs' => $auditLogsData->values(),
+            'auditPaginator' => $auditPaginator,
             'summary' => $summary,
             'users' => $users,
             'filters' => [

@@ -20,7 +20,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ExamController extends Controller
 {
@@ -106,7 +107,7 @@ class ExamController extends Controller
 
     // ─── Petunjuk ────────────────────────────────────────────────────────────────
 
-    public function petunjuk(): View|RedirectResponse
+    public function petunjuk(): RedirectResponse|Response
     {
         $sesi = $this->getActiveSession();
         if (! $sesi) {
@@ -115,17 +116,17 @@ class ExamController extends Controller
 
         $sesi->load(['exam', 'paketSoal', 'mapelPaket']);
 
-        return view('ujian.mulai', [
+        return Inertia::render('Ujian/Petunjuk', [
             'session' => $sesi,
             'exam' => $sesi->exam,
             'paket' => $sesi->paketSoal,
-            'mapel' => $sesi->mapelPaket,
+            'mapel' => $this->mapelProps($sesi->mapelPaket),
         ]);
     }
 
     // ─── Show Ujian ──────────────────────────────────────────────────────────────
 
-    public function showUjian(Request $request): View|RedirectResponse
+    public function showUjian(Request $request): RedirectResponse|Response
     {
         $sesi = $this->getActiveSession();
         if (! $sesi) {
@@ -220,11 +221,14 @@ class ExamController extends Controller
             return redirect()->route('siswa.petunjuk')->withErrors(['ujian' => 'Soal ujian belum siap untuk mapel ini.']);
         }
 
-        return view('ujian.pengerjaan', [
+        return Inertia::render('Ujian/Pengerjaan', [
             'exam' => $sesi->exam,
             'session' => $sesi,
             'paket' => $sesi->paketSoal,
-            'mapel' => $mapel,
+            'mapel' => [
+                'id' => $mapel->id,
+                'nama_label' => $mapel->nama_label,
+            ],
             'questions' => $questions,
             'timer' => $timerMapel,
         ]);
@@ -320,7 +324,7 @@ class ExamController extends Controller
 
     // ─── Selesai ─────────────────────────────────────────────────────────────────
 
-    public function selesai(): View|RedirectResponse
+    public function selesai(): RedirectResponse|Response
     {
         $sesi = $this->getActiveSession();
 
@@ -334,10 +338,21 @@ class ExamController extends Controller
                 if ($remaining > 0) {
                     $sesi->load(['exam', 'paketSoal', 'mapelPaket.soals', 'jawabanSiswas']);
 
-                    return view('ujian.konfirmasi-selesai', [
+                    return Inertia::render('Ujian/KonfirmasiSelesai', [
                         'session' => $sesi,
                         'exam' => $sesi->exam,
-                        'mapel' => $mapel,
+                        'mapel' => $this->mapelProps($mapel),
+                        'totalSoal' => $sesi->mapelPaket?->soals->count() ?? 0,
+                        'dijawab' => $sesi->jawabanSiswas->filter(function ($j) {
+                            if ($j->tipe_soal === 'pilihan_ganda') {
+                                return ! empty($j->jawaban_pg);
+                            }
+                            if ($j->tipe_soal === 'menjodohkan') {
+                                return ! empty($j->jawaban_menjodohkan);
+                            }
+
+                            return false;
+                        })->count(),
                         'remainingSeconds' => $remaining,
                     ]);
                 }
@@ -350,7 +365,37 @@ class ExamController extends Controller
             $sesi->load(['mapelPaket.soals', 'jawabanSiswas', 'landingExamOrder']);
         }
 
-        return view('ujian.selesai', ['session' => $sesi]);
+        $totalSoal = 0;
+        $dijawab = 0;
+        if ($sesi && $sesi->mapelPaket) {
+            $totalSoal = $sesi->mapelPaket->soals->count();
+            $dijawab = $sesi->jawabanSiswas->filter(function ($j) {
+                if ($j->tipe_soal === 'pilihan_ganda') {
+                    return ! empty($j->jawaban_pg);
+                }
+                if ($j->tipe_soal === 'menjodohkan') {
+                    return ! empty($j->jawaban_menjodohkan);
+                }
+
+                return false;
+            })->count();
+        }
+
+        return Inertia::render('Ujian/Selesai', [
+            'session' => $sesi ? [
+                'nama' => $sesi->nama,
+                'skor' => $sesi->skor,
+                'mapelPaket' => $sesi->mapelPaket ? [
+                    'is_survey' => $sesi->mapelPaket->isSurvey(),
+                ] : null,
+                'landing_exam_order_id' => $sesi->landing_exam_order_id,
+                'landingExamOrder' => $sesi->landingExamOrder ? [
+                    'session_token' => $sesi->landingExamOrder->session_token,
+                ] : null,
+            ] : null,
+            'totalSoal' => $totalSoal,
+            'dijawab' => $dijawab,
+        ]);
     }
 
     public function submitSelesai(Request $request): RedirectResponse
@@ -414,6 +459,22 @@ class ExamController extends Controller
         }
 
         return UjianSesi::where('session_token', $participantToken)->first();
+    }
+
+    private function mapelProps(?MapelPaket $mapel): ?array
+    {
+        if (! $mapel) {
+            return null;
+        }
+
+        return [
+            'id' => $mapel->id,
+            'nama_label' => $mapel->nama_label,
+            'jumlah_soal' => $mapel->jumlah_soal,
+            'durasi_menit' => $mapel->durasi_menit,
+            'petunjuk_khusus' => $mapel->petunjuk_khusus,
+            'is_survey' => $mapel->isSurvey(),
+        ];
     }
 
     private function handlePublicExamCompletion(UjianSesi $sesi): void

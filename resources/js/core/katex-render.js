@@ -5,7 +5,7 @@ const katexDelimiters = [
 	{ left: '\\[', right: '\\]', display: true },
 ];
 
-function renderKaTeX(root = document.body, { force = false } = {}) {
+export function renderKaTeX(root = document.body, { force = false } = {}) {
 	if (!root || typeof window.renderMathInElement !== 'function') {
 		return false;
 	}
@@ -26,7 +26,7 @@ function renderKaTeX(root = document.body, { force = false } = {}) {
 	return true;
 }
 
-function attemptRender(retries = 20) {
+export function attemptRender(retries = 20) {
 	if (renderKaTeX()) {
 		return;
 	}
@@ -44,10 +44,12 @@ window.UjionKaTeX = {
 	render: renderKaTeX,
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-	attemptRender();
-});
+if (typeof document !== 'undefined') {
+	document.addEventListener('DOMContentLoaded', () => {
+		attemptRender();
+	});
 
-window.addEventListener('load', () => {
-	attemptRender(5);
-});
+	window.addEventListener('load', () => {
+		attemptRender(5);
+	});
+}

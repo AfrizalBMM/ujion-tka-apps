@@ -8,6 +8,7 @@ use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class AuthController extends Controller
 {
@@ -16,12 +17,14 @@ class AuthController extends Controller
      */
     public function showLoginForm()
     {
-        return view('auth.login');
+        return Inertia::render('Auth/Login');
     }
 
     public function showForgotTokenForm()
     {
-        return view('auth.forgot-token');
+        return Inertia::render('Auth/ForgotToken', [
+            'jenjangs' => config('ujion.jenjangs'),
+        ]);
     }
 
     public function requestForgotToken(Request $request)
@@ -119,7 +122,7 @@ class AuthController extends Controller
      */
     public function showAdminLoginForm()
     {
-        return view('auth.admin-login');
+        return Inertia::render('Auth/AdminLogin');
     }
 
     /**

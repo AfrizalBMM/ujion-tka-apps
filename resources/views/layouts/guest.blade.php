@@ -14,7 +14,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
     @include('partials.ssd-style')
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/public.js'])
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <style>
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%); }

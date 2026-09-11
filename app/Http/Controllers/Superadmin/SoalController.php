@@ -18,13 +18,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class SoalController extends Controller
 {
     use ManagesSoalCrud;
 
-    public function index(PaketSoal $paket, MapelPaket $mapel): View
+    public function index(PaketSoal $paket, MapelPaket $mapel): InertiaResponse
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('view', $paket);
@@ -37,19 +38,44 @@ class SoalController extends Controller
             'soals.pasanganMenjodohkans',
         ]);
 
-        return view('superadmin.soal.index', compact('paket', 'mapel'));
+        return Inertia::render('Superadmin/Soal/Index', [
+            'paket' => $this->paketBrief($paket),
+            'mapel' => $this->mapelBrief($mapel),
+            'soals' => $mapel->soals->map(fn (Soal $soal) => [
+                'id' => $soal->id,
+                'nomor_soal' => $soal->nomor_soal,
+                'tipe_label' => str($soal->tipe_soal)->replace('_', ' ')->headline()->toString(),
+                'indikator_limited' => Str::limit((string) $soal->indikator, 100),
+                'dimensi' => $soal->dimensi,
+                'subdimensi' => $soal->subdimensi,
+                'teks_bacaan_judul' => $soal->teksBacaan?->judul,
+                'is_pilihan_ganda' => $soal->isPilihanGanda(),
+                'pilihan_count' => $soal->pilihanJawabans->count(),
+                'pasangan_count' => $soal->pasanganMenjodohkans->count(),
+            ])->values()->all(),
+        ]);
     }
 
-    public function create(Request $request, PaketSoal $paket, MapelPaket $mapel): View
+    public function create(Request $request, PaketSoal $paket, MapelPaket $mapel): InertiaResponse
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('create', [Soal::class, $mapel]);
 
         $tipeSoal = $mapel->isSurvey() ? 'pilihan_ganda' : ($request->string('tipe_soal')->toString() ?: 'pilihan_ganda');
-        $teksBacaans = $mapel->teksBacaans()->latest()->get();
+        $teksBacaans = $mapel->teksBacaans()->latest()->get()
+            ->map(fn (TeksBacaan $bacaan) => [
+                'id' => $bacaan->id,
+                'label' => $bacaan->judul ?: 'Teks bacaan #'.$bacaan->id,
+            ])->values()->all();
         $nextNomor = ((int) $mapel->soals()->max('nomor_soal')) + 1;
 
-        return view('superadmin.soal.create', compact('paket', 'mapel', 'tipeSoal', 'teksBacaans', 'nextNomor'));
+        return Inertia::render('Superadmin/Soal/Create', [
+            'paket' => $this->paketBrief($paket),
+            'mapel' => $this->mapelBrief($mapel),
+            'tipeSoal' => $tipeSoal,
+            'teksBacaans' => $teksBacaans,
+            'nextNomor' => $nextNomor,
+        ]);
     }
 
     public function store(StoreSoalRequest $request, PaketSoal $paket, MapelPaket $mapel): RedirectResponse
@@ -63,15 +89,50 @@ class SoalController extends Controller
             ->with('flash', ['type' => 'success', 'message' => 'Soal berhasil ditambahkan.']);
     }
 
-    public function edit(PaketSoal $paket, MapelPaket $mapel, Soal $soal): View
+    public function edit(PaketSoal $paket, MapelPaket $mapel, Soal $soal): InertiaResponse
     {
         abort_if($mapel->paket_soal_id !== $paket->id || $soal->mapel_paket_id !== $mapel->id, 404);
         $this->authorize('update', $soal);
 
         $soal->load(['pilihanJawabans', 'pasanganMenjodohkans', 'teksBacaan']);
-        $teksBacaans = $mapel->teksBacaans()->latest()->get();
+        $teksBacaans = $mapel->teksBacaans()->latest()->get()
+            ->map(fn (TeksBacaan $bacaan) => [
+                'id' => $bacaan->id,
+                'label' => $bacaan->judul ?: 'Teks bacaan #'.$bacaan->id,
+            ])->values()->all();
 
-        return view('superadmin.soal.edit', compact('paket', 'mapel', 'soal', 'teksBacaans'));
+        return Inertia::render('Superadmin/Soal/Edit', [
+            'paket' => $this->paketBrief($paket),
+            'mapel' => $this->mapelBrief($mapel),
+            'soal' => [
+                'id' => $soal->id,
+                'nomor_soal' => $soal->nomor_soal,
+                'tipe_soal' => $soal->tipe_soal,
+                'teks_bacaan_id' => $soal->teks_bacaan_id,
+                'bobot' => $soal->bobot,
+                'indikator' => $soal->indikator,
+                'dimensi' => $soal->dimensi,
+                'subdimensi' => $soal->subdimensi,
+                'kategori_profil' => $soal->kategori_profil,
+                'arah_skor' => $soal->arah_skor,
+                'pertanyaan' => $soal->pertanyaan,
+                'pembahasan' => $soal->pembahasan,
+                'gambar_url' => $soal->gambar_url,
+                'jawaban_benar' => $soal->pilihanJawabans->firstWhere('is_benar', true)?->kode,
+                'pilihan' => $soal->pilihanJawabans->map(fn ($item) => [
+                    'kode' => $item->kode,
+                    'teks' => $item->teks,
+                    'nilai_survey' => $item->nilai_survey,
+                    'profil_label' => $item->profil_label,
+                    'gambar_url' => $item->gambar_url,
+                ])->values()->all(),
+                'pasangan' => $soal->pasanganMenjodohkans->map(fn ($item) => [
+                    'teks_kiri' => $item->teks_kiri,
+                    'teks_kanan' => $item->teks_kanan,
+                ])->values()->all(),
+            ],
+            'teksBacaans' => $teksBacaans,
+        ]);
     }
 
     public function update(UpdateSoalRequest $request, PaketSoal $paket, MapelPaket $mapel, Soal $soal): RedirectResponse
@@ -102,7 +163,7 @@ class SoalController extends Controller
     /**
      * Tampilkan halaman builder — pilih soal dari bank global untuk dimasukkan ke mapel paket.
      */
-    public function bankBuilder(Request $request, PaketSoal $paket, MapelPaket $mapel): View
+    public function bankBuilder(Request $request, PaketSoal $paket, MapelPaket $mapel): InertiaResponse
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('create', [Soal::class, $mapel]);
@@ -111,7 +172,6 @@ class SoalController extends Controller
         $paket->load('jenjang');
         $mapel->load('paketSoal');
 
-        // Ambil ID soal yang sudah ada di mapel ini (agar bisa ditandai sudah masuk)
         $existingGlobalIds = [];
 
         $filters = [
@@ -144,7 +204,6 @@ class SoalController extends Controller
             ->latest()
             ->get();
 
-        // Opsi filter dinamis
         $jenjangId = $paket->jenjang_id;
 
         $jenjangs = Jenjang::orderBy('nama')->get();
@@ -167,12 +226,47 @@ class SoalController extends Controller
             ->whereNotNull('material_sub_unit')
             ->distinct()->pluck('material_sub_unit');
 
-        return view('superadmin.soal.bank-builder', compact(
-            'paket', 'mapel', 'bankSoals', 'filters',
-            'jenjangs', 'mapels',
-            'curriculums', 'subelements', 'units', 'subUnits',
-            'existingGlobalIds'
-        ));
+        $soalCount = $mapel->soals()->count();
+        $maxSoal = $mapel->jumlah_soal;
+        $slotSisa = max(0, $maxSoal - $soalCount);
+
+        return Inertia::render('Superadmin/Soal/BankBuilder', [
+            'paket' => $this->paketBrief($paket),
+            'mapel' => $this->mapelBrief($mapel),
+            'bankSoals' => $bankSoals->map(fn (GlobalQuestion $gq) => [
+                'id' => $gq->id,
+                'question_type' => $gq->question_type,
+                'type_label' => match ($gq->question_type) {
+                    'multiple_choice' => 'Pilihan Ganda',
+                    'matching' => 'Menjodohkan',
+                    default => 'Jawaban Singkat',
+                },
+                'type_badge_class' => match ($gq->question_type) {
+                    'multiple_choice' => 'badge-info',
+                    'matching' => 'badge-warning',
+                    default => 'badge-success',
+                },
+                'material_curriculum' => $gq->material_curriculum,
+                'material_sub_unit' => $gq->material_sub_unit,
+                'answer_key_limited' => $gq->answer_key ? Str::limit((string) $gq->answer_key, 30) : null,
+                'question_text_limited' => Str::limit(strip_tags((string) $gq->question_text), 180),
+                'reading_passage' => $gq->reading_passage,
+                'options' => $gq->options,
+                'material_subelement' => $gq->material_subelement,
+                'material_unit' => $gq->material_unit,
+            ])->values()->all(),
+            'filters' => $filters,
+            'filtersLimited' => [
+                'material_sub_unit' => $filters['material_sub_unit'] !== '' ? Str::limit($filters['material_sub_unit'], 26) : null,
+            ],
+            'jenjangs' => $jenjangs,
+            'mapels' => $mapels,
+            'curriculums' => $curriculums,
+            'subUnits' => $subUnits,
+            'soalCount' => $soalCount,
+            'maxSoal' => $maxSoal,
+            'slotSisa' => $slotSisa,
+        ]);
     }
 
     /**
@@ -305,5 +399,26 @@ class SoalController extends Controller
 
         return redirect()->route('superadmin.soal.index', [$paket, $mapel])
             ->with('flash', ['type' => 'success', 'message' => $message]);
+    }
+
+    private function paketBrief(PaketSoal $paket): array
+    {
+        return [
+            'id' => $paket->id,
+            'nama' => $paket->nama,
+            'jenjang_kode' => $paket->jenjang?->kode,
+        ];
+    }
+
+    private function mapelBrief(MapelPaket $mapel): array
+    {
+        return [
+            'id' => $mapel->id,
+            'nama_label' => $mapel->nama_label,
+            'is_survey' => $mapel->isSurvey(),
+            'jumlah_soal' => $mapel->jumlah_soal,
+            'durasi_menit' => $mapel->durasi_menit,
+            'soal_count' => $mapel->soals->count(),
+        ];
     }
 }

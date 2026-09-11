@@ -12,13 +12,15 @@ use App\Models\PaketSoal;
 use App\Models\Soal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SoalGuruController extends Controller
 {
     use ManagesSoalCrud;
 
-    public function index(PaketSoal $paket, MapelPaket $mapel): View
+    public function index(Request $request, PaketSoal $paket, MapelPaket $mapel): Response
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('view', $paket);
@@ -31,10 +33,60 @@ class SoalGuruController extends Controller
             'soals.pasanganMenjodohkans',
         ]);
 
-        return view('guru.soal.index', compact('paket', 'mapel'));
+        $canManage = $paket->isManagedByGuru($request->user());
+        $isSurvey = $mapel->isSurvey();
+
+        $soals = $mapel->soals
+            ->map(fn ($soal) => [
+                'id' => $soal->id,
+                'nomor_soal' => $soal->nomor_soal,
+                'tipe_label' => str($soal->tipe_soal)->replace('_', ' ')->headline()->toString(),
+                'indikator_limited' => Str::limit($soal->indikator, 100),
+                'dimensi' => $soal->dimensi,
+                'subdimensi' => $soal->subdimensi,
+                'teks_bacaan_judul' => $soal->teksBacaan?->judul ?? '-',
+                'jawaban_label' => $soal->isPilihanGanda()
+                    ? $soal->pilihanJawabans->count().' pilihan'
+                    : $soal->pasanganMenjodohkans->count().' pasangan',
+            ])
+            ->values();
+
+        $bankSoals = collect();
+        if ($canManage && ! $isSurvey) {
+            $bankSoals = GlobalQuestion::where('is_active', true)
+                ->where('jenjang_id', $paket->jenjang_id)
+                ->where('material_mapel', $mapel->nama_mapel)
+                ->latest()->take(30)->get()
+                ->map(fn ($gq) => [
+                    'id' => $gq->id,
+                    'question_text_limited' => Str::limit(strip_tags($gq->question_text), 80),
+                    'material_mapel' => $gq->material_mapel,
+                    'material_curriculum' => $gq->material_curriculum,
+                    'jenjang_nama' => $gq->jenjang?->nama ?? '-',
+                ])
+                ->values();
+        }
+
+        $existingIds = $mapel->soals->pluck('global_question_id')->filter()->values()->all();
+
+        return Inertia::render('Guru/Soal/Index', [
+            'paket' => [
+                'id' => $paket->id,
+                'nama' => $paket->nama,
+            ],
+            'mapel' => [
+                'id' => $mapel->id,
+                'nama_label' => $mapel->nama_label,
+                'is_survey' => $isSurvey,
+            ],
+            'canManage' => $canManage,
+            'soals' => $soals,
+            'bankSoals' => $bankSoals,
+            'existingIds' => $existingIds,
+        ]);
     }
 
-    public function create(Request $request, PaketSoal $paket, MapelPaket $mapel): View
+    public function create(Request $request, PaketSoal $paket, MapelPaket $mapel): Response
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('create', [Soal::class, $mapel]);
@@ -43,7 +95,24 @@ class SoalGuruController extends Controller
         $teksBacaans = $mapel->teksBacaans()->latest()->get();
         $nextNomor = ((int) $mapel->soals()->max('nomor_soal')) + 1;
 
-        return view('guru.soal.create', compact('paket', 'mapel', 'tipeSoal', 'teksBacaans', 'nextNomor'));
+        return Inertia::render('Guru/Soal/Create', [
+            'paket' => [
+                'id' => $paket->id,
+                'nama' => $paket->nama,
+            ],
+            'mapel' => [
+                'id' => $mapel->id,
+                'nama_label' => $mapel->nama_label,
+                'jumlah_soal' => $mapel->jumlah_soal,
+                'is_survey' => $mapel->isSurvey(),
+            ],
+            'tipeSoal' => $tipeSoal,
+            'teksBacaans' => $teksBacaans->map(fn ($bacaan) => [
+                'id' => $bacaan->id,
+                'judul' => $bacaan->judul,
+            ])->values(),
+            'nextNomor' => $nextNomor,
+        ]);
     }
 
     public function store(StoreSoalRequest $request, PaketSoal $paket, MapelPaket $mapel): RedirectResponse
@@ -57,7 +126,7 @@ class SoalGuruController extends Controller
             ->with('flash', ['type' => 'success', 'message' => 'Soal berhasil ditambahkan.']);
     }
 
-    public function edit(PaketSoal $paket, MapelPaket $mapel, Soal $soal): View
+    public function edit(PaketSoal $paket, MapelPaket $mapel, Soal $soal): Response
     {
         abort_if($mapel->paket_soal_id !== $paket->id || $soal->mapel_paket_id !== $mapel->id, 404);
         $this->authorize('update', $soal);
@@ -65,7 +134,49 @@ class SoalGuruController extends Controller
         $soal->load(['pilihanJawabans', 'pasanganMenjodohkans', 'teksBacaan']);
         $teksBacaans = $mapel->teksBacaans()->latest()->get();
 
-        return view('guru.soal.edit', compact('paket', 'mapel', 'soal', 'teksBacaans'));
+        return Inertia::render('Guru/Soal/Edit', [
+            'paket' => [
+                'id' => $paket->id,
+                'nama' => $paket->nama,
+            ],
+            'mapel' => [
+                'id' => $mapel->id,
+                'nama_label' => $mapel->nama_label,
+                'jumlah_soal' => $mapel->jumlah_soal,
+                'is_survey' => $mapel->isSurvey(),
+            ],
+            'soal' => [
+                'id' => $soal->id,
+                'nomor_soal' => $soal->nomor_soal,
+                'tipe_soal' => $soal->tipe_soal,
+                'teks_bacaan_id' => $soal->teks_bacaan_id,
+                'bobot' => $soal->bobot,
+                'indikator' => $soal->indikator,
+                'dimensi' => $soal->dimensi,
+                'subdimensi' => $soal->subdimensi,
+                'kategori_profil' => $soal->kategori_profil,
+                'arah_skor' => $soal->arah_skor,
+                'pertanyaan' => $soal->pertanyaan,
+                'pembahasan' => $soal->pembahasan,
+                'gambar_url' => $soal->gambar_url,
+                'pilihan' => $soal->pilihanJawabans->map(fn ($item) => [
+                    'kode' => $item->kode,
+                    'teks' => $item->teks,
+                    'nilai_survey' => $item->nilai_survey,
+                    'profil_label' => $item->profil_label,
+                    'is_benar' => (bool) $item->is_benar,
+                    'gambar_url' => $item->gambar_url,
+                ])->values(),
+                'pasangan' => $soal->pasanganMenjodohkans->map(fn ($item) => [
+                    'teks_kiri' => $item->teks_kiri,
+                    'teks_kanan' => $item->teks_kanan,
+                ])->values(),
+            ],
+            'teksBacaans' => $teksBacaans->map(fn ($bacaan) => [
+                'id' => $bacaan->id,
+                'judul' => $bacaan->judul,
+            ])->values(),
+        ]);
     }
 
     public function update(UpdateSoalRequest $request, PaketSoal $paket, MapelPaket $mapel, Soal $soal): RedirectResponse
@@ -156,6 +267,7 @@ class SoalGuruController extends Controller
                         ]);
                     }
                 }
+
                 // Menjodohkan
                 if ($soal->isMenjodohkan() && is_array($gq->options)) {
                     foreach ($gq->options as $idx => $opt) {

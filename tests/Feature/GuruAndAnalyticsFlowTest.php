@@ -2,10 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\Guru\DashboardController as GuruDashboardController;
-use App\Http\Controllers\Guru\ExamController as GuruExamController;
-use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
-use App\Http\Controllers\Superadmin\ExamAnalysisController as SuperadminExamAnalysisController;
 use App\Models\Exam;
 use App\Models\ExamMapelToken;
 use App\Models\Jenjang;
@@ -19,8 +15,7 @@ use App\Models\Transaction;
 use App\Models\UjianSesi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
 use Tests\TestCase;
 
 class GuruAndAnalyticsFlowTest extends TestCase
@@ -72,14 +67,12 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'waktu_selesai' => now(),
         ]);
 
-        Auth::login($guru);
+        $response = $this->actingAs($guru)->get(route('guru.dashboard'), $this->inertiaHeaders(route('guru.dashboard')));
 
-        $view = app(GuruDashboardController::class)->index();
-
-        $this->assertInstanceOf(View::class, $view);
-        $this->assertSame(1, $view->getData()['simulasiSelesai']);
-        $this->assertSame(1, $view->getData()['totalPeserta']);
-        $this->assertSame(90.0, $view->getData()['rataRataKelas']);
+        $response->assertOk();
+        $this->assertSame(1, $response->json('props.simulasiSelesai'));
+        $this->assertSame(1, $response->json('props.totalPeserta'));
+        $this->assertSame(90.0, (float) $response->json('props.rataRataKelas'));
     }
 
     public function test_guru_can_join_exam_into_student_flow(): void
@@ -140,14 +133,12 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'jawaban_pg' => 'B',
         ]);
 
-        Auth::login($guru);
+        $response = $this->actingAs($guru)->get(route('guru.exams.result', $exam), $this->inertiaHeaders(route('guru.exams.result', $exam)));
 
-        $view = app(GuruExamController::class)->result($exam);
-
-        $this->assertInstanceOf(View::class, $view);
-        $this->assertSame('100.00', data_get($view->getData(), 'result.skor'));
-        $this->assertSame('2 + 2 = ?', data_get($view->getData(), 'pembahasan.0.pertanyaan'));
-        $this->assertSame('B', data_get($view->getData(), 'pembahasan.0.jawaban_user'));
+        $response->assertOk();
+        $this->assertSame('100.00', $response->json('props.result.skor'));
+        $this->assertSame('2 + 2 = ?', $response->json('props.pembahasan.0.pertanyaan'));
+        $this->assertSame('B', $response->json('props.pembahasan.0.jawaban_user'));
     }
 
     public function test_guru_can_join_exam_without_whatsapp_number(): void
@@ -218,13 +209,12 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'waktu_selesai' => now(),
         ]);
 
-        Auth::login($guru);
+        $response = $this->actingAs($guru)->get(route('guru.dashboard'), $this->inertiaHeaders(route('guru.dashboard')));
 
-        $view = app(GuruDashboardController::class)->index();
-
-        $this->assertSame(1, $view->getData()['simulasiSelesai']);
-        $this->assertSame(0, $view->getData()['totalPeserta']);
-        $this->assertSame(0.0, $view->getData()['rataRataKelas']);
+        $response->assertOk();
+        $this->assertSame(1, $response->json('props.simulasiSelesai'));
+        $this->assertSame(0, $response->json('props.totalPeserta'));
+        $this->assertSame(0.0, (float) $response->json('props.rataRataKelas'));
     }
 
     public function test_guru_dashboard_ignores_student_session_with_same_whatsapp_number(): void
@@ -261,14 +251,13 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'waktu_selesai' => now(),
         ]);
 
-        Auth::login($guru);
+        $response = $this->actingAs($guru)->get(route('guru.dashboard'), $this->inertiaHeaders(route('guru.dashboard')));
 
-        $view = app(GuruDashboardController::class)->index();
-
-        $this->assertSame(1, $view->getData()['simulasiSelesai']);
+        $response->assertOk();
+        $this->assertSame(1, $response->json('props.simulasiSelesai'));
         // Siswa nyata (WA sama dgn guru) tetap dihitung sebagai peserta siswa.
-        $this->assertSame(1, $view->getData()['totalPeserta']);
-        $this->assertSame(10.0, $view->getData()['rataRataKelas']);
+        $this->assertSame(1, $response->json('props.totalPeserta'));
+        $this->assertSame(10.0, (float) $response->json('props.rataRataKelas'));
     }
 
     public function test_superadmin_dashboard_uses_real_metrics(): void
@@ -323,15 +312,13 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'status' => 'mengerjakan',
         ]);
 
-        Auth::login($superadmin);
+        $response = $this->actingAs($superadmin)->get(route('superadmin.dashboard'), $this->inertiaHeaders(route('superadmin.dashboard')));
 
-        $view = app(SuperadminDashboardController::class)->index();
-
-        $this->assertInstanceOf(View::class, $view);
-        $this->assertSame(1, $view->getData()['activeTeachersCount']);
-        $this->assertSame(1, $view->getData()['ongoingExamsCount']);
-        $this->assertSame(150000, $view->getData()['totalRevenue']);
-        $this->assertSame($guru->name, $view->getData()['topTeacherName']);
+        $response->assertOk();
+        $this->assertSame(1, $response->json('props.activeTeachersCount'));
+        $this->assertSame(1, $response->json('props.ongoingExamsCount'));
+        $this->assertSame(150000, $response->json('props.totalRevenue'));
+        $this->assertSame($guru->name, $response->json('props.topTeacherName'));
     }
 
     public function test_superadmin_exam_analysis_uses_real_sessions(): void
@@ -369,15 +356,23 @@ class GuruAndAnalyticsFlowTest extends TestCase
             'waktu_selesai' => now(),
         ]);
 
-        Auth::login($superadmin);
+        $response = $this->actingAs($superadmin)->get(route('superadmin.exams.analysis', $exam), $this->inertiaHeaders(route('superadmin.exams.analysis', $exam)));
 
-        $view = app(SuperadminExamAnalysisController::class)->show($exam);
+        $response->assertOk();
+        $this->assertSame(2, $response->json('props.participantsCount'));
+        $this->assertSame(83.5, $response->json('props.averageScore'));
+        $this->assertSame('Peserta A', $response->json('props.ranking.0.name'));
+        $this->assertSame('Peserta B', $response->json('props.ranking.1.name'));
+    }
 
-        $this->assertInstanceOf(View::class, $view);
-        $this->assertSame(2, $view->getData()['participantsCount']);
-        $this->assertSame(83.5, $view->getData()['averageScore']);
-        $this->assertSame('Peserta A', data_get($view->getData(), 'ranking.0.name'));
-        $this->assertSame('Peserta B', data_get($view->getData(), 'ranking.1.name'));
+    private function inertiaHeaders(string $url): array
+    {
+        $this->get($url);
+
+        return [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => Inertia::getVersion(),
+        ];
     }
 
     private function createExamSuite(User $owner): array

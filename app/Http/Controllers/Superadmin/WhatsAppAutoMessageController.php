@@ -7,26 +7,27 @@ use App\Models\WaMessageTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class WhatsAppAutoMessageController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
         $templates = WaMessageTemplate::query()
             ->orderBy('key')
             ->get();
 
-        return view('superadmin.wa-pesan-otomatis.index', compact('templates'));
+        return Inertia::render('Superadmin/WaPesanOtomatis/Index', compact('templates'));
     }
 
-    public function create(): View
+    public function create(): Response
     {
         $template = new WaMessageTemplate([
             'is_active' => true,
         ]);
 
-        return view('superadmin.wa-pesan-otomatis.form', [
+        return Inertia::render('Superadmin/WaPesanOtomatis/Form', [
             'template' => $template,
             'mode' => 'create',
         ]);
@@ -53,9 +54,9 @@ class WhatsAppAutoMessageController extends Controller
         ]);
     }
 
-    public function edit(WaMessageTemplate $template): View
+    public function edit(WaMessageTemplate $template): Response
     {
-        return view('superadmin.wa-pesan-otomatis.form', [
+        return Inertia::render('Superadmin/WaPesanOtomatis/Form', [
             'template' => $template,
             'mode' => 'edit',
         ]);

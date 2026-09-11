@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Tests\TestCase;
 
 class GuruProfileAndRegistrationFlowTest extends TestCase
@@ -40,9 +41,11 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
     public function test_guest_pages_have_theme_toggle(): void
     {
-        $this->get(route('login'))
-            ->assertOk()
-            ->assertSee('data-theme-toggle', false);
+        $loginUrl = route('login');
+        $login = $this->get($loginUrl, $this->inertiaHeaders($loginUrl));
+
+        $login->assertOk();
+        $this->assertSame('Auth/Login', $login->json('component'));
 
         $this->get(route('register.guru.form'))
             ->assertOk()
@@ -53,18 +56,18 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
     {
         $this->assertTrue(Route::has('guru.token-request.form'));
 
-        $this->get(route('login'))
-            ->assertOk()
-            ->assertSee('Lupa token?')
-            ->assertSee('No. WhatsApp')
-            ->assertDontSee('Nama Lengkap atau No. WhatsApp')
-            ->assertSee(route('guru.token-request.form'), false);
+        $loginUrl = route('login');
+        $login = $this->get($loginUrl, $this->inertiaHeaders($loginUrl));
 
-        $this->get(route('guru.token-request.form'))
-            ->assertOk()
-            ->assertSee('Nama Lengkap')
-            ->assertSee('Email / No. WhatsApp Aktif')
-            ->assertSee('Jenjang');
+        $login->assertOk();
+        $this->assertSame('Auth/Login', $login->json('component'));
+
+        $tokenUrl = route('guru.token-request.form');
+        $tokenForm = $this->get($tokenUrl, $this->inertiaHeaders($tokenUrl));
+
+        $tokenForm->assertOk();
+        $this->assertSame('Auth/ForgotToken', $tokenForm->json('component'));
+        $this->assertNotEmpty($tokenForm->json('props.jenjangs'));
     }
 
     public function test_guru_can_login_using_registered_whatsapp_number(): void
@@ -316,13 +319,14 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'jenjang' => 'SMP',
         ]);
 
-        $response = $this->actingAs($guru)->get(route('guru.dashboard'));
+        $url = route('guru.dashboard');
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
 
-        $response->assertOk()
-            ->assertSee('Aktifkan Akun Anda')
-            ->assertSee('Bayar Sekarang')
-            ->assertSee('data-payment-locked')
-            ->assertSee('data-doku-config');
+        $response->assertOk();
+        $this->assertSame('Guru/Dashboard', $response->json('component'));
+        $this->assertSame('Aktivasi SMP', $response->json('props.paymentBanner.planName'));
+        $this->assertTrue($response->json('props.guruLayout.paymentLocked'));
+        $this->assertNotNull($response->json('props.guruLayout.dokuConfig'));
     }
 
     public function test_duplicate_active_registration_returns_clear_errors(): void
@@ -403,12 +407,13 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'account_status' => User::STATUS_ACTIVE,
         ]);
 
-        $this->actingAs($guru)
-            ->get(route('guru.profile'))
-            ->assertOk()
-            ->assertSee('password_confirmation')
-            ->assertSee(route('guru.profile.password'))
-            ->assertDontSee('name="jenjang"', false);
+        $url = route('guru.profile');
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
+
+        $response->assertOk();
+        $this->assertSame('Guru/Profile', $response->json('component'));
+        $this->assertSame($guru->name, $response->json('props.user.name'));
+        $this->assertSame($guru->email, $response->json('props.user.email'));
 
         $this->assertTrue(Route::has('guru.profile.password'));
     }
@@ -459,12 +464,12 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'access_token' => 'ABC123TOKEN',
         ]);
 
-        $response = $this->actingAs($guru)->get(route('guru.dashboard'));
+        $url = route('guru.dashboard');
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
 
-        $response->assertOk()
-            ->assertSee('Token Akses')
-            ->assertSee('ABC123TOKEN')
-            ->assertSee('data-guru-token-copy="ABC123TOKEN"', false);
+        $response->assertOk();
+        $this->assertSame('Guru/Dashboard', $response->json('component'));
+        $this->assertSame('ABC123TOKEN', $response->json('props.auth.user.access_token'));
     }
 
     public function test_pending_guru_sidebar_does_not_show_access_token(): void
@@ -475,10 +480,11 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'access_token' => null,
         ]);
 
-        $this->actingAs($guru)
-            ->get(route('guru.dashboard'))
-            ->assertOk()
-            ->assertDontSee('data-guru-token-copy', false);
+        $url = route('guru.dashboard');
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
+
+        $response->assertOk();
+        $this->assertNull($response->json('props.auth.user.access_token'));
     }
 
     public function test_uploaded_guru_avatar_is_used_in_header_dropdown(): void
@@ -508,10 +514,11 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
         $this->assertNotNull($guru->avatar);
         Storage::disk('public')->assertExists($guru->avatar);
 
-        $this->actingAs($guru)
-            ->get(route('guru.dashboard'))
-            ->assertOk()
-            ->assertSee(Storage::url($guru->avatar), false);
+        $url = route('guru.dashboard');
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
+
+        $response->assertOk();
+        $this->assertSame(Storage::url($guru->avatar), $response->json('props.auth.user.avatar_url'));
     }
 
     public function test_guru_cannot_delete_other_users_personal_question(): void
@@ -621,5 +628,15 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
         $updateRoute = $routes->match(Request::create('/guru/personal-questions/123', 'POST'));
         $this->assertSame('guru.personal-questions.update', $updateRoute->getName());
+    }
+
+    private function inertiaHeaders(string $url): array
+    {
+        $this->get($url);
+
+        return [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => Inertia::getVersion(),
+        ];
     }
 }

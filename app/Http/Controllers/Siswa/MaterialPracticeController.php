@@ -17,7 +17,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class MaterialPracticeController extends Controller
 {
@@ -73,7 +74,7 @@ class MaterialPracticeController extends Controller
         return redirect()->route('materi.dashboard');
     }
 
-    public function dashboard(): View|RedirectResponse
+    public function dashboard(): Response|RedirectResponse
     {
         $session = $this->getActiveSession();
         if (! $session) {
@@ -100,7 +101,7 @@ class MaterialPracticeController extends Controller
 
         $telaahAnswersByQuestionId = $session->telaahAnswers->keyBy('global_question_id');
 
-        return view('siswa.practice.dashboard', compact(
+        return Inertia::render('Siswa/Practice/Dashboard', compact(
             'session',
             'token',
             'packages',
@@ -152,7 +153,7 @@ class MaterialPracticeController extends Controller
         ]);
     }
 
-    public function showPaket(Request $request, int $paketNo): View|RedirectResponse
+    public function showPaket(Request $request, int $paketNo): Response|RedirectResponse
     {
         $session = $this->getActiveSession();
         if (! $session) {
@@ -161,6 +162,7 @@ class MaterialPracticeController extends Controller
 
         $session->load('token');
         $token = $session->token;
+        $token->load('material');
 
         /** @var MaterialPracticePackage $package */
         $package = MaterialPracticePackage::query()
@@ -210,7 +212,7 @@ class MaterialPracticeController extends Controller
 
         $answersByQuestionId = $attempt->answers->keyBy('global_question_id');
 
-        return view('siswa.practice.paket', compact('session', 'token', 'package', 'attempt', 'answersByQuestionId'));
+        return Inertia::render('Siswa/Practice/Paket', compact('session', 'token', 'package', 'attempt', 'answersByQuestionId'));
     }
 
     public function submitPaket(Request $request, int $paketNo): RedirectResponse

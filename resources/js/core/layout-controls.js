@@ -1,35 +1,49 @@
+let liveClockStarted = false;
+let fontSizeInitialized = false;
+
 function updateLiveClocks() {
 	document.querySelectorAll('#live-clock').forEach((clock) => {
 		clock.textContent = new Date().toLocaleTimeString('id-ID');
 	});
 }
 
-function initLiveClock() {
+export function initLiveClock() {
+	if (liveClockStarted) return;
 	if (!document.getElementById('live-clock')) return;
+
+	liveClockStarted = true;
 
 	updateLiveClocks();
 	window.setInterval(updateLiveClocks, 1000);
 }
 
-function initFontSizeControls() {
+export function initFontSizeControls() {
+	if (fontSizeInitialized) return;
+	fontSizeInitialized = true;
+
 	const actions = {
 		increase: '1.05em',
 		decrease: '0.97em',
 		reset: '',
 	};
 
-	document.querySelectorAll('[data-font-size]').forEach((button) => {
-		button.addEventListener('click', () => {
-			const action = button.getAttribute('data-font-size');
-			if (!action || !(action in actions)) return;
+	document.addEventListener('click', (event) => {
+		const target = event.target;
+		if (!(target instanceof Element)) return;
 
-			document.body.style.fontSize = actions[action];
-		});
+		const button = target.closest('[data-font-size]');
+		if (!button) return;
+
+		const action = button.getAttribute('data-font-size');
+		if (!action || !(action in actions)) return;
+
+		document.body.style.fontSize = actions[action];
 	});
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-	initLiveClock();
-	initFontSizeControls();
-});
-
+if (typeof document !== 'undefined') {
+	document.addEventListener('DOMContentLoaded', () => {
+		initLiveClock();
+		initFontSizeControls();
+	});
+}

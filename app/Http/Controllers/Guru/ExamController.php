@@ -14,11 +14,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ExamController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
         $user = Auth::user();
 
@@ -28,7 +29,22 @@ class ExamController extends Controller
             ->where('is_active', true)
             ->whereHas('paketSoal.jenjang', fn ($query) => $query->where('kode', $user->jenjang))
             ->orderByDesc('tanggal_terbit')
-            ->get();
+            ->get()
+            ->map(fn (Exam $exam) => [
+                'id' => $exam->id,
+                'judul' => $exam->judul,
+                'paket_nama' => $exam->paketSoal?->nama ?? '-',
+                'tanggal_terbit' => $exam->tanggal_terbit?->format('d M Y H:i'),
+                'status' => $exam->status,
+                'tokens' => $exam->examMapelTokens
+                    ->map(fn ($mt) => [
+                        'id' => $mt->id,
+                        'token' => $mt->token,
+                        'mapel_label' => $mt->mapelPaket?->nama_label ?? 'Mapel',
+                    ])
+                    ->values(),
+            ])
+            ->values();
 
         $sessions = $this->sessionQueryForUser($user)
             ->with('exam')
@@ -51,7 +67,7 @@ class ExamController extends Controller
             ])
             ->values();
 
-        return view('guru.exams', compact('available', 'joined', 'history'));
+        return Inertia::render('Guru/Exams', compact('available', 'joined', 'history'));
     }
 
     public function join(Request $request): RedirectResponse
@@ -109,7 +125,7 @@ class ExamController extends Controller
         return redirect()->route('siswa.petunjuk');
     }
 
-    public function result(Exam $exam): View|RedirectResponse
+    public function result(Exam $exam): Response|RedirectResponse
     {
         $user = Auth::user();
         $session = $this->sessionQueryForUser($user)
@@ -150,10 +166,17 @@ class ExamController extends Controller
         $result = [
             'skor' => number_format((float) $session->skor, 2),
             'status' => $session->status,
-            'waktu_selesai' => $session->waktu_selesai,
+            'waktu_selesai' => $session->waktu_selesai?->format('d M Y H:i'),
         ];
 
-        return view('guru.exam-result', compact('exam', 'result', 'pembahasan'));
+        return Inertia::render('Guru/ExamResult', [
+            'exam' => [
+                'id' => $exam->id,
+                'judul' => $exam->judul,
+            ],
+            'result' => $result,
+            'pembahasan' => $pembahasan,
+        ]);
     }
 
     private function sessionQueryForUser(User $user)

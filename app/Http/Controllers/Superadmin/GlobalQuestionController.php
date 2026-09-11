@@ -12,12 +12,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GlobalQuestionController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): InertiaResponse
     {
         $filters = [
             'search' => trim((string) $request->query('search', '')),
@@ -54,7 +56,7 @@ class GlobalQuestionController extends Controller
         $materials = Material::all();
         $jenjangs = Jenjang::orderBy('urutan')->get();
 
-        return view('superadmin.questions', compact('globalQuestions', 'materials', 'jenjangs', 'filters'));
+        return Inertia::render('Superadmin/Questions', compact('globalQuestions', 'materials', 'jenjangs', 'filters'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -248,7 +250,7 @@ class GlobalQuestionController extends Controller
 
         $validated = $request->validate([
             'jenjang_id' => ['nullable', 'integer', 'exists:jenjangs,id'],
-            'file' => ['required', 'file', 'mimes:csv,xlsx,xls', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls,xml', 'max:5120'],
         ]);
 
         try {
@@ -338,7 +340,7 @@ class GlobalQuestionController extends Controller
 
         $validated = $request->validate([
             'jenjang_id' => ['required', 'integer', 'exists:jenjangs,id'],
-            'file' => ['required', 'file', 'mimes:csv,xlsx,xls', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls,xml', 'max:5120'],
         ]);
 
         try {

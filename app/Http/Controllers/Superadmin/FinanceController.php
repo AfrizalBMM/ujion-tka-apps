@@ -6,14 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Models\PricingPlan;
 use App\Support\PhoneNumber;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class FinanceController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
         $tarifJenjangs = [];
         if (Schema::hasTable('pricing_plans')) {
@@ -40,7 +41,9 @@ class FinanceController extends Controller
             'secret_key' => (string) AppSetting::getValue('doku_secret_key', ''),
         ];
 
-        return view('superadmin.finance', compact('tarifJenjangs', 'hasJenjangColumn', 'adminWhatsapp', 'dokuSettings'));
+        $jenjangs = config('ujion.jenjangs');
+
+        return Inertia::render('Superadmin/Finance', compact('tarifJenjangs', 'hasJenjangColumn', 'adminWhatsapp', 'dokuSettings', 'jenjangs'));
     }
 
     public function saveSettings(Request $request): RedirectResponse

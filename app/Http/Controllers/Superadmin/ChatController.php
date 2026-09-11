@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Models\Chat;
 use App\Models\User;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ChatController extends Controller
 {
@@ -62,7 +63,7 @@ class ChatController extends Controller
         ]);
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $users = User::query()
             ->where('role', User::ROLE_GURU)
@@ -105,6 +106,10 @@ class ChatController extends Controller
             $chatPaginator->setCollection($chatPaginator->getCollection()->sortBy('created_at')->values());
             $chats = $chatPaginator->getCollection();
 
+            $chats->each(function (Chat $chat) {
+                $chat->created_at_formatted = $chat->created_at?->format('d M H:i');
+            });
+
             Chat::query()
                 ->where('from_user_id', $selectedUser->id)
                 ->where('to_user_id', auth()->id())
@@ -112,7 +117,7 @@ class ChatController extends Controller
                 ->update(['is_read' => true]);
         }
 
-        return view('superadmin.chat', compact('chats', 'users', 'selectedUser', 'chatPaginator'));
+        return Inertia::render('Superadmin/Chat', compact('chats', 'users', 'selectedUser', 'chatPaginator'));
     }
 
     public function store(Request $request)

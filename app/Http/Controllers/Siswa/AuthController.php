@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Siswa;
 use App\Http\Controllers\Controller;
 use App\Models\ExamMapelToken;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('siswa.login');
+        return Inertia::render('Siswa/Login');
     }
 
     public function validateToken(Request $request)

@@ -14,8 +14,12 @@ export function initActionMenus() {
 	if (actionMenusInitialized) return;
 	actionMenusInitialized = true;
 
-	document.querySelectorAll('[data-action-menu-toggle]').forEach((button) => {
-		button.addEventListener('click', (event) => {
+	document.addEventListener('click', (event) => {
+		const target = event.target;
+		if (!(target instanceof Element)) return;
+
+		const button = target.closest('[data-action-menu-toggle]');
+		if (button) {
 			event.stopPropagation();
 
 			const menu = button.closest('[data-action-menu]');
@@ -30,10 +34,9 @@ export function initActionMenus() {
 
 			button.setAttribute('aria-expanded', 'true');
 			panel.classList.remove('invisible', 'translate-y-2', 'opacity-0');
-		});
-	});
+			return;
+		}
 
-	document.addEventListener('click', () => {
 		closeAllActionMenus();
 	});
 
@@ -44,8 +47,10 @@ export function initActionMenus() {
 	});
 }
 
-if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', initActionMenus);
-} else {
-	initActionMenus();
+if (typeof document !== 'undefined') {
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initActionMenus);
+	} else {
+		initActionMenus();
+	}
 }

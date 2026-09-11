@@ -58,7 +58,7 @@
     <meta name="twitter:description" content="{{ $seoDescription }}">
     <meta name="twitter:image" content="{{ $ogImageAbs }}">
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/public.js'])
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
     <script type="application/ld+json">

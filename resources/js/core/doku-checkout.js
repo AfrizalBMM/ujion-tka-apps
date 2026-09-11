@@ -1,4 +1,4 @@
-function initDokuCheckout() {
+export function initDokuCheckout() {
 	const rawConfig = document.body.dataset.dokuConfig;
 
 	if (!rawConfig) return;
@@ -136,4 +136,6 @@ function initDokuCheckout() {
 	}
 }
 
-document.addEventListener('DOMContentLoaded', initDokuCheckout);
+if (typeof document !== 'undefined') {
+	document.addEventListener('DOMContentLoaded', initDokuCheckout);
+}
