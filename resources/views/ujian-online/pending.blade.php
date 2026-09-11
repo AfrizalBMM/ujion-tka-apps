@@ -64,7 +64,7 @@
             <div data-flow-panel="loading" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-5">
                 <i class="fa-solid fa-spinner fa-spin mb-2 block text-2xl text-slate-400"></i>
                 <p class="text-sm font-semibold text-slate-900">Menyiapkan pembayaran...</p>
-                <p class="mt-1 text-xs text-slate-500">Jendela pembayaran Doku akan terbuka di tab baru.</p>
+                <p class="mt-1 text-xs text-slate-500">Jendela pembayaran akan terbuka di tab baru.</p>
             </div>
 
             <div data-flow-panel="polling" class="hidden rounded-xl border border-blue-100 bg-blue-50 p-5">

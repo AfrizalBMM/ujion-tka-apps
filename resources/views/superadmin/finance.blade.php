@@ -61,7 +61,7 @@
                         @checked($dokuSettings['enabled'])
                     >
                     <span>
-                        <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Aktifkan pembayaran Doku</span>
+                        <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Aktifkan pembayaran</span>
                         <span class="mt-0.5 block text-xs text-textSecondary dark:text-slate-400">Transaksi sukses tercatat otomatis dan akun guru langsung aktif. Jika nonaktif, guru hanya bisa menghubungi admin via WhatsApp untuk pembayaran.</span>
                     </span>
                 </label>
@@ -216,7 +216,7 @@
                 <div class="text-sm font-bold text-slate-900 dark:text-slate-100">Tarif & Pembayaran</div>
                 <ul class="mt-2 space-y-2 text-sm text-textSecondary dark:text-slate-300">
                     <li class="flex gap-2"><i class="fa-solid fa-circle-check mt-1 text-[10px] text-muted"></i><span>Tarif ditentukan per jenjang (SD/SMP/SMA) sesuai pilihan saat daftar.</span></li>
-                    <li class="flex gap-2"><i class="fa-solid fa-circle-check mt-1 text-[10px] text-muted"></i><span>Nominal akan dipakai otomatis pada halaman pembayaran Doku.</span></li>
+                    <li class="flex gap-2"><i class="fa-solid fa-circle-check mt-1 text-[10px] text-muted"></i><span>Nominal akan dipakai otomatis pada halaman pembayaran.</span></li>
                     <li class="flex gap-2"><i class="fa-solid fa-circle-check mt-1 text-[10px] text-muted"></i><span>Transaksi sukses tercatat otomatis di menu Riwayat Transaksi.</span></li>
                 </ul>
             </div>
@@ -265,7 +265,7 @@
         <div class="flex items-start justify-between gap-4">
             <div>
                 <div id="tarif-form-title" class="text-base font-bold text-slate-900 dark:text-slate-100">Tambah Tarif</div>
-                <div class="mt-1 text-sm text-textSecondary dark:text-slate-300">Isi tarif aktivasi per jenjang yang dipakai sebagai nominal pembayaran Doku.</div>
+                <div class="mt-1 text-sm text-textSecondary dark:text-slate-300">Isi tarif aktivasi per jenjang yang dipakai sebagai nominal pembayaran.</div>
             </div>
             <button type="button" class="btn-secondary" data-tarif-form-close>Tutup</button>
         </div>

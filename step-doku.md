@@ -90,7 +90,7 @@ Route::post('/payments/doku/notification', [..., 'notification'])
 ### A. Konfigurasi Aplikasi
 
 1. Login superadmin → menu **Keuangan**
-2. Centang **Aktifkan pembayaran Doku**
+2. Centang **Aktifkan pembayaran**
 3. Isi **Client-Id** (`BRN-...`) dan **Secret-Key** (`SK-...`) dari dashboard Doku
 4. Simpan
 
