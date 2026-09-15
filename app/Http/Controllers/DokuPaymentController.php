@@ -297,7 +297,7 @@ class DokuPaymentController extends Controller
                 'status' => Transaction::STATUS_FAILED,
                 'doku_transaction_status' => $dokuStatus,
                 'doku_payment_channel' => $paymentChannel,
-                'rejection_reason' => 'Pembayaran Doku tidak selesai (status: '.strtolower($dokuStatus).').',
+                'rejection_reason' => 'Pembayaran tidak selesai (status: '.strtolower($dokuStatus).').',
                 'reviewed_at' => now(),
             ]);
 

@@ -296,7 +296,7 @@
         <div class="mt-4 space-y-3 text-sm text-textSecondary dark:text-slate-300">
             <div class="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-950/40">
                 <div class="font-semibold text-slate-900 dark:text-slate-100">1. Cek status pembayaran</div>
-                <div class="mt-1">Pembayaran Doku yang sukses otomatis mengaktifkan akun guru. Cek menu Riwayat Transaksi untuk detailnya.</div>
+                <div class="mt-1">Pembayaran yang sukses otomatis mengaktifkan akun guru. Cek menu Riwayat Transaksi untuk detailnya.</div>
             </div>
             <div class="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-950/40">
                 <div class="font-semibold text-slate-900 dark:text-slate-100">2. Aktivasi manual bila perlu</div>

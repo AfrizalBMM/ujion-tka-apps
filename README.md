@@ -409,7 +409,7 @@ Saat men-deploy ke server production (shared hosting atau VPS), pastikan langkah
 Pembayaran otomatis (aktivasi guru & ujian publik) memakai **Doku Checkout**. Kredensial dikelola dari UI, bukan `.env`:
 
 1. Login sebagai superadmin → menu **Keuangan**.
-2. Centang **Aktifkan pembayaran Doku**, isi **Client-Id** (`BRN-...`) dan **Secret-Key** (`SK-...`) dari dashboard Doku (Settings → API Keys), lalu simpan.
+2. Centang **Aktifkan pembayaran**, isi **Client-Id** (`BRN-...`) dan **Secret-Key** (`SK-...`) dari dashboard Doku (Settings → API Keys), lalu simpan.
 3. Saat deploy: daftarkan `{domain}/api/payments/doku/notification` sebagai **Notification URL** di dashboard Doku. Di lokal tanpa URL publik, pembayaran tetap terverifikasi via polling status.
 
 Env pendukung:
