@@ -6,6 +6,7 @@ use App\Models\Chat;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Tests\TestCase;
 
 class ChatImageCleanupTest extends TestCase
@@ -72,10 +73,13 @@ class ChatImageCleanupTest extends TestCase
             'is_read' => false,
         ]);
 
-        $this->actingAs($superadmin)
-            ->get(route('superadmin.chat.index', ['user' => $guru->id]))
-            ->assertOk()
-            ->assertSee(Storage::url($guru->avatar), false);
+        $url = route('superadmin.chat.index', ['user' => $guru->id]);
+        $response = $this->actingAs($superadmin)->get($url, $this->inertiaHeaders($url));
+
+        $response->assertOk();
+        $this->assertSame($guru->id, $response->json('props.selectedUser.id'));
+        $this->assertSame($guru->avatar, $response->json('props.selectedUser.avatar'));
+        $this->assertSame($guru->avatar, $response->json('props.chats.0.from_user.avatar'));
     }
 
     public function test_guru_chat_uses_latest_names_and_uploaded_avatars(): void
@@ -112,12 +116,30 @@ class ChatImageCleanupTest extends TestCase
             'is_read' => false,
         ]);
 
-        $this->actingAs($guru)
-            ->get(route('guru.chat'))
-            ->assertOk()
-            ->assertSee('Admin Chat Baru')
-            ->assertSee('Guru Chat Baru')
-            ->assertSee(Storage::url($superadmin->avatar), false)
-            ->assertSee(Storage::url($guru->avatar), false);
+        $url = route('guru.chat');
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
+
+        $response->assertOk();
+        $this->assertSame('Admin Chat Baru', $response->json('props.chatPartnerName'));
+        $this->assertSame('Guru Chat Baru', $response->json('props.auth.user.name'));
+        $this->assertSame(Storage::url($superadmin->avatar), $response->json('props.chatPartnerAvatarUrl'));
+
+        $senderNames = collect($response->json('props.chats'))->pluck('sender_name');
+        $this->assertTrue($senderNames->contains('Admin Chat Baru'));
+        $this->assertTrue($senderNames->contains('Guru Chat Baru'));
+
+        $senderAvatars = collect($response->json('props.chats'))->pluck('sender_avatar_url');
+        $this->assertTrue($senderAvatars->contains(Storage::url($superadmin->avatar)));
+        $this->assertTrue($senderAvatars->contains(Storage::url($guru->avatar)));
+    }
+
+    private function inertiaHeaders(string $url): array
+    {
+        $this->get($url);
+
+        return [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => Inertia::getVersion(),
+        ];
     }
 }

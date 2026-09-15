@@ -18,6 +18,7 @@ use App\Http\Controllers\Guru\SoalUjionController;
 use App\Http\Controllers\Guru\TeksBacaanGuruController;
 use App\Http\Controllers\RegisterGuruController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/register/guru', [RegisterGuruController::class, 'showForm'])->name('register.guru.form');
 Route::post('/register/guru', [RegisterGuruController::class, 'register'])
@@ -108,6 +109,6 @@ Route::middleware(['auth', 'role:guru', 'guru.active', 'audit'])->prefix('guru')
         Route::put('/paket-soal/{paket}/mapel/{mapel}', [MapelPaketGuruController::class, 'update'])->name('mapel.update');
     });
     Route::get('/guide', function () {
-        return view('guru.guide');
+        return Inertia::render('Guru/Guide');
     })->name('guide');
 });

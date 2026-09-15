@@ -1,0 +1,490 @@
+<script setup>
+import { Head } from '@inertiajs/vue3';
+import { onBeforeUnmount, onMounted } from 'vue';
+import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
+
+defineProps({
+	dailyActivity: {
+		type: Object,
+		default: () => ({}),
+	},
+	landingTraffic: {
+		type: Object,
+		default: () => ({}),
+	},
+	activeTeachersCount: {
+		type: Number,
+		default: 0,
+	},
+	pendingRegistrationCount: {
+		type: Number,
+		default: 0,
+	},
+	ongoingExamsCount: {
+		type: Number,
+		default: 0,
+	},
+	totalRevenue: {
+		type: Number,
+		default: 0,
+	},
+	revenueBreakdown: {
+		type: Object,
+		default: () => ({}),
+	},
+	topTeacherName: {
+		type: String,
+		default: null,
+	},
+	latestAuditLogs: {
+		type: Array,
+		default: () => [],
+	},
+	pendingPaymentCount: {
+		type: Number,
+		default: 0,
+	},
+});
+
+const formatRupiah = (value) => Number(value ?? 0).toLocaleString('id-ID');
+
+function getColorFromClass(className) {
+	const el = document.createElement('span');
+	el.className = className;
+	el.style.position = 'absolute';
+	el.style.left = '-9999px';
+	el.style.top = '-9999px';
+	document.body.appendChild(el);
+	const color = getComputedStyle(el).color;
+	el.remove();
+	return color;
+}
+
+let activityChart = null;
+let landingChart = null;
+
+onMounted(async () => {
+	const canvas = document.getElementById('superadmin-activity-chart');
+	if (canvas) {
+		let labels = [];
+		let values = [];
+		try {
+			labels = JSON.parse(canvas.dataset.labels || '[]');
+			values = JSON.parse(canvas.dataset.values || '[]');
+		} catch {
+			labels = [];
+			values = [];
+		}
+
+		const [{ default: Chart }] = await Promise.all([import('chart.js/auto')]);
+
+		const primary = getColorFromClass('text-primary');
+		const muted = getColorFromClass('text-muted');
+
+		activityChart = new Chart(canvas, {
+			type: 'line',
+			data: {
+				labels,
+				datasets: [
+					{
+						label: 'Aktivitas',
+						data: values,
+						borderColor: primary,
+						backgroundColor: primary,
+						tension: 0.35,
+						pointRadius: 2,
+					},
+				],
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: { display: false },
+				},
+				scales: {
+					x: {
+						ticks: { color: muted },
+						grid: { display: false },
+					},
+					y: {
+						ticks: { color: muted, precision: 0 },
+						grid: { display: false },
+					},
+				},
+			},
+		});
+	}
+
+	const landingCanvas = document.getElementById('superadmin-landing-click-chart');
+	if (landingCanvas) {
+		let labels = [];
+		let views = [];
+		let clicks = [];
+		try {
+			labels = JSON.parse(landingCanvas.dataset.labels || '[]');
+			views = JSON.parse(landingCanvas.dataset.views || '[]');
+			clicks = JSON.parse(landingCanvas.dataset.clicks || '[]');
+		} catch {
+			labels = [];
+			views = [];
+			clicks = [];
+		}
+
+		const [{ default: Chart }] = await Promise.all([import('chart.js/auto')]);
+
+		landingChart = new Chart(landingCanvas, {
+			type: 'bar',
+			data: {
+				labels: labels,
+				datasets: [
+					{
+						label: 'Views',
+						data: views,
+						borderColor: '#0EA5E9',
+						backgroundColor: 'rgba(14, 165, 233, 0.18)',
+						borderWidth: 1,
+						borderRadius: 10,
+					},
+					{
+						label: 'Clicks',
+						data: clicks,
+						borderColor: '#4F6EF7',
+						backgroundColor: 'rgba(79, 110, 247, 0.18)',
+						borderWidth: 1,
+						borderRadius: 10,
+					},
+				],
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: { display: true },
+				},
+				scales: {
+					y: {
+						beginAtZero: true,
+						grid: { color: 'rgba(148, 163, 184, 0.16)', borderDash: [5, 5] },
+						ticks: { stepSize: 1 },
+					},
+					x: {
+						grid: { display: false },
+					},
+				},
+			},
+		});
+	}
+});
+
+onBeforeUnmount(() => {
+	if (activityChart) {
+		activityChart.destroy();
+		activityChart = null;
+	}
+	if (landingChart) {
+		landingChart.destroy();
+		landingChart = null;
+	}
+});
+</script>
+
+<template>
+	<Head title="Dashboard Analytics" />
+
+	<SuperadminLayout>
+		<div class="space-y-6">
+			<section class="page-hero">
+				<span class="page-kicker">Analytics Hub</span>
+				<div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+					<div>
+						<h1 class="page-title">Pusat kendali platform Ujion dalam tampilan admin yang lebih rapi dan terstruktur.</h1>
+						<p class="page-description">Ringkasan performa guru, ujian, dan transaksi disusun ulang supaya cepat dipindai tanpa membuat area kerja terasa padat atau saling bertabrakan.</p>
+					</div>
+					<div class="grid gap-3 sm:grid-cols-2">
+						<div class="hero-chip">
+							<i class="fa-solid fa-bolt"></i>
+							Monitoring realtime lebih cepat
+						</div>
+						<div class="hero-chip">
+							<i class="fa-solid fa-chart-column"></i>
+							Panel analitik lebih fokus
+						</div>
+					</div>
+				</div>
+				<div class="page-actions">
+					<div class="hero-chip">
+						<span class="text-white/70">AUTO REFRESH</span>
+						<span class="font-mono font-semibold text-white" id="live-timer">120s</span>
+					</div>
+					<a :href="route('superadmin.audit-logs.index')" class="btn-secondary border-white/15 bg-white/10 text-white hover:bg-white/15 hover:text-white">
+						<i class="fa-solid fa-shield-halved"></i>
+						Audit Logs
+					</a>
+				</div>
+			</section>
+
+			<section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+				<div class="metric-card">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<div class="metric-label">Guru Aktif</div>
+							<div class="metric-value">{{ activeTeachersCount }}</div>
+						</div>
+						<div class="metric-icon text-blue-600">
+							<i class="fa-solid fa-chalkboard-user text-xl"></i>
+						</div>
+					</div>
+					<div class="metric-meta">
+						<a v-if="pendingRegistrationCount > 0" :href="route('superadmin.teachers.index', { account_status: 'pending' })" class="inline-flex items-center gap-1 hover:underline" title="Lihat guru yang menunggu pembayaran">
+							<i class="fa-solid fa-hourglass-half text-[10px] text-amber-500"></i>
+							{{ pendingRegistrationCount }} menunggu pembayaran
+						</a>
+						<span v-else class="inline-flex items-center gap-1">
+							<i class="fa-solid fa-circle-check text-[10px] text-green-500"></i>
+							Tidak ada pendaftar pending
+						</span>
+						<span class="badge-info">Guru</span>
+					</div>
+				</div>
+
+				<div class="metric-card">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<div class="metric-label">Ujian Berlangsung</div>
+							<div class="metric-value">{{ ongoingExamsCount }}</div>
+						</div>
+						<div class="metric-icon text-indigo-600">
+							<i class="fa-solid fa-play-circle text-xl"></i>
+						</div>
+					</div>
+					<div class="metric-meta">
+						<span>Real-time active sessions</span>
+						<span class="badge-info">Live</span>
+					</div>
+				</div>
+
+				<div class="metric-card">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<div class="metric-label">Total Pendapatan</div>
+							<div class="metric-value text-2xl">Rp {{ formatRupiah(totalRevenue) }}</div>
+						</div>
+						<div class="metric-icon text-green-600">
+							<i class="fa-solid fa-wallet text-xl"></i>
+						</div>
+					</div>
+					<div class="metric-meta">
+						<a :href="route('superadmin.payment-confirmations.index', { status: 'success' })" class="inline-flex items-center gap-x-3 gap-y-1 hover:underline" title="Lihat riwayat transaksi">
+							<span class="inline-flex items-center gap-1" title="Pendapatan via Doku (otomatis)">
+								<i class="fa-solid fa-bolt text-[10px] text-blue-600"></i>
+								Doku: Rp {{ formatRupiah(revenueBreakdown.doku ?? 0) }}
+							</span>
+							<span class="inline-flex items-center gap-1" title="Pendapatan tercatat manual oleh admin">
+								<i class="fa-solid fa-user-gear text-[10px] text-amber-600"></i>
+								Manual: Rp {{ formatRupiah(revenueBreakdown.manual ?? 0) }}
+							</span>
+						</a>
+						<span class="font-semibold text-green-600">Finance</span>
+					</div>
+				</div>
+
+				<div class="metric-card">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<div class="metric-label">Guru Terbaik</div>
+							<div class="mt-3 max-w-[160px] truncate text-lg font-bold text-slate-900 dark:text-white">{{ topTeacherName || '-' }}</div>
+						</div>
+						<div class="metric-icon text-purple-600">
+							<i class="fa-solid fa-trophy text-xl"></i>
+						</div>
+					</div>
+					<div class="metric-meta">
+						<span>Berdasarkan kontribusi soal</span>
+						<span class="font-semibold text-purple-600">Top Rank</span>
+					</div>
+				</div>
+			</section>
+
+			<div>
+				<div class="mobile-section-label">Akademik</div>
+				<div class="mobile-menu-grid">
+					<a :href="route('superadmin.teachers.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-blue-500 to-blue-600">
+							<i class="fa-solid fa-chalkboard-user"></i>
+						</div>
+						<div class="mobile-menu-card-label">Guru</div>
+					</a>
+					<a :href="route('superadmin.materials.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-teal-500 to-cyan-600">
+							<i class="fa-solid fa-book"></i>
+						</div>
+						<div class="mobile-menu-card-label">Materi</div>
+					</a>
+					<a :href="route('superadmin.global-questions.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-purple-500 to-violet-600">
+							<i class="fa-solid fa-database"></i>
+						</div>
+						<div class="mobile-menu-card-label">Bank Soal</div>
+					</a>
+					<a :href="route('superadmin.paket-soal.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-indigo-500 to-blue-600">
+							<i class="fa-solid fa-cubes"></i>
+						</div>
+						<div class="mobile-menu-card-label">Paket Soal</div>
+					</a>
+					<a :href="route('superadmin.exams.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-amber-500 to-orange-600">
+							<i class="fa-solid fa-file-pen"></i>
+						</div>
+						<div class="mobile-menu-card-label">Ujian</div>
+					</a>
+				</div>
+			</div>
+
+			<div>
+				<div class="mobile-section-label">Keuangan & Sistem</div>
+				<div class="mobile-menu-grid">
+					<a :href="route('superadmin.finance.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-emerald-500 to-green-600">
+							<i class="fa-solid fa-credit-card"></i>
+						</div>
+						<div class="mobile-menu-card-label">Keuangan</div>
+					</a>
+					<a :href="route('superadmin.payment-confirmations.index')" class="mobile-menu-card relative">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-red-500 to-rose-600">
+							<i class="fa-solid fa-money-check-dollar"></i>
+						</div>
+						<div class="mobile-menu-card-label">Transaksi</div>
+						<span v-if="pendingPaymentCount > 0" class="bottom-nav-badge" style="right: -2px; top: -2px;">{{ pendingPaymentCount }}</span>
+					</a>
+					<a :href="route('superadmin.chat.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-rose-500 to-pink-600">
+							<i class="fa-solid fa-comments"></i>
+						</div>
+						<div class="mobile-menu-card-label">Live Chat</div>
+					</a>
+					<a :href="route('superadmin.landing-settings.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-sky-500 to-blue-500">
+							<i class="fa-solid fa-globe"></i>
+						</div>
+						<div class="mobile-menu-card-label">Landing</div>
+					</a>
+					<a :href="route('superadmin.audit-logs.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-slate-500 to-slate-600">
+							<i class="fa-solid fa-shield-halved"></i>
+						</div>
+						<div class="mobile-menu-card-label">Audit Log</div>
+					</a>
+					<a :href="route('superadmin.wa-koneksi')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-violet-500 to-purple-600">
+							<i class="fa-solid fa-qrcode"></i>
+						</div>
+						<div class="mobile-menu-card-label">WA Koneksi</div>
+					</a>
+					<a :href="route('superadmin.wa-templates.index')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-fuchsia-500 to-pink-600">
+							<i class="fa-solid fa-message"></i>
+						</div>
+						<div class="mobile-menu-card-label">Pesan WA</div>
+					</a>
+					<a :href="route('superadmin.wa-blast')" class="mobile-menu-card">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-orange-500 to-amber-600">
+							<i class="fa-solid fa-bullhorn"></i>
+						</div>
+						<div class="mobile-menu-card-label">Blast</div>
+					</a>
+				</div>
+			</div>
+
+			<section class="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.9fr)]">
+				<div class="card">
+					<div class="section-heading mb-6">
+						<div>
+							<h3 class="section-title">Aktivitas Sistem</h3>
+							<p class="section-description">Jumlah aksi yang tercatat dalam 14 hari terakhir.</p>
+						</div>
+						<div class="flex flex-wrap gap-2">
+							<a :href="route('superadmin.dashboard.print')" target="_blank" rel="noopener" class="btn-secondary px-3 py-1 text-xs">Versi Cetak</a>
+							<a :href="route('superadmin.dashboard.export-csv')" class="btn-secondary px-3 py-1 text-xs">CSV</a>
+						</div>
+					</div>
+					<div class="h-[320px]">
+						<canvas
+							id="superadmin-activity-chart"
+							:data-labels="JSON.stringify(dailyActivity.labels ?? [])"
+							:data-values="JSON.stringify(dailyActivity.values ?? [])"
+						></canvas>
+					</div>
+				</div>
+
+				<div class="card">
+					<div class="section-heading mb-6">
+						<div>
+							<h3 class="section-title">Aksi Terbaru</h3>
+							<p class="section-description">Log singkat untuk memantau kejadian penting.</p>
+						</div>
+						<a :href="route('superadmin.audit-logs.index')" class="text-xs font-bold text-primary hover:underline">Lihat Semua</a>
+					</div>
+					<div class="space-y-3">
+						<div v-for="log in latestAuditLogs" :key="`${log.method}-${log.path}-${log.created_at_human}`" class="rounded-2xl border border-slate-200/70 bg-slate-50/85 p-3 dark:border-slate-800 dark:bg-slate-800/45">
+							<div class="flex items-start gap-3">
+								<div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-slate-700">
+									<i class="fa-solid fa-user-gear text-xs text-slate-400"></i>
+								</div>
+								<div class="min-w-0 flex-1">
+									<div class="truncate text-xs font-bold text-slate-800 dark:text-white">{{ log.method }} {{ log.path }}</div>
+									<div class="mt-1 text-[10px] text-textSecondary dark:text-slate-400">{{ log.created_at_human }} &bull; IP: {{ log.ip_address }}</div>
+								</div>
+							</div>
+						</div>
+						<div v-if="latestAuditLogs.length === 0" class="empty-state opacity-70">
+							<i class="fa-solid fa-ghost mb-2 block text-3xl"></i>
+							<span class="text-xs italic">Belum ada aktivitas.</span>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="card">
+				<div class="section-heading mb-6">
+					<div>
+						<h3 class="section-title">Landing Clicks</h3>
+						<p class="section-description">Akses landing (views) dan klik CTA yang tercatat per hari (14 hari terakhir).</p>
+					</div>
+				</div>
+				<div class="h-[320px]">
+					<canvas
+						id="superadmin-landing-click-chart"
+						:data-labels="JSON.stringify(landingTraffic.labels ?? [])"
+						:data-views="JSON.stringify(landingTraffic.views ?? [])"
+						:data-clicks="JSON.stringify(landingTraffic.clicks ?? [])"
+					></canvas>
+				</div>
+			</section>
+
+			<section class="hidden grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 md:grid">
+				<a :href="route('superadmin.teachers.index')" class="quick-action">
+					<div class="quick-action-icon"><i class="fa-solid fa-users"></i></div>
+					<div class="quick-action-title">Kelola Guru</div>
+					<div class="quick-action-copy">Aktivasi akun, suspend akses, dan pantau status guru dari satu panel kerja.</div>
+				</a>
+				<a :href="route('superadmin.finance.index')" class="quick-action">
+					<div class="quick-action-icon"><i class="fa-solid fa-credit-card"></i></div>
+					<div class="quick-action-title">Pengaturan Pembayaran</div>
+					<div class="quick-action-copy">Atur tarif per jenjang dan payment gateway Doku dari satu panel kerja.</div>
+				</a>
+				<a :href="route('superadmin.questions.index')" class="quick-action">
+					<div class="quick-action-icon"><i class="fa-solid fa-database"></i></div>
+					<div class="quick-action-title">Bank Soal</div>
+					<div class="quick-action-copy">Kelola koleksi soal pusat yang dipakai lintas guru dan lintas ujian.</div>
+				</a>
+				<a :href="route('superadmin.chat.index')" class="quick-action">
+					<div class="quick-action-icon"><i class="fa-solid fa-comments"></i></div>
+					<div class="quick-action-title">Bantuan Chat</div>
+					<div class="quick-action-copy">Tinjau percakapan masuk dan respon cepat kebutuhan operator atau guru.</div>
+				</a>
+			</section>
+		</div>
+	</SuperadminLayout>
+</template>

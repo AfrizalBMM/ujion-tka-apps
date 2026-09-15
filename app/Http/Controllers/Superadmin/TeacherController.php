@@ -12,6 +12,8 @@ use App\Support\TokenGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class TeacherController extends Controller
 {
@@ -177,7 +179,7 @@ class TeacherController extends Controller
         ]);
     }
 
-    public function index(Request $request)
+    public function index(Request $request): InertiaResponse
     {
         $search = trim((string) $request->string('q'));
         $paymentStatus = (string) $request->string('payment_status');
@@ -227,13 +229,26 @@ class TeacherController extends Controller
 
         $notificationTemplates = GuruNotificationTemplates::library();
 
-        return view('superadmin.teachers', compact(
-            'teachers',
-            'notificationTemplates',
-            'paymentSummary',
-            'search',
-            'paymentStatus',
-            'accountStatus',
-        ));
+        $teachers = $teachers->map(fn (User $teacher) => [
+            'id' => $teacher->id,
+            'name' => $teacher->name,
+            'email' => $teacher->email,
+            'no_wa' => $teacher->no_wa,
+            'satuan_pendidikan' => $teacher->satuan_pendidikan,
+            'account_status' => $teacher->account_status,
+            'payment_status' => $teacher->payment_status,
+            'payment_rejection_reason' => $teacher->payment_rejection_reason,
+            'access_token' => $teacher->access_token,
+            'created_at_formatted' => $teacher->created_at?->format('d M Y'),
+        ])->values()->all();
+
+        return Inertia::render('Superadmin/Teachers', [
+            'teachers' => $teachers,
+            'notificationTemplates' => $notificationTemplates,
+            'paymentSummary' => $paymentSummary,
+            'search' => $search,
+            'paymentStatus' => $paymentStatus,
+            'accountStatus' => $accountStatus,
+        ]);
     }
 }

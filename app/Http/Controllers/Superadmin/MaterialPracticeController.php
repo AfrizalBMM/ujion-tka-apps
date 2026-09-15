@@ -10,12 +10,14 @@ use App\Models\MaterialTelaahQuestion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use RuntimeException;
 
 class MaterialPracticeController extends Controller
 {
-    public function show(Material $material): View
+    public function show(Material $material): InertiaResponse
     {
         $token = MaterialPracticeToken::query()
             ->with(['packages'])
@@ -36,22 +38,34 @@ class MaterialPracticeController extends Controller
             ->limit(200)
             ->get();
 
-        $bankQuestionsById = $bankQuestions->keyBy('id');
-
         $bankQuestionCount = GlobalQuestion::query()
             ->forMaterial($material)
             ->where('question_type', 'multiple_choice')
             ->where('is_active', true)
             ->count();
 
-        return view('superadmin.material-practice.show', compact(
-            'material',
-            'token',
-            'telaah',
-            'bankQuestions',
-            'bankQuestionsById',
-            'bankQuestionCount'
-        ));
+        return Inertia::render('Superadmin/MaterialPractice/Show', [
+            'material' => $material,
+            'token' => $token ? [
+                'token' => $token->token,
+                'jumlah_soal_per_paket' => $token->jumlah_soal_per_paket,
+                'is_active' => $token->is_active,
+            ] : null,
+            'telaah' => $telaah->map(fn (MaterialTelaahQuestion $row) => [
+                'urutan' => $row->urutan,
+                'global_question_id' => $row->global_question_id,
+                'has_reading_passage' => (bool) $row->globalQuestion?->reading_passage,
+                'reading_passage_limited' => $row->globalQuestion?->reading_passage ? Str::limit($row->globalQuestion->reading_passage, 260) : null,
+                'question_text_limited' => Str::limit(strip_tags((string) $row->globalQuestion?->question_text), 260),
+            ])->values()->all(),
+            'bankQuestions' => $bankQuestions->map(fn (GlobalQuestion $q) => [
+                'id' => $q->id,
+                'label' => '#'.$q->id.' — '.Str::limit(strip_tags((string) $q->question_text), 90),
+                'has_reading_passage' => (bool) $q->reading_passage,
+            ])->values()->all(),
+            'bankQuestionCount' => $bankQuestionCount,
+            'jenjangFilter' => request('jenjang'),
+        ]);
     }
 
     public function saveTelaah(Request $request, Material $material): RedirectResponse

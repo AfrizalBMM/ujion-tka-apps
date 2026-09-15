@@ -11,10 +11,13 @@ use App\Support\SurveyAnalytics;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ExamResultController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $activeTab = in_array($request->query('tab'), ['ujian', 'materi'], true)
             ? $request->query('tab')
@@ -29,7 +32,20 @@ class ExamResultController extends Controller
             ->withCount(['ujianSesis as total_peserta' => fn ($q) => $q->whereNull('user_id')])
             ->with(['paketSoal', 'creator'])
             ->latest()
-            ->get();
+            ->get()
+            ->map(fn (Exam $exam) => [
+                'id' => $exam->id,
+                'nama' => $exam->nama,
+                'total_peserta' => $exam->total_peserta,
+                'is_ujion' => $exam->creator && $exam->creator->role === 'superadmin',
+                'paket_nama' => $exam->paketSoal?->nama ?? '-',
+                'token_labels' => $exam->examMapelTokens()
+                    ->with('mapelPaket')
+                    ->get()
+                    ->map(fn ($t) => $t->mapelPaket?->nama_label ?? 'Mapel')
+                    ->values(),
+            ])
+            ->values();
 
         $jenjangUser = Auth::user()?->jenjang;
         $practiceTokens = MaterialPracticeToken::query()
@@ -53,20 +69,58 @@ class ExamResultController extends Controller
                 return $token;
             });
 
-        return view('guru.results.index', compact('exams', 'practiceTokens', 'activeTab'));
+        $practiceTokens = $practiceTokens->map(function (MaterialPracticeToken $token) {
+            return [
+                'material_id' => $token->material_id,
+                'token' => $token->token,
+                'sessions_count' => $token->sessions_count,
+                'packages_count' => $token->packages_count,
+                'completed_sessions_count' => $token->completed_sessions_count,
+                'avg_score' => $token->avg_score,
+                'sub_unit' => $token->material?->sub_unit,
+                'subelement' => $token->material?->subelement,
+                'unit' => $token->material?->unit,
+            ];
+        })->values();
+
+        return Inertia::render('Guru/Results/Index', compact('exams', 'practiceTokens', 'activeTab'));
     }
 
-    public function show(Exam $exam)
+    public function show(Exam $exam): Response
     {
         $this->authorizeOwner($exam);
 
         $exam->load(['paketSoal.mapelPakets']);
         $exam->setRelation('ujianSesis', $exam->ujianSesis()->whereNull('user_id')->get());
 
-        return view('guru.results.show', compact('exam'));
+        $tokens = $exam->examMapelTokens()
+            ->with('mapelPaket')
+            ->get()
+            ->map(fn ($t) => [
+                'id' => $t->id,
+                'token' => $t->token,
+                'mapel_paket_id' => $t->mapel_paket_id,
+                'nama_label' => $t->mapelPaket?->nama_label ?? 'Komponen',
+                'nama_mapel' => $t->mapelPaket?->nama_mapel,
+                'is_survey' => (bool) $t->mapelPaket?->isSurvey(),
+                'session_count' => $exam->ujianSesis()->where('mapel_paket_id', $t->mapel_paket_id)->count(),
+                'avg_score' => round($exam->ujianSesis()
+                    ->where('mapel_paket_id', $t->mapel_paket_id)
+                    ->where('status', 'selesai')
+                    ->avg('skor') ?? 0, 1),
+            ])
+            ->values();
+
+        return Inertia::render('Guru/Results/Show', [
+            'exam' => [
+                'id' => $exam->id,
+                'judul' => $exam->judul ?? $exam->nama,
+            ],
+            'tokens' => $tokens,
+        ]);
     }
 
-    public function mapel(Exam $exam, MapelPaket $mapel)
+    public function mapel(Exam $exam, MapelPaket $mapel): Response
     {
         $this->authorizeOwner($exam);
 
@@ -89,14 +143,20 @@ class ExamResultController extends Controller
                 'pass' => 0,
             ];
 
-            return view('guru.results.mapel', [
-                'exam' => $exam,
-                'mapel' => $mapel,
-                'sessions' => $sessions,
+            return Inertia::render('Guru/Results/Mapel', [
+                'exam' => [
+                    'id' => $exam->id,
+                    'judul' => $exam->judul ?? $exam->nama,
+                ],
+                'mapel' => [
+                    'id' => $mapel->id,
+                    'nama_label' => $mapel->nama_label,
+                ],
+                'sessions' => $this->sessionProps($sessions),
                 'stats' => $stats,
                 'questionStats' => [],
                 'isSurvey' => true,
-                'surveyOverview' => $overview,
+                'surveyOverview' => $this->surveyOverviewProps($overview),
             ]);
         }
 
@@ -139,12 +199,18 @@ class ExamResultController extends Controller
                 'correct' => $correctCount,
                 'percent' => $sessionIds->count() > 0 ? round(($correctCount / $sessionIds->count()) * 100, 1) : 0,
             ];
-        });
+        })->values();
 
-        return view('guru.results.mapel', [
-            'exam' => $exam,
-            'mapel' => $mapel,
-            'sessions' => $sessions,
+        return Inertia::render('Guru/Results/Mapel', [
+            'exam' => [
+                'id' => $exam->id,
+                'judul' => $exam->judul ?? $exam->nama,
+            ],
+            'mapel' => [
+                'id' => $mapel->id,
+                'nama_label' => $mapel->nama_label,
+            ],
+            'sessions' => $this->sessionProps($sessions),
             'stats' => $stats,
             'questionStats' => $questionStats,
             'isSurvey' => false,
@@ -152,7 +218,7 @@ class ExamResultController extends Controller
         ]);
     }
 
-    public function studentDetail(UjianSesi $session)
+    public function studentDetail(UjianSesi $session): Response
     {
         $exam = $session->exam;
         $this->authorizeOwner($exam);
@@ -164,11 +230,103 @@ class ExamResultController extends Controller
         ]);
 
         $answers = $session->jawabanSiswas->keyBy('soal_id');
-        $surveyProfile = $session->mapelPaket?->isSurvey()
+        $isSurveyMapel = $session->mapelPaket?->isSurvey();
+        $surveyProfile = $isSurveyMapel
             ? ($session->profil_ringkasan ?: SurveyAnalytics::sessionProfile($session))
             : null;
 
-        return view('guru.results.student', compact('session', 'answers', 'surveyProfile'));
+        $soalItems = $session->mapelPaket->soals
+            ->map(function ($s) use ($answers, $isSurveyMapel) {
+                $ans = $answers->get($s->id);
+                $correctOption = $s->pilihanJawabans->where('is_benar', true)->first();
+                $isCorrect = ($ans && $s->tipe_soal === 'pilihan_ganda' && ! $isSurveyMapel && $ans->jawaban_pg === $correctOption?->kode);
+
+                return [
+                    'id' => $s->id,
+                    'nomor_soal' => $s->nomor_soal,
+                    'tipe_soal' => $s->tipe_soal,
+                    'pertanyaan' => $s->pertanyaan,
+                    'indikator' => $s->indikator,
+                    'dimensi' => $s->dimensi,
+                    'bobot' => $s->bobot,
+                    'answered' => (bool) $ans,
+                    'is_correct' => (bool) $isCorrect,
+                    'options' => $s->pilihanJawabans->map(fn ($opt) => [
+                        'kode' => $opt->kode,
+                        'teks' => $opt->teks,
+                        'is_correct' => (bool) $opt->is_benar,
+                        'is_chosen' => (bool) ($ans && $ans->jawaban_pg === $opt->kode),
+                        'nilai_survey' => $opt->nilai_survey,
+                        'profil_label' => $opt->profil_label,
+                    ])->values(),
+                    'pasangan' => $s->pasanganMenjodohkans->map(fn ($pair) => [
+                        'teks_kiri' => $pair->teks_kiri,
+                        'teks_kanan' => $pair->teks_kanan,
+                    ])->values(),
+                ];
+            })
+            ->values();
+
+        return Inertia::render('Guru/Results/Student', [
+            'session' => [
+                'id' => $session->id,
+                'nama' => $session->nama,
+                'nomor_wa' => $session->nomor_wa,
+                'exam_id' => $session->exam_id,
+                'mapel_paket_id' => $session->mapel_paket_id,
+                'skor' => $session->skor !== null ? (float) $session->skor : null,
+                'mapel_nama_label' => $session->mapelPaket?->nama_label,
+                'is_survey' => (bool) $isSurveyMapel,
+            ],
+            'soalItems' => $soalItems,
+            'surveyProfile' => $surveyProfile ? [
+                'dimension_stats' => collect($surveyProfile['dimension_stats'] ?? [])->values(),
+            ] : null,
+        ]);
+    }
+
+    private function sessionProps($sessions)
+    {
+        return $sessions
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'nama' => $s->nama,
+                'nomor_wa' => $s->nomor_wa,
+                'waktu_mulai' => $s->waktu_mulai?->format('H:i'),
+                'waktu_selesai' => $s->waktu_selesai?->format('H:i'),
+                'durasi_menit' => $s->waktu_selesai?->diffInMinutes($s->waktu_mulai) ?? 0,
+                'skor' => $s->skor !== null ? (float) $s->skor : null,
+            ])
+            ->values();
+    }
+
+    private function surveyOverviewProps(array $overview): array
+    {
+        return [
+            'dimension_stats' => collect($overview['dimension_stats'] ?? [])
+                ->map(fn ($dimension) => [
+                    'dimensi' => $dimension['dimensi'],
+                    'score_percent' => (float) $dimension['score_percent'],
+                    'category' => $dimension['category'],
+                ])
+                ->values(),
+            'question_breakdown' => collect($overview['question_breakdown'] ?? [])
+                ->map(fn ($question) => [
+                    'nomor' => $question['nomor'],
+                    'dimensi' => $question['dimensi'],
+                    'subdimensi' => $question['subdimensi'],
+                    'distribution' => collect($question['distribution'] ?? [])
+                        ->map(fn ($option) => [
+                            'kode' => $option['kode'],
+                            'label' => Str::limit(strip_tags($option['label']), 48),
+                            'count' => $option['count'],
+                            'percent' => $option['percent'],
+                        ])
+                        ->values(),
+                ])
+                ->values(),
+            'category_distribution' => $overview['category_distribution'] ?? [],
+        ];
     }
 
     public function export(Exam $exam, MapelPaket $mapel)

@@ -2,10 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\Superadmin\TeacherController;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Tests\TestCase;
 
 class TeacherTokenManagementTest extends TestCase
@@ -134,6 +133,11 @@ class TeacherTokenManagementTest extends TestCase
 
     public function test_superadmin_can_filter_teacher_list_by_payment_status(): void
     {
+        $superadmin = User::factory()->create([
+            'role' => User::ROLE_SUPERADMIN,
+            'account_status' => User::STATUS_ACTIVE,
+        ]);
+
         $submittedTeacher = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
@@ -148,15 +152,27 @@ class TeacherTokenManagementTest extends TestCase
             'name' => 'Guru Belum Bayar',
         ]);
 
-        $request = Request::create(route('superadmin.teachers.index', [
+        $url = route('superadmin.teachers.index', [
             'payment_status' => User::PAYMENT_SUBMITTED,
-        ]), 'GET');
+        ]);
+        $response = $this->actingAs($superadmin)->get($url, $this->inertiaHeaders($url));
 
-        $view = app(TeacherController::class)->index($request);
-        $teachers = $view->getData()['teachers'];
+        $response->assertOk();
+        $teachers = $response->json('props.teachers');
 
         $this->assertCount(1, $teachers);
-        $this->assertTrue($teachers->contains('id', $submittedTeacher->id));
-        $this->assertFalse($teachers->contains('name', 'Guru Belum Bayar'));
+        $this->assertSame($submittedTeacher->id, $teachers[0]['id']);
+        $this->assertSame('Guru Review', $teachers[0]['name']);
+        $this->assertNotContains('Guru Belum Bayar', array_column($teachers, 'name'));
+    }
+
+    private function inertiaHeaders(string $url): array
+    {
+        $this->get($url);
+
+        return [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => Inertia::getVersion(),
+        ];
     }
 }

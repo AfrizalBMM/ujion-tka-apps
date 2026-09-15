@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\Guru\MaterialController;
-use App\Http\Controllers\Superadmin\ChatController;
 use App\Http\Controllers\Superadmin\ExamAnalysisController;
 use App\Http\Controllers\Superadmin\TeksBacaanController;
 use App\Models\Chat;
@@ -20,9 +19,9 @@ use App\Models\TeksBacaan;
 use App\Models\UjianSesi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
@@ -254,17 +253,15 @@ class RemainingFlowsHardeningTest extends TestCase
             'is_read' => false,
         ]);
 
-        $this->be($superadmin);
+        $url = route('superadmin.chat.index', ['user' => $teacherA->id]);
+        $response = $this->actingAs($superadmin)->get($url, $this->inertiaHeaders($url));
 
-        $request = Request::create(route('superadmin.chat.index', ['user' => $teacherA->id]), 'GET', ['user' => $teacherA->id]);
-        $request->setUserResolver(fn () => $superadmin);
+        $response->assertOk();
+        $this->assertSame($teacherA->id, $response->json('props.selectedUser.id'));
 
-        $view = app(ChatController::class)->index($request);
-        $data = $view->getData();
-
-        $this->assertSame($teacherA->id, $data['selectedUser']->id);
-        $this->assertCount(1, $data['chats']);
-        $this->assertSame('Pesan untuk A', $data['chats']->first()->message);
+        $chats = $response->json('props.chats');
+        $this->assertCount(1, $chats);
+        $this->assertSame('Pesan untuk A', $chats[0]['message']);
     }
 
     public function test_material_detail_uses_global_and_snapshot_reference_counts(): void
@@ -299,15 +296,12 @@ class RemainingFlowsHardeningTest extends TestCase
             'status' => 'draft',
         ]);
 
-        $this->be($guru);
-        $request = Request::create(route('guru.materials.show', $material), 'GET');
-        $request->setUserResolver(fn () => $guru);
+        $url = route('guru.materials.show', $material);
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
 
-        $view = app(MaterialController::class)->show($material);
-        $data = $view->getData();
-
-        $this->assertSame(1, $data['globalQuestionCount']);
-        $this->assertSame(1, $data['examSnapshotCount']);
+        $response->assertOk();
+        $this->assertSame(1, $response->json('props.globalQuestionCount'));
+        $this->assertSame(1, $response->json('props.examSnapshotCount'));
     }
 
     public function test_guru_material_index_only_shows_matching_jenjang(): void
@@ -330,16 +324,13 @@ class RemainingFlowsHardeningTest extends TestCase
             'sub_unit' => 'Sub SD',
         ]);
 
-        $this->be($guru);
+        $url = route('guru.materials');
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
 
-        $request = Request::create(route('guru.materials'), 'GET');
-        $request->setUserResolver(fn () => $guru);
-
-        $view = app(MaterialController::class)->index($request);
-        $materials = $view->getData()['materials'];
-
+        $response->assertOk();
+        $materials = $response->json('props.materials.data');
         $this->assertCount(1, $materials);
-        $this->assertSame('Materi SMP', $materials->first()->subelement);
+        $this->assertSame('Materi SMP', $materials[0]['subelement']);
     }
 
     public function test_guru_cannot_open_material_from_other_jenjang(): void
@@ -668,6 +659,16 @@ class RemainingFlowsHardeningTest extends TestCase
             'tipe_soal' => 'pilihan_ganda',
         ]);
         $this->assertDatabaseCount('pasangan_menjodohkans', 0);
+    }
+
+    private function inertiaHeaders(string $url): array
+    {
+        $this->get($url);
+
+        return [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => Inertia::getVersion(),
+        ];
     }
 
     private function createSuperadmin(): User

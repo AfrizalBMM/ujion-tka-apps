@@ -9,15 +9,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    public function show(): View
+    public function show(): Response
     {
         $user = Auth::user();
 
-        return view('superadmin.profile', compact('user'));
+        return Inertia::render('Superadmin/Profile', compact('user'));
     }
 
     public function update(Request $request): RedirectResponse

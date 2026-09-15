@@ -7,11 +7,13 @@ use App\Models\GlobalQuestion;
 use App\Models\Jenjang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SoalUjionController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $user = Auth::user();
         $jenjangId = Jenjang::where('kode', $user->jenjang)->value('id');
@@ -47,6 +49,18 @@ class SoalUjionController extends Controller
 
         $questions = $questionsQuery->with('jenjang')->latest()->paginate(24)->withQueryString();
 
+        $questions->getCollection()->transform(function (GlobalQuestion $question) use ($bookmarks) {
+            return [
+                'id' => $question->id,
+                'material_curriculum' => $question->material_curriculum,
+                'material_mapel' => $question->material_mapel,
+                'jenjang_nama' => $question->jenjang?->nama,
+                'material_subelement' => $question->material_subelement,
+                'question_excerpt' => Str::limit(strip_tags((string) $question->question_text), 80),
+                'is_bookmarked' => in_array($question->id, $bookmarks),
+            ];
+        });
+
         $mapels = GlobalQuestion::where('is_active', true)
             ->where('jenjang_id', $jenjangId)
             ->whereNotNull('material_mapel')
@@ -57,16 +71,31 @@ class SoalUjionController extends Controller
             ->whereNotNull('material_curriculum')
             ->distinct()->pluck('material_curriculum');
 
-        return view('guru.soal-ujion', compact('questions', 'mapels', 'curriculums', 'bookmarks'));
+        $bookmarked = $request->boolean('bookmarked');
+        $nextBookmarked = $bookmarked ? null : 1;
+        $bookmarkUrl = route('guru.soal-ujion.index', array_filter(array_merge($request->query(), [
+            'bookmarked' => $nextBookmarked,
+        ]), fn ($v) => $v !== null && $v !== ''));
+
+        return Inertia::render('Guru/SoalUjion', compact(
+            'questions',
+            'mapels',
+            'curriculums',
+            'filters',
+            'bookmarked',
+            'bookmarkUrl',
+            'bookmarks',
+        ));
     }
 
-    public function show(GlobalQuestion $question): View
+    public function show(GlobalQuestion $question): Response
     {
         $this->authorize('view', $question);
         $user = Auth::user();
         $isBookmarked = in_array($question->id, $user->global_question_bookmarks ?? []);
+        $question->loadMissing('jenjang');
 
-        return view('guru.soal-ujion-show', compact('question', 'isBookmarked'));
+        return Inertia::render('Guru/SoalUjionShow', compact('question', 'isBookmarked'));
     }
 
     public function bookmark(GlobalQuestion $question)

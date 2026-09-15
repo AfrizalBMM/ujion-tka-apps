@@ -13,6 +13,7 @@ use App\Models\Soal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 use Tests\TestCase;
 
 class SuperadminAccessAndExamBuilderTest extends TestCase
@@ -52,10 +53,12 @@ class SuperadminAccessAndExamBuilderTest extends TestCase
     {
         $superadmin = $this->createSuperadmin();
 
-        $response = $this->actingAs($superadmin)->get(route('superadmin.global-questions.index'));
+        $url = route('superadmin.global-questions.index');
+        $response = $this->actingAs($superadmin)->get($url, $this->inertiaHeaders($url));
 
         $response->assertOk();
-        $response->assertSee('Bank Soal Global');
+        $this->assertSame('Superadmin/Questions', $response->json('component'));
+        $this->assertArrayHasKey('globalQuestions', $response->json('props'));
     }
 
     public function test_superadmin_exam_creation_stores_creator_id(): void
@@ -213,6 +216,16 @@ class SuperadminAccessAndExamBuilderTest extends TestCase
         $this->assertSame('Checklist', $method->invoke($controller, 'matching'));
         $this->assertSame('Singkat', $method->invoke($controller, 'short_answer'));
         $this->assertSame('PG', $method->invoke($controller, 'PG'));
+    }
+
+    private function inertiaHeaders(string $url): array
+    {
+        $this->get($url);
+
+        return [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => Inertia::getVersion(),
+        ];
     }
 
     private function createSuperadmin(): User

@@ -10,15 +10,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PersonalQuestionController extends Controller
 {
     private const BUILDER_IMAGE_DIRECTORY = 'personal-question-images/';
 
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $user = Auth::user();
         $baseQuery = PersonalQuestion::query()
@@ -43,6 +45,27 @@ class PersonalQuestionController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $optionLabels = range('A', 'Z');
+
+        $questions->getCollection()->transform(function (PersonalQuestion $question) use ($optionLabels) {
+            return [
+                'id' => $question->id,
+                'jenjang' => $question->jenjang,
+                'kategori' => $question->kategori,
+                'tipe' => $question->tipe,
+                'status' => $question->status,
+                'pertanyaan' => $question->pertanyaan,
+                'pertanyaan_excerpt' => Str::limit(strip_tags((string) $question->pertanyaan), 110),
+                'opsi' => $question->opsi ?? [],
+                'jawaban_label' => $this->resolveAnswerLabel($question, $optionLabels),
+                'pembahasan' => $question->pembahasan,
+                'image_path' => $question->image_path,
+                'image_url' => $question->image_path
+                    ? route('guru.personal-questions.builder.image', ['path' => $question->image_path])
+                    : null,
+            ];
+        });
+
         $categories = (clone $baseQuery)
             ->select('kategori')
             ->distinct()
@@ -50,7 +73,16 @@ class PersonalQuestionController extends Controller
             ->filter()
             ->values();
 
-        return view('guru.personal-questions', compact('questions', 'user', 'categories'));
+        return Inertia::render('Guru/PersonalQuestions', [
+            'questions' => $questions,
+            'categories' => $categories,
+            'userJenjang' => $user->jenjang,
+            'filters' => [
+                'q' => $request->query('q'),
+                'kategori' => $request->query('kategori'),
+                'tipe' => $request->query('tipe'),
+            ],
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -150,14 +182,33 @@ class PersonalQuestionController extends Controller
         return back()->with('flash', ['type' => 'success', 'message' => 'Soal berhasil diperbarui.']);
     }
 
-    public function builder(): View
+    public function builder(): Response
     {
         $user = Auth::user();
         $questions = PersonalQuestion::where('user_id', $user->id)
             ->where('jenjang', $user->jenjang)
             ->get();
 
-        return view('guru.personal-question-builder', compact('questions', 'user'));
+        $initialQuestions = $questions->map(function (PersonalQuestion $q) {
+            return [
+                'id' => $q->id,
+                'tipe' => $q->tipe,
+                'pertanyaan' => $q->pertanyaan,
+                'opsi' => $q->opsi ?? [],
+                'jawaban_benar' => $q->jawaban_benar,
+                'pembahasan' => $q->pembahasan,
+                'image_path' => $q->image_path,
+                'image_url' => $q->image_path ? route('guru.personal-questions.builder.image', ['path' => $q->image_path]) : null,
+                'temp_preview_url' => null,
+                'kategori' => $q->kategori,
+                'status' => $q->status,
+            ];
+        })->values();
+
+        return Inertia::render('Guru/PersonalQuestionBuilder', [
+            'initialQuestions' => $initialQuestions,
+            'userJenjang' => $user->jenjang,
+        ]);
     }
 
     public function saveBuilder(Request $request): JsonResponse|RedirectResponse
@@ -322,6 +373,26 @@ class PersonalQuestionController extends Controller
         abort_unless($question->user_id === Auth::id(), 404);
 
         return $question;
+    }
+
+    private function resolveAnswerLabel(PersonalQuestion $question, array $optionLabels): string
+    {
+        if ($question->tipe === 'Singkat') {
+            return '';
+        }
+
+        $raw = strtoupper(trim((string) $question->jawaban_benar));
+        if (in_array($raw, array_slice($optionLabels, 0, 5), true)) {
+            return $raw;
+        }
+
+        foreach (($question->opsi ?? []) as $index => $option) {
+            if (trim((string) $option) === trim((string) $question->jawaban_benar)) {
+                return $optionLabels[$index] ?? '';
+            }
+        }
+
+        return '';
     }
 
     private function normalizeOptions(?array $options = null, ?string $raw = null): ?array

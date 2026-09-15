@@ -10,11 +10,12 @@ use App\Models\UjianSesi;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
         $user = Auth::user();
 
@@ -73,7 +74,7 @@ class DashboardController extends Controller
                 : null,
         ]));
 
-        return view('guru.dashboard', compact(
+        return Inertia::render('Guru/Dashboard', compact(
             'totalPeserta',
             'rataRataKelas',
             'simulasiSelesai',

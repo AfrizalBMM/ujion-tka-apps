@@ -9,11 +9,12 @@ use App\Models\MaterialPracticeToken;
 use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class MaterialController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $user = Auth::user();
         $jenjangUser = $user->jenjang ?? null;
@@ -57,6 +58,21 @@ class MaterialController extends Controller
             ->paginate(30)
             ->withQueryString();
 
+        $materials->getCollection()->transform(function (Material $material) use ($bookmarks) {
+            return [
+                'id' => $material->id,
+                'curriculum' => $material->curriculum,
+                'mapel' => $material->mapel,
+                'jenjang' => $material->jenjang,
+                'subelement' => $material->subelement,
+                'unit' => $material->unit,
+                'sub_unit' => $material->sub_unit,
+                'link' => $material->link,
+                'bank_question_count' => (int) ($material->bank_question_count ?? 0),
+                'is_bookmarked' => in_array($material->id, $bookmarks),
+            ];
+        });
+
         $mapels = Material::query()
             ->where('jenjang', $jenjangUser)
             ->distinct()
@@ -71,10 +87,25 @@ class MaterialController extends Controller
             ->filter()
             ->values();
 
-        return view('guru.materials', compact('materials', 'bookmarks', 'jenjangUser', 'filters', 'mapels', 'curriculums'));
+        $bookmarked = $request->boolean('bookmarked');
+        $nextBookmarked = $bookmarked ? null : 1;
+        $bookmarkUrl = route('guru.materials', array_filter(array_merge($request->query(), [
+            'bookmarked' => $nextBookmarked,
+        ]), fn ($v) => $v !== null && $v !== ''));
+
+        return Inertia::render('Guru/Materials', compact(
+            'materials',
+            'bookmarks',
+            'jenjangUser',
+            'filters',
+            'mapels',
+            'curriculums',
+            'bookmarked',
+            'bookmarkUrl',
+        ));
     }
 
-    public function show(Material $material): View
+    public function show(Material $material): Response
     {
         $user = Auth::user();
 
@@ -88,7 +119,7 @@ class MaterialController extends Controller
 
         $practiceToken = MaterialPracticeToken::query()->where('material_id', $material->id)->first();
 
-        return view('guru.material-show', compact('material', 'globalQuestionCount', 'examSnapshotCount', 'isBookmarked', 'practiceToken'));
+        return Inertia::render('Guru/MaterialShow', compact('material', 'globalQuestionCount', 'examSnapshotCount', 'isBookmarked', 'practiceToken'));
     }
 
     public function bookmark(Material $material)

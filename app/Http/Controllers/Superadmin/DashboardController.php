@@ -10,13 +10,24 @@ use App\Models\UjianSesi;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(): InertiaResponse
     {
-        return view('superadmin.dashboard', $this->buildMetrics());
+        $metrics = $this->buildMetrics();
+
+        $metrics['latestAuditLogs'] = collect($metrics['latestAuditLogs'])->map(fn (AuditLog $log) => [
+            'method' => $log->method,
+            'path' => $log->path,
+            'ip_address' => $log->ip_address,
+            'created_at_human' => $log->created_at?->diffForHumans(),
+        ])->all();
+
+        return Inertia::render('Superadmin/Dashboard', $metrics);
     }
 
     public function exportCsv(): StreamedResponse

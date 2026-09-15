@@ -20,7 +20,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -35,15 +36,36 @@ class ExamController extends Controller
         'short_answer',
     ];
 
-    public function index(): View
+    public function index(): InertiaResponse
     {
         $exams = Exam::with(['paketSoal.jenjang', 'examMapelTokens.mapelPaket'])
             ->withCount('ujianSesis')
             ->latest()
-            ->get();
-        $paketSoals = PaketSoal::with('jenjang')->latest()->get();
+            ->get()
+            ->map(fn (Exam $exam) => [
+                'id' => $exam->id,
+                'judul' => $exam->judul,
+                'paket_nama' => $exam->paketSoal?->nama ?? '-',
+                'tanggal_terbit_formatted' => $exam->tanggal_terbit?->format('d M Y H:i'),
+                'max_peserta' => $exam->max_peserta,
+                'status' => $exam->status,
+                'is_active' => (bool) $exam->is_active,
+                'ujian_sesis_count' => (int) ($exam->ujian_sesis_count ?? 0),
+                'mapel_tokens' => $exam->examMapelTokens->map(fn ($mt) => [
+                    'id' => $mt->id,
+                    'nama_label' => $mt->mapelPaket?->nama_label ?? 'Mapel',
+                    'token' => $mt->token,
+                ])->values()->all(),
+            ])->values()->all();
+        $paketSoals = PaketSoal::with('jenjang')->latest()->get()
+            ->map(fn (PaketSoal $paket) => [
+                'id' => $paket->id,
+                'nama' => $paket->nama,
+                'jenjang_kode' => $paket->jenjang?->kode,
+                'tahun_ajaran' => $paket->tahun_ajaran,
+            ])->values()->all();
 
-        return view('superadmin.exams', compact('exams', 'paketSoals'));
+        return Inertia::render('Superadmin/Exams', compact('exams', 'paketSoals'));
     }
 
     public function store(Request $request, WaMessageTemplateService $templates): RedirectResponse
@@ -126,7 +148,7 @@ class ExamController extends Controller
         $this->authorize('manage', Exam::class);
 
         $validated = $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,xlsx,xls', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls,xml', 'max:5120'],
         ]);
 
         try {
@@ -220,12 +242,33 @@ class ExamController extends Controller
         return back();
     }
 
-    public function builder(Exam $exam): View
+    public function builder(Exam $exam): InertiaResponse
     {
-        $questions = $exam->questions()->orderBy('exam_question.order')->get();
-        $materials = Material::all();
+        $questions = $exam->questions()->orderBy('exam_question.order')->get()
+            ->map(fn (Question $q) => [
+                'material_id' => $q->material_id,
+                'tipe' => $q->tipe,
+                'pertanyaan' => $q->pertanyaan,
+                'opsi' => $q->opsi ?? [],
+                'jawaban_benar' => $q->jawaban_benar,
+                'pembahasan' => $q->pembahasan,
+                'image' => $q->image_path,
+            ])->values()->all();
+        $materials = Material::all()
+            ->map(fn (Material $m) => [
+                'id' => $m->id,
+                'curriculum' => $m->curriculum,
+                'sub_unit' => $m->sub_unit,
+            ])->values()->all();
 
-        return view('superadmin.exam-builder', compact('exam', 'questions', 'materials'));
+        return Inertia::render('Superadmin/ExamBuilder', [
+            'exam' => [
+                'id' => $exam->id,
+                'judul' => $exam->judul,
+            ],
+            'questions' => $questions,
+            'materials' => $materials,
+        ]);
     }
 
     public function bankQuestions(Request $request, Exam $exam): JsonResponse
@@ -359,9 +402,19 @@ class ExamController extends Controller
         return back()->with('flash', ['type' => 'success', 'message' => 'Soal ujian berhasil disimpan.']);
     }
 
-    public function show(Exam $exam): View
+    public function show(Exam $exam): InertiaResponse
     {
-        return view('superadmin.exam-detail', compact('exam'));
+        return Inertia::render('Superadmin/ExamDetail', [
+            'exam' => [
+                'id' => $exam->id,
+                'token' => $exam->token,
+                'judul' => $exam->judul,
+                'tanggal_terbit_formatted' => $exam->tanggal_terbit?->format('d M Y H:i'),
+                'max_peserta' => $exam->max_peserta,
+                'status' => $exam->status,
+                'is_active' => (bool) $exam->is_active,
+            ],
+        ]);
     }
 
     private function makeQuestionPayload(Exam $exam, array $source, int $fallbackMaterialId): array

@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Support\MatchingKey;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Tests\TestCase;
 
 class MatchingAnswerSecurityTest extends TestCase
@@ -23,16 +24,17 @@ class MatchingAnswerSecurityTest extends TestCase
     {
         [$sesi, , , $pasangan] = $this->createMatchingSession();
 
+        $url = route('siswa.ujian');
         $response = $this->withSession(['participant_token' => $sesi->session_token])
-            ->get(route('siswa.ujian'));
+            ->get($url, $this->inertiaHeaders($url));
 
         $response->assertOk();
-        $html = $response->getContent();
-        $json = $this->extractExamPayload($html);
+        $json = $response->json('props.questions');
 
         $this->assertNotNull($json);
+        $this->assertNotEmpty($json);
 
-        $first = $json['questions'][0];
+        $first = $json[0];
         $this->assertNotEmpty($first['pasangan']);
         $this->assertNotEmpty($first['matching_options']);
 
@@ -143,20 +145,24 @@ class MatchingAnswerSecurityTest extends TestCase
             'skor' => 100,
         ]);
 
-        $response = $this->actingAs($guru)->get(route('guru.results.mapel', [$sesi->exam, $mapel]));
+        $url = route('guru.results.mapel', [$sesi->exam, $mapel]);
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
 
         $response->assertOk();
-        $response->assertDontSee('SimulasiGuruTersembunyi');
-        $response->assertSee($sesi->nama);
+
+        $sessionNames = collect($response->json('props.sessions'))->pluck('nama');
+        $this->assertFalse($sessionNames->contains('SimulasiGuruTersembunyi'));
+        $this->assertTrue($sessionNames->contains($sesi->nama));
     }
 
-    private function extractExamPayload(string $html): ?array
+    private function inertiaHeaders(string $url): array
     {
-        if (! preg_match('/<script id="exam-data" type="application\/json">(.*?)<\/script>/s', $html, $matches)) {
-            return null;
-        }
+        $this->get($url);
 
-        return json_decode(html_entity_decode($matches[1], ENT_QUOTES), true);
+        return [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => Inertia::getVersion(),
+        ];
     }
 
     private function createMatchingSession(): array

@@ -6,13 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Support\SurveyAnalytics;
 use Illuminate\Contracts\View\View;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamAnalysisController extends Controller
 {
-    public function show(Exam $exam): View
+    public function show(Exam $exam): InertiaResponse
     {
-        return view('superadmin.exam-analysis', $this->buildAnalysis($exam));
+        return Inertia::render('Superadmin/ExamAnalysis', $this->buildAnalysis($exam));
     }
 
     public function exportCsv(Exam $exam): StreamedResponse
@@ -88,13 +90,14 @@ class ExamAnalysisController extends Controller
                 }
 
                 return [
-                    'mapel' => $mapel,
+                    'mapel_label' => $mapel?->nama_label ?? 'Survey',
                     'participants' => $items->count(),
                     'average_score' => round($items->avg('skor') ?? 0, 2),
+                    'average_score_formatted' => number_format((float) ($items->avg('skor') ?? 0), 1),
                     'category_distribution' => $categoryDistribution,
                 ];
             })
-            ->values();
+            ->values()->all();
 
         return [
             'exam' => $exam,
@@ -102,6 +105,7 @@ class ExamAnalysisController extends Controller
             'distribution' => $distribution,
             'participantsCount' => $academicSessions->count(),
             'averageScore' => round((float) ($academicSessions->avg('skor') ?? 0), 2),
+            'averageScoreFormatted' => number_format((float) ($academicSessions->avg('skor') ?? 0), 2),
             'surveyComponents' => $surveyComponents,
         ];
     }

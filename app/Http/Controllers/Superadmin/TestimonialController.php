@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Testimonial;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class TestimonialController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
         $testimonials = Testimonial::query()
             ->orderBy('sort_order')
@@ -19,14 +20,14 @@ class TestimonialController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        return view('superadmin.testimonials.index', [
+        return Inertia::render('Superadmin/Testimonials/Index', [
             'testimonials' => $testimonials,
         ]);
     }
 
-    public function create(): View
+    public function create(): Response
     {
-        return view('superadmin.testimonials.form', [
+        return Inertia::render('Superadmin/Testimonials/Form', [
             'testimonial' => new Testimonial,
         ]);
     }
@@ -64,9 +65,9 @@ class TestimonialController extends Controller
         ]);
     }
 
-    public function edit(Testimonial $testimonial): View
+    public function edit(Testimonial $testimonial): Response
     {
-        return view('superadmin.testimonials.form', [
+        return Inertia::render('Superadmin/Testimonials/Form', [
             'testimonial' => $testimonial,
         ]);
     }

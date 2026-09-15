@@ -40,6 +40,7 @@ use App\Http\Controllers\Superadmin\WhatsAppAutoMessageController;
 use App\Http\Controllers\Superadmin\WhatsAppGatewayController;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 Route::post('/payments/doku/start', [DokuPaymentController::class, 'start'])->name('payments.doku.start');
@@ -96,7 +97,7 @@ Route::post('/siswa/login', [SiswaAuthController::class, 'validateToken'])
     ->middleware('throttle:10,1')
     ->name('siswa.token.validate');
 Route::get('/siswa/identitas', function () {
-    return view('siswa.identitas');
+    return Inertia::render('Siswa/Identitas');
 })->name('siswa.identitas');
 
 Route::post('/siswa/mulai', [ExamController::class, 'mulai'])->name('siswa.mulai');
@@ -112,7 +113,7 @@ Route::post('/siswa/latihan/login', [MaterialPracticeAuthController::class, 'val
     ->middleware('throttle:10,1')
     ->name('siswa.practice.token.validate');
 Route::get('/siswa/latihan/identitas', function () {
-    return view('siswa.practice.identitas');
+    return Inertia::render('Siswa/Practice/Identitas');
 })->name('siswa.practice.identitas');
 Route::post('/siswa/latihan/mulai', [SiswaMaterialPracticeController::class, 'mulai'])->name('siswa.practice.mulai');
 Route::get('/siswa/latihan', [SiswaMaterialPracticeController::class, 'dashboard'])->name('siswa.practice.dashboard');
@@ -127,7 +128,7 @@ Route::prefix('materi')->name('materi.')->group(function () {
         ->middleware('throttle:10,1')
         ->name('token.validate');
     Route::get('/identitas', function () {
-        return view('siswa.practice.identitas');
+        return Inertia::render('Siswa/Practice/Identitas');
     })->name('identitas');
     Route::post('/mulai', [SiswaMaterialPracticeController::class, 'mulai'])->name('mulai');
     Route::get('/', [SiswaMaterialPracticeController::class, 'dashboard'])->name('dashboard');
@@ -288,7 +289,7 @@ Route::prefix('superadmin')
         Route::delete('/paket-soal/{paket}/mapel/{mapel}/teks-bacaan/{bacaan}', [SuperadminTeksBacaanController::class, 'destroy'])->name('teks-bacaan.destroy');
 
         Route::get('/guide', function () {
-            return view('superadmin.guide');
+            return Inertia::render('Superadmin/Guide');
         }
         )->name('guide');
 

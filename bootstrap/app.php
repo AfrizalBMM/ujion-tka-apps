@@ -4,6 +4,7 @@ use App\Http\Middleware\AuditRequest;
 use App\Http\Middleware\EnsureGuruAccountIsActive;
 use App\Http\Middleware\EnsureGuruJenjangAccess;
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            HandleInertiaRequests::class,
+        ]);
+
         $middleware->alias([
             'audit' => AuditRequest::class,
             'role' => EnsureRole::class,

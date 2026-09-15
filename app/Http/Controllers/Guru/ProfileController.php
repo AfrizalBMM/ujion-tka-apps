@@ -11,22 +11,58 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    public function show(): View
+    public function show(): Response
     {
         $user = Auth::user();
 
-        return view('guru.profile', compact('user'));
+        $avatarUrl = $this->avatarUrl($user);
+        $initials = collect(preg_split('/\s+/', trim((string) $user->name)))
+            ->filter()
+            ->map(fn ($part) => strtoupper(mb_substr($part, 0, 1)))
+            ->take(2)
+            ->implode('');
+        $joinedAt = $user->created_at?->translatedFormat('d F Y');
+
+        $userData = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'no_wa' => $user->no_wa,
+            'satuan_pendidikan' => $user->satuan_pendidikan,
+            'jenjang' => $user->jenjang,
+            'google_connected' => (bool) $user->google_id,
+            'access_token' => $user->access_token,
+        ];
+
+        return Inertia::render('Guru/Profile', [
+            'user' => $userData,
+            'avatarUrl' => $avatarUrl,
+            'initials' => $initials,
+            'joinedAt' => $joinedAt,
+        ]);
     }
 
-    public function edit(): View
+    public function edit(): Response
     {
         $user = Auth::user();
 
-        return view('guru.profile-edit', compact('user'));
+        $userData = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'jenjang' => $user->jenjang,
+            'satuan_pendidikan' => $user->satuan_pendidikan,
+            'no_wa' => $user->no_wa,
+            'has_avatar' => (bool) $user->avatar,
+        ];
+
+        return Inertia::render('Guru/ProfileEdit', [
+            'user' => $userData,
+            'avatarUrl' => $this->avatarUrl($user),
+        ]);
     }
 
     public function update(Request $request)
@@ -112,5 +148,15 @@ class ProfileController extends Controller
         ]);
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Password berhasil disimpan.']);
+    }
+
+    private function avatarUrl(User $user): string
+    {
+        if ($user->avatar) {
+            return asset('storage/'.$user->avatar);
+        }
+
+        return $user->avatar_url
+            ?? 'https://ui-avatars.com/api/?name='.urlencode($user->name ?? 'Guru').'&background=0f766e&color=ffffff&size=256';
     }
 }

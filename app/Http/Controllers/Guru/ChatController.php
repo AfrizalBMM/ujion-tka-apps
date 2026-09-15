@@ -8,16 +8,21 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ChatController extends Controller
 {
-    public function index(): View
+    public function index(): Response
     {
         $user = Auth::user();
         $superadmin = User::query()
             ->where('role', User::ROLE_SUPERADMIN)
             ->first();
+
+        $chatPartnerName = $superadmin?->name ?? 'Superadmin';
+        $chatPartnerAvatarUrl = $superadmin?->avatar_url
+            ?? 'https://ui-avatars.com/api/?name=Superadmin&background=4F6EF7&color=fff';
 
         $chats = Chat::with(['fromUser', 'toUser'])
             ->where(function ($query) use ($user) {
@@ -28,9 +33,30 @@ class ChatController extends Controller
             ->limit(200)
             ->get()
             ->sortBy('created_at')
-            ->values();
+            ->values()
+            ->map(function (Chat $chat) use ($user, $chatPartnerName, $chatPartnerAvatarUrl) {
+                $isOwn = (int) $chat->from_user_id === (int) $user->id;
+                $sender = $chat->fromUser;
 
-        return view('guru.chat', compact('chats', 'superadmin'));
+                return [
+                    'id' => $chat->id,
+                    'is_own' => $isOwn,
+                    'message' => $chat->message,
+                    'image_url' => $chat->image_path ? route('guru.chat.image', $chat) : null,
+                    'created_at' => $chat->created_at?->format('d M H:i'),
+                    'sender_name' => $sender?->name ?? ($isOwn ? ($user->name ?? 'Anda') : $chatPartnerName),
+                    'sender_avatar_url' => $sender?->avatar_url
+                        ?? ($isOwn
+                            ? ($user->avatar_url ?? 'https://ui-avatars.com/api/?name=Guru&background=22C1C3&color=fff')
+                            : $chatPartnerAvatarUrl),
+                ];
+            });
+
+        return Inertia::render('Guru/Chat', [
+            'chats' => $chats,
+            'chatPartnerName' => $chatPartnerName,
+            'chatPartnerAvatarUrl' => $chatPartnerAvatarUrl,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

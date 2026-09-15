@@ -8,14 +8,17 @@ use App\Http\Requests\UpdatePaketSoalRequest;
 use App\Models\Jenjang;
 use App\Models\MapelPaket;
 use App\Models\PaketSoal;
+use App\Models\Soal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class PaketSoalController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): InertiaResponse
     {
         $this->authorize('viewAny', PaketSoal::class);
 
@@ -25,18 +28,25 @@ class PaketSoalController extends Controller
             ->when($request->filled('jenjang_id'), fn ($query) => $query->where('jenjang_id', $request->integer('jenjang_id')))
             ->when($request->filled('tahun_ajaran'), fn ($query) => $query->where('tahun_ajaran', $request->string('tahun_ajaran')))
             ->latest()
-            ->get();
+            ->get()
+            ->map(fn (PaketSoal $paket) => $this->paketRow($paket))
+            ->values()->all();
 
-        return view('superadmin.paket-soal.index', compact('paketSoals', 'jenjangs'));
+        return Inertia::render('Superadmin/PaketSoal/Index', [
+            'paketSoals' => $paketSoals,
+            'jenjangs' => $jenjangs,
+            'jenjangFilter' => $request->query('jenjang_id'),
+            'tahunAjaranFilter' => $request->query('tahun_ajaran'),
+        ]);
     }
 
-    public function create(): View
+    public function create(): InertiaResponse
     {
         $this->authorize('create', PaketSoal::class);
 
         $jenjangs = Jenjang::orderBy('urutan')->get();
 
-        return view('superadmin.paket-soal.create', compact('jenjangs'));
+        return Inertia::render('Superadmin/PaketSoal/Create', compact('jenjangs'));
     }
 
     public function store(StorePaketSoalRequest $request): RedirectResponse
@@ -117,7 +127,7 @@ class PaketSoalController extends Controller
             ->with('flash', ['type' => 'success', 'message' => 'Paket soal berhasil dibuat.']);
     }
 
-    public function show(PaketSoal $paket): View
+    public function show(PaketSoal $paket): InertiaResponse
     {
         $this->authorize('view', $paket);
 
@@ -130,16 +140,27 @@ class PaketSoalController extends Controller
             'exams' => fn ($q) => $q->with('examMapelTokens.mapelPaket')->orderByDesc('tanggal_terbit'),
         ]);
 
-        return view('superadmin.paket-soal.show', compact('paket'));
+        return Inertia::render('Superadmin/PaketSoal/Show', [
+            'paket' => $this->paketDetail($paket),
+        ]);
     }
 
-    public function edit(PaketSoal $paket): View
+    public function edit(PaketSoal $paket): InertiaResponse
     {
         $this->authorize('update', $paket);
 
         $jenjangs = Jenjang::orderBy('urutan')->get();
 
-        return view('superadmin.paket-soal.edit', compact('paket', 'jenjangs'));
+        return Inertia::render('Superadmin/PaketSoal/Edit', [
+            'paket' => [
+                'id' => $paket->id,
+                'jenjang_id' => $paket->jenjang_id,
+                'nama' => $paket->nama,
+                'tahun_ajaran' => $paket->tahun_ajaran,
+                'is_active' => (bool) $paket->is_active,
+            ],
+            'jenjangs' => $jenjangs,
+        ]);
     }
 
     public function update(UpdatePaketSoalRequest $request, PaketSoal $paket): RedirectResponse
@@ -188,5 +209,73 @@ class PaketSoalController extends Controller
         $paket->update(['is_active' => ! $paket->is_active]);
 
         return back()->with('flash', ['type' => 'success', 'message' => 'Status aktif paket diperbarui.']);
+    }
+
+    private function paketRow(PaketSoal $paket): array
+    {
+        return [
+            'id' => $paket->id,
+            'nama' => $paket->nama,
+            'jenjang_kode' => $paket->jenjang?->kode,
+            'tahun_ajaran' => $paket->tahun_ajaran,
+            'is_active' => (bool) $paket->is_active,
+            'created_by_name' => $paket->createdBy?->name ?? '-',
+            'mapel_labels' => $paket->mapelPakets->map(fn (MapelPaket $mapel) => $mapel->nama_label)->values()->all(),
+        ];
+    }
+
+    private function mapelBlock(PaketSoal $paket, MapelPaket $mapel): array
+    {
+        return [
+            'id' => $mapel->id,
+            'nama_label' => $mapel->nama_label,
+            'is_survey' => $mapel->isSurvey(),
+            'jumlah_soal' => $mapel->jumlah_soal,
+            'durasi_menit' => $mapel->durasi_menit,
+            'urutan' => $mapel->urutan,
+            'soal_count' => $mapel->soals->count(),
+            'bank_builder_params' => array_filter([
+                'jenjang_id' => $paket->jenjang_id,
+                'material_mapel' => str($mapel->nama_mapel)->headline()->toString(),
+            ]),
+            'soals_preview' => $mapel->soals->take(5)->map(fn (Soal $soal) => [
+                'nomor_soal' => $soal->nomor_soal,
+                'tipe_label' => str($soal->tipe_soal)->replace('_', ' ')->headline()->toString(),
+                'pertanyaan_limited' => Str::limit(strip_tags((string) $soal->pertanyaan), 120),
+                'dimensi' => $soal->dimensi,
+                'subdimensi' => $soal->subdimensi,
+            ])->values()->all(),
+        ];
+    }
+
+    private function examRow($exam): array
+    {
+        return [
+            'id' => $exam->id,
+            'judul' => $exam->judul,
+            'tanggal_terbit_formatted' => $exam->tanggal_terbit?->format('d M Y H:i'),
+            'max_peserta' => $exam->max_peserta,
+            'status' => $exam->status,
+            'is_active' => (bool) $exam->is_active,
+            'mapel_tokens' => $exam->examMapelTokens->map(fn ($mt) => [
+                'id' => $mt->id,
+                'nama_label' => $mt->mapelPaket?->nama_label ?? 'Mapel',
+                'token' => $mt->token,
+            ])->values()->all(),
+        ];
+    }
+
+    private function paketDetail(PaketSoal $paket): array
+    {
+        return [
+            'id' => $paket->id,
+            'nama' => $paket->nama,
+            'jenjang_kode' => $paket->jenjang?->kode,
+            'jenjang_id' => $paket->jenjang_id,
+            'tahun_ajaran' => $paket->tahun_ajaran,
+            'is_active' => (bool) $paket->is_active,
+            'mapels' => $paket->mapelPakets->map(fn (MapelPaket $mapel) => $this->mapelBlock($paket, $mapel))->values()->all(),
+            'exams' => $paket->exams->map(fn ($exam) => $this->examRow($exam))->values()->all(),
+        ];
     }
 }

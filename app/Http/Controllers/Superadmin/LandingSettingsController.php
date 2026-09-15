@@ -10,18 +10,20 @@ use App\Models\LandingFaq;
 use App\Models\LandingHeroMockup;
 use App\Models\Material;
 use App\Models\PricingPlan;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LandingSettingsController extends Controller
 {
     private const SECTIONS = ['hero', 'faq', 'stats'];
 
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $allowedTabs = ['hero', 'pricing', 'content', 'faq', 'stats', 'branding'];
         $tab = $request->query('tab', 'content');
@@ -193,13 +195,41 @@ class LandingSettingsController extends Controller
             $stats[$jenjang][$mapel]['questions'] = $q->count;
         }
 
-        return view('superadmin.landing-settings', [
+        $heroMockups->each(function (LandingHeroMockup $mockup) {
+            $mockup->description_limited = Str::limit($mockup->description, 120);
+        });
+
+        $faqItems = $faqs->map(function ($faq) {
+            if ($faq instanceof LandingFaq) {
+                return [
+                    'id' => $faq->id,
+                    'question' => $faq->question,
+                    'answer' => $faq->answer,
+                    'sort_order' => $faq->sort_order,
+                    'is_active' => $faq->is_active,
+                    'is_model' => true,
+                ];
+            }
+
+            return [
+                'id' => null,
+                'question' => $faq['question'],
+                'answer' => $faq['answer'],
+                'sort_order' => null,
+                'is_active' => null,
+                'is_model' => false,
+            ];
+        })->values();
+
+        $jenjangs = config('ujion.jenjangs');
+
+        return Inertia::render('Superadmin/LandingSettings', [
             'tab' => $tab,
             'tarifJenjangs' => $tarifJenjangs,
             'hasJenjangColumn' => $hasJenjangColumn,
             'sectionActives' => $sectionActives,
             'hero' => $hero,
-            'faqs' => $faqs,
+            'faqs' => $faqItems,
             'editFaq' => $editFaq,
             'logoUrl' => $logoUrl,
             'branding' => $branding,
@@ -210,6 +240,7 @@ class LandingSettingsController extends Controller
             'faqTotal' => $faqTotal,
             'pricingTotal' => $pricingTotal,
             'stats' => $stats,
+            'jenjangs' => $jenjangs,
         ]);
     }
 

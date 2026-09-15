@@ -10,18 +10,36 @@ use App\Models\PaketSoal;
 use App\Models\Soal;
 use App\Models\TeksBacaan;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class TeksBacaanController extends Controller
 {
-    public function index(PaketSoal $paket, MapelPaket $mapel): View
+    public function index(PaketSoal $paket, MapelPaket $mapel): InertiaResponse
     {
         abort_if($mapel->paket_soal_id !== $paket->id, 404);
         $this->authorize('view', $paket);
 
-        $teksBacaans = $mapel->teksBacaans()->latest()->get();
+        $teksBacaans = $mapel->teksBacaans()->latest()->get()
+            ->map(fn (TeksBacaan $bacaan) => [
+                'id' => $bacaan->id,
+                'judul' => $bacaan->judul,
+                'konten' => $bacaan->konten,
+                'konten_limited' => Str::limit((string) $bacaan->konten, 420),
+            ])->values()->all();
 
-        return view('superadmin.teks-bacaan.index', compact('paket', 'mapel', 'teksBacaans'));
+        return Inertia::render('Superadmin/TeksBacaan/Index', [
+            'paket' => [
+                'id' => $paket->id,
+                'nama' => $paket->nama,
+            ],
+            'mapel' => [
+                'id' => $mapel->id,
+                'nama_label' => $mapel->nama_label,
+            ],
+            'teksBacaans' => $teksBacaans,
+        ]);
     }
 
     public function store(StoreTeksBacaanRequest $request, PaketSoal $paket, MapelPaket $mapel): RedirectResponse

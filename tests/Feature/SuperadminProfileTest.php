@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Tests\TestCase;
 
 class SuperadminProfileTest extends TestCase
@@ -21,18 +22,19 @@ class SuperadminProfileTest extends TestCase
             'name' => 'Admin Utama',
         ]);
 
-        $this->actingAs($superadmin)
-            ->get(route('superadmin.dashboard'))
-            ->assertOk()
-            ->assertSee('Admin Utama')
-            ->assertSee(route('superadmin.profile'), false);
+        $dashboardUrl = route('superadmin.dashboard');
+        $dashboard = $this->actingAs($superadmin)->get($dashboardUrl, $this->inertiaHeaders($dashboardUrl));
 
-        $this->actingAs($superadmin)
-            ->get(route('superadmin.profile'))
-            ->assertOk()
-            ->assertSee('Profil Superadmin')
-            ->assertSee('Data Profil')
-            ->assertSee('Ganti Password');
+        $dashboard->assertOk();
+        $this->assertSame('Superadmin/Dashboard', $dashboard->json('component'));
+        $this->assertSame('Admin Utama', $dashboard->json('props.auth.user.name'));
+
+        $profileUrl = route('superadmin.profile');
+        $profile = $this->actingAs($superadmin)->get($profileUrl, $this->inertiaHeaders($profileUrl));
+
+        $profile->assertOk();
+        $this->assertSame('Superadmin/Profile', $profile->json('component'));
+        $this->assertSame('Admin Utama', $profile->json('props.user.name'));
     }
 
     public function test_superadmin_can_update_profile_and_avatar(): void
@@ -60,11 +62,12 @@ class SuperadminProfileTest extends TestCase
         $this->assertNotNull($superadmin->avatar);
         Storage::disk('public')->assertExists($superadmin->avatar);
 
-        $this->actingAs($superadmin)
-            ->get(route('superadmin.dashboard'))
-            ->assertOk()
-            ->assertSee(Storage::url($superadmin->avatar), false)
-            ->assertSee('Admin Baru');
+        $url = route('superadmin.dashboard');
+        $response = $this->actingAs($superadmin)->get($url, $this->inertiaHeaders($url));
+
+        $response->assertOk();
+        $this->assertSame(Storage::url($superadmin->avatar), $response->json('props.auth.user.avatar_url'));
+        $this->assertSame('Admin Baru', $response->json('props.auth.user.name'));
     }
 
     public function test_superadmin_can_change_password(): void
@@ -84,5 +87,15 @@ class SuperadminProfileTest extends TestCase
         $superadmin->refresh();
 
         $this->assertTrue(Hash::check('password-baru', $superadmin->password));
+    }
+
+    private function inertiaHeaders(string $url): array
+    {
+        $this->get($url);
+
+        return [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => Inertia::getVersion(),
+        ];
     }
 }
