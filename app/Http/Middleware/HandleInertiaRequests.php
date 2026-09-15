@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use App\Models\AppSetting;
 use App\Models\AuditLog;
+use App\Models\Jenjang;
+use App\Models\PricingPlan;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -72,6 +74,19 @@ class HandleInertiaRequests extends Middleware
     {
         $paymentLocked = $user->account_status === User::STATUS_PENDING;
 
+        $paymentInfo = null;
+        if ($paymentLocked) {
+            $plan = PricingPlan::resolveForJenjang($user->jenjang);
+
+            $paymentInfo = [
+                'jenjang' => $user->jenjang,
+                'jenjangLabel' => Jenjang::where('kode', $user->jenjang)->value('nama'),
+                'planName' => $plan?->name,
+                'planDescription' => $plan?->description ?: $plan?->subtitle,
+                'amount' => $plan?->price,
+            ];
+        }
+
         $activeDokuInvoice = null;
         if ($paymentLocked) {
             $activeDokuInvoice = $user->transactions()
@@ -108,6 +123,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             'paymentLocked' => $paymentLocked,
+            'paymentInfo' => $paymentInfo,
             'waGroupLink' => AppSetting::getValue('wa_group_link'),
             'dokuConfig' => $dokuConfig,
             'notifLogs' => $notifLogs,

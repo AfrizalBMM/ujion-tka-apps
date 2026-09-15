@@ -12,11 +12,11 @@ class SuperadminGuruSeeder extends Seeder
     {
         // Superadmin (Login via /ngadimin/login dengan Email & Pass)
         User::create([
-            "name" => "Ngadimin",
-            "email" => "adm-ujion@gmail.com",
-            "password" => Hash::make("password"),
-            "role" => User::ROLE_SUPERADMIN,
-            "account_status" => User::STATUS_ACTIVE,
+            'name' => 'Ngadimin',
+            'email' => 'adm-ujion@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => User::ROLE_SUPERADMIN,
+            'account_status' => User::STATUS_ACTIVE,
         ]);
     }
 }

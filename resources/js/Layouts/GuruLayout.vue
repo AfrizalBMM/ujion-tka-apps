@@ -1,11 +1,12 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { initDokuCheckout } from '@/core/doku-checkout';
 import { initGuruSidebarToken } from '@/core/guru-sidebar-token';
 import { initLayoutBehaviors } from '@/core/legacy-init';
 import FlashAlerts from '@/Components/Ui/FlashAlerts.vue';
 import ConfirmModal from '@/Components/Ui/ConfirmModal.vue';
+import PaymentInfoModal from '@/Components/Guru/PaymentInfoModal.vue';
 
 const page = usePage();
 
@@ -13,9 +14,12 @@ const user = computed(() => page.props.auth?.user || null);
 const guruLayout = computed(() => page.props.guruLayout || null);
 
 const paymentLocked = computed(() => guruLayout.value?.paymentLocked || false);
+const paymentInfo = computed(() => guruLayout.value?.paymentInfo || null);
 const waGroupLink = computed(() => guruLayout.value?.waGroupLink || null);
 const notifLogs = computed(() => guruLayout.value?.notifLogs || []);
 const dokuConfig = computed(() => guruLayout.value?.dokuConfig || null);
+
+const showPaymentModal = ref(false);
 
 const guruAvatarUrl = computed(
 	() => user.value?.avatar_url || 'https://ui-avatars.com/api/?name=Guru&background=22C1C3&color=fff'
@@ -36,6 +40,14 @@ const lockedLinks = [
 
 let previousBodyClass = null;
 
+const openPaymentModal = () => {
+	showPaymentModal.value = true;
+};
+
+const closePaymentModal = () => {
+	showPaymentModal.value = false;
+};
+
 onMounted(() => {
 	previousBodyClass = document.body.className;
 	document.body.className = 'app-shell flex flex-col';
@@ -49,6 +61,9 @@ onMounted(() => {
 		document.body.setAttribute('data-dashboard-shell', 'guru');
 	}
 
+	window.addEventListener('doku:info-open', openPaymentModal);
+	window.addEventListener('doku:info-close', closePaymentModal);
+
 	initGuruSidebarToken();
 	initLayoutBehaviors();
 });
@@ -57,6 +72,8 @@ onBeforeUnmount(() => {
 	document.body.className = previousBodyClass || '';
 	delete document.body.dataset.dokuConfig;
 	document.body.removeAttribute('data-dashboard-shell');
+	window.removeEventListener('doku:info-open', openPaymentModal);
+	window.removeEventListener('doku:info-close', closePaymentModal);
 });
 </script>
 
@@ -297,9 +314,10 @@ onBeforeUnmount(() => {
 				<div class="page-stack">
 					<div class="page-content">
 						<div class="page-content-inner">
-							<FlashAlerts />
-							<ConfirmModal />
-							<slot />
+					<FlashAlerts />
+					<ConfirmModal />
+					<PaymentInfoModal v-if="paymentLocked" :open="showPaymentModal" :info="paymentInfo" @close="closePaymentModal" />
+					<slot />
 						</div>
 					</div>
 					<footer class="page-footer">

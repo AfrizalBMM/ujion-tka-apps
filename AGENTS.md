@@ -14,30 +14,28 @@ Platform ujian terintegrasi berbasis Laravel 12 untuk tiga role: **superadmin**,
 | Frontend | Inertia.js 2 + Vue 3 (app), Blade (halaman publik SEO), Vite 7, Tailwind CSS 4, Flowbite, KaTeX, Chart.js, Ziggy |
 | Testing | PHPUnit 11 (SQLite in-memory) |
 | Code Style | Laravel Pint (preset default) |
-| Local Dev | Laragon (Apache/MySQL), `php artisan serve` |
+| Local Dev | Docker Compose (PHP-FPM + Nginx + MySQL 8 + Vite) — lihat `docker-setup.md` |
 
 ## Commands
 
 ```bash
-# Dev server
-php artisan serve                          # http://localhost:8000
+# Docker (utama — semua service: app, webserver, db, queue, vite)
+docker compose up -d                       # Start semua (dev, hot reload aktif)
+docker compose down                        # Stop (data DB aman di volume)
+docker compose ps                          # Status service
+
+# Perintah artisan di dalam container
+docker compose exec app php artisan test           # All tests (SQLite in-memory)
+docker compose exec app php artisan pint           # Format PHP
+docker compose exec app php artisan migrate --seed # Migrate + seed superadmin
+docker compose exec app composer install           # Setelah composer.lock berubah
+docker compose exec node npm install               # Setelah package-lock.json berubah
 
 # Frontend
-npm run dev                                # Vite watch (development)
+npm run dev                                # Vite watch (development, di container: service "node")
 npm run build                              # Production build
 
-# Database
-php artisan migrate --seed                 # Migrate + seed superadmin
-php artisan migrate:fresh --seed           # Full reset + seed
-
-# Testing
-php artisan test                           # All tests (SQLite in-memory)
-php artisan test --filter=SiswaExamSessionTest  # Single test class
-
-# Code quality
-composer pint                              # Format PHP (Laravel Pint)
-
-# Run everything concurrently
+# Run everything concurrently (legacy, tanpa Docker)
 composer dev                                # server + queue + pail + vite
 ```
 
@@ -249,7 +247,9 @@ Wajib juga di server production:
 | File | Isi |
 |---|---|
 | `README.md` | Overview project, stack, flow, modul |
-| `jalan-local.md` | Panduan setup & menjalankan lokal |
+| `jalan-local.md` | Panduan setup & menjalankan lokal (legacy Laragon) |
+| `docker-setup.md` | Setup Docker, workflow dev/publik, Cloudflare Tunnel |
+| `alur-soft-hosted.md` | Resume singkat menjalankan project + alur dev/publish |
 | `upload-hosting.md` | Panduan deployment ke shared hosting/VPS |
 | `konek.md` | Koneksi database & service |
 | `implementasi-wa-gateway.md` | Implementasi WhatsApp Gateway |

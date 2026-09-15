@@ -10,6 +10,7 @@
 .env-copy.*
 .env_copy.*
 !.env.example
+!.env.docker
 .phpactor.json
 .phpunit.result.cache
 /.fleet

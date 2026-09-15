@@ -28,6 +28,7 @@ defineProps({
 
 const page = usePage();
 
+const paymentLocked = computed(() => page.props.guruLayout?.paymentLocked || false);
 const waGroupLink = computed(() => page.props.guruLayout?.waGroupLink || null);
 
 const formatAmount = (value) => Number(value).toLocaleString('id-ID');
@@ -80,7 +81,7 @@ const formatAmount = (value) => Number(value).toLocaleString('id-ID');
 						<p class="mt-1 text-xs text-amber-700 dark:text-amber-200/70">
 							Selesaikan pembayaran di jendela checkout yang terbuka. Halaman ini akan diperbarui otomatis setelah pembayaran berhasil.
 						</p>
-						<button type="button" class="btn-secondary mt-3" data-doku-start>
+						<button type="button" class="btn-secondary mt-3" data-doku-retry>
 							<i class="fa-solid fa-rotate-left mr-2"></i>
 							Bayar Ulang / Coba Lagi
 						</button>
@@ -92,7 +93,7 @@ const formatAmount = (value) => Number(value).toLocaleString('id-ID');
 							Pembayaran Belum Selesai
 						</div>
 						<p class="mt-1 text-xs text-rose-700/80 dark:text-rose-200/70">Pembayaran tidak berhasil diselesaikan atau kedaluwarsa. Silakan coba lagi.</p>
-						<button type="button" class="btn-primary mt-3" data-doku-start>
+						<button type="button" class="btn-primary mt-3" data-doku-retry>
 							<i class="fa-solid fa-rotate-left mr-2"></i>
 							Coba Bayar Lagi
 						</button>
@@ -189,37 +190,79 @@ const formatAmount = (value) => Number(value).toLocaleString('id-ID');
 			<div>
 				<div class="mobile-section-label">Menu Cepat</div>
 				<div class="mobile-menu-grid">
-					<Link :href="route('guru.materials')" class="mobile-menu-card">
+					<a v-if="paymentLocked" href="#" class="mobile-menu-card relative opacity-70" data-payment-locked title="Selesaikan pembayaran untuk membuka">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-blue-500 to-blue-600">
+							<i class="fa-solid fa-book"></i>
+						</div>
+						<div class="mobile-menu-card-label">Materi</div>
+						<i class="fa-solid fa-lock absolute right-2 top-2 text-[10px] text-amber-500"></i>
+					</a>
+					<Link v-else :href="route('guru.materials')" class="mobile-menu-card">
 						<div class="mobile-menu-card-icon bg-gradient-to-br from-blue-500 to-blue-600">
 							<i class="fa-solid fa-book"></i>
 						</div>
 						<div class="mobile-menu-card-label">Materi</div>
 					</Link>
-					<Link :href="route('guru.soal-ujion.index')" class="mobile-menu-card">
+					<a v-if="paymentLocked" href="#" class="mobile-menu-card relative opacity-70" data-payment-locked title="Selesaikan pembayaran untuk membuka">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-teal-500 to-cyan-600">
+							<i class="fa-solid fa-layer-group"></i>
+						</div>
+						<div class="mobile-menu-card-label">Soal Ujion</div>
+						<i class="fa-solid fa-lock absolute right-2 top-2 text-[10px] text-amber-500"></i>
+					</a>
+					<Link v-else :href="route('guru.soal-ujion.index')" class="mobile-menu-card">
 						<div class="mobile-menu-card-icon bg-gradient-to-br from-teal-500 to-cyan-600">
 							<i class="fa-solid fa-layer-group"></i>
 						</div>
 						<div class="mobile-menu-card-label">Soal Ujion</div>
 					</Link>
-					<Link :href="route('guru.personal-questions')" class="mobile-menu-card">
+					<a v-if="paymentLocked" href="#" class="mobile-menu-card relative opacity-70" data-payment-locked title="Selesaikan pembayaran untuk membuka">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-purple-500 to-violet-600">
+							<i class="fa-solid fa-database"></i>
+						</div>
+						<div class="mobile-menu-card-label">Bank Soal</div>
+						<i class="fa-solid fa-lock absolute right-2 top-2 text-[10px] text-amber-500"></i>
+					</a>
+					<Link v-else :href="route('guru.personal-questions')" class="mobile-menu-card">
 						<div class="mobile-menu-card-icon bg-gradient-to-br from-purple-500 to-violet-600">
 							<i class="fa-solid fa-database"></i>
 						</div>
 						<div class="mobile-menu-card-label">Bank Soal</div>
 					</Link>
-					<Link :href="route('guru.paket-soal.index')" class="mobile-menu-card">
+					<a v-if="paymentLocked" href="#" class="mobile-menu-card relative opacity-70" data-payment-locked title="Selesaikan pembayaran untuk membuka">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-indigo-500 to-blue-600">
+							<i class="fa-solid fa-cubes"></i>
+						</div>
+						<div class="mobile-menu-card-label">Paket Soal</div>
+						<i class="fa-solid fa-lock absolute right-2 top-2 text-[10px] text-amber-500"></i>
+					</a>
+					<Link v-else :href="route('guru.paket-soal.index')" class="mobile-menu-card">
 						<div class="mobile-menu-card-icon bg-gradient-to-br from-indigo-500 to-blue-600">
 							<i class="fa-solid fa-cubes"></i>
 						</div>
 						<div class="mobile-menu-card-label">Paket Soal</div>
 					</Link>
-					<Link :href="route('guru.exams')" class="mobile-menu-card">
+					<a v-if="paymentLocked" href="#" class="mobile-menu-card relative opacity-70" data-payment-locked title="Selesaikan pembayaran untuk membuka">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-amber-500 to-orange-600">
+							<i class="fa-solid fa-file-pen"></i>
+						</div>
+						<div class="mobile-menu-card-label">Simulasi</div>
+						<i class="fa-solid fa-lock absolute right-2 top-2 text-[10px] text-amber-500"></i>
+					</a>
+					<Link v-else :href="route('guru.exams')" class="mobile-menu-card">
 						<div class="mobile-menu-card-icon bg-gradient-to-br from-amber-500 to-orange-600">
 							<i class="fa-solid fa-file-pen"></i>
 						</div>
 						<div class="mobile-menu-card-label">Simulasi</div>
 					</Link>
-					<Link :href="route('guru.results.index')" class="mobile-menu-card">
+					<a v-if="paymentLocked" href="#" class="mobile-menu-card relative opacity-70" data-payment-locked title="Selesaikan pembayaran untuk membuka">
+						<div class="mobile-menu-card-icon bg-gradient-to-br from-emerald-500 to-green-600">
+							<i class="fa-solid fa-chart-line"></i>
+						</div>
+						<div class="mobile-menu-card-label">Hasil Siswa</div>
+						<i class="fa-solid fa-lock absolute right-2 top-2 text-[10px] text-amber-500"></i>
+					</a>
+					<Link v-else :href="route('guru.results.index')" class="mobile-menu-card">
 						<div class="mobile-menu-card-icon bg-gradient-to-br from-emerald-500 to-green-600">
 							<i class="fa-solid fa-chart-line"></i>
 						</div>

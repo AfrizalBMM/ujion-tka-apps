@@ -1,0 +1,109 @@
+name: ujion
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ujion-app
+    restart: unless-stopped
+    working_dir: /var/www
+    command: sh -c "[ -f vendor/autoload.php ] || composer install --no-interaction --prefer-dist; exec php-fpm"
+    volumes:
+      - .:/var/www
+      - vendor:/var/www/vendor
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ujion
+
+  queue:
+    image: ujion-app
+    restart: unless-stopped
+    working_dir: /var/www
+    command: sh -c "while [ ! -f vendor/autoload.php ]; do sleep 2; done; exec php artisan queue:work --sleep=1 --tries=1 --timeout=0 --max-time=3600"
+    volumes:
+      - .:/var/www
+      - vendor:/var/www/vendor
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - app
+    networks:
+      - ujion
+
+  webserver:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./public:/var/www/public:ro
+      - ./storage:/var/www/storage:ro
+    depends_on:
+      - app
+    networks:
+      - ujion
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: tka-ujion
+      MYSQL_USER: ujion
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "33061:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - ujion
+
+  node:
+    image: node:22-alpine
+    restart: unless-stopped
+    working_dir: /var/www
+    environment:
+      LARAVEL_SAIL: "1"
+      VITE_PORT: ${VITE_PORT:-5173}
+    command: sh -c "[ -x node_modules/.bin/vite ] || npm install; exec npm run dev"
+    ports:
+      - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
+    volumes:
+      - .:/var/www
+      - node_modules:/var/www/node_modules
+    networks:
+      - ujion
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ujion-cloudflared
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run
+    volumes:
+      - C:/Users/USER/.cloudflared:/home/nonroot/.cloudflared
+    depends_on:
+      - webserver
+    networks:
+      - ujion
+
+volumes:
+  db-data:
+  vendor:
+  node_modules:
+
+networks:
+  ujion:
+    driver: bridge
