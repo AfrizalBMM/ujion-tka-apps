@@ -15,7 +15,7 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Cek GitHub CLI
+      - name: Check GitHub CLI
         shell: powershell
         run: |
           gh --version
@@ -27,7 +27,12 @@ jobs:
           fetch-depth: 0
           token: ${{ github.token }}
 
-      - name: Cek perbedaan develop vs main
+      - name: Fix git safe directory
+        shell: powershell
+        run: |
+          git config --global --add safe.directory "${{ github.workspace }}"
+
+      - name: Check for differences between develop and main
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
@@ -45,7 +50,7 @@ jobs:
               "HAS_DIFF=true" | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
-      - name: Buat atau cari Pull Request
+      - name: Create or find pull request
         if: env.HAS_DIFF == 'true'
         shell: powershell
         env:
@@ -74,7 +79,7 @@ jobs:
                 --repo $repo `
                 --base main `
                 --head develop `
-                --title "Auto Merge: develop → main" `
+                --title "Auto Merge: develop -> main" `
                 --body "Pull Request ini dibuat otomatis oleh GitHub Actions setelah perubahan masuk ke branch develop."
 
               Write-Host "Pull Request dibuat: $prNumber"
@@ -84,7 +89,7 @@ jobs:
               "PR_NUMBER=$number" | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
-      - name: Cek status mergeable
+      - name: Check mergeable status
         if: env.HAS_DIFF == 'true'
         shell: powershell
         env:
@@ -110,12 +115,12 @@ jobs:
 
               gh pr comment $pr `
                 --repo $repo `
-                --body "⚠️ Auto-merge gagal: branch develop memiliki conflict dengan main. Mohon di-resolve manual (lewat GitHub web atau lokal), lalu push ulang ke develop."
+                --body "Auto-merge gagal: branch develop memiliki conflict dengan main. Mohon di-resolve manual (lewat GitHub web atau lokal), lalu push ulang ke develop."
 
               exit 1
           }
 
-      - name: Merge Pull Request
+      - name: Merge pull request
         if: env.HAS_DIFF == 'true'
         shell: powershell
         env:
@@ -129,30 +134,17 @@ jobs:
           gh pr merge $pr `
             --repo $repo `
             --squash `
-            --admin `
-            --delete-branch
+            --admin
 
-      - name: Buat ulang branch develop dari main
+      - name: Sync develop with main
         if: env.HAS_DIFF == 'true'
         shell: powershell
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          Write-Host "Menyiapkan ulang branch develop dari main..."
+          Write-Host "Menyamakan branch develop dengan main..."
 
-          git config --global --add safe.directory "D:/actions-runner/_work/ujion-tka-apps/ujion-tka-apps"
           git fetch origin
+          git checkout develop
+          git reset --hard origin/main
+          git push --force origin develop
 
-          git checkout main
-          git pull origin main
-
-          git branch -D develop 2>$null
-          $LASTEXITCODE = 0
-
-          git push origin --delete develop 2>$null
-          $LASTEXITCODE = 0
-
-          git checkout -b develop
-          git push -u origin develop
-
-          Write-Host "Branch develop berhasil dibuat ulang dari main."
+          Write-Host "Branch develop sudah disamakan dengan main."
