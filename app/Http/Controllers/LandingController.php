@@ -96,9 +96,9 @@ class LandingController extends Controller
 
         $hero = [
             "kicker" =>
-                "Website pendamping guru untuk memantau kesiapan siswa menuju Tes Kemampuan Akademik (TKA).",
+                "IKIPIE NDANNN Website pendamping guru untuk memantau kesiapan siswa menuju Tes Kemampuan Akademik (TKA).",
             "title" =>
-                "Bantu guru memantau, menganalisis, dan menyiapkan siswa agar lebih siap menghadapi TKA.",
+                "NDANNNN Bantu guru memantau, menganalisis, dan menyiapkan siswa agar lebih siap menghadapi TKA.",
             "body" =>
                 "Ujion TKA dirancang untuk guru/operator yang ingin melihat perkembangan akademik siswa dengan lebih jelas. Mulai dari latihan, paket soal, sesi ujian, sampai hasil akhir, semua disusun agar guru lebih mudah membaca kesiapan siswa, menemukan kelemahan belajar, dan mengambil langkah pembinaan sebelum TKA berlangsung.",
             "button_text" => "Coba Sebagai Guru",
