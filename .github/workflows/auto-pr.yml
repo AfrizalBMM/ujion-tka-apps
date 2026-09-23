@@ -133,6 +133,7 @@ jobs:
         run: |
           Write-Host "Menyiapkan ulang branch develop dari main..."
 
+          git config --global --add safe.directory "D:/actions-runner/_work/ujion-tka-apps/ujion-tka-apps"
           git fetch origin
 
           git checkout main
