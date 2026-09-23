@@ -148,3 +148,19 @@ jobs:
           git push --force origin develop
 
           Write-Host "Branch develop sudah disamakan dengan main."
+
+      - name: Trigger deploy workflow
+        if: env.HAS_DIFF == 'true'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $repo = "${{ github.repository }}"
+
+          Write-Host "Menjalankan deploy-laravel.yml..."
+
+          gh workflow run deploy-laravel.yml `
+            --repo $repo `
+            --ref main
+
+          Write-Host "Deploy workflow berhasil dipanggil."
