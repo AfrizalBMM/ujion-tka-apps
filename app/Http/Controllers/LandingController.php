@@ -96,7 +96,7 @@ class LandingController extends Controller
 
         $hero = [
             "kicker" =>
-                "kedua COBA DEVELOP TO MAIN Website pendamping guru untuk memantau kesiapan siswa menuju Tes Kemampuan Akademik (TKA).",
+                "COBA DEVELOP TO MAIN Website pendamping guru untuk memantau kesiapan siswa menuju Tes Kemampuan Akademik (TKA).",
             "title" =>
                 "CEK ARUS LAGI NDAN Bantu guru memantau, menganalisis, dan menyiapkan siswa agar lebih siap menghadapi TKA.",
             "body" =>
