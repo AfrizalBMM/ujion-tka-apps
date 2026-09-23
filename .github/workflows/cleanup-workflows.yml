@@ -1,0 +1,144 @@
+name: Cleanup Old GitHub Actions
+
+on:
+  schedule:
+    # Setiap Minggu pukul 03:00 UTC (10:00 WIB)
+    - cron: "0 3 * * 0"
+
+  # Bisa dijalankan manual dari GitHub Actions
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: self-hosted
+
+    steps:
+      - name: Cleanup workflow runs
+        shell: powershell
+
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+        run: |
+          $repo = "${{ github.repository }}"
+
+          # Jumlah run terbaru yang ingin dipertahankan
+          $keep = 10
+
+          Write-Host "========================================"
+          Write-Host " GitHub Actions Cleanup"
+          Write-Host " Repository: $repo"
+          Write-Host " Menyimpan $keep run terbaru per workflow"
+          Write-Host "========================================"
+
+          # ========================================
+          # Ambil semua workflow
+          # ========================================
+
+          $workflows = gh workflow list `
+            --repo $repo `
+            --limit 100 `
+            --json id,name,path `
+            | ConvertFrom-Json
+
+          foreach ($workflow in $workflows) {
+
+              Write-Host ""
+              Write-Host "========================================"
+              Write-Host "Workflow: $($workflow.name)"
+              Write-Host "File: $($workflow.path)"
+              Write-Host "========================================"
+
+              # ========================================
+              # Ambil workflow runs
+              # ========================================
+
+              $runs = gh run list `
+                --repo $repo `
+                --workflow $workflow.id `
+                --limit 100 `
+                --json databaseId,status,conclusion,createdAt `
+                | ConvertFrom-Json
+
+              if (-not $runs) {
+                  Write-Host "Tidak ada run."
+                  continue
+              }
+
+              # ========================================
+              # Hanya proses run yang sudah selesai
+              # ========================================
+
+              $completedRuns = @(
+                  $runs |
+                  Where-Object {
+                      $_.status -eq "completed"
+                  }
+              )
+
+              Write-Host "Total completed runs: $($completedRuns.Count)"
+
+              # ========================================
+              # Jika jumlah run <= 10
+              # tidak perlu menghapus
+              # ========================================
+
+              if ($completedRuns.Count -le $keep) {
+                  Write-Host "Tidak ada run yang perlu dihapus."
+                  continue
+              }
+
+              # ========================================
+              # Urutkan:
+              # terbaru → terlama
+              # ========================================
+
+              $sortedRuns = @(
+                  $completedRuns |
+                  Sort-Object createdAt -Descending
+              )
+
+              # ========================================
+              # Ambil run setelah 10 terbaru
+              # ========================================
+
+              $oldRuns = @(
+                  $sortedRuns |
+                  Select-Object -Skip $keep
+              )
+
+              Write-Host "Run yang akan dihapus: $($oldRuns.Count)"
+
+              # ========================================
+              # Hapus run lama
+              # ========================================
+
+              foreach ($run in $oldRuns) {
+
+                  Write-Host ""
+                  Write-Host "Menghapus run ID: $($run.databaseId)"
+                  Write-Host "Tanggal: $($run.createdAt)"
+
+                  gh api `
+                    --method DELETE `
+                    -H "Accept: application/vnd.github+json" `
+                    -H "X-GitHub-Api-Version: 2026-03-10" `
+                    "/repos/$repo/actions/runs/$($run.databaseId)"
+
+                  if ($LASTEXITCODE -eq 0) {
+                      Write-Host "Berhasil dihapus: $($run.databaseId)"
+                  }
+                  else {
+                      Write-Host "Gagal menghapus: $($run.databaseId)"
+                  }
+              }
+          }
+
+          Write-Host ""
+          Write-Host "========================================"
+          Write-Host " Cleanup selesai"
+          Write-Host "========================================"
