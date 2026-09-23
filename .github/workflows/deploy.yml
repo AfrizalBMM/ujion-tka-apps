@@ -1,0 +1,61 @@
+name: Deploy Ujion Laravel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Sync repository ke server
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          Set-Location "D:\laragon\www\ujion-tka-apps"
+
+          git -c "http.extraheader=AUTHORIZATION: bearer $env:GH_TOKEN" fetch --prune origin main
+
+          git checkout main
+          git reset --hard origin/main
+
+          git status
+
+      - name: Build aplikasi Laravel
+        shell: powershell
+        run: |
+          Set-Location "D:\laragon\www\ujion-tka-apps"
+          docker compose build app queue
+
+      - name: Jalankan container aplikasi
+        shell: powershell
+        run: |
+          Set-Location "D:\laragon\www\ujion-tka-apps"
+          docker compose up -d app queue webserver
+
+      - name: Tunggu database
+        shell: powershell
+        run: |
+          Start-Sleep -Seconds 10
+
+      - name: Jalankan migration
+        shell: powershell
+        run: |
+          Set-Location "D:\laragon\www\ujion-tka-apps"
+          docker compose exec -T app php artisan migrate --force
+
+      - name: Bersihkan cache Laravel
+        shell: powershell
+        run: |
+          Set-Location "D:\laragon\www\ujion-tka-apps"
+          docker compose exec -T app php artisan optimize:clear
+          docker compose exec -T app php artisan config:cache
+
+      - name: Cek container
+        shell: powershell
+        run: |
+          Set-Location "D:\laragon\www\ujion-tka-apps"
+          docker compose ps
