@@ -96,7 +96,7 @@ class LandingController extends Controller
 
         $hero = [
             "kicker" =>
-                "versi DEVELOP 14.32 Website pendamping guru untuk memantau kesiapan siswa menuju Tes Kemampuan Akademik (TKA).",
+                "Website pendamping guru untuk memantau kesiapan siswa menuju Tes Kemampuan Akademik (TKA).",
             "title" =>
                 "Bantu guru memantau, menganalisis, dan menyiapkan siswa agar lebih siap menghadapi TKA.",
             "body" =>
