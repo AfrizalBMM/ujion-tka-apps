@@ -20,6 +20,13 @@ jobs:
         run: |
           gh --version
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ github.token }}
+
       - name: Cek perbedaan develop vs main
         shell: powershell
         env:
