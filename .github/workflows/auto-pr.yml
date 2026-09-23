@@ -157,9 +157,9 @@ jobs:
         run: |
           $repo = "${{ github.repository }}"
 
-          Write-Host "Menjalankan deploy-laravel.yml..."
+          Write-Host "Menjalankan deploy.yml..."
 
-          gh workflow run deploy-laravel.yml `
+          gh workflow run deploy.yml `
             --repo $repo `
             --ref main
 
