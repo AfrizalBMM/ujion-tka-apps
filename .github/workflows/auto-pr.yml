@@ -148,6 +148,7 @@ jobs:
 
           git branch -D develop 2>$null
           git push origin --delete develop 2>$null
+          $LASTEXITCODE = 0
 
           git checkout -b develop
           git push -u origin develop
