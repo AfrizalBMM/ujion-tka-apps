@@ -71,7 +71,6 @@ jobs:
           gh pr merge $pr `
             --repo $repo `
             --squash `
-            --delete-branch `
             --admin
 
       - name: Jalankan Deploy ke Server
