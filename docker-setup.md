@@ -1,6 +1,6 @@
 # Panduan Setup & Workflow Docker
 
-Migrasi dari Laragon ke full Docker (development + serving publik via Cloudflare Tunnel). Lihat PRD: `Migrasi laragon to docker.md`.
+Full Docker (development + serving publik via Cloudflare Tunnel).
 
 ## Prasyarat
 

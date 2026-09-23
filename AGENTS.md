@@ -10,7 +10,7 @@ Platform ujian terintegrasi berbasis Laravel 12 untuk tiga role: **superadmin**,
 |---|---|
 | Framework | Laravel 12 |
 | PHP | ^8.3 |
-| Database | MySQL 8.0+ (via Laragon) |
+| Database | MySQL 8.0+ (Docker service `db`) |
 | Frontend | Inertia.js 2 + Vue 3 (app), Blade (halaman publik SEO), Vite 7, Tailwind CSS 4, Flowbite, KaTeX, Chart.js, Ziggy |
 | Testing | PHPUnit 11 (SQLite in-memory) |
 | Code Style | Laravel Pint (preset default) |
@@ -42,7 +42,7 @@ composer dev                                # server + queue + pail + vite
 ## Environment & Database
 
 - Copy `.env.example` ke `.env`, lalu `php artisan key:generate`.
-- Database: MySQL, host `127.0.0.1:3306`, user `root`, password kosong (Laragon default).
+- Database: MySQL di Docker (service `db`, port host 33061, database `tka-ujion`, user `ujion`). Kredensial DB di `docker-compose.yml` harus sama dengan `DB_*` di `.env`.
 - `SESSION_DRIVER=database`, `QUEUE_CONNECTION=database`, `CACHE_STORE=database`.
 - `Schema::defaultStringLength(191)` di-set di `AppServiceProvider::boot()` untuk kompatibilitas MySQL utf8mb4 index length.
 - Test environment otomatis pakai SQLite in-memory (lihat `phpunit.xml`).
@@ -247,7 +247,6 @@ Wajib juga di server production:
 | File | Isi |
 |---|---|
 | `README.md` | Overview project, stack, flow, modul |
-| `jalan-local.md` | Panduan setup & menjalankan lokal (legacy Laragon) |
 | `docker-setup.md` | Setup Docker, workflow dev/publik, Cloudflare Tunnel |
 | `alur-soft-hosted.md` | Resume singkat menjalankan project + alur dev/publish |
 | `upload-hosting.md` | Panduan deployment ke shared hosting/VPS |

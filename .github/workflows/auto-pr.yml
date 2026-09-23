@@ -143,16 +143,7 @@ jobs:
           git config --global --add safe.directory "D:/actions-runner/_work/ujion-tka-apps/ujion-tka-apps"
           git fetch origin
 
-          git checkout main
-          git pull origin main
-
-          git branch -D develop 2>$null
-          $LASTEXITCODE = 0
-
-          git push origin --delete develop 2>$null
-          $LASTEXITCODE = 0
-
-          git checkout -b develop
-          git push -u origin develop
+          git checkout -f -B develop origin/main
+          git push --force origin develop
 
           Write-Host "Branch develop berhasil dibuat ulang dari main."
