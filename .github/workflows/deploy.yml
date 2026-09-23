@@ -15,7 +15,7 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Sync repository ke server
+      - name: Sync repository to server
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
@@ -38,7 +38,7 @@ jobs:
           Write-Host "=== Git status ==="
           git status
 
-      - name: Build aplikasi Laravel
+      - name: Build Laravel application
         shell: powershell
         run: |
           Set-Location "D:\laragon\www\ujion-tka-apps"
@@ -46,7 +46,7 @@ jobs:
           Write-Host "=== Docker Compose Build ==="
           docker compose build app queue
 
-      - name: Jalankan container aplikasi
+      - name: Recreate application containers
         shell: powershell
         run: |
           Set-Location "D:\laragon\www\ujion-tka-apps"
@@ -54,13 +54,13 @@ jobs:
           Write-Host "=== Recreating containers with new image ==="
           docker compose up -d --force-recreate --remove-orphans app queue webserver
 
-      - name: Tunggu database
+      - name: Wait for database
         shell: powershell
         run: |
           Write-Host "Menunggu database..."
           Start-Sleep -Seconds 10
 
-      - name: Jalankan migration
+      - name: Run migrations
         shell: powershell
         run: |
           Set-Location "D:\laragon\www\ujion-tka-apps"
@@ -68,7 +68,7 @@ jobs:
           Write-Host "=== Running migration ==="
           docker compose exec -T app php artisan migrate --force
 
-      - name: Bersihkan cache Laravel
+      - name: Clear and cache Laravel config
         shell: powershell
         run: |
           Set-Location "D:\laragon\www\ujion-tka-apps"
@@ -79,7 +79,7 @@ jobs:
           Write-Host "=== Caching Laravel config ==="
           docker compose exec -T app php artisan config:cache
 
-      - name: Cek container
+      - name: Check container status
         shell: powershell
         run: |
           Set-Location "D:\laragon\www\ujion-tka-apps"
