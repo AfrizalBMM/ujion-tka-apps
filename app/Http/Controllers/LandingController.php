@@ -95,7 +95,7 @@ class LandingController extends Controller
         }
 
         $hero = [
-            "kicker" => "Tes Kemampuan Akademik (TKA).",
+            "kicker" => "AAAAAAAAAAAAAAAAA Tes Kemampuan Akademik (TKA).",
             "title" => "siap menghadapi TKA.",
             "body" =>
                 "Ujion TKA dirancang untuk guru/operator yang ingin melihat perkembangan akademik siswa dengan lebih jelas. Mulai dari latihan, paket soal, sesi ujian, sampai hasil akhir, semua disusun agar guru lebih mudah membaca kesiapan siswa, menemukan kelemahan belajar, dan mengambil langkah pembinaan sebelum TKA berlangsung.",
