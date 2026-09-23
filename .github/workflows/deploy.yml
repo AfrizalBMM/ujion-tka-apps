@@ -51,8 +51,8 @@ jobs:
         run: |
           Set-Location "D:\laragon\www\ujion-tka-apps"
 
-          Write-Host "=== Starting containers ==="
-          docker compose up -d app queue webserver
+          Write-Host "=== Recreating containers with new image ==="
+          docker compose up -d --force-recreate --remove-orphans app queue webserver
 
       - name: Tunggu database
         shell: powershell

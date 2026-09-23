@@ -20,7 +20,26 @@ jobs:
         run: |
           gh --version
 
+      - name: Cek perbedaan develop vs main
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $repo = "${{ github.repository }}"
+
+          $ahead = gh api "repos/$repo/compare/main...develop" --jq ".ahead_by" 2>$null
+
+          if (-not $ahead -or $ahead -eq "0") {
+              Write-Host "Tidak ada perubahan baru antara develop dan main. Melewati proses."
+              "HAS_DIFF=false" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+          else {
+              Write-Host "Ditemukan $ahead commit baru di develop."
+              "HAS_DIFF=true" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
       - name: Buat atau cari Pull Request
+        if: env.HAS_DIFF == 'true'
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
@@ -58,7 +77,39 @@ jobs:
               "PR_NUMBER=$number" | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
+      - name: Cek status mergeable
+        if: env.HAS_DIFF == 'true'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $repo = "${{ github.repository }}"
+          $pr = "${{ env.PR_NUMBER }}"
+
+          Write-Host "Mengecek status mergeable PR #$pr ..."
+
+          $mergeable = "UNKNOWN"
+          $attempt = 0
+
+          while ($mergeable -eq "UNKNOWN" -and $attempt -lt 5) {
+              Start-Sleep -Seconds 3
+              $mergeable = gh pr view $pr --repo $repo --json mergeable --jq ".mergeable"
+              Write-Host "Percobaan $($attempt + 1): status = $mergeable"
+              $attempt++
+          }
+
+          if ($mergeable -eq "CONFLICTING") {
+              Write-Host "::error::PR #$pr memiliki conflict dan tidak bisa di-merge otomatis."
+
+              gh pr comment $pr `
+                --repo $repo `
+                --body "⚠️ Auto-merge gagal: branch develop memiliki conflict dengan main. Mohon di-resolve manual (lewat GitHub web atau lokal), lalu push ulang ke develop."
+
+              exit 1
+          }
+
       - name: Merge Pull Request
+        if: env.HAS_DIFF == 'true'
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
@@ -71,19 +122,26 @@ jobs:
           gh pr merge $pr `
             --repo $repo `
             --squash `
-            --admin
+            --admin `
+            --delete-branch
 
-      - name: Jalankan Deploy ke Server
+      - name: Buat ulang branch develop dari main
+        if: env.HAS_DIFF == 'true'
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $repo = "${{ github.repository }}"
+          Write-Host "Menyiapkan ulang branch develop dari main..."
 
-          Write-Host "Menjalankan deploy.yml..."
+          git fetch origin
 
-          gh workflow run deploy.yml `
-            --repo $repo `
-            --ref main
+          git checkout main
+          git pull origin main
 
-          Write-Host "Deploy workflow berhasil dipanggil."
+          git branch -D develop 2>$null
+          git push origin --delete develop 2>$null
+
+          git checkout -b develop
+          git push -u origin develop
+
+          Write-Host "Branch develop berhasil dibuat ulang dari main."
