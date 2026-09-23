@@ -147,6 +147,8 @@ jobs:
           git pull origin main
 
           git branch -D develop 2>$null
+          $LASTEXITCODE = 0
+
           git push origin --delete develop 2>$null
           $LASTEXITCODE = 0
 
