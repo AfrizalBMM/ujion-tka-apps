@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
   actions: write
 
 jobs:
@@ -120,6 +121,81 @@ jobs:
               exit 1
           }
 
+      - name: Tunggu CI hijau sebelum merge
+        if: env.HAS_DIFF == 'true'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $dbgFile = Join-Path $env:RUNNER_TEMP "gate-debug.txt"
+          "mulai $(Get-Date -Format o)" | Set-Content $dbgFile
+
+          $repo = "${{ github.repository }}"
+          $pr = "${{ env.PR_NUMBER }}"
+          "repo=$repo pr=$pr" | Add-Content $dbgFile
+
+          $sha = "$(gh pr view $pr --repo $repo --json headRefOid --jq '.headRefOid' 2>&1)".Trim()
+          "sha exit=$LASTEXITCODE sha=$sha" | Add-Content $dbgFile
+
+          $reason = ""
+          if ($sha -notmatch '^[0-9a-f]{40}$') {
+              $reason = "gagal mendapat sha PR"
+          }
+          else {
+                  $runStatus = "null"
+                  for ($i = 0; $i -lt 60; $i++) {
+                  $runStatus = "$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].status' 2>&1)".Trim()
+                  "iter=$i status=$runStatus" | Add-Content $dbgFile
+                  if ($runStatus -eq "completed") { break }
+                  Start-Sleep -Seconds 15
+              }
+
+              if ($runStatus -ne "completed") {
+                  $reason = "timeout 15 menit menunggu CI"
+              }
+              else {
+                  $runConclusion = "$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].conclusion' 2>&1)".Trim()
+                  "conclusion=$runConclusion exit=$LASTEXITCODE" | Add-Content $dbgFile
+                  if ($runConclusion -ne "success") { $reason = "CI berstatus '$runConclusion'" }
+              }
+          }
+
+          "reason=$reason" | Add-Content $dbgFile
+
+          if ($reason -ne "") {
+              $body = "Auto-merge dibatalkan: $reason. Detail: https://github.com/$repo/actions`n`nDebug gate:`n" + (Get-Content $dbgFile -Raw)
+              gh pr edit $pr --repo $repo --body $body 2>&1 | Out-Null
+              "edit exit=$LASTEXITCODE" | Add-Content $dbgFile
+              gh pr comment $pr --repo $repo --body "Auto-merge dibatalkan: $reason (log di deskripsi PR)." 2>&1 | Out-Null
+              "comment exit=$LASTEXITCODE" | Add-Content $dbgFile
+              exit 1
+          }
+
+          "CI hijau" | Add-Content $dbgFile
+          exit 0
+
+      - name: Unggah jejak gate ke ci-log
+        if: always()
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $src = Join-Path $env:RUNNER_TEMP "gate-debug.txt"
+          $dst = Join-Path "${{ github.workspace }}" "gate-failure.log"
+          if (Test-Path $src) { Copy-Item $src $dst -Force } else { "tidak ada jejak (mungkin gagal parse sebelum eksekusi)" | Set-Content $dst }
+
+          git config user.name github-actions
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git fetch origin ci-log 2>&1 | Out-Null
+          if ($LASTEXITCODE -eq 0) { git checkout ci-log } else { git checkout -b ci-log }
+          git add -f gate-failure.log
+          git commit --allow-empty -m "Jejak gate auto-merge otomatis" 2>&1 | Out-Null
+          git push origin ci-log --force 2>&1 | Out-Null
+          Write-Host "jejak diunggah, push exit=$LASTEXITCODE"
+          exit 0
+
       - name: Merge pull request
         if: env.HAS_DIFF == 'true'
         shell: powershell
@@ -133,8 +209,7 @@ jobs:
 
           gh pr merge $pr `
             --repo $repo `
-            --squash `
-            --admin
+            --squash
 
       - name: Sync develop with main
         if: env.HAS_DIFF == 'true'
