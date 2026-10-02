@@ -40,11 +40,30 @@ jobs:
 
       - name: Build Laravel application
         shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GIT_TERMINAL_PROMPT: 0
         run: |
+          $ErrorActionPreference = 'Continue'
           Set-Location "D:\laragon\www\ujion-tka-apps"
 
           Write-Host "=== Docker Compose Build ==="
-          docker compose build app queue
+          docker compose build app queue 2>&1 | Tee-Object -FilePath build-log.txt
+          $buildExit = $LASTEXITCODE
+          Write-Host "build exit=$buildExit"
+
+          if ($buildExit -ne 0) {
+              Write-Host "Build gagal — mengunggah log ke branch deploy-log ..."
+              git config user.name github-actions
+              git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+              git add -f build-log.txt
+              git commit -m "Log build deploy gagal otomatis" -- build-log.txt 2>&1 | Out-Host
+              Write-Host "commit exit=$LASTEXITCODE"
+              git -c credential.helper= -c core.askPass= -c "http.extraheader=AUTHORIZATION: bearer $env:GH_TOKEN" push --force origin HEAD:refs/heads/deploy-log 2>&1 | Out-Host
+              Write-Host "push exit=$LASTEXITCODE"
+              git reset --hard origin/main 2>&1 | Out-Host
+              exit $buildExit
+          }
 
       - name: Recreate application containers
         shell: powershell
