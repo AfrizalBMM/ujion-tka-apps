@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
   actions: write
 
 jobs:
@@ -126,32 +127,50 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $ErrorActionPreference = 'Continue'
+          $PSNativeCommandUseErrorActionPreference = $false
+
           $repo = "${{ github.repository }}"
           $pr = "${{ env.PR_NUMBER }}"
+          $dbg = @()
+          $reason = ""
 
-          $sha = gh pr view $pr --repo $repo --json headRefOid --jq ".headRefOid"
-          Write-Host "Menunggu workflow CI untuk commit $sha ..."
+          $sha = "$(gh pr view $pr --repo $repo --json headRefOid --jq '.headRefOid' 2>&1)".Trim()
+          $dbg += "gh pr view exit=$LASTEXITCODE sha=$sha"
 
-          $runStatus = "none"
-          for ($i = 0; $i -lt 60; $i++) {
-              $runStatus = gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].status // "none"'
-              if ($runStatus -eq "completed") { break }
-              Start-Sleep -Seconds 15
+          if ($sha -notmatch '^[0-9a-f]{40}$') {
+              $reason = "gagal mendapat sha PR"
+          }
+          else {
+              $runStatus = "none"
+              for ($i = 0; $i -lt 60; $i++) {
+                  $runStatus = "$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].status // "none"' 2>&1)".Trim()
+                  if ($runStatus -eq "completed") { break }
+                  Start-Sleep -Seconds 15
+              }
+              $dbg += "status akhir=$runStatus"
+
+              if ($runStatus -ne "completed") {
+                  $reason = "timeout 15 menit menunggu CI"
+              }
+              else {
+                  $runConclusion = "$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].conclusion' 2>&1)".Trim()
+                  $dbg += "conclusion=$runConclusion exit=$LASTEXITCODE"
+                  if ($runConclusion -ne "success") { $reason = "CI berstatus '$runConclusion'" }
+              }
           }
 
-          if ($runStatus -ne "completed") {
-              gh pr comment $pr --repo $repo --body "Auto-merge dibatalkan: timeout menunggu CI selesai. Detail: https://github.com/$repo/actions"
-              exit 1
-          }
-
-          $runConclusion = gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].conclusion'
-
-          if ($runConclusion -ne "success") {
-              gh pr comment $pr --repo $repo --body "Auto-merge dibatalkan: CI berstatus '$runConclusion'. Perbaiki dulu lalu push ulang ke develop. Detail: https://github.com/$repo/actions"
+          if ($reason -ne "") {
+              $body = "Auto-merge dibatalkan: $reason. Detail: https://github.com/$repo/actions`n`nDebug gate:`n" + ($dbg -join "`n")
+              gh pr edit $pr --repo $repo --body $body 2>&1 | Out-Host
+              Write-Host "exit pr edit=$LASTEXITCODE"
+              gh pr comment $pr --repo $repo --body "Auto-merge dibatalkan: $reason (log di deskripsi PR)." 2>&1 | Out-Host
+              Write-Host "exit pr comment=$LASTEXITCODE"
               exit 1
           }
 
           Write-Host "CI hijau — lanjut merge."
+          $dbg | ForEach-Object { Write-Host $_ }
 
       - name: Merge pull request
         if: env.HAS_DIFF == 'true'
