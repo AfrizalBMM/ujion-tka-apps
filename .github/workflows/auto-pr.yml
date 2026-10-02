@@ -143,9 +143,9 @@ jobs:
               $reason = "gagal mendapat sha PR"
           }
           else {
-              $runStatus = "none"
-              for ($i = 0; $i -lt 60; $i++) {
-                  $runStatus = "$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].status // "none"' 2>&1)".Trim()
+                  $runStatus = "null"
+                  for ($i = 0; $i -lt 60; $i++) {
+                  $runStatus = "$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].status' 2>&1)".Trim()
                   "iter=$i status=$runStatus" | Add-Content $dbgFile
                   if ($runStatus -eq "completed") { break }
                   Start-Sleep -Seconds 15
