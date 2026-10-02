@@ -120,6 +120,28 @@ jobs:
               exit 1
           }
 
+      - name: Tunggu CI hijau sebelum merge
+        if: env.HAS_DIFF == 'true'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $repo = "${{ github.repository }}"
+          $pr = "${{ env.PR_NUMBER }}"
+
+          Write-Host "Menunggu checks CI pada PR #$pr ..."
+          gh pr checks $pr --repo $repo --watch --interval 15
+
+          if ($LASTEXITCODE -ne 0) {
+              gh pr comment $pr `
+                --repo $repo `
+                --body "Auto-merge dibatalkan: CI belum hijau. Perbaiki dulu lalu push ulang ke develop. Detail: https://github.com/$repo/actions"
+
+              exit 1
+          }
+
+          Write-Host "CI hijau — lanjut merge."
+
       - name: Merge pull request
         if: env.HAS_DIFF == 'true'
         shell: powershell
@@ -133,8 +155,7 @@ jobs:
 
           gh pr merge $pr `
             --repo $repo `
-            --squash `
-            --admin
+            --squash
 
       - name: Sync develop with main
         if: env.HAS_DIFF == 'true'
