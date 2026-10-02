@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+jobs:
+  checks:
+    name: Pint & PHPUnit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, tokenizer, xml, curl, zip, gd, sqlite3, pdo_sqlite
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependensi PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Siapkan .env
+        run: cp .env.example .env && php artisan key:generate --force
+
+      - name: Pint (gaya kode)
+        run: vendor/bin/pint --test
+
+      - name: Install dependensi JS
+        run: npm ci --no-audit --no-fund
+
+      - name: Build aset
+        run: npm run build
+
+      - name: PHPUnit
+        run: php artisan test
