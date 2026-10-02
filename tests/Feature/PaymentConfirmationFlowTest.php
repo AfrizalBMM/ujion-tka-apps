@@ -9,10 +9,10 @@ class PaymentConfirmationFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    // public function test_superadmin_approve_handles_missing_teacher_account_gracefully(): void
-    // {
-    //     // Skipped due to SQLite in-memory FK constraint limitations
-    //     // Controller logic is correct and handles missing teacher gracefully
-    //     $this->assertTrue(true);
-    // }
+    public function test_superadmin_approve_handles_missing_teacher_account_gracefully(): void
+    {
+        // Dinonaktifkan sementara: terkendala batasan FK SQLite in-memory.
+        // Logika controller sudah menangani teacher yang hilang dengan graceful.
+        $this->markTestSkipped('Butuh MySQL untuk FK: approve saat akun teacher tidak ada');
+    }
 }
