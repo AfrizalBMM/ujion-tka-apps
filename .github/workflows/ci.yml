@@ -5,6 +5,9 @@ on:
     branches: [develop, main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   checks:
     name: Pint & PHPUnit
@@ -47,19 +50,24 @@ jobs:
           set -o pipefail
           php artisan test 2>&1 | tee test-output.txt
 
-      - name: Ungkap kegagalan ke anotasi & ringkasan
+      - name: Simpan log kegagalan ke branch ci-log
         if: failure()
         shell: bash
         run: |
-          if [ -f test-output.txt ]; then
-            {
-              echo '### Detail kegagalan PHPUnit'
-              echo '```'
-              tail -120 test-output.txt
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-            awk '/FAILED|⨯/{p=1;c=0} p&&c<8{print;c++} /^$/{if(p&&c>0){p=0}}' test-output.txt \
-              | head -40 | while IFS= read -r l; do echo "::error::$l"; done
-          else
-            echo "::error::test-output.txt tidak ada (gagal sebelum PHPUnit)"
-          fi
+          {
+            echo "run   : $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "sha   : $GITHUB_SHA"
+            echo "waktu : $(date -u +%FT%TZ)"
+            echo "-------------------------"
+            if [ -f test-output.txt ]; then
+              tail -250 test-output.txt
+            else
+              echo "test-output.txt tidak ada (gagal sebelum langkah PHPUnit)"
+            fi
+          } > ci-failure.log
+          git config user.name github-actions
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git checkout -B ci-log
+          git add -f ci-failure.log
+          git commit --allow-empty -m "Log kegagalan CI otomatis"
+          git push origin ci-log --force
