@@ -1,0 +1,225 @@
+run   : https://github.com/AfrizalBMM/ujion-tka-apps/actions/runs/36962940901
+sha   : b6c54e7ef9e28a10311f5abef0df4f95b18a8373
+waktu : 2026-10-02T04:05:28Z
+-------------------------
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true
+
+   PASS  Tests\Feature\AuditLogManagementTest
+  ✓ superadmin can view audit logs with summary                          0.30s  
+  ✓ audit log filters apply                                              0.02s  
+  ✓ superadmin can cleanup old logs only                                 0.02s  
+  ✓ superadmin can cleanup all logs                                      0.11s  
+  ✓ guest cannot access audit logs                                       0.01s  
+
+   PASS  Tests\Feature\AuthFlowHardeningTest
+  ✓ exam resume rejects mismatched name and creates new session          0.02s  
+  ✓ exam resume accepts matching name with titles                        0.01s  
+  ✓ exam rejects new session when quota is full                          0.01s  
+  ✓ exam resume still allowed when quota is full                         0.02s  
+  ✓ regenerate packages archives attempts instead of deleting            0.03s  
+
+   PASS  Tests\Feature\ChatImageCleanupTest
+  ✓ deleting chat removes image from storage                             0.02s  
+  ✓ superadmin chat uses uploaded guru avatar                            0.02s  
+  ✓ guru chat uses latest names and uploaded avatars                     0.02s  
+
+   PASS  Tests\Feature\ChatParticipantGuardTest
+  ✓ superadmin cannot destroy chat between others                        0.02s  
+  ✓ chat participant can destroy own chat                                0.02s  
+  ✓ superadmin cannot send chat to non guru                              0.01s  
+  ✓ landing click log masks ipv4                                         0.01s  
+
+   PASS  Tests\Feature\DokuPaymentTest
+  ✓ webhook success marks success and activates teacher                  0.02s  
+  ✓ webhook is idempotent for duplicate notifications                    0.02s  
+  ✓ webhook rejects invalid signature                                    0.02s  
+  ✓ webhook ignores amount mismatch                                      0.01s  
+  ✓ webhook expired marks transaction failed                             0.02s  
+  ✓ webhook returns 503 when doku disabled                               0.01s  
+  ✓ start returns payment url and records invoice                        0.03s  
+  ✓ start creates transaction when none exists                           0.02s  
+  ✓ start requires authentication                                        0.01s  
+  ✓ start returns 409 when already paid                                  0.01s  
+  ✓ cancel closes popup for logged in guru                               0.01s  
+  ✓ cancel redirects guest to login                                      0.01s  
+  ✓ finish page polls doku status when still pending                     0.02s  
+  ✓ status endpoint activates transaction via remote status              0.02s  
+
+   PASS  Tests\Feature\ExamDeletionProtectionTest
+  ✓ exam with results requires typed confirmation                        0.03s  
+  ✓ exam without results deletes without confirmation                    0.01s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ example feature assertion                                            0.01s  
+
+   PASS  Tests\Feature\GoogleAuthTest
+  ✓ redirect to google                                                   0.01s  
+  ✓ callback new user redirects to complete data                         0.01s  
+  ✓ callback existing active user logs in                                0.01s  
+  ✓ callback existing pending user logs in and redirects to dashboard    0.01s  
+  ✓ complete data creates pending teacher                                0.01s  
+  ✓ complete data requires session                                       0.01s  
+  ✓ complete data rejects duplicate whatsapp                             0.01s  
+  ✓ profile connect links google account                                 0.01s  
+  ✓ profile connect keeps email when google email taken by other         0.01s  
+  ✓ profile connect rejects google id taken by other                     0.01s  
+  ✓ disconnect clears google account                                     0.01s  
+
+   PASS  Tests\Feature\GuruAndAnalyticsFlowTest
+  ✓ guru dashboard uses ujian sesi metrics                               0.03s  
+  ✓ guru can join exam into student flow                                 0.02s  
+  ✓ guru can view completed exam result                                  0.02s  
+  ✓ guru can join exam without whatsapp number                           0.02s  
+  ✓ guru dashboard ignores sessions from other guru with same whatsapp…  0.02s  
+  ✓ guru dashboard ignores student session with same whatsapp number     0.02s  
+  ✓ superadmin dashboard uses real metrics                               0.02s  
+  ✓ superadmin exam analysis uses real sessions                          0.02s  
+
+   PASS  Tests\Feature\GuruProfileAndRegistrationFlowTest
+  ✓ landing points to guru registration route                            0.01s  
+  ✓ guest pages have theme toggle                                        0.02s  
+  ✓ login links to guru token request form                               0.02s  
+  ✓ guru can login using registered whatsapp number                      0.02s  
+  ✓ guru login rejects name as identifier                                0.01s  
+  ✓ guru token request redirects to admin whatsapp                       0.01s  
+  ✓ guru token request shows warning when admin whatsapp is missing      0.01s  
+  ✓ guru registration creates pending account and logs in                0.02s  
+  ✓ guru can start payment from dashboard                                0.02s  
+  ✓ registration auto login allows starting payment directly             0.02s  
+  ✓ duplicate pending registration logs user back in                     0.01s  
+  ✓ pending guru can access dashboard profile and chat but not other fe… 0.03s  
+  ✓ dashboard shows payment banner with locked menus for pending guru    0.02s  
+  ✓ duplicate active registration returns clear errors                   0.01s  
+  ✓ suspended guru is logged out when trying to open guru area           0.01s  
+  ✓ guru can update complete profile fields                              0.01s  
+  ✓ guru profile shows optional password form                            0.02s  
+  ✓ guru can set password                                                0.02s  
+  ✓ guru password requires confirmation                                  0.01s  
+  ✓ active guru sidebar shows access token with copy button              0.02s  
+  ✓ pending guru sidebar does not show access token                      0.02s  
+  ✓ uploaded guru avatar is used in header dropdown                      0.04s  
+  ✓ guru cannot delete other users personal question                     0.02s  
+  ✓ personal question builder only replaces current guru questions       0.02s  
+  ✓ personal question builder routes are resolved before parameter rout… 0.01s  
+
+   PASS  Tests\Feature\ImportUjionMatchingTest
+  ✓ import matching question creates pairs with text                     0.03s  
+
+   PASS  Tests\Feature\LegacyCleanupAndAuditPrivacyTest
+  ✓ legacy superadmin and student artifacts are removed                  0.01s  
+  ✓ audit log masks path ip and user agent metadata                      0.02s  
+
+   PASS  Tests\Feature\MatchingAnswerSecurityTest
+  ✓ matching payload does not expose raw pair ids                        0.02s  
+  ✓ matching save resolves opaque keys to pair ids                       0.02s  
+  ✓ matching save rejects unknown keys                                   0.02s  
+  ✓ simulation sessions are excluded from student results                0.02s  
+
+   PASS  Tests\Feature\MaterialPracticeHardeningTest
+  ✓ attempt creation is race safe                                        0.04s  
+  ✓ double submit is idempotent                                          0.04s  
+  ✓ telaah stats only count active questions                             0.03s  
+
+   PASS  Tests\Feature\PaketSoalManagementTest
+  ✓ superadmin can create package and default mapel                      0.02s  
+
+   PASS  Tests\Feature\PricingPlanFallbackTest
+  ✓ teacher is not charged plan from other jenjang                       0.02s  
+  ✓ teacher uses own jenjang plan                                        0.02s  
+  ✓ teacher falls back to global plan                                    0.02s  
+  ✓ start payment rejected when no plan available                        0.01s  
+  ✓ stale pending transactions are cancelled when price changes          0.02s  
+
+   PASS  Tests\Feature\PublicContentTest
+  ✓ kisi kisi index renders and is indexable                             0.02s  
+  ✓ kisi kisi jenjang lists mapels                                       0.01s  
+  ✓ kisi kisi jenjang returns 404 for unknown jenjang                    0.01s  
+  ✓ kisi kisi mapel shows topics with reference link                     0.01s  
+  ✓ kisi kisi mapel returns 404 for unknown mapel                        0.01s  
+  ✓ artikel index only lists published posts                             0.01s  
+  ✓ artikel show renders published post with article schema              0.03s  
+  ✓ artikel show returns 404 for draft                                   0.01s  
+  ✓ superadmin can create published post with auto slug                  0.01s  
+  ✓ superadmin can toggle post publish status                            0.01s  
+  ✓ guest cannot access blog admin                                       0.01s  
+  ✓ sitemap includes kisi kisi and artikel urls                          0.01s  
+
+   PASS  Tests\Feature\RemainingFlowsHardeningTest
+  ✓ personal question quick form parses comma separated options          0.02s  
+  ✓ personal question quick form accepts split option inputs             0.01s  
+  ✓ superadmin can update global question from edit flow                 0.01s  
+  ✓ superadmin can store global question with split option inputs        0.01s  
+  ✓ superadmin can import materials from csv                             0.01s  
+  ✓ superadmin can import global questions from csv                      0.01s  
+  ✓ superadmin can import exams from csv                                 0.01s  
+  ✓ superadmin can download excel templates for batch imports            0.02s  
+  ✓ superadmin chat index filters to selected conversation               0.02s  
+  ✓ material detail uses global and snapshot reference counts            0.02s  
+  ✓ guru material index only shows matching jenjang                      0.02s  
+  ✓ guru cannot open material from other jenjang                         0.01s  
+  ✓ personal question builder forces logged in guru jenjang              0.01s  
+  ✓ personal question builder rejects path traversal image paths         0.01s  
+  ✓ personal question builder accepts existing uploaded image paths      0.02s  
+  ✓ personal question builder updates existing questions in place        0.01s  
+  ✓ personal question builder rejects unknown ids without deleting exis… 0.01s  
+  ✓ superadmin cannot delete package with exam dependencies              0.01s  
+  ✓ superadmin cannot delete teks bacaan that is still used              0.01s  
+  ✓ superadmin exports dashboard and exam analysis                       0.02s  
+  ✓ superadmin can store pilihan ganda even when hidden matching fields… 0.02s  
+
+   PASS  Tests\Feature\SecurityHardeningTest
+  ✓ wa webhook rejects requests when key is not configured               0.03s  
+  ✓ wa webhook rejects wrong key                                         0.01s  
+  ✓ wa webhook does not reset token without valid key                    0.01s  
+  ✓ student cannot save answer for other mapel                           0.02s  
+  ✓ admin login is throttled after five attempts                         1.02s  
+
+   PASS  Tests\Feature\SeoMetadataTest
+  ✓ landing uses default meta when seo fields empty                      0.02s  
+  ✓ landing uses custom seo fields from landing content                  0.01s  
+  ✓ private layouts send noindex                                         0.01s  
+  ✓ register guru page stays indexable                                   0.01s  
+  ✓ robots txt disallows private paths and references sitemap            0.01s  
+  ✓ sitemap uses realistic lastmod from content updates                  0.01s  
+
+   PASS  Tests\Feature\SiswaExamSessionTest
+  ✓ student answer can be saved in new schema                            0.02s  
+  ✓ student cannot extend timer by sending large remaining seconds       0.02s  
+  ✓ student answer is rejected when server timer has expired             0.02s  
+
+   PASS  Tests\Feature\SuperadminAccessAndExamBuilderTest
+  ✓ guest is redirected from superadmin dashboard                        0.01s  
+  ✓ guru cannot access superadmin dashboard                              0.01s  
+  ✓ legacy questions route redirects to global question page             0.01s  
+  ✓ superadmin global questions page renders                             0.02s  
+  ✓ superadmin exam creation stores creator id                           0.01s  
+  ✓ guru cannot manage superadmin owned package content                  0.01s  
+  ✓ superadmin can save exam builder questions using pivot schema        0.02s  
+  ✓ superadmin can import global question into exam builder              0.02s  
+  ✓ superadmin exam builder rejects unknown question types               0.01s  
+  ✓ superadmin exam builder normalizes legacy question type aliases      0.01s  
+
+   PASS  Tests\Feature\SuperadminProfileTest
+  ✓ superadmin header dropdown links to profile page                     0.03s  
+  ✓ superadmin can update profile and avatar                             0.02s  
+  ✓ superadmin can change password                                       0.02s  
+
+   PASS  Tests\Feature\TeacherTokenManagementTest
+  ✓ activate generates consistent teacher token and flashes it           0.02s  
+  ✓ refresh token uses same format and replaces old value                0.01s  
+  ✓ superadmin can approve submitted payment and activate teacher        0.01s  
+  ✓ superadmin can reject submitted payment with reason                  0.01s  
+  ✓ manual activate is blocked when payment is waiting review            0.01s  
+  ✓ superadmin can filter teacher list by payment status                 0.02s  
+
+   PASS  Tests\Feature\TestimonialTest
+  ✓ superadmin can create testimonial                                    0.02s  
+  ✓ superadmin can toggle and delete testimonial                         0.01s  
+  ✓ landing shows only active testimonials ordered                       0.01s  
+  ✓ guest cannot access testimonial admin                                0.01s  
+
+  Tests:    165 passed (662 assertions)
+  Duration: 4.28s
+
