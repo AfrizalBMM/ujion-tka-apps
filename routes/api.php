@@ -3,7 +3,6 @@
 use App\Http\Controllers\Api\LandingClickController;
 use App\Http\Controllers\Api\WebhookController;
 use App\Http\Controllers\DokuPaymentController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,10 +15,6 @@ use Illuminate\Support\Facades\Route;
 | middleware group. Enjoy building your API!
 |
 */
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
 
 Route::post('/landing-click', [LandingClickController::class, 'store'])
     ->middleware('throttle:120,1')

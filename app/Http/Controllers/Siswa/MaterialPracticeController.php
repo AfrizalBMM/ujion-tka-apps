@@ -31,13 +31,13 @@ class MaterialPracticeController extends Controller
 
         $tokenId = session('siswa_practice_token_id');
         if (! $tokenId) {
-            return redirect()->route('materi.login')
+            return redirect()->route('materi.practice.login')
                 ->withErrors(['token' => 'Sesi latihan telah habis. Masukkan token kembali.']);
         }
 
         $token = MaterialPracticeToken::query()->find($tokenId);
         if (! $token || ! $token->is_active) {
-            return redirect()->route('materi.login')
+            return redirect()->route('materi.practice.login')
                 ->withErrors(['token' => 'Token latihan tidak valid atau tidak aktif.']);
         }
 
@@ -58,7 +58,7 @@ class MaterialPracticeController extends Controller
         if ($existing) {
             session(['material_practice_session_token' => $existing->session_token]);
 
-            return redirect()->route('materi.dashboard');
+            return redirect()->route('materi.practice.dashboard');
         }
 
         $session = MaterialPracticeSession::create([
@@ -71,14 +71,14 @@ class MaterialPracticeController extends Controller
 
         session(['material_practice_session_token' => $session->session_token]);
 
-        return redirect()->route('materi.dashboard');
+        return redirect()->route('materi.practice.dashboard');
     }
 
     public function dashboard(): Response|RedirectResponse
     {
         $session = $this->getActiveSession();
         if (! $session) {
-            return redirect()->route('materi.login');
+            return redirect()->route('materi.practice.login');
         }
 
         $session->load([
@@ -115,7 +115,7 @@ class MaterialPracticeController extends Controller
     {
         $session = $this->getActiveSession();
         if (! $session) {
-            return redirect()->route('materi.login');
+            return redirect()->route('materi.practice.login');
         }
 
         $session->load('token');
@@ -157,7 +157,7 @@ class MaterialPracticeController extends Controller
     {
         $session = $this->getActiveSession();
         if (! $session) {
-            return redirect()->route('materi.login');
+            return redirect()->route('materi.practice.login');
         }
 
         $session->load('token');
@@ -178,7 +178,7 @@ class MaterialPracticeController extends Controller
             ->first();
 
         if ($attempt && $attempt->status === 'selesai') {
-            return redirect()->route('materi.dashboard')->with('flash', [
+            return redirect()->route('materi.practice.dashboard')->with('flash', [
                 'type' => 'warning',
                 'message' => 'Paket ini sudah diselesaikan dan tidak dapat dikerjakan ulang.',
             ]);
@@ -219,7 +219,7 @@ class MaterialPracticeController extends Controller
     {
         $session = $this->getActiveSession();
         if (! $session) {
-            return redirect()->route('materi.login');
+            return redirect()->route('materi.practice.login');
         }
 
         $session->load('token');
@@ -239,7 +239,7 @@ class MaterialPracticeController extends Controller
             ->firstOrFail();
 
         if ($attempt->status === 'selesai') {
-            return redirect()->route('materi.dashboard')->with('flash', [
+            return redirect()->route('materi.practice.dashboard')->with('flash', [
                 'type' => 'warning',
                 'message' => 'Paket ini sudah diselesaikan dan tidak dapat dikerjakan ulang.',
             ]);
@@ -313,13 +313,13 @@ class MaterialPracticeController extends Controller
         });
 
         if ($alreadyFinished) {
-            return redirect()->route('materi.dashboard')->with('flash', [
+            return redirect()->route('materi.practice.dashboard')->with('flash', [
                 'type' => 'warning',
                 'message' => 'Paket ini sudah diselesaikan dan tidak dapat dikerjakan ulang.',
             ]);
         }
 
-        return redirect()->route('materi.dashboard')->with('flash', [
+        return redirect()->route('materi.practice.dashboard')->with('flash', [
             'type' => 'success',
             'message' => 'Paket berhasil dikumpulkan. Hasil tersimpan.',
         ]);

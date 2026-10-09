@@ -43,7 +43,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
-Route::post('/payments/doku/start', [DokuPaymentController::class, 'start'])->name('payments.doku.start');
+Route::post('/payments/doku/start', [DokuPaymentController::class, 'start'])->middleware('throttle:10,1')->name('payments.doku.start');
 Route::get('/payments/doku/finish', [DokuPaymentController::class, 'finish'])->name('payments.doku.finish');
 Route::get('/payments/doku/status', [DokuPaymentController::class, 'status'])->name('payments.doku.status');
 Route::get('/payments/doku/cancel', [DokuPaymentController::class, 'cancel'])->name('payments.doku.cancel');
@@ -53,13 +53,13 @@ Route::prefix('ujian-online')->name('ujian-online.')->group(function () {
     Route::get('/', [LandingExamController::class, 'index'])->name('index');
     Route::get('/{jenjang}', [LandingExamController::class, 'jenjang'])->where('jenjang', 'sd|smp|sma')->name('jenjang');
     Route::get('/{jenjang}/{landingExam}', [LandingExamController::class, 'show'])->where('jenjang', 'sd|smp|sma')->name('show');
-    Route::post('/{jenjang}/{landingExam}/daftar', [LandingExamController::class, 'register'])->where('jenjang', 'sd|smp|sma')->name('register');
+    Route::post('/{jenjang}/{landingExam}/daftar', [LandingExamController::class, 'register'])->where('jenjang', 'sd|smp|sma')->middleware('throttle:10,1')->name('register');
 
     Route::get('/pending/{orderToken}', [LandingExamController::class, 'pending'])->name('pending');
     Route::get('/start/{orderToken}', [LandingExamController::class, 'startExam'])->name('start');
     Route::get('/result/{orderToken}', [LandingExamController::class, 'result'])->name('result');
 
-    Route::post('/pay/{orderToken}', [LandingExamPaymentController::class, 'start'])->name('pay.start');
+    Route::post('/pay/{orderToken}', [LandingExamPaymentController::class, 'start'])->middleware('throttle:10,1')->name('pay.start');
     Route::get('/pay/status', [LandingExamPaymentController::class, 'status'])->name('pay.status');
     Route::get('/pay/finish', [LandingExamPaymentController::class, 'finish'])->name('pay.finish');
 });
@@ -79,7 +79,7 @@ Route::get('/login', [GeneralAuthController::class, 'showLoginForm'])->name('log
 Route::post('/login', [GeneralAuthController::class, 'login'])->middleware('throttle:5,1');
 Route::get('/lupa-token', [GeneralAuthController::class, 'showForgotTokenForm'])->name('guru.token-request.form');
 Route::post('/lupa-token', [GeneralAuthController::class, 'requestForgotToken'])->middleware('throttle:10,1')->name('guru.token-request.send');
-Route::post('/logout', [GeneralAuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [GeneralAuthController::class, 'logout'])->middleware('throttle:10,1')->name('logout');
 
 // Auth via Google (Guru)
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -100,12 +100,12 @@ Route::get('/siswa/identitas', function () {
     return Inertia::render('Siswa/Identitas');
 })->name('siswa.identitas');
 
-Route::post('/siswa/mulai', [ExamController::class, 'mulai'])->name('siswa.mulai');
+Route::post('/siswa/mulai', [ExamController::class, 'mulai'])->middleware('throttle:10,1')->name('siswa.mulai');
 Route::get('/siswa/petunjuk', [ExamController::class, 'petunjuk'])->name('siswa.petunjuk');
 Route::get('/siswa/ujian', [ExamController::class, 'showUjian'])->name('siswa.ujian');
-Route::post('/siswa/api/save-answer', [ExamController::class, 'apiSaveAnswer'])->name('siswa.api.save_answer');
+Route::post('/siswa/api/save-answer', [ExamController::class, 'apiSaveAnswer'])->middleware('throttle:30,1')->name('siswa.api.save_answer');
 Route::get('/siswa/selesai', [ExamController::class, 'selesai'])->name('siswa.selesai');
-Route::post('/siswa/selesai', [ExamController::class, 'submitSelesai'])->name('siswa.selesai.submit');
+Route::post('/siswa/selesai', [ExamController::class, 'submitSelesai'])->middleware('throttle:10,1')->name('siswa.selesai.submit');
 
 // Siswa - Latihan Materi (Telaah + Paket Latihan)
 Route::get('/siswa/latihan/login', [MaterialPracticeAuthController::class, 'showLoginForm'])->name('siswa.practice.login');
@@ -115,26 +115,26 @@ Route::post('/siswa/latihan/login', [MaterialPracticeAuthController::class, 'val
 Route::get('/siswa/latihan/identitas', function () {
     return Inertia::render('Siswa/Practice/Identitas');
 })->name('siswa.practice.identitas');
-Route::post('/siswa/latihan/mulai', [SiswaMaterialPracticeController::class, 'mulai'])->name('siswa.practice.mulai');
+Route::post('/siswa/latihan/mulai', [SiswaMaterialPracticeController::class, 'mulai'])->middleware('throttle:10,1')->name('siswa.practice.mulai');
 Route::get('/siswa/latihan', [SiswaMaterialPracticeController::class, 'dashboard'])->name('siswa.practice.dashboard');
-Route::post('/siswa/latihan/telaah/{globalQuestion}', [SiswaMaterialPracticeController::class, 'submitTelaah'])->name('siswa.practice.telaah.submit');
+Route::post('/siswa/latihan/telaah/{globalQuestion}', [SiswaMaterialPracticeController::class, 'submitTelaah'])->middleware('throttle:10,1')->name('siswa.practice.telaah.submit');
 Route::get('/siswa/latihan/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'showPaket'])->whereNumber('paketNo')->name('siswa.practice.paket.show');
-Route::post('/siswa/latihan/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'submitPaket'])->whereNumber('paketNo')->name('siswa.practice.paket.submit');
+Route::post('/siswa/latihan/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'submitPaket'])->whereNumber('paketNo')->middleware('throttle:10,1')->name('siswa.practice.paket.submit');
 
 // Materi / Latihan (URL khusus, terpisah dari ujian)
 Route::prefix('materi')->name('materi.')->group(function () {
-    Route::get('/login', [MaterialPracticeAuthController::class, 'showLoginForm'])->name('login');
+    Route::get('/login', [MaterialPracticeAuthController::class, 'showLoginForm'])->name('practice.login');
     Route::post('/login', [MaterialPracticeAuthController::class, 'validateToken'])
         ->middleware('throttle:10,1')
         ->name('token.validate');
     Route::get('/identitas', function () {
         return Inertia::render('Siswa/Practice/Identitas');
     })->name('identitas');
-    Route::post('/mulai', [SiswaMaterialPracticeController::class, 'mulai'])->name('mulai');
-    Route::get('/', [SiswaMaterialPracticeController::class, 'dashboard'])->name('dashboard');
-    Route::post('/telaah/{globalQuestion}', [SiswaMaterialPracticeController::class, 'submitTelaah'])->name('telaah.submit');
+    Route::post('/mulai', [SiswaMaterialPracticeController::class, 'mulai'])->middleware('throttle:10,1')->name('mulai');
+    Route::get('/', [SiswaMaterialPracticeController::class, 'dashboard'])->name('practice.dashboard');
+    Route::post('/telaah/{globalQuestion}', [SiswaMaterialPracticeController::class, 'submitTelaah'])->middleware('throttle:10,1')->name('telaah.submit');
     Route::get('/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'showPaket'])->whereNumber('paketNo')->name('paket.show');
-    Route::post('/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'submitPaket'])->whereNumber('paketNo')->name('paket.submit');
+    Route::post('/paket/{paketNo}', [SiswaMaterialPracticeController::class, 'submitPaket'])->whereNumber('paketNo')->middleware('throttle:10,1')->name('paket.submit');
 });
 
 Route::prefix('superadmin')

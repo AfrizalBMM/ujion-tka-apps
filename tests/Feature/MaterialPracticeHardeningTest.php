@@ -45,7 +45,7 @@ class MaterialPracticeHardeningTest extends TestCase
         $first = $this->withSession(['material_practice_session_token' => $session->session_token])
             ->post(route('materi.paket.submit', ['paketNo' => 1]), ['answers' => []]);
 
-        $first->assertRedirect(route('materi.dashboard'));
+        $first->assertRedirect(route('materi.practice.dashboard'));
         $first->assertSessionHas('flash');
 
         $attempt = MaterialPracticePackageAttempt::firstOrFail();
@@ -54,7 +54,7 @@ class MaterialPracticeHardeningTest extends TestCase
         $second = $this->withSession(['material_practice_session_token' => $session->session_token])
             ->post(route('materi.paket.submit', ['paketNo' => 1]), ['answers' => []]);
 
-        $second->assertRedirect(route('materi.dashboard'));
+        $second->assertRedirect(route('materi.practice.dashboard'));
         $this->assertSame(1, MaterialPracticePackageAttempt::count());
     }
 
