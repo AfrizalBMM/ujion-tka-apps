@@ -13,14 +13,9 @@ permissions:
 
 jobs:
   auto-merge:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Check GitHub CLI
-        shell: powershell
-        run: |
-          gh --version
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -29,213 +24,133 @@ jobs:
           token: ${{ github.token }}
 
       - name: Fix git safe directory
-        shell: powershell
         run: |
           git config --global --add safe.directory "${{ github.workspace }}"
 
       - name: Check for differences between develop and main
-        shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $repo = "${{ github.repository }}"
-
-          $ahead = gh api "repos/$repo/compare/main...develop" --jq ".ahead_by" 2>$null
-
-          if (-not $ahead -or $ahead -eq "0") {
-              Write-Host "Tidak ada perubahan baru antara develop dan main. Melewati proses."
-              "HAS_DIFF=false" | Out-File -FilePath $env:GITHUB_ENV -Append
-          }
-          else {
-              Write-Host "Ditemukan $ahead commit baru di develop."
-              "HAS_DIFF=true" | Out-File -FilePath $env:GITHUB_ENV -Append
-          }
+          repo="${{ github.repository }}"
+          ahead=$(gh api "repos/$repo/compare/main...develop" --jq ".ahead_by")
+          if [ -z "$ahead" ] || [ "$ahead" = "0" ]; then
+            echo "Tidak ada perubahan baru antara develop dan main. Melewati proses."
+            echo "HAS_DIFF=false" >> "$GITHUB_ENV"
+          else
+            echo "Ditemukan $ahead commit baru di develop."
+            echo "HAS_DIFF=true" >> "$GITHUB_ENV"
+          fi
 
       - name: Create or find pull request
         if: env.HAS_DIFF == 'true'
-        shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $repo = "${{ github.repository }}"
-
-          Write-Host "Repository: $repo"
-
-          $existingPr = gh pr list `
-            --repo $repo `
-            --base main `
-            --head develop `
-            --state open `
-            --json number `
-            --jq ".[0].number"
-
-          if ($existingPr) {
-              Write-Host "Pull Request sudah ada: #$existingPr"
-              "PR_NUMBER=$existingPr" | Out-File -FilePath $env:GITHUB_ENV -Append
-          }
-          else {
-              Write-Host "Membuat Pull Request baru..."
-
-              $prNumber = gh pr create `
-                --repo $repo `
-                --base main `
-                --head develop `
-                --title "Auto Merge: develop -> main" `
-                --body "Pull Request ini dibuat otomatis oleh GitHub Actions setelah perubahan masuk ke branch develop."
-
-              Write-Host "Pull Request dibuat: $prNumber"
-
-              $number = $prNumber -replace '\D',''
-
-              "PR_NUMBER=$number" | Out-File -FilePath $env:GITHUB_ENV -Append
-          }
+          repo="${{ github.repository }}"
+          existingPr=$(gh pr list \
+            --repo "$repo" \
+            --base main \
+            --head develop \
+            --state open \
+            --json number \
+            --jq ".[0].number")
+          if [ -n "$existingPr" ]; then
+            echo "Pull Request sudah ada: #$existingPr"
+            echo "PR_NUMBER=$existingPr" >> "$GITHUB_ENV"
+          else
+            echo "Membuat Pull Request baru..."
+            prUrl=$(gh pr create \
+              --repo "$repo" \
+              --base main \
+              --head develop \
+              --title "Auto Merge: develop -> main" \
+              --body "Pull Request ini dibuat otomatis oleh GitHub Actions setelah perubahan masuk ke branch develop.")
+            prNumber=$(echo "$prUrl" | grep -oP '\d+')
+            echo "Pull Request dibuat: #$prNumber"
+            echo "PR_NUMBER=$prNumber" >> "$GITHUB_ENV"
+          fi
 
       - name: Check mergeable status
         if: env.HAS_DIFF == 'true'
-        shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $repo = "${{ github.repository }}"
-          $pr = "${{ env.PR_NUMBER }}"
-
-          Write-Host "Mengecek status mergeable PR #$pr ..."
-
-          $mergeable = "UNKNOWN"
-          $attempt = 0
-
-          while ($mergeable -eq "UNKNOWN" -and $attempt -lt 5) {
-              Start-Sleep -Seconds 3
-              $mergeable = gh pr view $pr --repo $repo --json mergeable --jq ".mergeable"
-              Write-Host "Percobaan $($attempt + 1): status = $mergeable"
-              $attempt++
-          }
-
-          if ($mergeable -eq "CONFLICTING") {
-              Write-Host "::error::PR #$pr memiliki conflict dan tidak bisa di-merge otomatis."
-
-              gh pr comment $pr `
-                --repo $repo `
-                --body "Auto-merge gagal: branch develop memiliki conflict dengan main. Mohon di-resolve manual (lewat GitHub web atau lokal), lalu push ulang ke develop."
-
-              exit 1
-          }
+          repo="${{ github.repository }}"
+          pr="${{ env.PR_NUMBER }}"
+          echo "Mengecek status mergeable PR #$pr ..."
+          mergeable="UNKNOWN"
+          attempt=0
+          while [ "$mergeable" = "UNKNOWN" ] && [ "$attempt" -lt 5 ]; do
+            sleep 3
+            mergeable=$(gh pr view "$pr" --repo "$repo" --json mergeable --jq ".mergeable")
+            echo "Percobaan $((attempt + 1)): status = $mergeable"
+            attempt=$((attempt + 1))
+          done
+          if [ "$mergeable" = "CONFLICTING" ]; then
+            echo "::error::PR #$pr memiliki conflict dan tidak bisa di-merge otomatis."
+            gh pr comment "$pr" \
+              --repo "$repo" \
+              --body "Auto-merge gagal: branch develop memiliki conflict dengan main. Mohon di-resolve manual."
+            exit 1
+          fi
 
       - name: Tunggu CI hijau sebelum merge
         if: env.HAS_DIFF == 'true'
-        shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $ErrorActionPreference = 'Continue'
-          $dbgFile = Join-Path $env:RUNNER_TEMP "gate-debug.txt"
-          "mulai $(Get-Date -Format o)" | Set-Content $dbgFile
-
-          $repo = "${{ github.repository }}"
-          $pr = "${{ env.PR_NUMBER }}"
-          "repo=$repo pr=$pr" | Add-Content $dbgFile
-
-          $sha = "$(gh pr view $pr --repo $repo --json headRefOid --jq '.headRefOid' 2>&1)".Trim()
-          "sha exit=$LASTEXITCODE sha=$sha" | Add-Content $dbgFile
-
-          $reason = ""
-          if ($sha -notmatch '^[0-9a-f]{40}$') {
-              $reason = "gagal mendapat sha PR"
-          }
-          else {
-                  $runStatus = "null"
-                  for ($i = 0; $i -lt 60; $i++) {
-                  $runStatus = "$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].status' 2>&1)".Trim()
-                  "iter=$i status=$runStatus" | Add-Content $dbgFile
-                  if ($runStatus -eq "completed") { break }
-                  Start-Sleep -Seconds 15
-              }
-
-              if ($runStatus -ne "completed") {
-                  $reason = "timeout 15 menit menunggu CI"
-              }
-              else {
-                  $runConclusion = "$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].conclusion' 2>&1)".Trim()
-                  "conclusion=$runConclusion exit=$LASTEXITCODE" | Add-Content $dbgFile
-                  if ($runConclusion -ne "success") { $reason = "CI berstatus '$runConclusion'" }
-              }
-          }
-
-          "reason=$reason" | Add-Content $dbgFile
-
-          if ($reason -ne "") {
-              $body = "Auto-merge dibatalkan: $reason. Detail: https://github.com/$repo/actions`n`nDebug gate:`n" + (Get-Content $dbgFile -Raw)
-              gh pr edit $pr --repo $repo --body $body 2>&1 | Out-Null
-              "edit exit=$LASTEXITCODE" | Add-Content $dbgFile
-              gh pr comment $pr --repo $repo --body "Auto-merge dibatalkan: $reason (log di deskripsi PR)." 2>&1 | Out-Null
-              "comment exit=$LASTEXITCODE" | Add-Content $dbgFile
-              exit 1
-          }
-
-          "CI hijau" | Add-Content $dbgFile
-          exit 0
-
-      - name: Unggah jejak gate ke ci-log
-        if: always()
-        shell: powershell
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $ErrorActionPreference = 'Continue'
-          $src = Join-Path $env:RUNNER_TEMP "gate-debug.txt"
-          $dst = Join-Path "${{ github.workspace }}" "gate-failure.log"
-          if (Test-Path $src) { Copy-Item $src $dst -Force } else { "tidak ada jejak (mungkin gagal parse sebelum eksekusi)" | Set-Content $dst }
-
-          git config user.name github-actions
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git fetch origin ci-log 2>&1 | Out-Null
-          if ($LASTEXITCODE -eq 0) { git checkout ci-log } else { git checkout -b ci-log }
-          git add -f gate-failure.log
-          git commit --allow-empty -m "Jejak gate auto-merge otomatis" 2>&1 | Out-Null
-          git push origin ci-log --force 2>&1 | Out-Null
-          Write-Host "jejak diunggah, push exit=$LASTEXITCODE"
-          exit 0
+          repo="${{ github.repository }}"
+          pr="${{ env.PR_NUMBER }}"
+          sha=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')
+          echo "PR head SHA: $sha"
+          reason=""
+          if ! echo "$sha" | grep -qP '^[0-9a-f]{40}$'; then
+            reason="gagal mendapat sha PR"
+          else
+            runStatus="null"
+            for i in $(seq 1 60); do
+              runStatus=$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].status')
+              echo "iter=$i status=$runStatus"
+              if [ "$runStatus" = "completed" ]; then break; fi
+              sleep 15
+            done
+            if [ "$runStatus" != "completed" ]; then
+              reason="timeout 15 menit menunggu CI"
+            else
+              runConclusion=$(gh api "repos/$repo/actions/workflows/ci.yml/runs?head_sha=$sha&per_page=1" --jq '.workflow_runs[0].conclusion')
+              echo "conclusion=$runConclusion"
+              if [ "$runConclusion" != "success" ]; then
+                reason="CI berstatus '$runConclusion'"
+              fi
+            fi
+          fi
+          if [ -n "$reason" ]; then
+            gh pr edit "$pr" --repo "$repo" --body "Auto-merge dibatalkan: $reason. Detail: https://github.com/$repo/actions"
+            gh pr comment "$pr" --repo "$repo" --body "Auto-merge dibatalkan: $reason."
+            exit 1
+          fi
+          echo "CI hijau, siap merge."
 
       - name: Merge pull request
         if: env.HAS_DIFF == 'true'
-        shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $repo = "${{ github.repository }}"
-          $pr = "${{ env.PR_NUMBER }}"
-
-          Write-Host "Merging PR #$pr ..."
-
-          gh pr merge $pr `
-            --repo $repo `
+          repo="${{ github.repository }}"
+          pr="${{ env.PR_NUMBER }}"
+          echo "Merging PR #$pr ..."
+          gh pr merge "$pr" \
+            --repo "$repo" \
             --squash
-
-      - name: Sync develop with main
-        if: env.HAS_DIFF == 'true'
-        shell: powershell
-        run: |
-          Write-Host "Menyamakan branch develop dengan main..."
-
-          git fetch origin
-          git checkout develop
-          git reset --hard origin/main
-          git push --force origin develop
-
-          Write-Host "Branch develop sudah disamakan dengan main."
 
       - name: Trigger deploy workflow
         if: env.HAS_DIFF == 'true'
-        shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $repo = "${{ github.repository }}"
-
-          Write-Host "Menjalankan deploy.yml..."
-
-          gh workflow run deploy.yml `
-            --repo $repo `
+          repo="${{ github.repository }}"
+          echo "Menjalankan deploy.yml..."
+          gh workflow run deploy.yml \
+            --repo "$repo" \
             --ref main
-
-          Write-Host "Deploy workflow berhasil dipanggil."
+          echo "Deploy workflow berhasil dipanggil."
