@@ -4,104 +4,42 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - name: Sync repository to server
-        shell: powershell
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GIT_TERMINAL_PROMPT: 0
-        run: |
-          Set-Location "D:\laragon\www\ujion-tka-apps"
+      - name: Deploy via SSH to Rumah Web hosting
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 202.10.43.99
+          port: 2223
+          username: redp7931
+          key: ${{ secrets.RUMAHWEB_SSH_KEY }}
+          script: |
+            cd ~/public_html/tka-ujion.reditech.id
 
-          Write-Host "=== Repository ==="
-          git remote -v
+            echo "=== Git fetch + reset to origin/main ==="
+            git fetch origin main
+            git reset --hard origin/main
 
-          Write-Host "=== Fetch repository ==="
-          git -c credential.helper= -c core.askPass= -c "http.extraheader=AUTHORIZATION: bearer $env:GH_TOKEN" fetch --prune origin main
+            echo "=== Composer install (no-dev, optimize) ==="
+            php ~/composer.phar install --no-dev --optimize-autoloader --no-interaction 2>&1 || echo "WARN: composer install issue"
 
-          Write-Host "=== Checkout main ==="
-          git checkout main
+            echo "=== Run migrations ==="
+            php artisan migrate --force
 
-          Write-Host "=== Reset ke origin/main ==="
-          git reset --hard origin/main
+            echo "=== Clear + cache ==="
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
 
-          Write-Host "=== Git status ==="
-          git status
-
-      - name: Build Laravel application
-        shell: powershell
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GIT_TERMINAL_PROMPT: 0
-        run: |
-          $ErrorActionPreference = 'Continue'
-          Set-Location "D:\laragon\www\ujion-tka-apps"
-
-          Write-Host "=== Docker Compose Build ==="
-          docker compose build app queue 2>&1 | Tee-Object -FilePath build-log.txt
-          $buildExit = $LASTEXITCODE
-          Write-Host "build exit=$buildExit"
-
-          if ($buildExit -ne 0) {
-              Write-Host "Build gagal — mengunggah log ke branch deploy-log ..."
-              git config user.name github-actions
-              git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-              git add -f build-log.txt
-              git commit -m "Log build deploy gagal otomatis" -- build-log.txt 2>&1 | Out-Host
-              Write-Host "commit exit=$LASTEXITCODE"
-              git -c credential.helper= -c core.askPass= -c "http.extraheader=AUTHORIZATION: bearer $env:GH_TOKEN" push --force origin HEAD:refs/heads/deploy-log 2>&1 | Out-Host
-              Write-Host "push exit=$LASTEXITCODE"
-              git reset --hard origin/main 2>&1 | Out-Host
-              exit $buildExit
-          }
-
-      - name: Recreate application containers
-        shell: powershell
-        run: |
-          Set-Location "D:\laragon\www\ujion-tka-apps"
-
-          Write-Host "=== Recreating containers with new image ==="
-          docker compose up -d --force-recreate --remove-orphans app queue webserver
-
-      - name: Wait for database
-        shell: powershell
-        run: |
-          Write-Host "Menunggu database..."
-          Start-Sleep -Seconds 10
-
-      - name: Run migrations
-        shell: powershell
-        run: |
-          Set-Location "D:\laragon\www\ujion-tka-apps"
-
-          Write-Host "=== Running migration ==="
-          docker compose exec -T app php artisan migrate --force
-
-      - name: Clear and cache Laravel config
-        shell: powershell
-        run: |
-          Set-Location "D:\laragon\www\ujion-tka-apps"
-
-          Write-Host "=== Clearing Laravel cache ==="
-          docker compose exec -T app php artisan optimize:clear
-
-          Write-Host "=== Caching Laravel config ==="
-          docker compose exec -T app php artisan config:cache
-
-      - name: Check container status
-        shell: powershell
-        run: |
-          Set-Location "D:\laragon\www\ujion-tka-apps"
-
-          Write-Host "=== Container Status ==="
-          docker compose ps
+            echo "=== Done ==="
+            php artisan tinker --execute="echo 'App: ' . config('app.name') . ' | Env: ' . config('app.env');" 2>&1 || true
