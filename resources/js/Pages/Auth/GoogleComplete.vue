@@ -35,7 +35,7 @@ const submit = () => {
 				</div>
 				<h1 class="text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">Lengkapi Data Guru</h1>
 				<p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
-					Akun Google Anda berhasil terhubung. Lengkapi data di bawah untuk mengajukan aktivasi akun.
+					Akun Google Anda berhasil terhubung. Lengkapi data di bawah untuk mengaktifkan trial gratis.
 				</p>
 			</div>
 
@@ -124,7 +124,7 @@ const submit = () => {
 					</div>
 
 					<button type="submit" class="btn-primary w-full py-3 text-lg" :disabled="form.processing">
-						Satu tahap lagi
+						Aktifkan Trial Gratis
 						<i class="fa-solid fa-arrow-right ml-2 text-sm"></i>
 					</button>
 				</form>
