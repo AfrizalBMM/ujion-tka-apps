@@ -145,6 +145,7 @@ class RouteThrottleTest extends TestCase
 
             if ($route === null) {
                 $missing[] = $name.' (route not found)';
+
                 continue;
             }
 

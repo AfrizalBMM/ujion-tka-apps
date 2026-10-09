@@ -7,7 +7,6 @@ use App\Services\TrialService;
 use App\Services\WaMessageTemplateService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Route;
 
 class SendTrialReminders extends Command
 {
@@ -32,6 +31,7 @@ class SendTrialReminders extends Command
         foreach ($users as $user) {
             if (! $user->no_wa) {
                 Log::info('Trial reminder skipped — no WA number', ['user_id' => $user->id]);
+
                 continue;
             }
 

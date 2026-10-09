@@ -50,7 +50,7 @@ class BlogXssSanitizationTest extends TestCase
     public function test_javascript_urls_are_stripped_from_href(): void
     {
         $post = $this->createPublishedPost(
-            "[Click me](javascript:alert(1))"
+            '[Click me](javascript:alert(1))'
         );
 
         $response = $this->get(route('artikel.show', $post));

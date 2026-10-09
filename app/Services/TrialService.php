@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AppSetting;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 
 class TrialService
 {
@@ -105,7 +106,7 @@ class TrialService
     /**
      * Get users whose trial expires within the given hours (for WA reminder).
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     * @return Collection<int, User>
      */
     public function getUsersExpiringSoon(int $withinHours = 24)
     {

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\User;
-use Illuminate\Support\Carbon;
 
 class CouponService
 {

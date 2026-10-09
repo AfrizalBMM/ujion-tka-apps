@@ -17,8 +17,8 @@ use App\Http\Controllers\Guru\ProfileController;
 use App\Http\Controllers\Guru\SoalGuruController;
 use App\Http\Controllers\Guru\SoalUjionController;
 use App\Http\Controllers\Guru\TeksBacaanGuruController;
-use App\Http\Controllers\TrialProfileController;
 use App\Http\Controllers\RegisterGuruController;
+use App\Http\Controllers\TrialProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
