@@ -22,24 +22,24 @@ jobs:
           port: 2223
           username: redp7931
           key: ${{ secrets.RUMAHWEB_SSH_KEY }}
+          script_stop: false
+          allenvs: false
+          command_timeout: 8m
+          proxy_timeout: 8m
           script: |
+            export LC_ALL=C
             cd ~/public_html/tka-ujion.reditech.id
-
-            echo "=== Git fetch + reset to origin/main ==="
-            git fetch origin main
-            git reset --hard origin/main
-
-            echo "=== Composer install (no-dev, optimize) ==="
-            php ~/composer.phar install --no-dev --optimize-autoloader --no-interaction 2>&1 || echo "WARN: composer install issue"
-
-            echo "=== Run migrations ==="
-            php artisan migrate --force
-
-            echo "=== Clear + cache ==="
-            php artisan optimize:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-
+            echo "=== Git fetch + reset ==="
+            git fetch origin main 2>&1
+            git reset --hard origin/main 2>&1
+            echo "=== Composer ==="
+            php ~/composer.phar install --no-dev --optimize-autoloader --no-interaction 2>&1 || true
+            echo "=== Migrate ==="
+            php artisan migrate --force 2>&1 || true
+            echo "=== Cache ==="
+            php artisan optimize:clear 2>&1 || true
+            php artisan config:cache 2>&1 || true
+            php artisan route:cache 2>&1 || true
+            php artisan view:cache 2>&1 || true
             echo "=== Done ==="
             php artisan tinker --execute="echo 'App: ' . config('app.name') . ' | Env: ' . config('app.env');" 2>&1 || true

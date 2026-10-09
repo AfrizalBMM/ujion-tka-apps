@@ -12,6 +12,10 @@ const props = defineProps({
 		type: Number,
 		default: 7,
 	},
+	defaults: {
+		type: Object,
+		default: () => ({}),
+	},
 });
 
 const page = usePage();
@@ -21,10 +25,10 @@ const currentStep = ref(1);
 const totalSteps = 2;
 
 const form = useForm({
-	name: '',
-	jenjang: '',
-	satuan_pendidikan: '',
-	no_wa: '',
+	name: props.defaults?.name || '',
+	jenjang: props.defaults?.jenjang || '',
+	satuan_pendidikan: props.defaults?.satuan_pendidikan || '',
+	no_wa: props.defaults?.no_wa || '',
 	avatar: null,
 });
 

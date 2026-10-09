@@ -95,10 +95,19 @@ class GoogleAuthController extends Controller
                 Auth::login($user, true);
                 $request->session()->regenerate();
 
+                // Trial belum pernah diaktifkan → wajib lengkapi profil dulu
+                if (! $user->isTrialActive() && $user->trial_status === User::TRIAL_NONE) {
+                    return redirect()->route('guru.trial.profile.show')->with('flash', [
+                        'type' => 'info',
+                        'title' => 'Akun ditemukan',
+                        'message' => 'Lengkapi profil Anda untuk mengaktifkan trial gratis.',
+                    ]);
+                }
+
                 return redirect()->route('guru.dashboard')->with('flash', [
                     'type' => 'info',
-                    'title' => 'Akun ditemukan, masih pending',
-                    'message' => 'Akun Anda terhubung dengan Google namun masih menunggu pembayaran aktivasi. Selesaikan pembayaran dari dashboard untuk mengaktifkan akun.',
+                    'title' => 'Akun ditemukan',
+                    'message' => 'Selamat datang kembali. Trial Anda masih berjalan.',
                 ]);
             }
 
@@ -188,10 +197,11 @@ class GoogleAuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        return redirect()->route('guru.dashboard')->with('flash', [
+        // Trial belum aktif → minta lengkapi profil dulu untuk mengaktifkan trial
+        return redirect()->route('guru.trial.profile.show')->with('flash', [
             'type' => 'success',
             'title' => 'Akun Google berhasil dihubungkan',
-            'message' => 'Selamat datang! Selesaikan pembayaran aktivasi dari dashboard untuk membuka semua fitur.',
+            'message' => 'Satu langkah lagi! Lengkapi profil untuk mengaktifkan trial gratis Anda.',
         ]);
     }
 
