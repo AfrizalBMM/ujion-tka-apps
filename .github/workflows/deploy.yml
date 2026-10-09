@@ -30,19 +30,6 @@ jobs:
       - name: Build Vite assets
         run: npm run build
 
-      - name: Upload build assets to hosting
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 202.10.43.99
-          port: 2223
-          username: redp7931
-          key: ${{ secrets.RUMAHWEB_SSH_KEY }}
-          source: "public/build/"
-          target: "/home/redp7931/public_html/tka-ujion.reditech.id/public/"
-          strip_components: 1
-          timeout: 120s
-          command_timeout: 120s
-
       - name: Deploy via SSH to Rumah Web hosting
         uses: appleboy/ssh-action@v1
         with:
@@ -71,3 +58,36 @@ jobs:
             php artisan view:cache 2>&1 || true
             echo "=== Done ==="
             php artisan tinker --execute="echo 'App: ' . config('app.name') . ' | Env: ' . config('app.env');" 2>&1 || true
+
+      - name: Upload build assets to hosting (after git reset)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 202.10.43.99
+          port: 2223
+          username: redp7931
+          key: ${{ secrets.RUMAHWEB_SSH_KEY }}
+          source: "public/build/"
+          target: "/home/redp7931/public_html/tka-ujion.reditech.id/public/"
+          strip_components: 1
+          timeout: 120s
+          command_timeout: 120s
+
+      - name: Clear cache after asset upload
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 202.10.43.99
+          port: 2223
+          username: redp7931
+          key: ${{ secrets.RUMAHWEB_SSH_KEY }}
+          script_stop: false
+          allenvs: false
+          command_timeout: 4m
+          proxy_timeout: 4m
+          script: |
+            export LC_ALL=C
+            cd ~/public_html/tka-ujion.reditech.id
+            php artisan optimize:clear 2>&1 || true
+            php artisan config:cache 2>&1 || true
+            php artisan route:cache 2>&1 || true
+            php artisan view:cache 2>&1 || true
+            echo "=== Deploy complete ==="
