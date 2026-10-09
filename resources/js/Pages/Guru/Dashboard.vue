@@ -24,6 +24,10 @@ defineProps({
 		type: Object,
 		default: null,
 	},
+	trialBanner: {
+		type: Object,
+		default: null,
+	},
 });
 
 const page = usePage();
@@ -39,6 +43,33 @@ const formatAmount = (value) => Number(value).toLocaleString('id-ID');
 
 	<GuruLayout>
 		<div class="space-y-6">
+			<!-- Trial Active Banner -->
+			<div v-if="trialBanner" class="card border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 dark:border-emerald-500/30 dark:from-emerald-500/10 dark:to-teal-500/10">
+				<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div class="flex items-center gap-4">
+						<div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
+							<i class="fa-solid fa-rocket text-lg"></i>
+						</div>
+						<div>
+							<div class="flex items-center gap-2">
+								<span class="text-sm font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Trial Aktif</span>
+								<span v-if="trialBanner.days_left !== undefined" class="inline-flex items-center rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-bold text-white">
+									{{ trialBanner.days_left }} hari tersisa
+								</span>
+							</div>
+							<p class="mt-1 text-sm text-emerald-900 dark:text-emerald-100">
+								Akses penuh platform aktif selama periode trial.
+								<span v-if="trialBanner.expires_at" class="font-semibold">Berakhir: {{ trialBanner.expires_at }}</span>
+							</p>
+						</div>
+					</div>
+					<Link :href="route('pricing')" class="btn-primary shrink-0 whitespace-nowrap">
+						<i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>
+						Lihat Paket Langganan
+					</Link>
+				</div>
+			</div>
+
 			<div v-if="paymentBanner" class="card border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10">
 				<div id="doku-payment-banner" class="space-y-4">
 					<div data-doku-panel="idle">
@@ -263,12 +294,18 @@ const formatAmount = (value) => Number(value).toLocaleString('id-ID');
 						<i class="fa-solid fa-lock absolute right-2 top-2 text-[10px] text-amber-500"></i>
 					</a>
 					<Link v-else :href="route('guru.results.index')" class="mobile-menu-card">
-						<div class="mobile-menu-card-icon bg-gradient-to-br from-emerald-500 to-green-600">
-							<i class="fa-solid fa-chart-line"></i>
-						</div>
-						<div class="mobile-menu-card-label">Hasil Siswa</div>
-					</Link>
-					<Link :href="route('guru.chat')" class="mobile-menu-card">
+							<div class="mobile-menu-card-icon bg-gradient-to-br from-emerald-500 to-green-600">
+								<i class="fa-solid fa-chart-line"></i>
+							</div>
+							<div class="mobile-menu-card-label">Hasil Siswa</div>
+						</Link>
+						<Link :href="route('guru.analisis-siswa')" class="mobile-menu-card">
+							<div class="mobile-menu-card-icon bg-gradient-to-br from-indigo-500 to-purple-600">
+								<i class="fa-solid fa-chart-pie"></i>
+							</div>
+							<div class="mobile-menu-card-label">Analisis Siswa</div>
+						</Link>
+						<Link :href="route('guru.chat')" class="mobile-menu-card">
 						<div class="mobile-menu-card-icon bg-gradient-to-br from-rose-500 to-pink-600">
 							<i class="fa-solid fa-comments"></i>
 						</div>

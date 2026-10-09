@@ -1,9 +1,9 @@
 <script setup>
-import { inject, onBeforeUnmount, onMounted, ref, nextTick, watch} from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { inject, onBeforeUnmount, onMounted, ref, nextTick, watch, computed } from 'vue';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import GuruLayout from '@/Layouts/GuruLayout.vue';
 
-defineProps({
+const props = defineProps({
 	chats: {
 		type: Array,
 		required: true,
@@ -33,6 +33,46 @@ const previewUrl = ref('');
 const previewMeta = ref('');
 
 let objectUrl = null;
+
+// --- Auto-refresh polling for new messages ---
+const lastChatId = computed(() => {
+	if (!props.chats || props.chats.length === 0) return 0;
+	return Math.max(...props.chats.map(c => c.id));
+});
+
+let pollTimer = null;
+const pollIntervalMs = 15000; // 15 seconds
+
+const pollForNewMessages = () => {
+	router.reload({
+		only: ['chats'],
+		preserveScroll: true,
+		preserveState: true,
+	});
+};
+
+const startPolling = () => {
+	stopPolling();
+	pollTimer = window.setInterval(pollForNewMessages, pollIntervalMs);
+};
+
+const stopPolling = () => {
+	if (pollTimer) {
+		window.clearInterval(pollTimer);
+		pollTimer = null;
+	}
+};
+
+// Watch for new messages to auto-scroll
+watch(() => props.chats.length, (newLen, oldLen) => {
+	if (newLen > (oldLen || 0)) {
+		nextTick(() => {
+			if (chatBox.value) {
+				chatBox.value.scrollTop = chatBox.value.scrollHeight;
+			}
+		});
+	}
+}, { flush: 'post' });
 
 const clearPreview = () => {
 	if (objectUrl) {
@@ -91,12 +131,14 @@ onMounted(() => {
 			chatBox.value.scrollTop = chatBox.value.scrollHeight;
 		}, 100);
 	}
+	startPolling();
 });
 
 onBeforeUnmount(() => {
 	if (objectUrl) {
 		URL.revokeObjectURL(objectUrl);
 	}
+	stopPolling();
 });
 </script>
 
