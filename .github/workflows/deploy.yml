@@ -51,6 +51,8 @@ jobs:
             php ~/composer.phar install --no-dev --optimize-autoloader --no-interaction 2>&1 || true
             echo "=== Migrate ==="
             php artisan migrate --force 2>&1 || true
+            echo "=== Ziggy routes ==="
+            php artisan ziggy:generate 2>&1 || true
             echo "=== Cache ==="
             php artisan optimize:clear 2>&1 || true
             php artisan config:cache 2>&1 || true
