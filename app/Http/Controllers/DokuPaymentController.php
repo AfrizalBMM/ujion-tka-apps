@@ -172,6 +172,12 @@ class DokuPaymentController extends Controller
             return response()->json(['success' => $order !== null]);
         }
 
+        if (str_starts_with($invoiceNumber, 'PMB-')) {
+            $transaction = $this->processPembahasanStatusPayload($payload);
+
+            return response()->json(['success' => $transaction !== null]);
+        }
+
         $transaction = $this->processStatusPayload($payload);
 
         return response()->json(['success' => $transaction !== null]);
@@ -198,7 +204,26 @@ class DokuPaymentController extends Controller
             $remoteStatus = $doku->checkStatus($invoiceNumber);
 
             if (is_array($remoteStatus)) {
-                $transaction = $this->processStatusPayload($remoteStatus) ?? $transaction->refresh();
+                if ($transaction->type === Transaction::TYPE_PEMBAHASAN) {
+                    $transaction = $this->processPembahasanStatusPayload($remoteStatus) ?? $transaction->refresh();
+                } else {
+                    $transaction = $this->processStatusPayload($remoteStatus) ?? $transaction->refresh();
+                }
+            }
+        }
+
+        // For pembahasan transactions, redirect to the exam result page
+        if ($transaction->type === Transaction::TYPE_PEMBAHASAN) {
+            $sesi = $transaction->ujianSesi;
+            $order = $sesi?->landingExamOrder;
+            if ($order && $transaction->status === Transaction::STATUS_SUCCESS) {
+                return redirect()
+                    ->route('ujian-online.result', $order->session_token)
+                    ->with('flash', [
+                        'type' => 'success',
+                        'title' => 'Pembayaran berhasil',
+                        'message' => 'Pembahasan telah terbuka. Silakan lihat hasil ujian Anda.',
+                    ]);
             }
         }
 
@@ -310,6 +335,110 @@ class DokuPaymentController extends Controller
         ]);
 
         return $transaction->refresh();
+    }
+
+    public function processPembahasanStatusPayload(array $payload): ?Transaction
+    {
+        $invoiceNumber = $this->extractInvoiceNumber($payload);
+        $transaction = $this->findTransactionByInvoiceNumber($invoiceNumber);
+
+        if (! $transaction) {
+            Log::warning('Doku notification for unknown pembahasan transaction', ['invoice_number' => $invoiceNumber]);
+
+            return null;
+        }
+
+        if ($transaction->status === Transaction::STATUS_SUCCESS) {
+            return $transaction;
+        }
+
+        $grossAmount = (float) $this->extractAmount($payload);
+        if (abs($grossAmount - (float) $transaction->amount) > 0.01) {
+            Log::critical('Doku pembahasan amount mismatch', [
+                'reference_code' => $transaction->reference_code,
+                'invoice_number' => $invoiceNumber,
+                'expected' => $transaction->amount,
+                'received' => $this->extractAmount($payload),
+            ]);
+
+            return $transaction;
+        }
+
+        $dokuStatus = $this->extractStatus($payload);
+        $paymentChannel = $this->extractPaymentChannel($payload);
+
+        if ($dokuStatus === 'SUCCESS') {
+            $this->markPembahasanSuccess($transaction, $dokuStatus, $paymentChannel);
+
+            return $transaction->refresh();
+        }
+
+        if (in_array($dokuStatus, ['FAILED', 'EXPIRED', 'CANCELLED'], true)) {
+            $transaction->update([
+                'status' => Transaction::STATUS_FAILED,
+                'doku_transaction_status' => $dokuStatus,
+                'doku_payment_channel' => $paymentChannel,
+                'rejection_reason' => 'Pembayaran pembahasan tidak selesai (status: '.strtolower($dokuStatus).').',
+                'reviewed_at' => now(),
+            ]);
+
+            return $transaction->refresh();
+        }
+
+        $transaction->update([
+            'doku_transaction_status' => $dokuStatus,
+            'doku_payment_channel' => $paymentChannel,
+        ]);
+
+        return $transaction->refresh();
+    }
+
+    private function markPembahasanSuccess(Transaction $transaction, string $dokuStatus, string $paymentChannel): void
+    {
+        $transaction->update([
+            'status' => Transaction::STATUS_SUCCESS,
+            'payment_method' => Transaction::PAYMENT_METHOD_DOKU,
+            'doku_transaction_status' => $dokuStatus,
+            'doku_payment_channel' => $paymentChannel,
+            'paid_at' => now(),
+            'rejection_reason' => null,
+        ]);
+
+        // Unlock pembahasan for the associated exam session
+        $sesi = $transaction->ujianSesi;
+        if ($sesi) {
+            $sesi->update(['pembahasan_unlocked_at' => now()]);
+
+            // Record coupon usage if coupon was applied
+            if ($transaction->coupon_id && $transaction->discount_value > 0) {
+                $coupon = \App\Models\Coupon::find($transaction->coupon_id);
+                if ($coupon) {
+                    app(\App\Services\CouponService::class)->recordUsage(
+                        coupon: $coupon,
+                        originalAmount: (float) $transaction->original_amount,
+                        discountValue: (float) $transaction->discount_value,
+                        finalAmount: (float) $transaction->amount,
+                        user: $transaction->user,
+                        identifier: $sesi->nomor_wa,
+                        referenceCode: $transaction->reference_code,
+                    );
+                }
+            }
+
+            // Send WA notification if we have a phone number
+            if (! blank($sesi->nomor_wa)) {
+                $waBody = app(WaMessageTemplateService::class)->render('event_pembahasan_unlocked', [
+                    'name' => $sesi->nama,
+                    'exam_title' => $sesi->exam?->judul ?? 'Ujian',
+                ]);
+
+                SendWhatsAppBlast::dispatch($sesi->nomor_wa, $waBody)->onQueue('high');
+            }
+        } else {
+            Log::critical('Pembahasan payment success but no exam session linked', [
+                'reference_code' => $transaction->reference_code,
+            ]);
+        }
     }
 
     public function processPublicExamStatusPayload(array $payload): ?LandingExamOrder
@@ -448,6 +577,11 @@ class DokuPaymentController extends Controller
         $user = Auth::user();
 
         if ($user && $user->isSuperadmin()) {
+            return;
+        }
+
+        // For pembahasan transactions by guest users (no user_id), allow access
+        if ($transaction->type === Transaction::TYPE_PEMBAHASAN && ! $transaction->user_id) {
             return;
         }
 

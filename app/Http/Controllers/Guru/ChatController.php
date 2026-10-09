@@ -25,6 +25,7 @@ class ChatController extends Controller
             ?? 'https://ui-avatars.com/api/?name=Superadmin&background=4F6EF7&color=fff';
 
         $chats = Chat::with(['fromUser', 'toUser'])
+            ->where('conversation_type', Chat::CONVERSATION_GURU_ADMIN)
             ->where(function ($query) use ($user) {
                 $query->where('from_user_id', $user->id)
                     ->orWhere('to_user_id', $user->id);
@@ -80,6 +81,7 @@ class ChatController extends Controller
 
         $data['from_user_id'] = Auth::id();
         $data['to_user_id'] = $superadminId;
+        $data['conversation_type'] = Chat::CONVERSATION_GURU_ADMIN;
 
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('chat-images', 'local');

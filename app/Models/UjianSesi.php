@@ -23,6 +23,7 @@ class UjianSesi extends Model
         'waktu_selesai',
         'skor',
         'profil_ringkasan',
+        'pembahasan_unlocked_at',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class UjianSesi extends Model
         'waktu_selesai' => 'datetime',
         'skor' => 'decimal:2',
         'profil_ringkasan' => 'array',
+        'pembahasan_unlocked_at' => 'datetime',
     ];
 
     public function exam(): BelongsTo
@@ -61,5 +63,15 @@ class UjianSesi extends Model
     public function landingExamOrder(): BelongsTo
     {
         return $this->belongsTo(LandingExamOrder::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function pembahasanUnlocked(): bool
+    {
+        return $this->pembahasan_unlocked_at !== null;
     }
 }

@@ -83,9 +83,9 @@ class LandingExamController extends Controller
             ->where('nomor_wa', PhoneNumber::toLocalFormat($nomorWa))
             ->where('nama', $validated['nama'])
             ->whereIn('status', [
-                LandingExamOrder::STATUS_PENDING_PAYMENT,
                 LandingExamOrder::STATUS_PAID,
                 LandingExamOrder::STATUS_EXAM_STARTED,
+                LandingExamOrder::STATUS_EXAM_COMPLETED,
             ])
             ->latest()
             ->first();
@@ -94,15 +94,19 @@ class LandingExamController extends Controller
             return redirect()->route('ujian-online.pending', $existing->session_token);
         }
 
+        // Phase 2: exam is free to take. Payment is only for pembahasan (post-exam).
+        // If the mapel price is 0, auto-set to paid. Otherwise, still allow free exam access
+        // by setting status to paid (the pembahasan paywall handles monetization).
         $order = LandingExamOrder::create([
             'landing_exam_mapel_id' => $mapel->id,
             'nama' => $validated['nama'],
             'nomor_wa' => PhoneNumber::toLocalFormat($nomorWa),
-            'status' => LandingExamOrder::STATUS_PENDING_PAYMENT,
+            'status' => LandingExamOrder::STATUS_PAID,
             'amount' => $mapel->price,
+            'original_amount' => $mapel->price,
         ]);
 
-        return redirect()->route('ujian-online.pending', $order->session_token);
+        return redirect()->route('ujian-online.start', $order->session_token);
     }
 
     public function pending(string $orderToken): View
@@ -189,6 +193,8 @@ class LandingExamController extends Controller
         $sesi = $order->ujianSesi;
         abort_unless($sesi && $sesi->status === 'selesai', 404);
 
+        $pembahasanUnlocked = $sesi->pembahasanUnlocked();
+
         $sesi->load([
             'mapelPaket.soals.pilihanJawabans',
             'mapelPaket.soals.pasanganMenjodohkans',
@@ -202,7 +208,7 @@ class LandingExamController extends Controller
         $jawabanBySoal = $sesi->jawabanSiswas->keyBy('soal_id');
         $seed = $sesi->session_token;
 
-        $questions = $soals->map(function (Soal $soal) use ($jawabanBySoal) {
+        $questions = $soals->map(function (Soal $soal) use ($jawabanBySoal, $pembahasanUnlocked) {
             $jawaban = $jawabanBySoal->get($soal->id);
 
             $correctOption = $soal->pilihanJawabans->firstWhere('is_benar', true);
@@ -237,7 +243,8 @@ class LandingExamController extends Controller
                 'tipe_soal' => $soal->tipe_soal,
                 'pertanyaan' => $soal->pertanyaan,
                 'gambar_url' => $soal->gambar_url,
-                'pembahasan' => $soal->pembahasan,
+                'pembahasan' => $pembahasanUnlocked ? $soal->pembahasan : null,
+                'pembahasan_locked' => ! $pembahasanUnlocked,
                 'teks_bacaan' => $soal->teksBacaan ? [
                     'judul' => $soal->teksBacaan->judul,
                     'konten' => $soal->teksBacaan->konten,
@@ -260,6 +267,6 @@ class LandingExamController extends Controller
         $totalSoal = $soals->count();
         $dijawab = $jawabanBySoal->filter(fn ($j) => ! empty($j->jawaban_pg) || ! empty($j->jawaban_menjodohkan))->count();
 
-        return view('ujian-online.result', compact('order', 'sesi', 'mapelPaket', 'questions', 'totalSoal', 'dijawab'));
+        return view('ujian-online.result', compact('order', 'sesi', 'mapelPaket', 'questions', 'totalSoal', 'dijawab', 'pembahasanUnlocked'));
     }
 }

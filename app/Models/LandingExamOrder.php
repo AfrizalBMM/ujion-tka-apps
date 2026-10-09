@@ -26,14 +26,20 @@ class LandingExamOrder extends Model
         'session_token',
         'status',
         'amount',
+        'original_amount',
         'doku_invoice_number',
         'doku_transaction_status',
         'doku_payment_channel',
         'paid_at',
+        'coupon_id',
+        'coupon_code',
+        'discount_value',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'original_amount' => 'decimal:2',
+        'discount_value' => 'decimal:2',
         'paid_at' => 'datetime',
     ];
 

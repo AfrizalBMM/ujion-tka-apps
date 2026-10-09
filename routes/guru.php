@@ -31,7 +31,7 @@ Route::get('/register/guru/check-email', [RegisterGuruController::class, 'checkE
     ->middleware('throttle:30,1')
     ->name('register.guru.check-email');
 
-Route::middleware(['auth', 'role:guru', 'guru.active', 'audit'])->prefix('guru')->name('guru.')->scopeBindings()->group(function () {
+Route::middleware(['auth', 'role:guru', 'guru.active', 'trial.active', 'audit'])->prefix('guru')->name('guru.')->scopeBindings()->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');

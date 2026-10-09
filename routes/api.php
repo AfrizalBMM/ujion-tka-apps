@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\LandingClickController;
 use App\Http\Controllers\Api\WebhookController;
 use App\Http\Controllers\DokuPaymentController;
@@ -19,6 +20,17 @@ use Illuminate\Support\Facades\Route;
 Route::post('/landing-click', [LandingClickController::class, 'store'])
     ->middleware('throttle:120,1')
     ->name('api.landing-click');
+
+Route::post('/coupons/verify', [CouponController::class, 'verify'])
+    ->middleware('throttle:30,1')
+    ->name('api.coupons.verify');
+
+// Chat API (guru-admin only)
+Route::middleware(['auth'])->prefix('chat')->group(function () {
+    Route::get('/threads', [\App\Http\Controllers\Api\ChatController::class, 'threads'])->name('api.chat.threads');
+    Route::post('/send', [\App\Http\Controllers\Api\ChatController::class, 'send'])->name('api.chat.send');
+    Route::get('/messages/{thread}', [\App\Http\Controllers\Api\ChatController::class, 'messages'])->name('api.chat.messages');
+});
 
 Route::post('/wa-webhook', [WebhookController::class, 'handle'])
     ->middleware('throttle:120,1')

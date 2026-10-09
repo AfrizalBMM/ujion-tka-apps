@@ -12,14 +12,21 @@ class Transaction extends Model
 
     public const STATUS_FAILED = 'failed';
 
+    public const TYPE_SUBSCRIPTION = 'subscription';
+
+    public const TYPE_PEMBAHASAN = 'pembahasan';
+
     public const PAYMENT_METHOD_DOKU = 'doku';
 
     protected $fillable = [
         'user_id',
         'pricing_plan_id',
+        'ujian_sesi_id',
+        'type',
         'reference_code',
         'plan_name',
         'amount',
+        'original_amount',
         'status',
         'payment_method',
         'doku_invoice_number',
@@ -31,12 +38,17 @@ class Transaction extends Model
         'reviewed_at',
         'reviewed_by',
         'rejection_reason',
+        'coupon_id',
+        'coupon_code',
+        'discount_value',
     ];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
+            'original_amount' => 'decimal:2',
+            'discount_value' => 'decimal:2',
             'reviewed_at' => 'datetime',
             'paid_at' => 'datetime',
         ];
@@ -50,6 +62,16 @@ class Transaction extends Model
     public function pricingPlan()
     {
         return $this->belongsTo(PricingPlan::class);
+    }
+
+    public function ujianSesi()
+    {
+        return $this->belongsTo(UjianSesi::class);
+    }
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function tarifJenjang()
