@@ -10,7 +10,23 @@ class GlobalQuestion extends Model
 {
     use SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'jenjang_id',
+        'material_id',
+        'reading_passage',
+        'question_type',
+        'question_text',
+        'material_curriculum',
+        'material_mapel',
+        'material_subelement',
+        'material_unit',
+        'material_sub_unit',
+        'options',
+        'answer_key',
+        'explanation',
+        'is_active',
+        'created_by',
+    ];
 
     protected $casts = [
         'options' => 'array',

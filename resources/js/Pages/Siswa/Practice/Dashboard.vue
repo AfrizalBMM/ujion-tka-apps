@@ -195,7 +195,7 @@ const packageRows = computed(() =>
 			</section>
 
 			<div class="text-center text-xs text-textSecondary">
-				Jika Anda salah token, kembali ke <Link class="font-semibold text-indigo-700 hover:underline" :href="route('materi.login')">halaman login latihan</Link>.
+				Jika Anda salah token, kembali ke <Link class="font-semibold text-indigo-700 hover:underline" :href="route('materi.practice.login')">halaman login latihan</Link>.
 			</div>
 		</div>
 	</GuestLayout>

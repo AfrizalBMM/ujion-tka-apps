@@ -32,9 +32,11 @@ const currentIndex = ref(0);
 const saveStatus = ref('idle');
 const showSaveStatus = ref(false);
 const showFinishModal = ref(false);
+const showTimeWarningToast = ref(false);
 const finishSubmitting = ref(false);
 const finishError = ref(null);
 const rootEl = ref(null);
+const finishModalEl = ref(null);
 const questionPaneEl = ref(null);
 
 const initialRemaining = Number(props.timer?.remaining_seconds ?? props.timer?.duration_seconds ?? 0);
@@ -226,6 +228,7 @@ const next = () => {
 
 const openFinishModal = () => {
 	showFinishModal.value = true;
+	nextTick(() => finishModalEl.value?.focus());
 };
 
 const closeFinishModal = () => {
@@ -308,7 +311,8 @@ onMounted(() => {
 
 		if (remainingSeconds.value <= 300 && !warned5) {
 			warned5 = true;
-			window.confirm('⚠️ Sisa waktu 5 menit lagi! Periksa kembali jawaban Anda.');
+			showTimeWarningToast.value = true;
+			setTimeout(() => { showTimeWarningToast.value = false; }, 8000);
 		}
 
 		if (remainingSeconds.value <= 0) {
@@ -414,7 +418,7 @@ const onQuestionChange = async () => {
 						v-if="currentQuestion.gambar_url"
 						:src="currentQuestion.gambar_url"
 						alt="Gambar soal"
-						class="mb-5 hidden max-h-72 w-auto rounded-2xl border border-slate-200 shadow-sm"
+						class="mb-5 max-h-72 w-auto rounded-2xl border border-slate-200 shadow-sm"
 					>
 
 					<div v-if="currentQuestion.tipe_soal === 'pilihan_ganda'" class="grid grid-cols-1 gap-3 md:grid-flow-col md:grid-cols-2 md:grid-rows-2">
@@ -545,10 +549,40 @@ const onQuestionChange = async () => {
 			</div>
 		</div>
 
+		<Transition
+		enter-active-class="transition duration-300 ease-out"
+		enter-from-class="translate-y-[-100%] opacity-0"
+		enter-to-class="translate-y-0 opacity-100"
+		leave-active-class="transition duration-300 ease-in"
+		leave-from-class="translate-y-0 opacity-100"
+		leave-to-class="translate-y-[-100%] opacity-0"
+	>
 		<div
-			class="fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm"
-			:class="showFinishModal ? 'flex' : 'hidden'"
+			v-if="showTimeWarningToast"
+			class="fixed left-1/2 top-4 z-[55] -translate-x-1/2 rounded-2xl bg-amber-500 px-6 py-4 text-white shadow-2xl"
+			role="alert"
+			aria-live="assertive"
 		>
+			<div class="flex items-center gap-3">
+				<i class="fa-solid fa-clock text-xl"></i>
+				<div>
+					<div class="font-bold">Sisa waktu 5 menit lagi!</div>
+					<div class="text-sm text-amber-50">Periksa kembali jawaban Anda.</div>
+				</div>
+				<button type="button" class="ml-2 text-amber-100 hover:text-white" @click="showTimeWarningToast = false" aria-label="Tutup">
+					<i class="fa-solid fa-xmark"></i>
+				</button>
+			</div>
+		</div>
+	</Transition>
+
+	<div
+		class="fixed inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-sm"
+		:class="showFinishModal ? 'flex' : 'hidden'"
+		@keydown.escape="closeFinishModal"
+		tabindex="-1"
+		ref="finishModalEl"
+	>
 			<div class="mx-4 w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
 				<h3 class="text-lg font-bold text-slate-900">Selesaikan Ujian?</h3>
 				<div class="mt-3 space-y-2 text-sm text-slate-600">

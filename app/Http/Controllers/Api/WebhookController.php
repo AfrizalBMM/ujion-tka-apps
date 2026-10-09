@@ -117,7 +117,7 @@ class WebhookController extends Controller
 
             // Access token disimpan dalam bentuk hash, jadi untuk "lupa token" kita buat token baru.
             $newToken = TokenGenerator::uniqueTeacherToken();
-            $teacher->update(['access_token' => $newToken]);
+            $teacher->forceFill(['access_token' => $newToken])->save();
 
             return response()->json([
                 'success' => true,

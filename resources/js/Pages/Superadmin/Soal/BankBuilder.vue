@@ -499,7 +499,7 @@ onBeforeUnmount(() => {
 								</div>
 
 								<div v-if="gq.question_type === 'matching' && gq.options && gq.options.length" class="border-t border-border px-4 py-3 dark:border-slate-800">
-									<table class="w-full text-xs">
+									<div class="overflow-x-auto"><table class="w-full text-xs">
 										<thead>
 											<tr class="text-left text-textSecondary">
 												<th class="pb-1 pr-4 font-semibold">Item Kiri</th>
@@ -513,6 +513,7 @@ onBeforeUnmount(() => {
 											</tr>
 										</tbody>
 									</table>
+									</div>
 								</div>
 
 								<div v-if="gq.material_subelement || gq.material_unit" class="border-t border-border px-4 py-2 dark:border-slate-800">

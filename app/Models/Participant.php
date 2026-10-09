@@ -8,7 +8,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Participant extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'exam_id',
+        'nama',
+        'nomor_wa',
+        'session_token',
+        'waktu_mulai',
+        'waktu_selesai',
+        'skor',
+        'status_ujian',
+    ];
 
     protected $casts = [
         'waktu_mulai' => 'datetime',

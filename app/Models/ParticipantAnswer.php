@@ -7,7 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ParticipantAnswer extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'participant_id',
+        'question_id',
+        'jawaban',
+        'ragu_ragu',
+    ];
 
     protected $casts = [
         'ragu_ragu' => 'boolean',

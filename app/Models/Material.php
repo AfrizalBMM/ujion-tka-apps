@@ -9,5 +9,13 @@ class Material extends Model
 {
     use SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'jenjang',
+        'mapel',
+        'curriculum',
+        'subelement',
+        'unit',
+        'sub_unit',
+        'link',
+    ];
 }

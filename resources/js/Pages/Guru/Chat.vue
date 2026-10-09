@@ -1,5 +1,5 @@
 <script setup>
-import { inject, onBeforeUnmount, onMounted, ref } from 'vue';
+import { inject, onBeforeUnmount, onMounted, ref, nextTick, watch} from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import GuruLayout from '@/Layouts/GuruLayout.vue';
 
@@ -82,6 +82,8 @@ const submit = () => {
 };
 
 const modalOpen = ref(false);
+const detailAkunModalEl = ref(null);
+watch(modalOpen, (val) => { if (val) nextTick(() => detailAkunModalEl.value?.focus()); });
 
 onMounted(() => {
 	if (chatBox.value) {
@@ -186,7 +188,7 @@ onBeforeUnmount(() => {
 
 
 			<!-- Modal Info/Tutorial Chat -->
-			<div id="modal-detail-akun" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" :class="modalOpen ? '' : 'hidden'" @click.self="modalOpen = false">
+			<div id="modal-detail-akun" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" :class="modalOpen ? '' : 'hidden'" @click.self="modalOpen = false" @keydown.escape="modalOpen = false" tabindex="-1" ref="detailAkunModalEl">
 				<div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 w-full max-w-md relative">
 					<button class="absolute top-2 right-2 text-gray-400 hover:text-red-500" @click="modalOpen = false">
 						<i class="fa-solid fa-xmark fa-lg"></i>

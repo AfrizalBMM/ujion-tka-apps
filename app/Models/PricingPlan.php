@@ -7,7 +7,19 @@ use Illuminate\Support\Facades\Schema;
 
 class PricingPlan extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'jenjang',
+        'subtitle',
+        'description',
+        'qris_image_path',
+        'price',
+        'original_price',
+        'promo_active',
+        'period',
+        'is_active',
+        'sort_order',
+    ];
 
     protected $casts = [
         'is_active' => 'boolean',

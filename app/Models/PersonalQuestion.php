@@ -6,7 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class PersonalQuestion extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'jenjang',
+        'kategori',
+        'tipe',
+        'pertanyaan',
+        'opsi',
+        'jawaban_benar',
+        'pembahasan',
+        'image_path',
+        'status',
+    ];
 
     protected $casts = [
         'opsi' => 'array',

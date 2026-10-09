@@ -42,7 +42,7 @@ class PaymentApprovalService
                     'rejection_reason' => null,
                 ]);
 
-                $teacher->update([
+                $teacher->forceFill([
                     'role' => User::ROLE_GURU,
                     'account_status' => User::STATUS_ACTIVE,
                     'payment_status' => User::PAYMENT_APPROVED,
@@ -50,9 +50,9 @@ class PaymentApprovalService
                     'payment_reviewed_by' => Auth::id(),
                     'payment_rejection_reason' => null,
                     'access_token' => $token,
-                ]);
+                ])->save();
             } else {
-                $teacher->update([
+                $teacher->forceFill([
                     'role' => User::ROLE_GURU,
                     'account_status' => User::STATUS_ACTIVE,
                     'payment_status' => User::PAYMENT_APPROVED,
@@ -60,7 +60,7 @@ class PaymentApprovalService
                     'payment_reviewed_by' => Auth::id(),
                     'payment_rejection_reason' => null,
                     'access_token' => $token,
-                ]);
+                ])->save();
             }
 
             return $token;
@@ -92,13 +92,13 @@ class PaymentApprovalService
                 ]);
             }
 
-            $teacher->update([
+            $teacher->forceFill([
                 'payment_status' => User::PAYMENT_REJECTED,
                 'payment_verified_at' => now(),
                 'payment_reviewed_by' => Auth::id(),
                 'payment_rejection_reason' => $reason,
                 'account_status' => User::STATUS_PENDING,
-            ]);
+            ])->save();
 
             return true;
         });

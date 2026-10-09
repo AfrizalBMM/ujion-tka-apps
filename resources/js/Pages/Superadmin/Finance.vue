@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
 import { closeAllActionMenus } from '@/core/action-menus';
@@ -39,8 +39,12 @@ const submitSettings = () => {
 };
 
 const catatanModalOpen = ref(false);
+const catatanModalEl = ref(null);
 
 const tarifModalOpen = ref(false);
+const tarifModalEl = ref(null);
+watch(catatanModalOpen, (val) => { if (val) nextTick(() => catatanModalEl.value?.focus()); });
+watch(tarifModalOpen, (val) => { if (val) nextTick(() => tarifModalEl.value?.focus()); });
 const tarifAction = ref('');
 const tarifEditing = ref(false);
 const tarifNameInput = ref(null);
@@ -297,6 +301,9 @@ onBeforeUnmount(() => {
 			class="fixed inset-0 z-50 items-center justify-center bg-slate-950/70 px-4"
 			:class="catatanModalOpen ? 'flex' : 'hidden'"
 			@click.self="catatanModalOpen = false"
+			@keydown.escape="catatanModalOpen = false"
+			tabindex="-1"
+			ref="catatanModalEl"
 		>
 			<div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900">
 				<div class="flex items-start justify-between gap-4">
@@ -336,6 +343,9 @@ onBeforeUnmount(() => {
 			class="fixed inset-0 z-50 items-center justify-center bg-slate-950/70 px-4"
 			:class="tarifModalOpen ? 'flex' : 'hidden'"
 			@click.self="tarifModalOpen = false"
+			@keydown.escape="tarifModalOpen = false"
+			tabindex="-1"
+			ref="tarifModalEl"
 		>
 			<div class="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900">
 				<div class="flex items-start justify-between gap-4">

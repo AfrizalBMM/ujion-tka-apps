@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 
 class AppSetting extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['key', 'value'];
 
     public static function getValue(string $key, ?string $default = null): ?string
     {
