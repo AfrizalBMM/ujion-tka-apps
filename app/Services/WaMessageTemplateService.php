@@ -173,6 +173,28 @@ class WaMessageTemplateService
                 'Salam,',
                 'Admin Ujion',
             ])),
+
+            'event_pembahasan_unlocked' => trim(implode("\n", [
+                'Halo {name},',
+                '',
+                'Pembahasan untuk ujian *{exam_title}* telah terbuka.',
+                'Silakan kembali ke halaman hasil ujian untuk melihat pembahasan.',
+                '',
+                'Salam,',
+                'Admin Ujion',
+            ])),
+
+            'event_trial_ending_reminder' => trim(implode("\n", [
+                'Halo {name},',
+                '',
+                'Masa trial Anda akan berakhir dalam 1 hari ({trial_ends_date}).',
+                'Segera berlangganan untuk tetap mengakses semua fitur Ujion.',
+                '',
+                'Pilih paket langganan di: {pricing_url}',
+                '',
+                'Salam,',
+                'Admin Ujion',
+            ])),
         ];
     }
 

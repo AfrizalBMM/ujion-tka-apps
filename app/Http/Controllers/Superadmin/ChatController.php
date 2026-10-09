@@ -132,6 +132,7 @@ class ChatController extends Controller
             'to_user_id.exists' => 'Penerima harus akun guru.',
         ]);
         $data['from_user_id'] = auth()->id();
+        $data['conversation_type'] = Chat::CONVERSATION_GURU_ADMIN;
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('chat-images', 'local');
         }

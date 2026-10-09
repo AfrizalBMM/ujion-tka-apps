@@ -63,6 +63,8 @@
         <div class="article-content mt-8">
             @php
                 $html = Str::markdown($post->content);
+                // Decode entities so escaped tags (e.g. &lt;script&gt;) can be caught
+                $html = html_entity_decode($html, ENT_QUOTES, 'UTF-8');
                 // Strip dangerous tag blocks (script, style, iframe, object, embed)
                 $html = preg_replace('#<(script|style|iframe|object|embed)[^>]*>.*?</\1>#is', '', $html);
                 // Remove on* event handler attributes (double-quoted, single-quoted, unquoted)

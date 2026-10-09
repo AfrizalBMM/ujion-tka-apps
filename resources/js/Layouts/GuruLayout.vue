@@ -255,6 +255,28 @@ onBeforeUnmount(() => {
 						<span class="sidebar-link-label">Live Chat</span>
 					</a>
 
+					<div class="sidebar-section-title">Analisis</div>
+					<a
+						v-if="!paymentLocked"
+						:href="route('guru.analisis-siswa')"
+						class="sidebar-link"
+						:class="route().current('guru.analisis-siswa') ? 'active' : ''"
+					>
+						<i class="fa-solid fa-chart-pie w-5"></i>
+						<span class="sidebar-link-label">Analisis Siswa</span>
+					</a>
+					<a
+						v-else
+						href="#"
+						class="sidebar-link opacity-70"
+						data-payment-locked
+						title="Selesaikan pembayaran untuk membuka"
+					>
+						<i class="fa-solid fa-chart-pie w-5"></i>
+						<span class="sidebar-link-label">Analisis Siswa</span>
+						<i class="fa-solid fa-lock ml-auto text-[10px] text-amber-500"></i>
+					</a>
+
 					<div class="sidebar-section-title">Konten</div>
 					<template v-for="link in lockedLinks" :key="link.route">
 						<a

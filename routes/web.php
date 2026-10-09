@@ -10,6 +10,8 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LandingExamController;
 use App\Http\Controllers\LandingExamPaymentController;
 use App\Http\Controllers\OgImageController;
+use App\Http\Controllers\PembahasanPaymentController;
+use App\Http\Controllers\PricingController;
 use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\Siswa\AuthController as SiswaAuthController;
 use App\Http\Controllers\Siswa\ExamController;
@@ -19,6 +21,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Superadmin\AuditLogController;
 use App\Http\Controllers\Superadmin\BlogPostController;
 use App\Http\Controllers\Superadmin\ChatController;
+use App\Http\Controllers\Superadmin\CouponController;
 use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\ExamAnalysisController;
 use App\Http\Controllers\Superadmin\FinanceController;
@@ -36,6 +39,7 @@ use App\Http\Controllers\Superadmin\SoalController as SuperadminSoalController;
 use App\Http\Controllers\Superadmin\TeacherController;
 use App\Http\Controllers\Superadmin\TeksBacaanController as SuperadminTeksBacaanController;
 use App\Http\Controllers\Superadmin\TestimonialController;
+use App\Http\Controllers\Superadmin\TrialSettingsController;
 use App\Http\Controllers\Superadmin\WhatsAppAutoMessageController;
 use App\Http\Controllers\Superadmin\WhatsAppGatewayController;
 use Illuminate\Http\RedirectResponse;
@@ -43,10 +47,16 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
+
+Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
 Route::post('/payments/doku/start', [DokuPaymentController::class, 'start'])->middleware('throttle:10,1')->name('payments.doku.start');
 Route::get('/payments/doku/finish', [DokuPaymentController::class, 'finish'])->name('payments.doku.finish');
 Route::get('/payments/doku/status', [DokuPaymentController::class, 'status'])->name('payments.doku.status');
 Route::get('/payments/doku/cancel', [DokuPaymentController::class, 'cancel'])->name('payments.doku.cancel');
+
+// Pembahasan payment flow (paywall moved to after exam completion)
+Route::post('/payments/pembahasan/start', [PembahasanPaymentController::class, 'start'])->middleware('throttle:10,1')->name('payments.pembahasan.start');
+Route::get('/payments/pembahasan/status/{examSession}', [PembahasanPaymentController::class, 'status'])->name('payments.pembahasan.status');
 
 // Ujian Online Publik (per jenjang)
 Route::prefix('ujian-online')->name('ujian-online.')->group(function () {
@@ -196,6 +206,17 @@ Route::prefix('superadmin')
         Route::post('/tarif-jenjang/{pricingPlan}', [PricingPlanController::class, 'update'])->name('tarif-jenjang.update');
         Route::post('/tarif-jenjang/{pricingPlan}/toggle-active', [PricingPlanController::class, 'toggleActive'])->name('tarif-jenjang.toggle-active');
         Route::post('/tarif-jenjang/{pricingPlan}/delete', [PricingPlanController::class, 'destroy'])->name('tarif-jenjang.destroy');
+
+        // Coupon management (superadmin CRUD)
+        Route::get('/coupons', [CouponController::class, 'index'])->name('coupons.index');
+        Route::post('/coupons', [CouponController::class, 'store'])->name('coupons.store');
+        Route::post('/coupons/{coupon}', [CouponController::class, 'update'])->name('coupons.update');
+        Route::post('/coupons/{coupon}/toggle-active', [CouponController::class, 'toggleActive'])->name('coupons.toggle-active');
+        Route::post('/coupons/{coupon}/delete', [CouponController::class, 'destroy'])->name('coupons.destroy');
+
+        // Trial management
+        Route::get('/trial-settings', [TrialSettingsController::class, 'index'])->name('trial-settings.index');
+        Route::post('/trial-settings', [TrialSettingsController::class, 'update'])->name('trial-settings.update');
 
         Route::post('/teachers/{teacher}/activate', [TeacherController::class, 'activate'])->name('teachers.activate');
         Route::post('/teachers/{teacher}/suspend', [TeacherController::class, 'suspend'])->name('teachers.suspend');

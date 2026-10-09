@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             SuperadminGuruSeeder::class,
+            PricingPlanSeeder::class,
+            TrialSettingsSeeder::class,
         ]);
     }
 }

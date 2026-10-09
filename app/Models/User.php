@@ -34,6 +34,12 @@ class User extends Authenticatable
 
     public const PAYMENT_REJECTED = 'rejected';
 
+    public const TRIAL_NONE = 'none';
+
+    public const TRIAL_ACTIVE = 'active';
+
+    public const TRIAL_EXPIRED = 'expired';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -49,6 +55,8 @@ class User extends Authenticatable
         'avatar',
         'google_id',
         'google_avatar',
+        'trial_status',
+        'trial_ends_at',
     ];
 
     /**
@@ -75,6 +83,7 @@ class User extends Authenticatable
             'bookmarks' => 'array',
             'global_question_bookmarks' => 'array',
             'payment_verified_at' => 'datetime',
+            'trial_ends_at' => 'datetime',
         ];
     }
 
@@ -141,5 +150,25 @@ class User extends Authenticatable
     public function receivedChats()
     {
         return $this->hasMany(Chat::class, 'to_user_id');
+    }
+
+    public function isTrialActive(): bool
+    {
+        return $this->trial_status === self::TRIAL_ACTIVE
+            && $this->trial_ends_at !== null
+            && $this->trial_ends_at->isFuture();
+    }
+
+    public function isTrialExpired(): bool
+    {
+        return $this->trial_status === self::TRIAL_EXPIRED
+            || ($this->trial_status === self::TRIAL_ACTIVE
+                && $this->trial_ends_at !== null
+                && $this->trial_ends_at->isPast());
+    }
+
+    public function couponUsages()
+    {
+        return $this->hasMany(CouponUsage::class);
     }
 }

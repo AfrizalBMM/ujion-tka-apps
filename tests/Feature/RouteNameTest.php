@@ -60,8 +60,8 @@ class RouteNameTest extends TestCase
         $controllerPath = app_path('Http/Controllers/Siswa/MaterialPracticeController.php');
         $source = file_get_contents($controllerPath);
 
-        $this->assertStringContainsString("materi.practice.login", $source);
-        $this->assertStringContainsString("materi.practice.dashboard", $source);
+        $this->assertStringContainsString('materi.practice.login', $source);
+        $this->assertStringContainsString('materi.practice.dashboard', $source);
         $this->assertStringNotContainsString("route('materi.login')", $source);
         $this->assertStringNotContainsString("route('materi.dashboard')", $source);
     }

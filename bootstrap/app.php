@@ -4,6 +4,7 @@ use App\Http\Middleware\AuditRequest;
 use App\Http\Middleware\EnsureGuruAccountIsActive;
 use App\Http\Middleware\EnsureGuruJenjangAccess;
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\EnsureTrialActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => EnsureRole::class,
             'guru.active' => EnsureGuruAccountIsActive::class,
             'guru.jenjang' => EnsureGuruJenjangAccess::class,
+            'trial.active' => EnsureTrialActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

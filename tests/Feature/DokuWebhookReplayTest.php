@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\DokuService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class DokuWebhookReplayTest extends TestCase
@@ -29,6 +30,9 @@ class DokuWebhookReplayTest extends TestCase
 
         // Prevent real HTTP calls during webhook processing.
         Http::preventStrayRequests();
+
+        // Prevent queued jobs (SendWhatsAppBlast) from making HTTP calls.
+        Queue::fake();
     }
 
     // --- Unit tests for isTimestampFresh via reflection ---

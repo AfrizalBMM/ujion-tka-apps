@@ -272,3 +272,9 @@ Schedule::call(function (): void {
     ->name('wa-payment-followups')
     ->withoutOverlapping(10)
     ->everyThirtyMinutes();
+
+// Trial H-1 WA reminder: blast to guru whose trial expires within 24 hours.
+Schedule::command('trial:send-reminders')
+    ->name('trial-reminder-h1')
+    ->withoutOverlapping(10)
+    ->dailyAt('09:00');

@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Chat extends Model
 {
+    public const CONVERSATION_GURU_ADMIN = 'guru_admin';
+
     protected $fillable = [
         'from_user_id',
         'to_user_id',
+        'conversation_type',
         'message',
         'image_path',
         'is_read',
