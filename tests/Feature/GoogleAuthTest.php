@@ -128,7 +128,7 @@ class GoogleAuthTest extends TestCase
             'no_wa' => '08123456789',
         ]);
 
-        $response->assertRedirect(route('guru.trial.profile.show'));
+        $response->assertRedirect(route('guru.dashboard'));
         $this->assertAuthenticated();
 
         $this->assertDatabaseHas('users', [
@@ -138,7 +138,7 @@ class GoogleAuthTest extends TestCase
             'payment_status' => User::PAYMENT_AWAITING,
             'jenjang' => 'SD',
             'google_id' => 'google-123',
-            'trial_status' => User::TRIAL_NONE,
+            'trial_status' => User::TRIAL_ACTIVE,
         ]);
     }
 

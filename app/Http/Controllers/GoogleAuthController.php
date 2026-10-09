@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\TrialService;
 use App\Support\PhoneNumber;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -142,7 +143,7 @@ class GoogleAuthController extends Controller
         ]);
     }
 
-    public function complete(Request $request): RedirectResponse
+    public function complete(Request $request, TrialService $trialService): RedirectResponse
     {
         $google = $request->session()->get('google_registration');
 
@@ -197,12 +198,17 @@ class GoogleAuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        // Trial belum aktif → minta lengkapi profil dulu untuk mengaktifkan trial
-        return redirect()->route('guru.trial.profile.show')->with('flash', [
-            'type' => 'success',
-            'title' => 'Akun Google berhasil dihubungkan',
-            'message' => 'Satu langkah lagi! Lengkapi profil untuk mengaktifkan trial gratis Anda.',
-        ]);
+        // Data sudah lengkap dari form GoogleComplete → langsung aktifkan trial
+        $trialService->startTrial($user);
+        $days = $trialService->getDefaultDays();
+
+        return redirect()
+            ->route('guru.dashboard')
+            ->with('flash', [
+                'type' => 'success',
+                'title' => 'Trial aktif!',
+                'message' => "Akun Google berhasil dihubungkan. Akses penuh platform selama {$days} hari.",
+            ]);
     }
 
     private function handleConnect(Request $request, $googleUser, ?string $googleId): RedirectResponse
