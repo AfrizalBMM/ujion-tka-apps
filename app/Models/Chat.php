@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Chat extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'from_user_id',
+        'to_user_id',
+        'message',
+        'image_path',
+        'is_read',
+    ];
 
     public function fromUser()
     {

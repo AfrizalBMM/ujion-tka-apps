@@ -334,6 +334,6 @@ class DokuService
             return false;
         }
 
-        return $parsed->diffInMinutes(now()) <= 5;
+        return abs($parsed->diffInMinutes(now())) <= 5;
     }
 }

@@ -14,7 +14,24 @@ class Transaction extends Model
 
     public const PAYMENT_METHOD_DOKU = 'doku';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'pricing_plan_id',
+        'reference_code',
+        'plan_name',
+        'amount',
+        'status',
+        'payment_method',
+        'doku_invoice_number',
+        'doku_transaction_status',
+        'doku_payment_channel',
+        'paid_at',
+        'payment_proof_path',
+        'payment_submitted_at',
+        'reviewed_at',
+        'reviewed_by',
+        'rejection_reason',
+    ];
 
     protected function casts(): array
     {

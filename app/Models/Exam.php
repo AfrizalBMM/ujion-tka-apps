@@ -6,7 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exam extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'paket_soal_id',
+        'judul',
+        'tanggal_terbit',
+        'max_peserta',
+        'timer',
+        'status',
+        'is_active',
+    ];
 
     protected $casts = [
         'tanggal_terbit' => 'datetime',
