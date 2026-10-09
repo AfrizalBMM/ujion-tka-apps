@@ -39,7 +39,7 @@ class TeacherController extends Controller
             'access_token' => $token,
         ];
 
-        $teacher->update($updateData);
+        $teacher->forceFill($updateData)->save();
 
         $waBody = $templates->render('event_activation_token', [
             'name' => $teacher->name,
@@ -60,9 +60,9 @@ class TeacherController extends Controller
 
     public function suspend(User $teacher): RedirectResponse
     {
-        $teacher->update([
+        $teacher->forceFill([
             'account_status' => User::STATUS_SUSPEND,
-        ]);
+        ])->save();
 
         return back()->with('flash', [
             'type' => 'success',
@@ -75,9 +75,9 @@ class TeacherController extends Controller
     {
         $token = TokenGenerator::uniqueTeacherToken();
 
-        $teacher->update([
+        $teacher->forceFill([
             'access_token' => $token,
-        ]);
+        ])->save();
 
         $waBody = $templates->render('event_activation_token', [
             'name' => $teacher->name,

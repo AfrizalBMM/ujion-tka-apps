@@ -169,7 +169,7 @@ class GoogleAuthController extends Controller
             ]);
         }
 
-        $user = User::create([
+        $user = User::forceCreate([
             'name' => $google['name'] !== '' ? $google['name'] : $google['email'],
             'email' => $google['email'],
             'password' => Hash::make(Str::password(24)),

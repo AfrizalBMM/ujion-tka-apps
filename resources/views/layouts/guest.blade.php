@@ -31,7 +31,7 @@
     $hideGuestFooter = isset($hideFooterGuest) && $hideFooterGuest;
     $guestWide = isset($wideGuest) && $wideGuest;
 
-    if (request()->routeIs('materi.dashboard', 'materi.paket.*', 'siswa.practice.dashboard', 'siswa.practice.paket.*', 'ujian-online.result*')) {
+    if (request()->routeIs('materi.practice.dashboard', 'materi.paket.*', 'siswa.practice.dashboard', 'siswa.practice.paket.*', 'ujian-online.result*')) {
         $guestWide = true;
     }
 @endphp

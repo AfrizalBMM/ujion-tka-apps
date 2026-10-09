@@ -123,7 +123,7 @@ class RegisterGuruController extends Controller
         $generatedPassword = Str::password(24);
 
         try {
-            $user = User::create([
+            $user = User::forceCreate([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($generatedPassword),
