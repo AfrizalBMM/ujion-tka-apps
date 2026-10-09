@@ -91,10 +91,10 @@ class RegisterGuruController extends Controller
             if ($existingTeacher->role === User::ROLE_GURU && $existingTeacher->account_status === User::STATUS_PENDING) {
                 $this->loginPendingTeacher($request, $existingTeacher);
 
-                return redirect()->route('guru.dashboard')->with('flash', [
+                return redirect()->route('guru.trial.profile.show')->with('flash', [
                     'type' => 'info',
                     'title' => 'Pendaftaran sebelumnya masih aktif',
-                    'message' => 'Kami menemukan data pendaftaran Anda yang masih pending. Selesaikan pembayaran dari dashboard untuk mengaktifkan akun.',
+                    'message' => 'Kami menemukan data pendaftaran Anda. Lengkapi profil untuk mengaktifkan trial gratis Anda.',
                 ]);
             }
 
@@ -148,10 +148,10 @@ class RegisterGuruController extends Controller
                 && $existingTeacher->account_status === User::STATUS_PENDING) {
                 $this->loginPendingTeacher($request, $existingTeacher);
 
-                return redirect()->route('guru.dashboard')->with('flash', [
+                return redirect()->route('guru.trial.profile.show')->with('flash', [
                     'type' => 'info',
                     'title' => 'Pendaftaran sebelumnya masih aktif',
-                    'message' => 'Kami menemukan data pendaftaran Anda yang masih pending. Selesaikan pembayaran dari dashboard untuk mengaktifkan akun.',
+                    'message' => 'Kami menemukan data pendaftaran Anda. Lengkapi profil untuk mengaktifkan trial gratis Anda.',
                 ]);
             }
 
@@ -167,10 +167,10 @@ class RegisterGuruController extends Controller
 
         $this->loginPendingTeacher($request, $user);
 
-        return redirect()->route('guru.dashboard')->with('flash', [
+        return redirect()->route('guru.trial.profile.show')->with('flash', [
             'type' => 'success',
             'title' => 'Pendaftaran berhasil',
-            'message' => 'Selamat datang! Selesaikan pembayaran aktivasi dari dashboard untuk membuka semua fitur.',
+            'message' => 'Satu langkah lagi! Lengkapi profil untuk mengaktifkan trial gratis Anda.',
         ]);
     }
 

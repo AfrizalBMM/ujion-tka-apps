@@ -164,7 +164,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'no_wa' => '0812-3456-789',
         ]);
 
-        $response->assertRedirect(route('guru.dashboard'));
+        $response->assertRedirect(route('guru.trial.profile.show'));
         $this->assertDatabaseHas('users', [
             'name' => 'Guru Baru',
             'email' => 'guru.baru@example.com',
@@ -172,6 +172,7 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_AWAITING,
             'no_wa' => '08123456789',
+            'trial_status' => User::TRIAL_NONE,
         ]);
 
         $user = User::where('email', 'guru.baru@example.com')->firstOrFail();
@@ -244,8 +245,9 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'no_wa' => '0812-7777-9999',
         ]);
 
-        $response->assertRedirect(route('guru.dashboard'));
+        $response->assertRedirect(route('guru.trial.profile.show'));
 
+        // Guru tetap bisa memulai pembayaran kapan saja (mis. mau langsung langganan)
         $paymentResponse = $this->postJson(route('payments.doku.start'));
 
         $paymentResponse->assertOk()->assertJsonPath('ok', true);
@@ -275,48 +277,105 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'no_wa' => '0812-3456-789',
         ]);
 
-        $response->assertRedirect(route('guru.dashboard'));
+        $response->assertRedirect(route('guru.trial.profile.show'));
         $this->assertAuthenticatedAs($guru);
-        $response->assertSessionHas('flash.message', 'Kami menemukan data pendaftaran Anda yang masih pending. Selesaikan pembayaran dari dashboard untuk mengaktifkan akun.');
+        $response->assertSessionHas('flash.message', 'Kami menemukan data pendaftaran Anda. Lengkapi profil untuk mengaktifkan trial gratis Anda.');
         $this->assertDatabaseCount('users', 1);
     }
 
-    public function test_pending_guru_can_access_dashboard_profile_and_chat_but_not_other_features(): void
+    public function test_pending_guru_without_trial_is_redirected_to_trial_profile(): void
     {
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_AWAITING,
             'jenjang' => 'SMP',
+            'trial_status' => User::TRIAL_NONE,
         ]);
 
+        // Profil belum lengkap → diarahkan ke form trial
+        $this->actingAs($guru)->get(route('guru.dashboard'))->assertRedirect(route('guru.trial.profile.show'));
+        $this->actingAs($guru)->get(route('guru.trial.profile.show'))->assertOk();
+    }
+
+    public function test_guru_on_trial_can_access_all_features(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'payment_status' => User::PAYMENT_AWAITING,
+            'jenjang' => 'SMP',
+            'trial_status' => User::TRIAL_ACTIVE,
+            'trial_ends_at' => now()->addDays(7),
+        ]);
+
+        // Trial aktif → akses penuh, tidak terkunci
         $this->actingAs($guru)->get(route('guru.dashboard'))->assertOk();
         $this->actingAs($guru)->get(route('guru.profile'))->assertOk();
         $this->actingAs($guru)->get(route('guru.chat'))->assertOk();
-
-        $blocked = $this->actingAs($guru)->get(route('guru.materials'));
-        $blocked->assertRedirect(route('guru.dashboard'));
-        $blocked->assertSessionHas('flash.message', 'Fitur ini terbuka setelah pembayaran aktivasi berhasil. Silakan selesaikan pembayaran dari dashboard Anda.');
-        $this->assertAuthenticatedAs($guru);
-
-        $this->actingAs($guru)->get(route('guru.exams'))->assertRedirect(route('guru.dashboard'));
-        $this->actingAs($guru)->get(route('guru.paket-soal.index'))->assertRedirect(route('guru.dashboard'));
+        $this->actingAs($guru)->get(route('guru.materials'))->assertOk();
+        $this->actingAs($guru)->get(route('guru.exams'))->assertOk();
     }
 
-    public function test_dashboard_shows_payment_banner_with_locked_menus_for_pending_guru(): void
+    public function test_expired_trial_guru_is_redirected_to_pricing(): void
     {
-        PricingPlan::create([
-            'name' => 'Aktivasi SMP',
-            'jenjang' => 'SMP',
-            'price' => 99000,
-            'is_active' => true,
-        ]);
-
         $guru = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'payment_status' => User::PAYMENT_AWAITING,
             'jenjang' => 'SMP',
+            'trial_status' => User::TRIAL_ACTIVE,
+            'trial_ends_at' => now()->subDay(),
+        ]);
+
+        // Trial habis → diarahkan ke pricing
+        $this->actingAs($guru)->get(route('guru.materials'))->assertRedirect(route('pricing'));
+
+        // Status trial tersinkron jadi expired
+        $this->assertSame(User::TRIAL_EXPIRED, $guru->fresh()->trial_status);
+    }
+
+    public function test_trial_profile_completion_activates_trial_and_redirects_to_dashboard(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'payment_status' => User::PAYMENT_AWAITING,
+            'jenjang' => 'SMP',
+            'trial_status' => User::TRIAL_NONE,
+            'no_wa' => '0811111111',
+        ]);
+
+        $response = $this->actingAs($guru)->post(route('guru.trial.profile.complete'), [
+            'name' => 'Guru Trial',
+            'jenjang' => 'SMP',
+            'satuan_pendidikan' => 'SMPN 2 Contoh',
+            'no_wa' => '0822222222',
+        ]);
+
+        $response->assertRedirect(route('guru.dashboard'));
+
+        $guru->refresh();
+        $this->assertSame(User::TRIAL_ACTIVE, $guru->trial_status);
+        $this->assertNotNull($guru->trial_ends_at);
+        $this->assertTrue($guru->trial_ends_at->isFuture());
+        $this->assertSame('Guru Trial', $guru->name);
+        $this->assertSame('SMPN 2 Contoh', $guru->satuan_pendidikan);
+        $this->assertSame('0822222222', $guru->no_wa);
+
+        // Setelah trial aktif, dashboard bisa diakses
+        $this->actingAs($guru)->get(route('guru.dashboard'))->assertOk();
+    }
+
+    public function test_dashboard_shows_trial_banner_when_trial_active(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'payment_status' => User::PAYMENT_AWAITING,
+            'jenjang' => 'SMP',
+            'trial_status' => User::TRIAL_ACTIVE,
+            'trial_ends_at' => now()->addDays(7),
         ]);
 
         $url = route('guru.dashboard');
@@ -324,9 +383,35 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
 
         $response->assertOk();
         $this->assertSame('Guru/Dashboard', $response->json('component'));
-        $this->assertSame('Aktivasi SMP', $response->json('props.paymentBanner.planName'));
-        $this->assertTrue($response->json('props.guruLayout.paymentLocked'));
-        $this->assertNotNull($response->json('props.guruLayout.dokuConfig'));
+        $this->assertNotNull($response->json('props.trialBanner'));
+        $this->assertFalse($response->json('props.guruLayout.paymentLocked'));
+
+        // Banner pembayaran tidak muncul selama trial
+        $this->assertNull($response->json('props.paymentBanner'));
+    }
+
+    public function test_trial_days_follow_admin_setting(): void
+    {
+        AppSetting::putValue('trial_default_days', '14');
+
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'trial_status' => User::TRIAL_NONE,
+            'no_wa' => '0813333333',
+        ]);
+
+        $this->actingAs($guru)->post(route('guru.trial.profile.complete'), [
+            'name' => 'Guru Durasi',
+            'jenjang' => 'SMP',
+            'satuan_pendidikan' => 'SMPN 3',
+            'no_wa' => '0814444444',
+        ]);
+
+        $guru->refresh();
+        $this->assertEqualsWithDelta(14, now()->diffInDays($guru->trial_ends_at), 1.0);
+
+        AppSetting::putValue('trial_default_days', '7');
     }
 
     public function test_duplicate_active_registration_returns_clear_errors(): void
@@ -478,6 +563,8 @@ class GuruProfileAndRegistrationFlowTest extends TestCase
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'access_token' => null,
+            'trial_status' => User::TRIAL_ACTIVE,
+            'trial_ends_at' => now()->addDays(7),
         ]);
 
         $url = route('guru.dashboard');

@@ -72,7 +72,8 @@ class HandleInertiaRequests extends Middleware
 
     protected function guruLayoutProps(User $user): array
     {
-        $paymentLocked = $user->account_status === User::STATUS_PENDING;
+        // Trial aktif = akses penuh (tidak terkunci). Lock hanya jika trial habis / belum pernah aktif.
+        $paymentLocked = $user->account_status === User::STATUS_PENDING && ! $user->isTrialActive();
 
         $paymentInfo = null;
         if ($paymentLocked) {

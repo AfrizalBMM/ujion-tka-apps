@@ -31,30 +31,35 @@ class EnsureTrialActive
             return $next($request);
         }
 
-        // Only check trial for guru users
-        if ($user->isGuru()) {
-            // If user has approved payment (active subscription), bypass trial check
-            if ($user->account_status === User::STATUS_ACTIVE) {
-                return $next($request);
-            }
+        if (! $user->isGuru()) {
+            return $next($request);
+        }
 
-            // Pending payment users can access dashboard (payment banner shown there)
-            if ($user->account_status === User::STATUS_PENDING) {
-                return $next($request);
-            }
+        // Sinkronkan status trial (active → expired saat lewat tanggal)
+        $this->trialService->checkExpiry($user);
+        $user = $user->fresh();
 
-            $this->trialService->checkExpiry($user);
+        // Trial aktif → akses penuh
+        if ($user->isTrialActive()) {
+            return $next($request);
+        }
 
-            // If trial is active, allow access
-            if ($user->fresh()->isTrialActive()) {
-                return $next($request);
-            }
+        // Langganan aktif (akun lama / pembayaran sukses) → akses penuh
+        if ($user->account_status === User::STATUS_ACTIVE) {
+            return $next($request);
+        }
 
-            // If trial expired or none, redirect to pricing page
+        // Trial sudah berakhir → wajib pilih paket berlangganan
+        if ($user->isTrialExpired()) {
             return redirect()->route('pricing')
                 ->with('warning', 'Masa trial Anda telah berakhir. Silakan pilih paket berlangganan untuk melanjutkan.');
         }
 
-        return $next($request);
+        // Belum pernah mengaktifkan trial (profil belum lengkap) → lengkapi profil dulu
+        return redirect()->route('guru.trial.profile.show')->with('flash', [
+            'type' => 'info',
+            'title' => 'Lengkapi profil untuk mulai trial',
+            'message' => 'Isi data profil Anda untuk mengaktifkan trial gratis.',
+        ]);
     }
 }

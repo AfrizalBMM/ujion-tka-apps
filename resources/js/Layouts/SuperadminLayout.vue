@@ -194,6 +194,10 @@ onBeforeUnmount(() => {
 						<i class="fa-solid fa-credit-card w-5"></i>
 						<span class="sidebar-link-label">Keuangan</span>
 					</a>
+					<a :href="route('superadmin.trial-settings.index')" class="sidebar-link" :class="route().current('superadmin.trial-settings.*') ? 'active' : ''">
+						<i class="fa-solid fa-hourglass-half w-5"></i>
+						<span class="sidebar-link-label">Pengaturan Trial</span>
+					</a>
 					<a :href="route('superadmin.payment-confirmations.index')" class="sidebar-link" :class="route().current('superadmin.payment-confirmations.*') ? 'active' : ''">
 						<i class="fa-solid fa-money-check-dollar w-5"></i>
 						<span class="sidebar-link-label flex-1">Riwayat Transaksi</span>

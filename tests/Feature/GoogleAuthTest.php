@@ -74,12 +74,32 @@ class GoogleAuthTest extends TestCase
         $this->assertSame('google-123', $user->fresh()->google_id);
     }
 
-    public function test_callback_existing_pending_user_logs_in_and_redirects_to_dashboard(): void
+    public function test_callback_existing_pending_user_without_trial_redirects_to_trial_profile(): void
     {
         $user = User::factory()->create([
             'role' => User::ROLE_GURU,
             'account_status' => User::STATUS_PENDING,
             'email' => 'siti@gmail.com',
+            'trial_status' => User::TRIAL_NONE,
+        ]);
+
+        $this->mockGoogleUser();
+
+        $response = $this->get(route('auth.google.callback'));
+
+        $response->assertRedirect(route('guru.trial.profile.show'));
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame('google-123', $user->fresh()->google_id);
+    }
+
+    public function test_callback_existing_pending_user_on_trial_redirects_to_dashboard(): void
+    {
+        $user = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'email' => 'siti@gmail.com',
+            'trial_status' => User::TRIAL_ACTIVE,
+            'trial_ends_at' => now()->addDays(7),
         ]);
 
         $this->mockGoogleUser();
@@ -108,7 +128,7 @@ class GoogleAuthTest extends TestCase
             'no_wa' => '08123456789',
         ]);
 
-        $response->assertRedirect(route('guru.dashboard'));
+        $response->assertRedirect(route('guru.trial.profile.show'));
         $this->assertAuthenticated();
 
         $this->assertDatabaseHas('users', [
@@ -118,6 +138,7 @@ class GoogleAuthTest extends TestCase
             'payment_status' => User::PAYMENT_AWAITING,
             'jenjang' => 'SD',
             'google_id' => 'google-123',
+            'trial_status' => User::TRIAL_NONE,
         ]);
     }
 

@@ -21,7 +21,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         $paymentBanner = null;
-        if ($user->account_status === User::STATUS_PENDING) {
+        if ($user->account_status === User::STATUS_PENDING && ! $user->isTrialActive()) {
             $plan = PricingPlan::resolveForJenjang($user->jenjang);
 
             $paymentBanner = [
