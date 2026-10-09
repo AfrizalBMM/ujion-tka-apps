@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\LandingClickController;
 use App\Http\Controllers\Api\WebhookController;
@@ -27,9 +28,9 @@ Route::post('/coupons/verify', [CouponController::class, 'verify'])
 
 // Chat API (guru-admin only)
 Route::middleware(['auth'])->prefix('chat')->group(function () {
-    Route::get('/threads', [\App\Http\Controllers\Api\ChatController::class, 'threads'])->name('api.chat.threads');
-    Route::post('/send', [\App\Http\Controllers\Api\ChatController::class, 'send'])->name('api.chat.send');
-    Route::get('/messages/{thread}', [\App\Http\Controllers\Api\ChatController::class, 'messages'])->name('api.chat.messages');
+    Route::get('/threads', [ChatController::class, 'threads'])->name('api.chat.threads');
+    Route::post('/send', [ChatController::class, 'send'])->name('api.chat.send');
+    Route::get('/messages/{thread}', [ChatController::class, 'messages'])->name('api.chat.messages');
 });
 
 Route::post('/wa-webhook', [WebhookController::class, 'handle'])

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Services\TrialService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,7 +27,7 @@ class TrialSettingsController extends Controller
         ]);
     }
 
-    public function update(\Illuminate\Http\Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse
     {
         $validValues = array_column($this->trialService->getDurationOptions(), 'value');
 

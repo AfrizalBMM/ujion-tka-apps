@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendWhatsAppBlast;
+use App\Models\Coupon;
 use App\Models\LandingExamOrder;
 use App\Models\PricingPlan;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\CouponService;
 use App\Services\DokuService;
 use App\Services\PaymentApprovalService;
 use App\Services\WaMessageTemplateService;
@@ -411,9 +413,9 @@ class DokuPaymentController extends Controller
 
             // Record coupon usage if coupon was applied
             if ($transaction->coupon_id && $transaction->discount_value > 0) {
-                $coupon = \App\Models\Coupon::find($transaction->coupon_id);
+                $coupon = Coupon::find($transaction->coupon_id);
                 if ($coupon) {
-                    app(\App\Services\CouponService::class)->recordUsage(
+                    app(CouponService::class)->recordUsage(
                         coupon: $coupon,
                         originalAmount: (float) $transaction->original_amount,
                         discountValue: (float) $transaction->discount_value,

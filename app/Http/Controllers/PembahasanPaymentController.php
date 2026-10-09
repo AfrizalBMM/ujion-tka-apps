@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppSetting;
+use App\Models\LandingExamMapel;
 use App\Models\Transaction;
 use App\Models\UjianSesi;
 use App\Services\CouponService;
@@ -181,7 +183,7 @@ class PembahasanPaymentController extends Controller
         // Try to get price from the associated landing exam mapel
         $mapelPaket = $sesi->mapelPaket;
         if ($mapelPaket) {
-            $landingMapel = \App\Models\LandingExamMapel::query()
+            $landingMapel = LandingExamMapel::query()
                 ->where('mapel_paket_id', $mapelPaket->id)
                 ->where('is_active', true)
                 ->whereHas('landingExam', function ($q) {
@@ -195,7 +197,7 @@ class PembahasanPaymentController extends Controller
         }
 
         // Fallback default pembahasan price from AppSetting
-        $defaultPrice = \App\Models\AppSetting::getValue('pembahasan_price', '10000');
+        $defaultPrice = AppSetting::getValue('pembahasan_price', '10000');
 
         return (float) $defaultPrice;
     }

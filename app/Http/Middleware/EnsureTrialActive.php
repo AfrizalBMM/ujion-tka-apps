@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Services\TrialService;
 use Closure;
 use Illuminate\Http\Request;
@@ -33,7 +34,12 @@ class EnsureTrialActive
         // Only check trial for guru users
         if ($user->isGuru()) {
             // If user has approved payment (active subscription), bypass trial check
-            if ($user->payment_status === User::PAYMENT_APPROVED) {
+            if ($user->account_status === User::STATUS_ACTIVE) {
+                return $next($request);
+            }
+
+            // Pending payment users can access dashboard (payment banner shown there)
+            if ($user->account_status === User::STATUS_PENDING) {
                 return $next($request);
             }
 

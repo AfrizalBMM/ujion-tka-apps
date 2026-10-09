@@ -67,7 +67,7 @@ class TrialProfileController extends Controller
         return redirect()
             ->route('guru.dashboard')
             ->with('flash', [
-                'banner' => 'Trial aktif! Akses penuh platform selama ' . $trialService->getDefaultDays() . ' hari.',
+                'banner' => 'Trial aktif! Akses penuh platform selama '.$trialService->getDefaultDays().' hari.',
                 'bannerStyle' => 'success',
             ]);
     }
