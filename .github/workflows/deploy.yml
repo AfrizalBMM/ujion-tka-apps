@@ -42,3 +42,4 @@ jobs:
             php artisan route:cache 2>&1 || true
             php artisan view:cache 2>&1 || true
             echo "=== Done ==="
+            php artisan tinker --execute="echo 'App: ' . config('app.name') . ' | Env: ' . config('app.env');" 2>&1 || true

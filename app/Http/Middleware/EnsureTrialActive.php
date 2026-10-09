@@ -35,17 +35,17 @@ class EnsureTrialActive
             return $next($request);
         }
 
+        // Langganan aktif (akun lama / pembayaran sukses) → akses penuh
+        if ($user->account_status === User::STATUS_ACTIVE) {
+            return $next($request);
+        }
+
         // Sinkronkan status trial (active → expired saat lewat tanggal)
         $this->trialService->checkExpiry($user);
         $user = $user->fresh();
 
         // Trial aktif → akses penuh
         if ($user->isTrialActive()) {
-            return $next($request);
-        }
-
-        // Langganan aktif (akun lama / pembayaran sukses) → akses penuh
-        if ($user->account_status === User::STATUS_ACTIVE) {
             return $next($request);
         }
 
