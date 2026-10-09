@@ -1,6 +1,6 @@
 <script setup>
 import { Head, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, nextTick, watch} from 'vue';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
 import { copyTextToClipboard } from '@/utils/copy-text';
 
@@ -34,6 +34,8 @@ const props = defineProps({
 const page = usePage();
 
 const showAdminFlowModal = ref(false);
+const adminFlowModalEl = ref(null);
+watch(showAdminFlowModal, (val) => { if (val) nextTick(() => adminFlowModalEl.value?.focus()); });
 const copiedTokenId = ref(null);
 const copiedTemplateIndex = ref(null);
 
@@ -331,7 +333,7 @@ const copyTemplate = async (index, body) => {
 			</div>
 		</div>
 
-		<div id="admin-flow-modal" class="fixed inset-0 z-50 items-center justify-center bg-slate-950/70 px-4" :class="showAdminFlowModal ? 'flex' : 'hidden'">
+		<div id="admin-flow-modal" class="fixed inset-0 z-50 items-center justify-center bg-slate-950/70 px-4" :class="showAdminFlowModal ? 'flex' : 'hidden'" @keydown.escape="showAdminFlowModal = false" tabindex="-1" ref="adminFlowModalEl">
 			<div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900">
 				<div class="flex items-start justify-between gap-4">
 					<div>

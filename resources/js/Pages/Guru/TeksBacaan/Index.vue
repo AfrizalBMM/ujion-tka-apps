@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, nextTick, watch} from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import GuruLayout from '@/Layouts/GuruLayout.vue';
 
@@ -32,6 +32,8 @@ const storeSubmit = () => {
 };
 
 const showModal = ref(false);
+const editModalEl = ref(null);
+watch(showModal, (val) => { if (val) nextTick(() => editModalEl.value?.focus()); });
 const editingId = ref(null);
 const editForm = useForm({
 	judul: '',
@@ -128,7 +130,7 @@ const deleteBacaan = (bacaan) => {
 			</section>
 		</div>
 
-		<div v-if="canManage" id="edit-modal" class="fixed inset-0 z-50 items-center justify-center bg-black/50 p-4" :class="showModal ? '' : 'hidden'" @click.self="closeModal">
+		<div v-if="canManage" id="edit-modal" class="fixed inset-0 z-50 items-center justify-center bg-black/50 p-4" :class="showModal ? '' : 'hidden'" @click.self="closeModal" @keydown.escape="closeModal" tabindex="-1" ref="editModalEl">
 			<div class="w-full max-w-2xl rounded-[28px] border border-white/80 bg-white/95 p-6 shadow-modal">
 				<div class="flex items-start justify-between gap-4">
 					<div>
