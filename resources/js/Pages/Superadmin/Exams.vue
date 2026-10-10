@@ -111,11 +111,11 @@ const copyToken = async (token) => {
 						<div class="bg-white rounded-lg shadow-lg p-6">
 							<div class="flex items-center justify-between mb-4">
 								<div class="font-bold text-lg">Import Ujian</div>
-								<button class="text-gray-500 hover:text-gray-700" type="button" @click="importOpen = false">
+								<button class="text-slate-500 hover:text-slate-700" type="button" @click="importOpen = false">
 									<i class="fa-solid fa-times"></i>
 								</button>
 							</div>
-							<p class="mb-4 text-sm text-gray-600">Download template Excel, isi data ujian, lalu upload kembali.</p>
+							<p class="mb-4 text-sm text-slate-600">Download template Excel, isi data ujian, lalu upload kembali.</p>
 							<form method="POST" :action="route('superadmin.exams.import')" enctype="multipart/form-data"
 								class="flex flex-col gap-3">
 								<input type="hidden" name="_token" :value="page.props.csrf_token" />
