@@ -263,6 +263,7 @@ class MaterialPracticeController extends Controller
             }
 
             $benar = 0;
+            $salah = 0;
             $total = $package->questions->count();
 
             foreach ($package->questions as $q) {
@@ -272,6 +273,8 @@ class MaterialPracticeController extends Controller
                 $isCorrect = $jawaban !== null && $q->answer_key !== null && $jawaban === $q->answer_key;
                 if ($isCorrect) {
                     $benar++;
+                } elseif ($jawaban !== null) {
+                    $salah++;
                 }
 
                 MaterialPracticePackageAnswer::query()->updateOrCreate(
@@ -286,7 +289,8 @@ class MaterialPracticeController extends Controller
                 );
             }
 
-            $skor = $total > 0 ? round(($benar / $total) * 100, 2) : 0.0;
+            $scoring = new \App\Support\TkaScoring();
+            $skor = (float) $scoring->calculate($benar, $salah, $total);
 
             $attempt->update([
                 'status' => 'selesai',

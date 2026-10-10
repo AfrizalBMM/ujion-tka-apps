@@ -129,7 +129,7 @@ defineProps({
 											</td>
 											<td class="px-6 py-4">
 												<div class="flex justify-center">
-													<span class="rounded-xl px-3 py-1 text-sm font-black" :class="(s.avg_score ?? 0) >= 70 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'">
+													<span class="rounded-xl px-3 py-1 text-sm font-black" :class="(s.avg_score ?? 0) >= 500 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'">
 														{{ s.avg_score !== null ? Number(s.avg_score).toFixed(1) : '-' }}
 													</span>
 												</div>
