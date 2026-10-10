@@ -46,14 +46,14 @@ class AnalisisSiswaController extends Controller
 
         $siswa = [];
         $distribution = [
-            '90-100' => 0,
-            '80-89' => 0,
-            '70-79' => 0,
-            '60-69' => 0,
-            '0-59' => 0,
+            '700-800' => 0,
+            '600-699' => 0,
+            '500-599' => 0,
+            '400-499' => 0,
+            '200-399' => 0,
         ];
 
-        $passingGrade = 70;
+        $passingGrade = (int) config('ujion.scoring.passing_grade', 500);
 
         if ($selectedExamId) {
             $exam = Exam::findOrFail($selectedExamId);
@@ -95,16 +95,16 @@ class AnalisisSiswaController extends Controller
 
             // Build distribution
             foreach ($scores as $skor) {
-                if ($skor >= 90) {
-                    $distribution['90-100']++;
-                } elseif ($skor >= 80) {
-                    $distribution['80-89']++;
-                } elseif ($skor >= 70) {
-                    $distribution['70-79']++;
-                } elseif ($skor >= 60) {
-                    $distribution['60-69']++;
+                if ($skor >= 700) {
+                    $distribution['700-800']++;
+                } elseif ($skor >= 600) {
+                    $distribution['600-699']++;
+                } elseif ($skor >= 500) {
+                    $distribution['500-599']++;
+                } elseif ($skor >= 400) {
+                    $distribution['400-499']++;
                 } else {
-                    $distribution['0-59']++;
+                    $distribution['200-399']++;
                 }
             }
         }

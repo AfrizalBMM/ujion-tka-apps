@@ -166,7 +166,7 @@ class ExamResultController extends Controller
             'avg' => round($sessions->avg('skor') ?? 0, 2),
             'max' => round($sessions->max('skor') ?? 0, 2),
             'min' => round($sessions->min('skor') ?? 0, 2),
-            'pass' => $sessions->where('skor', '>=', 70)->count(), // Example threshold
+            'pass' => $sessions->where('skor', '>=', config('ujion.scoring.passing_grade', 500))->count(),
         ];
 
         // Question Analysis (Heatmap) — eager load to avoid N+1, filter from collection

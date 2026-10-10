@@ -131,7 +131,7 @@ const formatSkor = (value) => Number(value).toFixed(1);
 										</td>
 										<td class="px-6 py-4">
 											<div class="flex justify-center">
-												<span class="rounded-xl px-3 py-1 text-sm font-black" :class="s.skor >= 70 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'">
+												<span class="rounded-xl px-3 py-1 text-sm font-black" :class="s.skor >= 500 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'">
 													{{ formatSkor(s.skor) }}
 												</span>
 											</div>

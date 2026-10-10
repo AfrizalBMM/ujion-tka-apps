@@ -71,10 +71,11 @@ class ExamAnalysisController extends Controller
         ]);
 
         $distribution = [
-            '90-100' => $academicSessions->filter(fn ($session) => $session->skor >= 90)->count(),
-            '80-89' => $academicSessions->filter(fn ($session) => $session->skor >= 80 && $session->skor < 90)->count(),
-            '70-79' => $academicSessions->filter(fn ($session) => $session->skor >= 70 && $session->skor < 80)->count(),
-            '0-69' => $academicSessions->filter(fn ($session) => $session->skor < 70)->count(),
+            '700-800' => $academicSessions->filter(fn ($session) => $session->skor >= 700)->count(),
+            '600-699' => $academicSessions->filter(fn ($session) => $session->skor >= 600 && $session->skor < 700)->count(),
+            '500-599' => $academicSessions->filter(fn ($session) => $session->skor >= 500 && $session->skor < 600)->count(),
+            '400-499' => $academicSessions->filter(fn ($session) => $session->skor >= 400 && $session->skor < 500)->count(),
+            '200-399' => $academicSessions->filter(fn ($session) => $session->skor < 400)->count(),
         ];
 
         $surveyComponents = $surveySessions
