@@ -298,6 +298,8 @@ class LandingSettingsController extends Controller
             'seo_description' => ['nullable', 'string', 'max:300'],
         ]);
 
+        $heroContent = LandingContent::query()->where('section', 'hero')->first();
+
         LandingContent::query()->updateOrCreate(
             ['section' => 'hero'],
             [
@@ -308,7 +310,7 @@ class LandingSettingsController extends Controller
                 'button_url' => $validated['button_url'] ?? null,
                 'seo_title' => $validated['seo_title'] ?? null,
                 'seo_description' => $validated['seo_description'] ?? null,
-                'is_active' => true,
+                'is_active' => $heroContent?->exists ? (bool) $heroContent->is_active : true,
                 'sort_order' => 0,
             ]
         );

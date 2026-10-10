@@ -19,6 +19,8 @@ class TeacherController extends Controller
 {
     public function activate(User $teacher, WaMessageTemplateService $templates): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         if ($teacher->payment_status === User::PAYMENT_SUBMITTED) {
             return back()->with('flash', [
                 'type' => 'warning',
@@ -60,6 +62,8 @@ class TeacherController extends Controller
 
     public function suspend(User $teacher): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         $teacher->forceFill([
             'account_status' => User::STATUS_SUSPEND,
         ])->save();
@@ -73,6 +77,8 @@ class TeacherController extends Controller
 
     public function refreshToken(User $teacher, WaMessageTemplateService $templates): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         $token = TokenGenerator::uniqueTeacherToken();
 
         $teacher->forceFill([
@@ -98,6 +104,8 @@ class TeacherController extends Controller
 
     public function approvePayment(User $teacher, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         if ($teacher->payment_status === User::PAYMENT_APPROVED && $teacher->account_status === User::STATUS_ACTIVE) {
             return back()->with('flash', [
                 'type' => 'warning',
@@ -139,6 +147,8 @@ class TeacherController extends Controller
 
     public function rejectPayment(Request $request, User $teacher, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         if ($teacher->payment_status === User::PAYMENT_APPROVED) {
             return back()->with('flash', [
                 'type' => 'warning',

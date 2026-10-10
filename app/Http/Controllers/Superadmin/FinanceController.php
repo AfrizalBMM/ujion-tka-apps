@@ -35,10 +35,16 @@ class FinanceController extends Controller
         $hasJenjangColumn = Schema::hasTable('pricing_plans') && Schema::hasColumn('pricing_plans', 'jenjang');
         $adminWhatsapp = AppSetting::getValue('admin_whatsapp', config('services.admin.whatsapp'));
 
+        $rawSecretKey = (string) AppSetting::getValue('doku_secret_key', '');
+        $maskedSecretKey = $rawSecretKey !== ''
+            ? '••••'.substr($rawSecretKey, -4)
+            : '';
+
         $dokuSettings = [
             'enabled' => AppSetting::getValue('doku_enabled') === '1',
             'client_id' => (string) AppSetting::getValue('doku_client_id', ''),
-            'secret_key' => (string) AppSetting::getValue('doku_secret_key', ''),
+            'secret_key' => $maskedSecretKey,
+            'public_key' => (string) AppSetting::getValue('doku_public_key', ''),
         ];
 
         $jenjangs = config('ujion.jenjangs');
