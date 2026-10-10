@@ -90,7 +90,7 @@ const previewSoal = (q) => {
 		html += '</div>';
 	}
 	if (q.image) {
-		html += `<div class="mt-4"><img src='${q.image}' class='max-h-48 rounded-xl'></div>`;
+		html += `<div class="mt-4"><img src='${q.image}' alt="Gambar soal" class='max-h-48 rounded-xl'></div>`;
 	}
 	return DOMPurify.sanitize(html);
 };
