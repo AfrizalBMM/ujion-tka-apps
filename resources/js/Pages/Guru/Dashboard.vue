@@ -337,7 +337,7 @@ const formatAmount = (value) => Number(value).toLocaleString('id-ID');
 					<template v-if="pengumuman.length > 0">
 						<li v-for="info in pengumuman" :key="info" class="rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3 text-sm text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-200">{{ info }}</li>
 					</template>
-					<li v-else class="empty-state text-gray-400">Tidak ada pengumuman.</li>
+					<li v-else class="empty-state text-slate-400">Tidak ada pengumuman.</li>
 				</ul>
 			</div>
 		</div>

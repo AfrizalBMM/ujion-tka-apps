@@ -157,7 +157,7 @@ onBeforeUnmount(() => {
 					<img :src="chatPartnerAvatarUrl" class="w-10 h-10 rounded-full border border-white object-cover shadow" :alt="`Avatar ${chatPartnerName}`">
 					<div class="flex-1 min-w-0">
 						<div class="font-bold text-base text-slate-900 dark:text-slate-100">{{ chatPartnerName }}</div>
-						<div class="text-xs text-gray-500 dark:text-slate-400">Percakapan dengan Admin Ujion</div>
+						<div class="text-xs text-slate-500 dark:text-slate-400">Percakapan dengan Admin Ujion</div>
 					</div>
 					<div class="flex items-center gap-2 ml-2">
 						<!-- Info Button -->
@@ -232,7 +232,7 @@ onBeforeUnmount(() => {
 			<!-- Modal Info/Tutorial Chat -->
 			<div id="modal-detail-akun" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" :class="modalOpen ? '' : 'hidden'" @click.self="modalOpen = false" @keydown.escape="modalOpen = false" tabindex="-1" ref="detailAkunModalEl">
 				<div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 w-full max-w-md relative">
-					<button class="absolute top-2 right-2 text-gray-400 hover:text-red-500" @click="modalOpen = false">
+					<button class="absolute top-2 right-2 text-slate-400 hover:text-red-500" @click="modalOpen = false">
 						<i class="fa-solid fa-xmark fa-lg"></i>
 					</button>
 					<div class="flex flex-col items-center gap-3">
@@ -246,7 +246,7 @@ onBeforeUnmount(() => {
 								<li>Superadmin dapat membalas pesan Anda secara langsung di chat ini.</li>
 								<li>Gunakan bahasa yang sopan dan jelas agar komunikasi efektif.</li>
 							</ul>
-							<div class="mt-2 text-xs text-gray-500 dark:text-slate-400">
+							<div class="mt-2 text-xs text-slate-500 dark:text-slate-400">
 								Jika ada kendala teknis, silakan hubungi superadmin melalui chat ini atau kontak resmi yang tersedia.
 							</div>
 						</div>

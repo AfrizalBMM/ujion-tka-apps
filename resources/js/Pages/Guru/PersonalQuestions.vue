@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
 					<div class="bg-white rounded-lg shadow-lg p-6">
 						<div class="flex items-center justify-between mb-4">
 							<div class="font-bold text-lg">Tambah Soal Pribadi</div>
-							<button class="text-gray-500 hover:text-gray-700" type="button" data-modal-close="modal-tambah-soal" @click="openModal = ''">
+							<button class="text-slate-500 hover:text-slate-700" type="button" data-modal-close="modal-tambah-soal" @click="openModal = ''">
 								<i class="fa-solid fa-times"></i>
 							</button>
 						</div>
@@ -426,7 +426,7 @@ onBeforeUnmount(() => {
 				<div class="bg-white rounded-lg shadow-lg p-6">
 					<div class="flex items-center justify-between mb-4">
 						<div class="font-bold text-lg">Edit Soal Pribadi</div>
-						<button class="text-gray-500 hover:text-gray-700" type="button" :data-modal-close="`modal-edit-soal-${question.id}`" @click="openModal = ''">
+						<button class="text-slate-500 hover:text-slate-700" type="button" :data-modal-close="`modal-edit-soal-${question.id}`" @click="openModal = ''">
 							<i class="fa-solid fa-times"></i>
 						</button>
 					</div>

@@ -130,7 +130,7 @@ const sendMessage = () => {
 									<span v-if="user.unread_messages_count" class="ml-2 rounded-full bg-red-500 px-2 py-1 text-[10px] font-bold text-white">{{ user.unread_messages_count }}</span>
 								</Link>
 							</template>
-							<div v-else class="text-sm text-gray-500">Belum ada guru yang bisa dipilih.</div>
+							<div v-else class="text-sm text-slate-500">Belum ada guru yang bisa dipilih.</div>
 						</div>
 					</div>
 				</div>
@@ -140,7 +140,7 @@ const sendMessage = () => {
 							<img :src="selectedUser.avatar_url" class="w-10 h-10 rounded-full border border-white object-cover shadow" :alt="`Avatar ${selectedUser.name}`">
 							<div class="flex-1 min-w-0">
 								<div class="font-bold text-base text-slate-900 dark:text-slate-100">{{ selectedUser.name }}</div>
-								<div class="text-xs text-gray-500 dark:text-slate-400">{{ selectedUser.email }}</div>
+								<div class="text-xs text-slate-500 dark:text-slate-400">{{ selectedUser.email }}</div>
 							</div>
 							<div class="flex items-center gap-2 ml-2">
 								<button type="button" class="icon-button btn-info btn-xs" title="Detail Akun" @click="accountDetailOpen = true">
@@ -160,7 +160,7 @@ const sendMessage = () => {
 								</form>
 							</div>
 						</template>
-						<span v-else class="text-sm text-gray-500">Pilih guru untuk mulai chat.</span>
+						<span v-else class="text-sm text-slate-500">Pilih guru untuk mulai chat.</span>
 					</div>
 					<div class="flex-1 overflow-y-auto p-2 md:p-4 rounded-2xl shadow-inner bg-white bg-[linear-gradient(rgba(120,120,120,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(120,120,120,0.06)_1px,transparent_1px)] bg-[length:32px_32px]" role="log" aria-label="Riwayat percakapan chat">
 						<template v-if="selectedUser">
@@ -177,7 +177,7 @@ const sendMessage = () => {
 												<img :src="route('superadmin.chat.image', chat.id)" alt="Lampiran chat" class="max-h-56 rounded-2xl border border-slate-200 max-w-full object-cover dark:border-slate-700">
 											</a>
 										</div>
-										<div class="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-slate-500" :class="isOwn(chat) ? 'justify-end' : 'justify-start'">
+										<div class="flex items-center gap-2 mt-1 text-xs text-slate-400 dark:text-slate-500" :class="isOwn(chat) ? 'justify-end' : 'justify-start'">
 											<span>{{ chat.created_at_formatted }}</span>
 											<span v-if="isOwn(chat) && chat.is_read" class="text-green-500"><i class="fa-solid fa-check-double"></i></span>
 											<span v-else-if="isOwn(chat)"><i class="fa-solid fa-check"></i></span>
@@ -186,9 +186,9 @@ const sendMessage = () => {
 									<img v-if="isOwn(chat)" :src="authAvatarUrl" class="h-8 w-8 shrink-0 rounded-full border border-white object-cover shadow" alt="Avatar Admin">
 								</div>
 							</template>
-							<div v-else class="text-sm text-gray-500">Belum ada pesan untuk percakapan ini.</div>
+							<div v-else class="text-sm text-slate-500">Belum ada pesan untuk percakapan ini.</div>
 						</template>
-						<div v-else class="text-sm text-gray-500">Pilih guru untuk melihat percakapan.</div>
+						<div v-else class="text-sm text-slate-500">Pilih guru untuk melihat percakapan.</div>
 					</div>
 					<div v-if="chatPaginator" class="mt-4">
 						<PaginationLinks :paginator="chatPaginator" />
@@ -235,36 +235,36 @@ const sendMessage = () => {
 			@click.self="accountDetailOpen = false"
 		>
 			<div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 w-full max-w-md relative">
-				<button class="absolute top-2 right-2 text-gray-400 hover:text-red-500" type="button" @click="accountDetailOpen = false">
+				<button class="absolute top-2 right-2 text-slate-400 hover:text-red-500" type="button" @click="accountDetailOpen = false">
 					<i class="fa-solid fa-xmark fa-lg"></i>
 				</button>
 				<div class="flex flex-col items-center gap-3">
 					<img :src="selectedUser.avatar_url" class="w-16 h-16 rounded-full border border-white object-cover shadow" :alt="`Avatar ${selectedUser.name}`">
 					<div class="font-bold text-lg text-slate-900 dark:text-slate-100">{{ selectedUser.name }}</div>
-					<div class="text-sm text-gray-500 dark:text-slate-400">{{ selectedUser.email }}</div>
+					<div class="text-sm text-slate-500 dark:text-slate-400">{{ selectedUser.email }}</div>
 					<div class="mt-2 w-full space-y-2">
 						<div class="flex justify-between py-1 border-b">
-							<span class="text-gray-500">Role</span>
+							<span class="text-slate-500">Role</span>
 							<span class="font-semibold text-slate-900 dark:text-slate-100">{{ selectedUser.role ?? '-' }}</span>
 						</div>
 						<div class="flex justify-between py-1 border-b">
-							<span class="text-gray-500">Status Akun</span>
+							<span class="text-slate-500">Status Akun</span>
 							<span class="font-semibold text-slate-900 dark:text-slate-100">{{ selectedUser.account_status ?? '-' }}</span>
 						</div>
 						<div class="flex justify-between py-1 border-b">
-							<span class="text-gray-500">Access Token</span>
+							<span class="text-slate-500">Access Token</span>
 							<span class="font-mono text-xs text-slate-700 dark:text-slate-200">{{ selectedUser.access_token ?? '-' }}</span>
 						</div>
 						<div class="flex justify-between py-1 border-b">
-							<span class="text-gray-500">Jenjang</span>
+							<span class="text-slate-500">Jenjang</span>
 							<span class="text-slate-900 dark:text-slate-100">{{ selectedUser.jenjang ?? '-' }}</span>
 						</div>
 						<div class="flex justify-between py-1 border-b">
-							<span class="text-gray-500">Satuan Pendidikan</span>
+							<span class="text-slate-500">Satuan Pendidikan</span>
 							<span class="text-slate-900 dark:text-slate-100">{{ selectedUser.satuan_pendidikan ?? '-' }}</span>
 						</div>
 						<div class="flex justify-between py-1 border-b">
-							<span class="text-gray-500">No. WA</span>
+							<span class="text-slate-500">No. WA</span>
 							<span class="text-slate-900 dark:text-slate-100">{{ selectedUser.no_wa ?? '-' }}</span>
 						</div>
 					</div>
