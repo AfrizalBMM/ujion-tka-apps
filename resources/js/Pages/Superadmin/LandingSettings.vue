@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
 
@@ -83,7 +83,13 @@ const tabs = [
 	{ key: 'stats', label: 'Statistik', icon: 'fa-chart-column' },
 ];
 
+// Client-side tab state — no full-page reload on tab switch
+const activeTab = ref(props.tab);
+
 const nf = (value) => Number(value).toLocaleString('id-ID');
+
+// --- Hero Mockup ---
+const editingHeroMockupId = ref(props.editHeroMockup?.id ?? null);
 
 const heroMockupForm = useForm({
 	badge: props.editHeroMockup?.badge ?? '',
@@ -95,9 +101,40 @@ const heroMockupForm = useForm({
 	is_active: props.editHeroMockup?.is_active ?? true,
 });
 
+const currentEditingHeroMockup = computed(() => {
+	if (!editingHeroMockupId.value) return null;
+	return props.heroMockups.find((m) => m.id === editingHeroMockupId.value) ?? props.editHeroMockup ?? null;
+});
+
+const isEditingHeroMockup = computed(() => editingHeroMockupId.value !== null);
+
+const editHeroMockupItem = (mockup) => {
+	editingHeroMockupId.value = mockup.id;
+	heroMockupForm.badge = mockup.badge ?? '';
+	heroMockupForm.title = mockup.title ?? '';
+	heroMockupForm.description = mockup.description ?? '';
+	heroMockupForm.image = null;
+	heroMockupForm.sort_order = mockup.sort_order ?? 0;
+	heroMockupForm.is_featured = mockup.is_featured ?? false;
+	heroMockupForm.is_active = mockup.is_active ?? true;
+	heroMockupForm.clearErrors();
+};
+
+const cancelEditHeroMockup = () => {
+	editingHeroMockupId.value = null;
+	heroMockupForm.badge = '';
+	heroMockupForm.title = '';
+	heroMockupForm.description = '';
+	heroMockupForm.image = null;
+	heroMockupForm.sort_order = 0;
+	heroMockupForm.is_featured = false;
+	heroMockupForm.is_active = true;
+	heroMockupForm.clearErrors();
+};
+
 const submitHeroMockup = () => {
-	if (props.editHeroMockup) {
-		heroMockupForm.post(route('superadmin.landing-settings.hero-mockups.update', props.editHeroMockup.id));
+	if (editingHeroMockupId.value) {
+		heroMockupForm.post(route('superadmin.landing-settings.hero-mockups.update', editingHeroMockupId.value));
 	} else {
 		heroMockupForm.post(route('superadmin.landing-settings.hero-mockups.store'));
 	}
@@ -105,6 +142,7 @@ const submitHeroMockup = () => {
 
 const heroMockupFormErrors = computed(() => Object.values(heroMockupForm.errors));
 
+// --- Content ---
 const contentForm = useForm({
 	kicker: props.hero.kicker ?? '',
 	title: props.hero.title ?? '',
@@ -115,10 +153,14 @@ const contentForm = useForm({
 	seo_description: props.hero.seo_description ?? '',
 });
 
+const seoTitleLength = computed(() => contentForm.seo_title.length);
+const seoDescriptionLength = computed(() => contentForm.seo_description.length);
+
 const submitContent = () => {
 	contentForm.post(route('superadmin.landing-settings.content'));
 };
 
+// --- Logo ---
 const logoForm = useForm({
 	logo: null,
 });
@@ -127,6 +169,9 @@ const submitLogo = () => {
 	logoForm.post(route('superadmin.landing-settings.logo'));
 };
 
+// --- FAQ ---
+const editingFaqId = ref(props.editFaq?.id ?? null);
+
 const faqForm = useForm({
 	question: props.editFaq?.question ?? '',
 	answer: props.editFaq?.answer ?? '',
@@ -134,13 +179,36 @@ const faqForm = useForm({
 	is_active: props.editFaq?.is_active ?? true,
 });
 
+const isEditingFaq = computed(() => editingFaqId.value !== null);
+
+const editFaqItem = (faq) => {
+	editingFaqId.value = faq.id;
+	faqForm.question = faq.question ?? '';
+	faqForm.answer = faq.answer ?? '';
+	faqForm.sort_order = faq.sort_order ?? 0;
+	faqForm.is_active = faq.is_active ?? true;
+	faqForm.clearErrors();
+};
+
+const cancelEditFaq = () => {
+	editingFaqId.value = null;
+	faqForm.question = '';
+	faqForm.answer = '';
+	faqForm.sort_order = 0;
+	faqForm.is_active = true;
+	faqForm.clearErrors();
+};
+
 const submitFaq = () => {
-	if (props.editFaq) {
-		faqForm.post(route('superadmin.landing-settings.faq.update', props.editFaq.id));
+	if (editingFaqId.value) {
+		faqForm.post(route('superadmin.landing-settings.faq.update', editingFaqId.value));
 	} else {
 		faqForm.post(route('superadmin.landing-settings.faq.store'));
 	}
 };
+
+// --- Pricing / Tarif ---
+const editingTarifId = ref(null);
 
 const tarifForm = useForm({
 	name: '',
@@ -153,8 +221,35 @@ const tarifForm = useForm({
 const tarifJenjangLabel = () =>
 	tarifForm.jenjang || (props.hasJenjangColumn ? 'Pilih jenjang' : 'Jalankan migrate untuk aktifkan jenjang');
 
+const isEditingTarif = computed(() => editingTarifId.value !== null);
+
+const editTarif = (tarif) => {
+	editingTarifId.value = tarif.id;
+	tarifForm.name = tarif.name ?? '';
+	tarifForm.jenjang = tarif.jenjang ?? '';
+	tarifForm.description = tarif.description ?? '';
+	tarifForm.price = String(tarif.price ?? '');
+	tarifForm.subtitle = tarif.subtitle ?? '';
+	tarifForm.clearErrors();
+	document.getElementById('tarif-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const cancelEditTarif = () => {
+	editingTarifId.value = null;
+	tarifForm.name = '';
+	tarifForm.jenjang = '';
+	tarifForm.description = '';
+	tarifForm.price = '';
+	tarifForm.subtitle = '';
+	tarifForm.clearErrors();
+};
+
 const submitTarif = () => {
-	tarifForm.post(route('superadmin.tarif-jenjang.store'));
+	if (editingTarifId.value) {
+		tarifForm.post(route('superadmin.tarif-jenjang.update', editingTarifId.value));
+	} else {
+		tarifForm.post(route('superadmin.tarif-jenjang.store'));
+	}
 };
 </script>
 
@@ -175,27 +270,28 @@ const submitTarif = () => {
 			</div>
 
 			<div class="flex flex-wrap gap-2">
-				<Link
+				<button
 					v-for="item in tabs"
 					:key="item.key"
-					:href="route('superadmin.landing-settings.index', { tab: item.key })"
-					:class="tab === item.key ? 'btn-primary' : 'btn-secondary'"
+					type="button"
+					:class="activeTab === item.key ? 'btn-primary' : 'btn-secondary'"
+					@click="activeTab = item.key"
 				>
 					<i class="fa-solid" :class="item.icon"></i>
 					{{ item.label }}
-				</Link>
+				</button>
 			</div>
 
-			<div v-if="tab === 'hero'" class="grid gap-6">
+			<div v-if="activeTab === 'hero'" class="grid gap-6">
 				<div class="card">
 					<div class="flex items-start justify-between gap-4">
 						<div>
-							<h2 class="text-lg font-bold">{{ editHeroMockup ? 'Edit Mockup Hero' : 'Tambah Mockup Hero' }}</h2>
+							<h2 class="text-lg font-bold">{{ isEditingHeroMockup ? 'Edit Mockup Hero' : 'Tambah Mockup Hero' }}</h2>
 							<p class="mt-1 text-sm text-textSecondary dark:text-slate-300">Upload PNG final untuk mengganti placeholder ruang mockup produk.</p>
 						</div>
-						<Link v-if="editHeroMockup" :href="route('superadmin.landing-settings.index', { tab: 'hero' })" class="btn-secondary px-3" title="Batal edit">
+						<button v-if="isEditingHeroMockup" type="button" class="btn-secondary px-3" title="Batal edit" @click="cancelEditHeroMockup">
 							<i class="fa-solid fa-xmark"></i>
-						</Link>
+						</button>
 					</div>
 
 					<div v-if="heroMockupFormErrors.length > 0" class="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -223,9 +319,9 @@ const submitTarif = () => {
 
 						<div>
 							<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Gambar PNG</label>
-							<input class="input mt-1 w-full" type="file" name="image" accept="image/png,image/jpeg,image/webp" :required="!editHeroMockup" @input="heroMockupForm.image = $event.target.files[0]">
+							<input class="input mt-1 w-full" type="file" name="image" accept="image/png,image/jpeg,image/webp" :required="!isEditingHeroMockup" @input="heroMockupForm.image = $event.target.files[0]">
 							<div class="mt-1 text-xs text-muted">Disarankan PNG landscape rasio 16:10 atau 4:3, maksimal 10MB.</div>
-							<img v-if="editHeroMockup && editHeroMockup.image_path" :src="editHeroMockup.image_url" :alt="editHeroMockup.title" class="mt-3 h-32 w-full rounded-2xl border border-slate-200 object-cover dark:border-slate-700">
+							<img v-if="currentEditingHeroMockup && currentEditingHeroMockup.image_path" :src="currentEditingHeroMockup.image_url" :alt="currentEditingHeroMockup.title" class="mt-3 h-32 w-full rounded-2xl border border-slate-200 object-cover dark:border-slate-700">
 						</div>
 
 						<div class="grid gap-4 sm:grid-cols-2">
@@ -248,7 +344,7 @@ const submitTarif = () => {
 						<div class="flex justify-end">
 							<button type="submit" class="btn-primary" :disabled="heroMockupForm.processing">
 								<i class="fa-solid fa-floppy-disk"></i>
-								{{ editHeroMockup ? 'Simpan Perubahan' : 'Tambah Mockup' }}
+								{{ isEditingHeroMockup ? 'Simpan Perubahan' : 'Tambah Mockup' }}
 							</button>
 						</div>
 					</form>
@@ -295,9 +391,9 @@ const submitTarif = () => {
 										</td>
 										<td class="text-right">
 											<div class="flex justify-end gap-2">
-												<Link :href="route('superadmin.landing-settings.index', { tab: 'hero', hero_mockup_id: mockup.id })" class="btn-secondary px-3" title="Edit">
+												<button type="button" class="btn-secondary px-3" title="Edit" @click="editHeroMockupItem(mockup)">
 													<i class="fa-solid fa-pen"></i>
-												</Link>
+												</button>
 												<form method="POST" :action="route('superadmin.landing-settings.hero-mockups.toggle', mockup.id)">
 													<input type="hidden" name="_token" :value="$page.props.csrf_token">
 													<button type="submit" class="btn-secondary px-3" title="Aktif / Nonaktif">
@@ -323,7 +419,7 @@ const submitTarif = () => {
 				</div>
 			</div>
 
-			<div v-if="tab === 'content'" class="card">
+			<div v-if="activeTab === 'content'" class="card">
 				<div class="flex items-start justify-between gap-4">
 					<div>
 						<h2 class="text-lg font-bold">Hero Section</h2>
@@ -375,12 +471,24 @@ const submitTarif = () => {
 							<div>
 								<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Meta Title (opsional)</label>
 								<input v-model="contentForm.seo_title" class="input mt-1 w-full" name="seo_title" placeholder="Contoh: Platform Ujian TKA Online untuk Guru &amp; Bimbel" maxlength="120">
-								<div class="mt-1 text-xs text-muted">Ideal 50-60 karakter. Kosongkan untuk memakai nama aplikasi + judul hero.</div>
+								<div class="mt-1 flex items-center gap-2 text-xs text-muted">
+									<span>Ideal 50-60 karakter. Kosongkan untuk memakai nama aplikasi + judul hero.</span>
+									<span
+										class="font-semibold"
+										:class="seoTitleLength === 0 ? 'text-muted' : (seoTitleLength >= 50 && seoTitleLength <= 60 ? 'text-green-600' : 'text-amber-600')"
+									>{{ seoTitleLength }} karakter</span>
+								</div>
 							</div>
 							<div>
 								<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Meta Description (opsional)</label>
 								<textarea v-model="contentForm.seo_description" class="input mt-1 min-h-20 w-full" name="seo_description" placeholder="Deskripsi yang tampil di hasil pencarian Google" maxlength="300"></textarea>
-								<div class="mt-1 text-xs text-muted">Ideal 150-160 karakter. Kosongkan untuk memakai kicker hero.</div>
+								<div class="mt-1 flex items-center gap-2 text-xs text-muted">
+									<span>Ideal 150-160 karakter. Kosongkan untuk memakai kicker hero.</span>
+									<span
+										class="font-semibold"
+										:class="seoDescriptionLength === 0 ? 'text-muted' : (seoDescriptionLength >= 150 && seoDescriptionLength <= 160 ? 'text-green-600' : 'text-amber-600')"
+									>{{ seoDescriptionLength }} karakter</span>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -394,7 +502,7 @@ const submitTarif = () => {
 				</form>
 			</div>
 
-			<div v-if="tab === 'branding'" class="card">
+			<div v-if="activeTab === 'branding'" class="card">
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 					<div>
 						<h2 class="text-lg font-bold">Logo Landing</h2>
@@ -440,7 +548,7 @@ const submitTarif = () => {
 				</form>
 			</div>
 
-			<div v-if="tab === 'faq'" class="card">
+			<div v-if="activeTab === 'faq'" class="card">
 				<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 					<div>
 						<h2 class="text-lg font-bold">FAQ Landing</h2>
@@ -455,16 +563,16 @@ const submitTarif = () => {
 								<i class="fa-solid fa-power-off"></i>
 							</button>
 						</form>
-						<Link :href="route('superadmin.landing-settings.index', { tab: 'faq' })" class="btn-secondary whitespace-nowrap">
+						<button type="button" class="btn-secondary whitespace-nowrap" @click="cancelEditFaq">
 							<i class="fa-solid fa-plus"></i>
 							Tambah Baru
-						</Link>
+						</button>
 					</div>
 				</div>
 
 				<div class="mt-5 grid gap-4 lg:grid-cols-2">
 					<div class="rounded-2xl border border-border bg-white/60 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-						<div class="text-sm font-bold text-slate-900 dark:text-white">{{ editFaq ? 'Edit FAQ' : 'Tambah FAQ' }}</div>
+						<div class="text-sm font-bold text-slate-900 dark:text-white">{{ isEditingFaq ? 'Edit FAQ' : 'Tambah FAQ' }}</div>
 
 						<form class="mt-4 space-y-3" @submit.prevent="submitFaq">
 							<div>
@@ -489,7 +597,7 @@ const submitTarif = () => {
 							</div>
 
 							<div class="flex items-center justify-end gap-3">
-								<Link v-if="editFaq" :href="route('superadmin.landing-settings.index', { tab: 'faq' })" class="btn-secondary">Batal</Link>
+								<button v-if="isEditingFaq" type="button" class="btn-secondary" @click="cancelEditFaq">Batal</button>
 								<button class="btn-primary" type="submit" :disabled="faqForm.processing">
 									<i class="fa-solid fa-floppy-disk"></i>
 									Simpan
@@ -528,9 +636,9 @@ const submitTarif = () => {
 											</td>
 											<td class="text-right">
 												<div v-if="faq.is_model" class="flex justify-end gap-2">
-													<Link :href="route('superadmin.landing-settings.index', { tab: 'faq', faq_id: faq.id })" class="btn-secondary px-3">
+													<button type="button" class="btn-secondary px-3" @click="editFaqItem(faq)">
 														<i class="fa-solid fa-pen"></i>
-													</Link>
+													</button>
 													<form method="POST" :action="route('superadmin.landing-settings.faq.toggle', faq.id)">
 														<input type="hidden" name="_token" :value="$page.props.csrf_token">
 														<button type="submit" class="btn-secondary px-3" title="Aktif/Nonaktif">
@@ -558,13 +666,18 @@ const submitTarif = () => {
 				</div>
 			</div>
 
-			<div v-if="tab === 'pricing'" class="card">
-				<div>
-					<h2 class="text-lg font-bold">Pricing / Tarif Jenjang</h2>
-					<p class="mt-1 text-sm text-textSecondary dark:text-slate-300">Tab ini memakai tabel pricing_plans yang sama dengan menu Keuangan. Tarif hanya dipakai untuk flow aktivasi guru dan tidak lagi ditampilkan di landing publik.</p>
+			<div v-if="activeTab === 'pricing'" class="card">
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<h2 class="text-lg font-bold">{{ isEditingTarif ? 'Edit Tarif' : 'Pricing / Tarif Jenjang' }}</h2>
+						<p class="mt-1 text-sm text-textSecondary dark:text-slate-300">Tab ini memakai tabel pricing_plans yang sama dengan menu Keuangan. Tarif hanya dipakai untuk flow aktivasi guru dan tidak lagi ditampilkan di landing publik.</p>
+					</div>
+					<button v-if="isEditingTarif" type="button" class="btn-secondary px-3" title="Batal edit" @click="cancelEditTarif">
+						<i class="fa-solid fa-xmark"></i>
+					</button>
 				</div>
 
-				<form class="mt-5 grid gap-4 md:grid-cols-2" enctype="multipart/form-data" @submit.prevent="submitTarif">
+				<form id="tarif-form" class="mt-5 grid gap-4 md:grid-cols-2" enctype="multipart/form-data" @submit.prevent="submitTarif">
 					<div>
 						<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Judul</label>
 						<input v-model="tarifForm.name" class="input mt-1 w-full" name="name" placeholder="Contoh: Aktivasi Guru SD" required>
@@ -615,10 +728,11 @@ const submitTarif = () => {
 						<input v-model="tarifForm.subtitle" class="input mt-1 w-full" name="subtitle" placeholder="Contoh: Akses akun guru / operator">
 					</div>
 
-					<div class="md:col-span-2 flex items-center justify-end">
+					<div class="md:col-span-2 flex items-center justify-end gap-3">
+						<button v-if="isEditingTarif" type="button" class="btn-secondary" @click="cancelEditTarif">Batal</button>
 						<button class="btn-primary" type="submit" :disabled="tarifForm.processing">
 							<i class="fa-solid fa-floppy-disk"></i>
-							Simpan
+							{{ isEditingTarif ? 'Simpan Perubahan' : 'Simpan' }}
 						</button>
 					</div>
 				</form>
@@ -649,6 +763,9 @@ const submitTarif = () => {
 									</td>
 									<td class="text-right">
 										<div class="flex justify-end gap-2">
+											<button type="button" class="btn-secondary px-3" title="Edit tarif" @click="editTarif(tarif)">
+												<i class="fa-solid fa-pen"></i>
+											</button>
 											<form method="POST" :action="route('superadmin.tarif-jenjang.toggle-active', tarif.id)">
 												<input type="hidden" name="_token" :value="$page.props.csrf_token">
 												<button type="submit" class="btn-secondary px-3" title="Aktif/Nonaktif">
@@ -673,7 +790,7 @@ const submitTarif = () => {
 				</div>
 			</div>
 
-			<div v-if="tab === 'stats'" class="grid gap-4 lg:grid-cols-3">
+			<div v-if="activeTab === 'stats'" class="grid gap-4 lg:grid-cols-3">
 				<div class="card">
 					<div class="text-xs font-semibold uppercase tracking-wide text-muted">Total Materi</div>
 					<div class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ nf(materialTotal) }}</div>
@@ -689,7 +806,7 @@ const submitTarif = () => {
 				</div>
 			</div>
 
-			<div v-if="tab === 'stats'" class="card">
+			<div v-if="activeTab === 'stats'" class="card">
 				<div class="flex items-start justify-between gap-4">
 					<div>
 						<h2 class="text-lg font-bold">Ringkasan Materi &amp; Soal</h2>
