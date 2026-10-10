@@ -239,16 +239,16 @@
                 <div class="mx-auto grid max-w-7xl gap-10 px-4 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start lg:py-16">
                     <div class="animate-fade-in-up">
                         <div class="landing-kicker">
-                            <i class="fa-solid fa-sparkles text-warning"></i>
-                            {{ $hero['kicker'] ?? 'Website pendamping guru untuk memantau kesiapan siswa menuju Tes Kemampuan Akademik (TKA).' }}
+                            <i class="fa-solid fa-bullseye text-warning"></i>
+                            {{ $hero['kicker'] ?? 'Platform TKA-first untuk bimbel & guru — bukan CBT biasa.' }}
                         </div>
 
                         <h1 class="landing-hero-title">
-                            {{ $hero['title'] ?? 'Bantu guru memantau, menganalisis, dan menyiapkan siswa agar lebih siap menghadapi TKA.' }}
+                            {{ $hero['title'] ?? 'Siapkan siswa TKA dengan platform yang benar-benar dirancang untuk format ujian nasional terbaru.' }}
                         </h1>
 
                         <p class="landing-hero-copy">
-                            {{ $hero['body'] ?? 'Ujion TKA dirancang untuk guru/operator yang ingin melihat perkembangan akademik siswa dengan lebih jelas. Mulai dari latihan, paket soal, sesi ujian, sampai hasil akhir, semua disusun agar guru lebih mudah membaca kesiapan siswa, menemukan kelemahan belajar, dan mengambil langkah pembinaan sebelum TKA berlangsung.' }}
+                            {{ $hero['body'] ?? 'Ujion TKA adalah platform ujian yang spesifik dibangun untuk Tes Kemampuan Akademik. Skor 200-800 sesuai standar Kemendikdasmen, format soal aligned dengan kerangka asesmen terbaru, dan alur kerja yang pas untuk bimbel maupun guru independen. Mulai gratis, jalankan dari HP.' }}
                         </p>
 
                         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
