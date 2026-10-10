@@ -97,7 +97,7 @@ const submit = () => {
 									<i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-muted ssd-icon"></i>
 								</button>
 								<div class="ssd-panel">
-									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 									<div class="ssd-list">
 										<div class="ssd-option" :class="!form.jenjang ? 'ssd-selected' : ''" data-value="">Pilih jenjang</div>
 										<div

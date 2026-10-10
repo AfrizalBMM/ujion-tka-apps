@@ -345,7 +345,7 @@ onBeforeUnmount(() => {
 														<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 													</button>
 													<div class="ssd-panel">
-														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..." aria-label="Cari tipe"></div>
 														<div class="ssd-list">
 															<div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'PG'}" data-value="PG">Pilihan Ganda</div>
 															<div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'Checklist'}" data-value="Checklist">Checklist</div>
@@ -363,7 +363,7 @@ onBeforeUnmount(() => {
 														<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 													</button>
 													<div class="ssd-panel">
-														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari status..."></div>
+														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari status..." aria-label="Cari status"></div>
 														<div class="ssd-list">
 															<div class="ssd-option" :class="{'ssd-selected': questions[current].status === 'draft'}" data-value="draft">Draft</div>
 															<div class="ssd-option" :class="{'ssd-selected': questions[current].status === 'terbit'}" data-value="terbit">Terbit</div>
@@ -408,7 +408,7 @@ onBeforeUnmount(() => {
 														<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 													</button>
 													<div class="ssd-panel">
-														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jawaban..."></div>
+														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jawaban..." aria-label="Cari jawaban"></div>
 														<div class="ssd-list">
 															<div class="ssd-option" :class="{'ssd-selected': !questions[current].jawaban_benar}" data-value="">Pilih jawaban benar</div>
 															<div

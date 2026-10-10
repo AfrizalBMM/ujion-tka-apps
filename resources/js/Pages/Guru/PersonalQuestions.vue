@@ -282,7 +282,7 @@ onBeforeUnmount(() => {
 							<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 						</button>
 						<div class="ssd-panel">
-							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kategori..."></div>
+							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kategori..." aria-label="Cari kategori"></div>
 							<div class="ssd-list">
 								<div class="ssd-option" :class="!kategori ? ' ssd-selected' : ''" data-value="">Semua Kategori</div>
 								<div v-for="kategoriItem in categories" :key="kategoriItem" class="ssd-option" :class="kategori == kategoriItem ? ' ssd-selected' : ''" :data-value="kategoriItem">{{ kategoriItem }}</div>
@@ -299,7 +299,7 @@ onBeforeUnmount(() => {
 							<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 						</button>
 						<div class="ssd-panel">
-							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..." aria-label="Cari tipe"></div>
 							<div class="ssd-list">
 								<div class="ssd-option" :class="!tipe ? ' ssd-selected' : ''" data-value="">Semua Tipe</div>
 								<div class="ssd-option" :class="tipe === 'PG' ? ' ssd-selected' : ''" data-value="PG">Pilihan Ganda</div>

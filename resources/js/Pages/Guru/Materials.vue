@@ -149,7 +149,7 @@ onBeforeUnmount(() => {
 						</button>
 						<div class="ssd-panel">
 							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search"
-								placeholder="Cari mapel..."></div>
+								placeholder="Cari mapel..." aria-label="Cari mapel"></div>
 							<div class="ssd-list">
 								<div class="ssd-option" data-value="">Semua Mapel</div>
 								<div v-for="m in mapels" :key="m" class="ssd-option" :class="filters.mapel === m ? ' ssd-selected' : ''" :data-value="m">
@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
 						</button>
 						<div class="ssd-panel">
 							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search"
-								placeholder="Cari kurikulum..."></div>
+								placeholder="Cari kurikulum..." aria-label="Cari kurikulum"></div>
 							<div class="ssd-list">
 								<div class="ssd-option" data-value="">Semua Kurikulum</div>
 								<div v-for="c in curriculums" :key="c" class="ssd-option" :class="filters.curriculum === c ? ' ssd-selected' : ''"

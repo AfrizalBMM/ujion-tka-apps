@@ -511,7 +511,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="(filters.question_type ?? '') === '' ? 'ssd-selected' : ''" data-value="">Semua Jenis</div>
 									<div class="ssd-option" :class="(filters.question_type ?? '') === 'multiple_choice' ? 'ssd-selected' : ''" data-value="multiple_choice">Pilihan Ganda</div>
@@ -530,7 +530,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="(filters.status ?? '') === '' ? 'ssd-selected' : ''" data-value="">Semua Status</div>
 									<div class="ssd-option" :class="(filters.status ?? '') === 'active' ? 'ssd-selected' : ''" data-value="active">Aktif</div>
@@ -548,7 +548,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari mapel..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari mapel..." aria-label="Cari mapel"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="(filters.material_mapel ?? '') === '' ? 'ssd-selected' : ''" data-value="">Semua Mapel</div>
 									<div v-for="m in mapelFilters" :key="m" class="ssd-option" :class="(filters.material_mapel ?? '') === m ? 'ssd-selected' : ''" :data-value="m">{{ m }}</div>
@@ -565,7 +565,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kurikulum..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kurikulum..." aria-label="Cari kurikulum"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="(filters.material_curriculum ?? '') === '' ? 'ssd-selected' : ''" data-value="">Semua Kurikulum</div>
 									<div v-for="curriculum in curriculumFilters" :key="curriculum" class="ssd-option" :class="(filters.material_curriculum ?? '') === curriculum ? 'ssd-selected' : ''" :data-value="curriculum">{{ curriculum }}</div>
@@ -582,7 +582,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="(filters.jenjang_id ?? '') === '' ? 'ssd-selected' : ''" data-value="">Semua Jenjang</div>
 									<div v-for="jenjang in jenjangs" :key="jenjang.id" class="ssd-option" :class="(filters.jenjang_id ?? '') == jenjang.id ? 'ssd-selected' : ''" :data-value="jenjang.id">{{ jenjang.nama }}</div>
@@ -818,7 +818,7 @@ onBeforeUnmount(() => {
 						<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Baru</div>
 						<div class="mt-2 text-xl font-bold">Input Soal Global</div>
 					</div>
-					<button type="button" class="icon-button" data-close-modal="create-question-modal"><i class="fa-solid fa-xmark"></i></button>
+					<button type="button" class="icon-button" data-close-modal="create-question-modal" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
 				</div>
 
 				<form class="mt-5 flex-1 space-y-4 overflow-y-auto pr-2" method="POST" :action="route('superadmin.global-questions.store')">
@@ -833,7 +833,7 @@ onBeforeUnmount(() => {
 									<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 								</button>
 								<div class="ssd-panel">
-									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 									<div class="ssd-list">
 										<div class="ssd-option ssd-selected" data-value="">Pilih Jenjang</div>
 										<div v-for="jenjang in jenjangs" :key="jenjang.id" class="ssd-option" :data-value="jenjang.id">{{ jenjang.nama }}</div>
@@ -850,7 +850,7 @@ onBeforeUnmount(() => {
 									<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 								</button>
 								<div class="ssd-panel">
-									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 									<div class="ssd-list">
 										<div class="ssd-option ssd-selected" data-value="multiple_choice">Pilihan Ganda</div>
 										<div class="ssd-option" data-value="short_answer">Jawaban Singkat</div>
@@ -970,7 +970,7 @@ onBeforeUnmount(() => {
 									<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 								</button>
 								<div class="ssd-panel">
-									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 									<div class="ssd-list">
 										<div class="ssd-option ssd-selected" data-value="1">Aktif (Publik)</div>
 										<div class="ssd-option" data-value="0">Draft (Sembunyi)</div>
@@ -1006,7 +1006,7 @@ onBeforeUnmount(() => {
 						<div class="mt-2 text-xl font-bold">Upload Soal Pilihan Ganda</div>
 						<p class="mt-2 text-sm text-textSecondary">Gunakan Excel atau CSV. Kolom <code>reading_passage</code> untuk teks bacaan (boleh kosong).</p>
 					</div>
-					<button type="button" class="icon-button" data-close-modal="import-pg-modal"><i class="fa-solid fa-xmark"></i></button>
+					<button type="button" class="icon-button" data-close-modal="import-pg-modal" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
 				</div>
 				<form class="mt-5 space-y-4" method="POST" :action="route('superadmin.global-questions.import-pg')" enctype="multipart/form-data">
 					<input type="hidden" name="_token" :value="page.props.csrf_token" />
@@ -1019,7 +1019,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 								<div class="ssd-list">
 									<div class="ssd-option ssd-selected" data-value="">Pilih Jenjang Tujuan</div>
 									<div v-for="jenjang in jenjangs" :key="jenjang.id" class="ssd-option" :data-value="jenjang.id">{{ jenjang.nama }}</div>
@@ -1059,7 +1059,7 @@ onBeforeUnmount(() => {
 						<div class="mt-2 text-xl font-bold">Upload Soal Menjodohkan</div>
 						<p class="mt-2 text-sm text-textSecondary">Format: kolom <code>pair_1_left</code>, <code>pair_1_right</code>, dst. hingga pair_8.</p>
 					</div>
-					<button type="button" class="icon-button" data-close-modal="import-menjodohkan-modal"><i class="fa-solid fa-xmark"></i></button>
+					<button type="button" class="icon-button" data-close-modal="import-menjodohkan-modal" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
 				</div>
 				<form class="mt-5 space-y-4" method="POST" :action="route('superadmin.global-questions.import-menjodohkan')" enctype="multipart/form-data">
 					<input type="hidden" name="_token" :value="page.props.csrf_token" />
@@ -1072,7 +1072,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 								<div class="ssd-list">
 									<div class="ssd-option ssd-selected" data-value="">Pilih Jenjang Tujuan</div>
 									<div v-for="jenjang in jenjangs" :key="jenjang.id" class="ssd-option" :data-value="jenjang.id">{{ jenjang.nama }}</div>
@@ -1108,7 +1108,7 @@ onBeforeUnmount(() => {
 						<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Edit</div>
 						<div class="mt-2 text-xl font-bold">Soal Global</div>
 					</div>
-					<button type="button" class="icon-button" data-close-modal="edit-question-modal"><i class="fa-solid fa-xmark"></i></button>
+					<button type="button" class="icon-button" data-close-modal="edit-question-modal" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
 				</div>
 
 				<form id="edit-question-form" method="POST" class="mt-5 flex-1 space-y-4 overflow-y-auto pr-2">
@@ -1123,7 +1123,7 @@ onBeforeUnmount(() => {
 									<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 								</button>
 								<div class="ssd-panel">
-									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 									<div class="ssd-list">
 										<div class="ssd-option ssd-selected" data-value="">Pilih Jenjang</div>
 										<div v-for="jenjang in jenjangs" :key="jenjang.id" class="ssd-option" :data-value="jenjang.id">{{ jenjang.nama }}</div>
@@ -1140,7 +1140,7 @@ onBeforeUnmount(() => {
 									<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 								</button>
 								<div class="ssd-panel">
-									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 									<div class="ssd-list">
 										<div class="ssd-option ssd-selected" data-value="multiple_choice">Pilihan Ganda</div>
 										<div class="ssd-option" data-value="short_answer">Jawaban Singkat</div>
@@ -1260,7 +1260,7 @@ onBeforeUnmount(() => {
 									<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 								</button>
 								<div class="ssd-panel">
-									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 									<div class="ssd-list">
 										<div class="ssd-option ssd-selected" data-value="1">Aktif (Publik)</div>
 										<div class="ssd-option" data-value="0">Draft (Sembunyi)</div>

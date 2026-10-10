@@ -73,7 +73,7 @@ const submit = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari ujian..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari ujian..." aria-label="Cari ujian"></div>
 								<div class="ssd-list">
 									<div
 										v-for="exam in examOptions"
@@ -98,7 +98,7 @@ const submit = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 								<div class="ssd-list">
 									<div
 										v-for="j in jenjangOptions"

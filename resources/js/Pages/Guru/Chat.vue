@@ -221,7 +221,7 @@ onBeforeUnmount(() => {
 								<input ref="imageInput" type="file" name="image" accept="image/*" class="hidden" id="chat-image-input" @change="onImageChange">
 								<span class="icon-button" title="Lampirkan Media (maks 2 MB)"><i class="fa-solid fa-photo-film"></i></span>
 							</label>
-							<button class="btn-primary px-5" type="submit" :disabled="form.processing"><i class="fa-solid fa-paper-plane"></i></button>
+							<button class="btn-primary px-5" type="submit" :disabled="form.processing" aria-label="Kirim pesan"><i class="fa-solid fa-paper-plane"></i></button>
 						</div>
 						<div class="text-[11px] text-slate-500 dark:text-slate-400">Lampiran gambar maksimal 2 MB.</div>
 					</div>
