@@ -28,7 +28,7 @@ class AnalisisSiswaController extends Controller
             ->get()
             ->map(fn (Exam $exam) => [
                 'id' => $exam->id,
-                'nama' => $exam->nama,
+                'nama' => $exam->judul,
                 'total_peserta' => $exam->total_peserta,
             ])
             ->values()

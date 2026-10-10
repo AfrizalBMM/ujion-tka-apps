@@ -505,6 +505,22 @@ class DokuPaymentController extends Controller
             'paid_at' => now(),
         ]);
 
+        // Record coupon usage if coupon was applied
+        if ($order->coupon_id && $order->discount_value > 0) {
+            $coupon = Coupon::find($order->coupon_id);
+            if ($coupon) {
+                app(CouponService::class)->recordUsage(
+                    coupon: $coupon,
+                    originalAmount: (float) ($order->original_amount ?? ($order->amount + $order->discount_value)),
+                    discountValue: (float) $order->discount_value,
+                    finalAmount: (float) $order->amount,
+                    user: null,
+                    identifier: $order->nomor_wa,
+                    referenceCode: $order->session_token,
+                );
+            }
+        }
+
         $mapel = $order->landingExamMapel;
         $landingExam = $mapel?->landingExam;
         $exam = $landingExam?->exam;
@@ -537,6 +553,22 @@ class DokuPaymentController extends Controller
             'paid_at' => now(),
             'rejection_reason' => null,
         ]);
+
+        // Record coupon usage if coupon was applied (subscription transactions)
+        if ($transaction->coupon_id && $transaction->discount_value > 0) {
+            $coupon = Coupon::find($transaction->coupon_id);
+            if ($coupon) {
+                app(CouponService::class)->recordUsage(
+                    coupon: $coupon,
+                    originalAmount: (float) $transaction->original_amount,
+                    discountValue: (float) $transaction->discount_value,
+                    finalAmount: (float) $transaction->amount,
+                    user: $transaction->user,
+                    identifier: $transaction->user?->no_wa,
+                    referenceCode: $transaction->reference_code,
+                );
+            }
+        }
 
         $teacher = $transaction->user;
 

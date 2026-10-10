@@ -35,7 +35,7 @@ class ExamResultController extends Controller
             ->get()
             ->map(fn (Exam $exam) => [
                 'id' => $exam->id,
-                'nama' => $exam->nama,
+                'nama' => $exam->judul,
                 'total_peserta' => $exam->total_peserta,
                 'is_ujion' => $exam->creator && $exam->creator->role === 'superadmin',
                 'paket_nama' => $exam->paketSoal?->nama ?? '-',
@@ -114,7 +114,7 @@ class ExamResultController extends Controller
         return Inertia::render('Guru/Results/Show', [
             'exam' => [
                 'id' => $exam->id,
-                'judul' => $exam->judul ?? $exam->nama,
+                'judul' => $exam->judul,
             ],
             'tokens' => $tokens,
         ]);
@@ -123,6 +123,7 @@ class ExamResultController extends Controller
     public function mapel(Exam $exam, MapelPaket $mapel): Response
     {
         $this->authorizeOwner($exam);
+        abort_if($mapel->paket_soal_id !== $exam->paket_soal_id, 404);
 
         $sessions = UjianSesi::where('exam_id', $exam->id)
             ->where('mapel_paket_id', $mapel->id)
@@ -146,7 +147,7 @@ class ExamResultController extends Controller
             return Inertia::render('Guru/Results/Mapel', [
                 'exam' => [
                     'id' => $exam->id,
-                    'judul' => $exam->judul ?? $exam->nama,
+                    'judul' => $exam->judul,
                 ],
                 'mapel' => [
                     'id' => $mapel->id,
@@ -168,13 +169,11 @@ class ExamResultController extends Controller
             'pass' => $sessions->where('skor', '>=', 70)->count(), // Example threshold
         ];
 
-        // Question Analysis (Heatmap)
-        $mapel->load('soals.jawabanSiswas', 'soals.pilihanJawabans', 'soals.pasanganMenjodohkans');
+        // Question Analysis (Heatmap) — eager load to avoid N+1, filter from collection
+        $mapel->load(['soals.jawabanSiswas' => fn ($q) => $q->whereIn('ujian_sesi_id', $sessions->pluck('id')), 'soals.pilihanJawabans', 'soals.pasanganMenjodohkans']);
         $sessionIds = $sessions->pluck('id');
         $questionStats = $mapel->soals->map(function ($soal) use ($sessionIds) {
-            $answers = $soal->jawabanSiswas()
-                ->whereIn('ujian_sesi_id', $sessionIds)
-                ->get();
+            $answers = $soal->jawabanSiswas->whereIn('ujian_sesi_id', $sessionIds);
 
             $correctCount = $answers->filter(function ($j) use ($soal) {
                 if ($soal->tipe_soal === 'pilihan_ganda') {
@@ -204,7 +203,7 @@ class ExamResultController extends Controller
         return Inertia::render('Guru/Results/Mapel', [
             'exam' => [
                 'id' => $exam->id,
-                'judul' => $exam->judul ?? $exam->nama,
+                'judul' => $exam->judul,
             ],
             'mapel' => [
                 'id' => $mapel->id,
@@ -332,6 +331,7 @@ class ExamResultController extends Controller
     public function export(Exam $exam, MapelPaket $mapel)
     {
         $this->authorizeOwner($exam);
+        abort_if($mapel->paket_soal_id !== $exam->paket_soal_id, 404);
 
         $sessions = UjianSesi::where('exam_id', $exam->id)
             ->where('mapel_paket_id', $mapel->id)
@@ -340,7 +340,7 @@ class ExamResultController extends Controller
             ->orderBy('skor', 'desc')
             ->get();
 
-        $fileName = 'Hasil_'.($exam->judul ?? $exam->nama ?? 'ujian').'_'.$mapel->nama_label.'.csv';
+        $fileName = 'Hasil_'.($exam->judul ?? 'ujian').'_'.$mapel->nama_label.'.csv';
 
         $headers = [
             'Content-type' => 'text/csv',
