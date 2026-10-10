@@ -244,10 +244,17 @@ class SoalGuruController extends Controller
                 $nextNomor++;
                 $currentCount++;
 
+                // Map tipe soal dari format GlobalQuestion ke format tabel soals
+                $tipeSoal = match ($gq->question_type) {
+                    'multiple_choice', 'short_answer', 'pilihan_ganda' => 'pilihan_ganda',
+                    'matching', 'menjodohkan' => 'menjodohkan',
+                    default => 'pilihan_ganda',
+                };
+
                 // Clone ke Soal guru
                 $soal = $mapel->soals()->create([
                     'nomor_soal' => $nextNomor,
-                    'tipe_soal' => $gq->question_type ?? 'pilihan_ganda',
+                    'tipe_soal' => $tipeSoal,
                     'indikator' => $gq->indikator ?? 'Diimpor dari bank soal Ujion',
                     'pertanyaan' => $gq->question_text,
                     'dimensi' => $gq->dimensi,
