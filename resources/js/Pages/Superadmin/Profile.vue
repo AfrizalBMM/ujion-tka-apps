@@ -99,7 +99,8 @@ const submitPassword = () => {
 					<div class="space-y-4">
 						<div>
 							<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Password Baru</label>
-							<input v-model="passwordForm.password" type="password" name="password" class="input w-full" required>
+							<input v-model="passwordForm.password" type="password" name="password" class="input w-full" required minlength="12">
+							<p class="mt-1 text-xs text-muted">Minimal 12 karakter, kombinasi huruf besar, kecil, angka, dan simbol.</p>
 						</div>
 						<div>
 							<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Konfirmasi Password</label>

@@ -51,7 +51,7 @@ class ProfileController extends Controller
     public function password(Request $request): RedirectResponse
     {
         $request->validate([
-            'password' => ['required', 'confirmed', 'min:6'],
+            'password' => ['required', 'confirmed', 'min:12', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$/'],
         ]);
 
         $user = Auth::user();

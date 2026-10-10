@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import GuruLayout from '@/Layouts/GuruLayout.vue';
+import DOMPurify from 'dompurify';
 
 const props = defineProps({
 	session: {
@@ -45,6 +46,8 @@ const optionStyles = (item, opt) => {
 
 	return { bgColor, icon };
 };
+
+const sanitizeRichText = (value) => DOMPurify.sanitize(String(value ?? ''));
 </script>
 
 <template>
@@ -116,15 +119,15 @@ const optionStyles = (item, opt) => {
 				</div>
 
 				<div class="prose prose-slate max-w-none mb-8 text-slate-900">
-					<div v-html="s.pertanyaan"></div>
+					<div v-html="sanitizeRichText(s.pertanyaan)"></div>
 				</div>
 
 				<div v-if="s.tipe_soal === 'pilihan_ganda'" class="grid gap-3 sm:grid-cols-2">
 					<div v-for="opt in s.options" :key="opt.kode" class="relative flex items-center rounded-2xl border p-4 transition-all" :class="optionStyles(s, opt).bgColor">
 						<span class="mr-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/80 font-black shadow-sm text-sm">{{ opt.kode }}</span>
 						<div class="flex-1 text-sm">
-							<span v-if="optionStyles(s, opt).icon" v-html="optionStyles(s, opt).icon"></span>
-							<span v-html="opt.teks"></span>
+							<span v-if="optionStyles(s, opt).icon" v-html="sanitizeRichText(optionStyles(s, opt).icon)"></span>
+							<span v-html="sanitizeRichText(opt.teks)"></span>
 							<div v-if="session.is_survey" class="mt-1 text-[11px] text-textSecondary">Nilai {{ opt.nilai_survey }} · {{ opt.profil_label }}</div>
 						</div>
 					</div>
@@ -144,7 +147,7 @@ const optionStyles = (item, opt) => {
 						<i class="fa-solid fa-lightbulb"></i> {{ session.is_survey ? 'Catatan Butir / Indikator' : 'Pembahasan / Indikator' }}
 					</div>
 					<div class="text-sm text-slate-700 prose prose-indigo">
-						<div v-html="s.indikator"></div>
+						<div v-html="sanitizeRichText(s.indikator)"></div>
 					</div>
 				</div>
 			</div>

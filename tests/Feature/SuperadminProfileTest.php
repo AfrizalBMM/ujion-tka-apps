@@ -79,14 +79,14 @@ class SuperadminProfileTest extends TestCase
         ]);
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.profile.password'), [
-            'password' => 'password-baru',
-            'password_confirmation' => 'password-baru',
+            'password' => 'PasswordBaru123!',
+            'password_confirmation' => 'PasswordBaru123!',
         ]);
 
         $response->assertRedirect();
         $superadmin->refresh();
 
-        $this->assertTrue(Hash::check('password-baru', $superadmin->password));
+        $this->assertTrue(Hash::check('PasswordBaru123!', $superadmin->password));
     }
 
     private function inertiaHeaders(string $url): array

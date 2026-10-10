@@ -2,6 +2,7 @@
 import { inject } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import GuruLayout from '@/Layouts/GuruLayout.vue';
+import DOMPurify from 'dompurify';
 
 const props = defineProps({
 	question: {
@@ -60,6 +61,8 @@ const escapeHtml = (value) => String(value ?? '')
 	.replaceAll('>', '&gt;')
 	.replaceAll('"', '&quot;')
 	.replaceAll("'", '&#039;');
+
+const sanitizeRichText = (value) => DOMPurify.sanitize(String(value ?? ''));
 
 const explanationHtml = props.question.explanation
 	? escapeHtml(props.question.explanation).replaceAll('\n', '<br />')
@@ -142,7 +145,7 @@ const toggleBookmark = () => {
 							</span>
 						</div>
 						<div class="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4 leading-7 text-slate-800 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-100">
-							<div v-html="question.reading_passage"></div>
+							<div v-html="sanitizeRichText(question.reading_passage)"></div>
 						</div>
 					</div>
 
@@ -161,7 +164,7 @@ const toggleBookmark = () => {
 						</div>
 
 						<div class="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4 leading-7 text-slate-800 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-100">
-							<div v-html="question.question_text"></div>
+							<div v-html="sanitizeRichText(question.question_text)"></div>
 						</div>
 
 						<div v-if="options.length" class="mt-6">
@@ -239,7 +242,7 @@ const toggleBookmark = () => {
 						</div>
 
 						<div v-if="question.explanation" class="mt-4 text-sm leading-6 text-slate-800 dark:text-slate-100">
-							<div v-html="explanationHtml"></div>
+							<div v-html="sanitizeRichText(explanationHtml)"></div>
 						</div>
 						<div v-else class="mt-4 text-sm text-textSecondary">Pembahasan belum tersedia.</div>
 					</div>

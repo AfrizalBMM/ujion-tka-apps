@@ -158,7 +158,7 @@ class TeacherTokenManagementTest extends TestCase
         $response = $this->actingAs($superadmin)->get($url, $this->inertiaHeaders($url));
 
         $response->assertOk();
-        $teachers = $response->json('props.teachers');
+        $teachers = $response->json('props.teachers.data');
 
         $this->assertCount(1, $teachers);
         $this->assertSame($submittedTeacher->id, $teachers[0]['id']);
