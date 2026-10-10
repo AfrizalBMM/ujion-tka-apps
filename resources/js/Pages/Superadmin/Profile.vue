@@ -20,6 +20,7 @@ const submitProfile = () => {
 };
 
 const passwordForm = useForm({
+	current_password: '',
 	password: '',
 	password_confirmation: '',
 });
@@ -98,8 +99,14 @@ const submitPassword = () => {
 
 					<div class="space-y-4">
 						<div>
+							<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Password Saat Ini</label>
+							<input v-model="passwordForm.current_password" type="password" name="current_password" class="input w-full" required autocomplete="current-password">
+							<p class="mt-1 text-xs text-muted">Masukkan password saat ini untuk verifikasi.</p>
+						</div>
+						<div>
 							<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Password Baru</label>
-							<input v-model="passwordForm.password" type="password" name="password" class="input w-full" required>
+							<input v-model="passwordForm.password" type="password" name="password" class="input w-full" required minlength="12">
+							<p class="mt-1 text-xs text-muted">Minimal 12 karakter, kombinasi huruf besar, kecil, angka, dan simbol.</p>
 						</div>
 						<div>
 							<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Konfirmasi Password</label>

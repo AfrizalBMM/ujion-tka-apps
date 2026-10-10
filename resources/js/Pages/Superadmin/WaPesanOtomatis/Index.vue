@@ -73,9 +73,9 @@ const isBlank = (value) => value === null || value === undefined || String(value
 												</button>
 											</form>
 
-											<form method="POST" :action="route('superadmin.wa-templates.destroy', template.id)" onsubmit="return confirm('Hapus template ini?')">
-												<input type="hidden" name="_token" :value="$page.props.csrf_token">
-												<button type="submit" class="btn-danger">
+											<form method="POST" :action="route('superadmin.wa-templates.destroy', template.id)">
+																			<input type="hidden" name="_token" :value="$page.props.csrf_token">
+																			<button type="submit" class="btn-danger" data-confirm="Hapus template ini?" data-confirm-title="Hapus Template">
 													<i class="fa-solid fa-trash mr-2"></i>
 													Hapus
 												</button>

@@ -3,6 +3,8 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
 import { initSSD, syncSSD } from '@/core/ssd';
+import DOMPurify from 'dompurify';
+import { confirmAction } from '@/ui';
 
 const props = defineProps({
 	exam: {
@@ -61,8 +63,9 @@ const add = () => {
 	state.current = state.questions.length - 1;
 };
 
-const remove = (idx) => {
-	if (confirm('Hapus soal ini?')) {
+const remove = async (idx) => {
+	const ok = await confirmAction({ title: 'Hapus Soal', message: 'Hapus soal ini?' });
+	if (ok) {
 		state.questions.splice(idx, 1);
 		if (state.current >= state.questions.length) state.current = state.questions.length - 1;
 	}
@@ -91,7 +94,7 @@ const previewSoal = (q) => {
 	if (q.image) {
 		html += `<div class="mt-4"><img src='${q.image}' alt="Gambar soal" class='max-h-48 rounded-xl'></div>`;
 	}
-	return html;
+	return DOMPurify.sanitize(html);
 };
 
 const debounceSearch = () => {
@@ -120,8 +123,12 @@ const fetchBankQuestions = () => {
 		});
 };
 
-const importFromBank = () => {
-	if (confirm(`Import ${state.selectedBankIds.length} soal terpilih ke dalam builder? (Catatan: Perubahan yang belum disimpan akan hilang jika tidak hati-hati)`)) {
+const importFromBank = async () => {
+	const ok = await confirmAction({
+		title: 'Import dari Bank Soal',
+		message: `Import ${state.selectedBankIds.length} soal terpilih ke dalam builder? (Catatan: Perubahan yang belum disimpan akan hilang jika tidak hati-hati)`,
+	});
+	if (ok) {
 		state.loadingImport = true;
 		fetch(route('superadmin.exams.import-bank', props.exam.id), {
 			method: 'POST',

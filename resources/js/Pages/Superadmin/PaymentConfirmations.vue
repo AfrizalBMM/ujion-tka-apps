@@ -2,10 +2,11 @@
 import { reactive } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
+import PaginationLinks from '@/Components/Ui/PaginationLinks.vue';
 
 const props = defineProps({
 	transactions: {
-		type: Array,
+		type: Object,
 		required: true,
 	},
 	summary: {
@@ -90,8 +91,8 @@ const isBlank = (value) => value === null || value === undefined || String(value
 							</tr>
 						</thead>
 						<tbody>
-							<template v-if="transactions.length > 0">
-								<tr v-for="transaction in transactions" :key="transaction.id">
+							<template v-if="transactions.data.length > 0">
+								<tr v-for="transaction in transactions.data" :key="transaction.id">
 									<td>
 										<div class="font-bold">{{ transaction.reference_code }}</div>
 										<div v-if="!isBlank(transaction.doku_invoice_number) && transaction.doku_invoice_number !== transaction.reference_code" class="mt-1 text-xs text-muted">{{ transaction.doku_invoice_number }}</div>
@@ -129,6 +130,10 @@ const isBlank = (value) => value === null || value === undefined || String(value
 							</tr>
 						</tbody>
 					</table>
+				</div>
+
+				<div class="mt-4">
+					<PaginationLinks :paginator="transactions" />
 				</div>
 			</div>
 		</div>

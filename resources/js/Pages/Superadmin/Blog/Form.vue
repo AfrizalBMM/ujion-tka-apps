@@ -1,6 +1,8 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
 
 const props = defineProps({
@@ -20,6 +22,13 @@ const form = useForm({
 	meta_title: props.post.meta_title ?? '',
 	meta_description: props.post.meta_description ?? '',
 	is_published: props.post.is_published ?? false,
+});
+
+const contentMode = ref('edit'); // 'edit' | 'preview'
+
+const renderedContent = computed(() => {
+	const rawHtml = marked.parse(form.content ?? '', { breaks: true });
+	return DOMPurify.sanitize(rawHtml);
 });
 
 const submit = () => {
@@ -75,8 +84,22 @@ const formErrors = computed(() => Object.values(form.errors));
 				</div>
 
 				<div>
-					<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Konten (Markdown)</label>
-					<textarea v-model="form.content" class="input mt-1 min-h-80 w-full font-mono text-sm" name="content" placeholder="Tulis isi artikel di sini..." required></textarea>
+					<div class="flex items-center justify-between">
+						<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Konten (Markdown)</label>
+						<div class="flex gap-1 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
+							<button type="button" class="rounded-md px-3 py-1 text-xs font-semibold transition-colors" :class="contentMode === 'edit' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-muted hover:text-slate-700 dark:hover:text-slate-200'" @click="contentMode = 'edit'">
+								<i class="fa-solid fa-pen mr-1"></i> Edit
+							</button>
+							<button type="button" class="rounded-md px-3 py-1 text-xs font-semibold transition-colors" :class="contentMode === 'preview' ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-muted hover:text-slate-700 dark:hover:text-slate-200'" @click="contentMode = 'preview'">
+								<i class="fa-solid fa-eye mr-1"></i> Preview
+							</button>
+						</div>
+					</div>
+					<textarea v-show="contentMode === 'edit'" v-model="form.content" class="input mt-1 min-h-80 w-full font-mono text-sm" name="content" placeholder="Tulis isi artikel di sini..." required></textarea>
+					<div v-show="contentMode === 'preview'" class="prose-article mt-1 min-h-80 w-full overflow-auto rounded-lg border border-border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+						<div v-if="form.content" v-html="renderedContent"></div>
+						<p v-else class="text-sm text-muted italic">Belum ada konten untuk ditampilkan. Kembali ke mode Edit untuk menulis.</p>
+					</div>
 				</div>
 
 				<div class="rounded-2xl border border-slate-200/70 p-4 dark:border-slate-700/60">

@@ -79,14 +79,35 @@ class SuperadminProfileTest extends TestCase
         ]);
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.profile.password'), [
-            'password' => 'password-baru',
-            'password_confirmation' => 'password-baru',
+            'current_password' => 'password-lama',
+            'password' => 'PasswordBaru123!',
+            'password_confirmation' => 'PasswordBaru123!',
         ]);
 
         $response->assertRedirect();
         $superadmin->refresh();
 
-        $this->assertTrue(Hash::check('password-baru', $superadmin->password));
+        $this->assertTrue(Hash::check('PasswordBaru123!', $superadmin->password));
+    }
+
+    public function test_superadmin_cannot_change_password_without_matching_current(): void
+    {
+        $superadmin = User::factory()->create([
+            'role' => User::ROLE_SUPERADMIN,
+            'account_status' => User::STATUS_ACTIVE,
+            'password' => Hash::make('password-lama'),
+        ]);
+
+        $response = $this->actingAs($superadmin)->post(route('superadmin.profile.password'), [
+            'current_password' => 'password-salah',
+            'password' => 'PasswordBaru123!',
+            'password_confirmation' => 'PasswordBaru123!',
+        ]);
+
+        $response->assertSessionHasErrors(['current_password']);
+        $superadmin->refresh();
+
+        $this->assertTrue(Hash::check('password-lama', $superadmin->password));
     }
 
     private function inertiaHeaders(string $url): array

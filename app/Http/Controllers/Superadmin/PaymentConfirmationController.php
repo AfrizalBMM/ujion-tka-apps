@@ -37,19 +37,21 @@ class PaymentConfirmationController extends Controller
 
         $transactions = $transactionsQuery
             ->orderByDesc('updated_at')
-            ->limit(200)
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
+
+        $transactions->through(function (Transaction $transaction) {
+            $transaction->paid_at_formatted = $transaction->paid_at?->format('d M Y H:i');
+            $transaction->created_at_formatted = $transaction->created_at?->format('d M Y H:i');
+
+            return $transaction;
+        });
 
         $summary = [
             'pending' => Transaction::query()->where('status', Transaction::STATUS_PENDING)->count(),
             'success' => Transaction::query()->where('status', Transaction::STATUS_SUCCESS)->count(),
             'failed' => Transaction::query()->where('status', Transaction::STATUS_FAILED)->count(),
         ];
-
-        $transactions->each(function (Transaction $transaction) {
-            $transaction->paid_at_formatted = $transaction->paid_at?->format('d M Y H:i');
-            $transaction->created_at_formatted = $transaction->created_at?->format('d M Y H:i');
-        });
 
         return Inertia::render('Superadmin/PaymentConfirmations', compact('transactions', 'summary', 'search', 'statusFilter'));
     }

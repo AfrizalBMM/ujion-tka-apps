@@ -14,6 +14,7 @@ use App\Services\WaMessageTemplateService;
 use App\Support\MatchingKey;
 use App\Support\NameMatcher;
 use App\Support\SurveyAnalytics;
+use App\Support\TkaScoring;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -523,17 +524,21 @@ class ExamController extends Controller
 
         $maxScore = (float) $soals->sum('bobot');
         $earnedScore = 0.0;
+        $wrongScore = 0.0;
 
         foreach ($soals as $soal) {
             $jawaban = $jawabanBySoal->get($soal->id);
             if (! $jawaban) {
-                continue;
+                continue; // unanswered — no penalty
             }
 
             if ($soal->isPilihanGanda()) {
                 $correct = $soal->pilihanJawabans->firstWhere('is_benar', true)?->kode;
                 if ($correct && $jawaban->jawaban_pg === $correct) {
                     $earnedScore += $soal->bobot;
+                } elseif ($jawaban->jawaban_pg !== null && $jawaban->jawaban_pg !== '') {
+                    // Wrong answer (answered but incorrect) — track for penalty
+                    $wrongScore += $soal->bobot;
                 }
 
                 continue;
@@ -550,15 +555,41 @@ class ExamController extends Controller
                     return (int) $answers->get($pair->id) === (int) $pair->id;
                 })->count();
 
+                $wrongPairs = $totalPairs - $correctPairs;
                 $earnedScore += ($correctPairs / $totalPairs) * $soal->bobot;
+                $wrongScore += ($wrongPairs / $totalPairs) * $soal->bobot;
             }
         }
 
+        // Division-by-zero guard: return TKA baseline (200), not 0.
         if ($maxScore <= 0) {
-            return 0.0;
+            return (float) config('ujion.scoring.baseline', 200);
         }
 
-        return round(($earnedScore / $maxScore) * 100, 2);
+        // TKA 200-800 scoring with penalty and round-half-up.
+        $scoring = new TkaScoring;
+
+        // Normalize to integer counts if all bobot=1; otherwise use weighted ratios.
+        if ($maxScore === (float) $soals->count()) {
+            // Standard case: all bobot=1, use integer counts directly.
+            return (float) $scoring->calculate(
+                (int) round($earnedScore),
+                (int) round($wrongScore),
+                (int) $soals->count(),
+            );
+        }
+
+        // Weighted case: convert to equivalent integer counts.
+        // raw = earnedScore - penalty × wrongScore; total = maxScore
+        // Scale: 200 + (raw / maxScore) × 600
+        $penalty = (float) config('ujion.scoring.penalty_factor', 0.25);
+        $raw = $earnedScore - ($penalty * $wrongScore);
+        $baseline = (int) config('ujion.scoring.baseline', 200);
+        $ceiling = (int) config('ujion.scoring.ceiling', 800);
+        $preClamp = $baseline + ($raw / $maxScore) * ($ceiling - $baseline);
+        $rounded = (int) floor($preClamp + 0.5); // round-half-up
+
+        return (float) max($baseline, min($ceiling, $rounded));
     }
 
     private function syncTimerStateForMapel(UjianSesi $sesi, MapelPaket $mapel, bool $startIfMissing): array

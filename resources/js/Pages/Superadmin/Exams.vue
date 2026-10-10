@@ -182,13 +182,15 @@ const copyToken = async (token) => {
 									<div class="flex flex-wrap gap-2">
 										<form method="POST" :action="route('superadmin.exams.toggle', exam.id)"><input type="hidden" name="_token" :value="page.props.csrf_token" /><button
 												class="btn-secondary text-xs px-2 py-1">Toggle</button></form>
-										<form v-if="exam.ujian_sesis_count > 0" method="POST" :action="route('superadmin.exams.destroy', exam.id)"
-											  :onsubmit="`return confirm('Ujian ini memiliki ${exam.ujian_sesis_count} hasil peserta yang akan DIHAPUS PERMANEN beserta ujiannya. Lanjutkan?')`">
-											<input type="hidden" name="_token" :value="page.props.csrf_token" />
-											<input type="text" name="confirm_text" placeholder="Ketik HAPUS" required
-												   class="w-24 rounded-lg border border-rose-200 px-2 py-1 text-xs uppercase" autocomplete="off">
-											<button class="btn-danger text-xs px-2 py-1">Hapus ({{ exam.ujian_sesis_count }} hasil)</button>
-										</form>
+										<form v-if="exam.ujian_sesis_count > 0" method="POST" :action="route('superadmin.exams.destroy', exam.id)">
+																				<input type="hidden" name="_token" :value="page.props.csrf_token" />
+																				<button class="btn-danger text-xs px-2 py-1"
+																					:data-confirm="`Ujian ini memiliki ${exam.ujian_sesis_count} hasil peserta yang akan DIHAPUS PERMANEN beserta ujiannya. Lanjutkan?`"
+																					data-confirm-title="Hapus Ujian"
+																					data-confirm-require-text="HAPUS"
+																					data-confirm-prompt-label="Ketik HAPUS untuk konfirmasi"
+																					data-confirm-prompt-placeholder="HAPUS">Hapus ({{ exam.ujian_sesis_count }} hasil)</button>
+																			</form>
 										<form v-else method="POST" :action="route('superadmin.exams.destroy', exam.id)"><input type="hidden" name="_token" :value="page.props.csrf_token" /><button
 												class="btn-danger text-xs px-2 py-1">Hapus</button></form>
 									</div>

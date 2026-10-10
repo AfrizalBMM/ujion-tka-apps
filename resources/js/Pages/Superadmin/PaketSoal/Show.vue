@@ -28,6 +28,12 @@ const copyToken = async (token) => {
 	}, 2000);
 };
 
+const bankBuilderUrl = (paketId, mapelId, params) => {
+	const base = route('superadmin.soal.bank-builder', [paketId, mapelId]);
+	const query = new URLSearchParams(Object.entries(params)).toString();
+	return query ? `${base}?${query}` : base;
+};
+
 onMounted(() => {
 	const root = rootEl.value;
 	if (!root) return;
@@ -109,7 +115,7 @@ onMounted(() => {
 								<i class="fa-solid fa-pen-to-square mr-1.5"></i>Buat Manual
 							</Link>
 							<Link v-if="!mapel.is_survey"
-								  :href="route('superadmin.soal.bank-builder', [paket.id, mapel.id]) + '?' + new URLSearchParams(mapel.bank_builder_params).toString()"
+								  :href="bankBuilderUrl(paket.id, mapel.id, mapel.bank_builder_params)"
 								  class="btn-secondary px-4 py-2 text-xs">
 								<i class="fa-solid fa-layer-group mr-1.5"></i>Dari Bank Soal
 							</Link>

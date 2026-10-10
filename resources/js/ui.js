@@ -191,6 +191,50 @@ const submitPendingForm = () => {
 	pendingForm.submit();
 };
 
+export function confirmAction({ title = 'Konfirmasi', message = 'Yakin?', confirmText = null, confirmField = 'confirm_text', promptLabelText = 'Ketik konfirmasi', promptPlaceholder = '' } = {}) {
+	return new Promise((resolve) => {
+		const modal = getModal();
+		if (!modal) {
+			resolve(window.confirm(message));
+			return;
+		}
+
+		const fakeForm = { submit: () => resolve(true) };
+
+		const cleanup = () => {
+			pendingForm = null;
+			pendingConfirmText = null;
+			pendingConfirmField = null;
+			resolve(false);
+		};
+
+		const overlay = modal.querySelector('[data-confirm-modal-overlay]');
+		const cancelBtns = modal.querySelectorAll('[data-confirm-modal-cancel]');
+		const confirmBtn = modal.querySelector('[data-confirm-modal-confirm]');
+
+		const onConfirmClick = (e) => {
+			if (e.target.closest('[data-confirm-modal-confirm]')) {
+				document.removeEventListener('click', onConfirmClick, true);
+				document.removeEventListener('click', onCancelClick, true);
+				resolve(true);
+			}
+		};
+
+		const onCancelClick = (e) => {
+			if (e.target.closest('[data-confirm-modal-cancel], [data-confirm-modal-overlay]')) {
+				document.removeEventListener('click', onConfirmClick, true);
+				document.removeEventListener('click', onCancelClick, true);
+				resolve(false);
+			}
+		};
+
+		document.addEventListener('click', onConfirmClick, true);
+		document.addEventListener('click', onCancelClick, true);
+
+		openConfirmModal({ title, message, form: fakeForm, confirmText, confirmField, promptLabelText, promptPlaceholder });
+	});
+}
+
 export function initConfirmModal() {
 	if (confirmModalGlobalBound) return;
 	confirmModalGlobalBound = true;

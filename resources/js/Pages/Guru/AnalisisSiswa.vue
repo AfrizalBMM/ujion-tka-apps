@@ -32,7 +32,7 @@ const props = defineProps({
 	},
 	passingGrade: {
 		type: Number,
-		default: 70,
+		default: 500,
 	},
 });
 
@@ -59,11 +59,11 @@ const onExamChange = () => {
 const distributionBars = computed(() => {
 	const dist = props.distribution || {};
 	const ranges = [
-		{ key: '90-100', label: '90-100', color: 'bg-emerald-500', textColor: 'text-emerald-700' },
-		{ key: '80-89', label: '80-89', color: 'bg-emerald-400', textColor: 'text-emerald-600' },
-		{ key: '70-79', label: '70-79', color: 'bg-amber-400', textColor: 'text-amber-600' },
-		{ key: '60-69', label: '60-69', color: 'bg-orange-400', textColor: 'text-orange-600' },
-		{ key: '0-59', label: '0-59', color: 'bg-rose-500', textColor: 'text-rose-700' },
+		{ key: '700-800', label: '700-800', color: 'bg-emerald-500', textColor: 'text-emerald-700' },
+		{ key: '600-699', label: '600-699', color: 'bg-emerald-400', textColor: 'text-emerald-600' },
+		{ key: '500-599', label: '500-599', color: 'bg-amber-400', textColor: 'text-amber-600' },
+		{ key: '400-499', label: '400-499', color: 'bg-orange-400', textColor: 'text-orange-600' },
+		{ key: '200-399', label: '200-399', color: 'bg-rose-500', textColor: 'text-rose-700' },
 	];
 	const maxCount = Math.max(...ranges.map(r => dist[r.key] || 0), 1);
 	return ranges.map(r => ({

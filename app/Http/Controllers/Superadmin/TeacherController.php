@@ -19,6 +19,8 @@ class TeacherController extends Controller
 {
     public function activate(User $teacher, WaMessageTemplateService $templates): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         if ($teacher->payment_status === User::PAYMENT_SUBMITTED) {
             return back()->with('flash', [
                 'type' => 'warning',
@@ -60,6 +62,8 @@ class TeacherController extends Controller
 
     public function suspend(User $teacher): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         $teacher->forceFill([
             'account_status' => User::STATUS_SUSPEND,
         ])->save();
@@ -73,6 +77,8 @@ class TeacherController extends Controller
 
     public function refreshToken(User $teacher, WaMessageTemplateService $templates): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         $token = TokenGenerator::uniqueTeacherToken();
 
         $teacher->forceFill([
@@ -98,6 +104,8 @@ class TeacherController extends Controller
 
     public function approvePayment(User $teacher, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         if ($teacher->payment_status === User::PAYMENT_APPROVED && $teacher->account_status === User::STATUS_ACTIVE) {
             return back()->with('flash', [
                 'type' => 'warning',
@@ -139,6 +147,8 @@ class TeacherController extends Controller
 
     public function rejectPayment(Request $request, User $teacher, PaymentApprovalService $paymentService, WaMessageTemplateService $templates): RedirectResponse
     {
+        abort_unless($teacher->role === User::ROLE_GURU, 403, 'Target user is not a teacher.');
+
         if ($teacher->payment_status === User::PAYMENT_APPROVED) {
             return back()->with('flash', [
                 'type' => 'warning',
@@ -218,7 +228,8 @@ class TeacherController extends Controller
         $teachers = $teachersQuery
             ->orderByRaw("case when payment_status = 'submitted' then 0 when payment_status = 'rejected' then 1 when payment_status = 'awaiting_payment' then 2 else 3 end")
             ->latest()
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         $paymentSummary = [
             User::PAYMENT_SUBMITTED => User::query()->where('role', User::ROLE_GURU)->where('payment_status', User::PAYMENT_SUBMITTED)->count(),
@@ -229,7 +240,7 @@ class TeacherController extends Controller
 
         $notificationTemplates = GuruNotificationTemplates::library();
 
-        $teachers = $teachers->map(fn (User $teacher) => [
+        $teachers->through(fn (User $teacher) => [
             'id' => $teacher->id,
             'name' => $teacher->name,
             'email' => $teacher->email,
@@ -240,7 +251,7 @@ class TeacherController extends Controller
             'payment_rejection_reason' => $teacher->payment_rejection_reason,
             'access_token' => $teacher->access_token,
             'created_at_formatted' => $teacher->created_at?->format('d M Y'),
-        ])->values()->all();
+        ]);
 
         return Inertia::render('Superadmin/Teachers', [
             'teachers' => $teachers,

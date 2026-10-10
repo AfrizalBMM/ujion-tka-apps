@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppBlast;
 use App\Models\PaketSoal;
-use App\Models\UjianSesi;
 use App\Models\User;
 use App\Models\WhatsAppLog;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -100,7 +101,23 @@ class WhatsAppGatewayController extends Controller
             'school' => ['nullable', 'string', 'max:200'],
             'paket_soal_id' => ['nullable', 'integer', 'exists:paket_soals,id'],
             'scheduled_at' => ['nullable', 'date_format:Y-m-d\TH:i'],
+            'confirm' => ['nullable', 'boolean'],
         ]);
+
+        $user = Auth::user();
+        abort_unless($user, 401);
+
+        // Rate limiting: max 5 blasts per hour per superadmin.
+        $rateLimitKey = "wa-blast:{$user->id}";
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
+            $retryAfter = RateLimiter::availableIn($rateLimitKey);
+
+            return back()->with('flash', [
+                'type' => 'warning',
+                'title' => 'Batas blast tercapai',
+                'message' => "Anda telah mencapai batas 5 blast per jam. Coba lagi dalam {$retryAfter} detik.",
+            ]);
+        }
 
         if ($validated['target'] === 'guru_jenjang' && blank($validated['jenjang'] ?? null)) {
             return back()->with('flash', [
@@ -123,6 +140,16 @@ class WhatsAppGatewayController extends Controller
                 'type' => 'warning',
                 'title' => 'Target belum lengkap',
                 'message' => 'Silakan pilih paket soal untuk target blast siswa.',
+            ]);
+        }
+
+        // Filter recipients: only ROLE_GURU users are eligible for blast.
+        // Siswa-based targets are rejected since recipients must be ROLE_GURU.
+        if (str_starts_with($validated['target'], 'siswa_')) {
+            return back()->with('flash', [
+                'type' => 'warning',
+                'title' => 'Target tidak diizinkan',
+                'message' => 'Blast hanya dapat dikirim ke pengguna dengan peran guru.',
             ]);
         }
 
@@ -149,65 +176,48 @@ class WhatsAppGatewayController extends Controller
 
         $totalQueued = 0;
 
-        if (str_starts_with($validated['target'], 'guru_')) {
-            $teachersQuery = User::query()
-                ->where('role', User::ROLE_GURU)
-                ->where('account_status', User::STATUS_ACTIVE)
-                ->whereNotNull('no_wa')
-                ->where('no_wa', '!=', '');
+        $teachersQuery = User::query()
+            ->where('role', User::ROLE_GURU)
+            ->where('account_status', User::STATUS_ACTIVE)
+            ->whereNotNull('no_wa')
+            ->where('no_wa', '!=', '');
 
-            if ($validated['target'] === 'guru_jenjang') {
-                $teachersQuery->where('jenjang', $validated['jenjang']);
-            }
-
-            if ($validated['target'] === 'guru_school') {
-                $school = trim((string) ($validated['school'] ?? ''));
-                $teachersQuery->where('satuan_pendidikan', 'like', '%'.$school.'%');
-            }
-
-            $teachersQuery
-                ->orderBy('id')
-                ->chunkById(200, function ($teachers) use (&$totalQueued, $validated, $scheduledAt) {
-                    foreach ($teachers as $teacher) {
-                        $delaySeconds = random_int(2, 7);
-                        $delay = $scheduledAt ? $scheduledAt->copy()->addSeconds($delaySeconds) : now()->addSeconds($delaySeconds);
-
-                        SendWhatsAppBlast::dispatch($teacher->no_wa, $validated['message'])
-                            ->onQueue('low')
-                            ->delay($delay);
-
-                        $totalQueued++;
-                    }
-                });
-        } else {
-            // Siswa nyata tersimpan di ujian_sesis (bukan tabel legacy participants).
-            $siswaQuery = UjianSesi::query()
-                ->whereNull('user_id')
-                ->whereNotNull('nomor_wa')
-                ->where('nomor_wa', '!=', '');
-
-            if ($validated['target'] === 'siswa_paket') {
-                $paketSoalId = (int) ($validated['paket_soal_id'] ?? 0);
-                $siswaQuery->where('paket_soal_id', $paketSoalId);
-            }
-
-            $siswaQuery
-                ->select('nomor_wa')
-                ->distinct()
-                ->orderBy('nomor_wa')
-                ->chunk(200, function ($rows) use (&$totalQueued, $validated, $scheduledAt) {
-                    foreach ($rows as $row) {
-                        $delaySeconds = random_int(2, 7);
-                        $delay = $scheduledAt ? $scheduledAt->copy()->addSeconds($delaySeconds) : now()->addSeconds($delaySeconds);
-
-                        SendWhatsAppBlast::dispatch($row->nomor_wa, $validated['message'])
-                            ->onQueue('low')
-                            ->delay($delay);
-
-                        $totalQueued++;
-                    }
-                });
+        if ($validated['target'] === 'guru_jenjang') {
+            $teachersQuery->where('jenjang', $validated['jenjang']);
         }
+
+        if ($validated['target'] === 'guru_school') {
+            $school = trim((string) ($validated['school'] ?? ''));
+            $teachersQuery->where('satuan_pendidikan', 'like', '%'.$school.'%');
+        }
+
+        // Confirmation requirement: if recipients count > 50, require 'confirm' field.
+        $recipientCount = $teachersQuery->count();
+
+        if ($recipientCount > 50 && ! filter_var($validated['confirm'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            return back()->with('flash', [
+                'type' => 'warning',
+                'title' => 'Konfirmasi diperlukan',
+                'message' => "Blast ini menargetkan {$recipientCount} penerima (>50). Centang kolom konfirmasi untuk melanjutkan.",
+            ]);
+        }
+
+        $teachersQuery
+            ->orderBy('id')
+            ->chunkById(200, function ($teachers) use (&$totalQueued, $validated, $scheduledAt) {
+                foreach ($teachers as $teacher) {
+                    $delaySeconds = random_int(2, 7);
+                    $delay = $scheduledAt ? $scheduledAt->copy()->addSeconds($delaySeconds) : now()->addSeconds($delaySeconds);
+
+                    SendWhatsAppBlast::dispatch($teacher->no_wa, $validated['message'])
+                        ->onQueue('low')
+                        ->delay($delay);
+
+                    $totalQueued++;
+                }
+            });
+
+        RateLimiter::hit($rateLimitKey, 3600);
 
         return back()->with('flash', [
             'type' => 'success',
