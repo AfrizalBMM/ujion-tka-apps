@@ -12,6 +12,7 @@ use App\Models\MaterialPracticeToken;
 use App\Models\MaterialTelaahAnswer;
 use App\Models\MaterialTelaahQuestion;
 use App\Support\NameMatcher;
+use App\Support\TkaScoring;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -289,7 +290,7 @@ class MaterialPracticeController extends Controller
                 );
             }
 
-            $scoring = new \App\Support\TkaScoring();
+            $scoring = new TkaScoring;
             $skor = (float) $scoring->calculate($benar, $salah, $total);
 
             $attempt->update([

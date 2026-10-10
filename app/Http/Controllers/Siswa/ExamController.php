@@ -14,6 +14,7 @@ use App\Services\WaMessageTemplateService;
 use App\Support\MatchingKey;
 use App\Support\NameMatcher;
 use App\Support\SurveyAnalytics;
+use App\Support\TkaScoring;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -566,7 +567,7 @@ class ExamController extends Controller
         }
 
         // TKA 200-800 scoring with penalty and round-half-up.
-        $scoring = new \App\Support\TkaScoring();
+        $scoring = new TkaScoring;
 
         // Normalize to integer counts if all bobot=1; otherwise use weighted ratios.
         if ($maxScore === (float) $soals->count()) {
