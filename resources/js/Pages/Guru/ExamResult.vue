@@ -27,7 +27,7 @@ defineProps({
 			<div class="card p-4 mb-4">
 				<div class="font-bold">Skor simulasi Anda:</div>
 				<div class="text-3xl text-blue-700 font-bold">{{ result ? result.skor : '-' }}</div>
-				<div v-if="result.waktu_selesai ?? null" class="mt-2 text-sm text-gray-500">Selesai pada {{ result.waktu_selesai }}</div>
+				<div v-if="result.waktu_selesai ?? null" class="mt-2 text-sm text-slate-500">Selesai pada {{ result.waktu_selesai }}</div>
 			</div>
 			<div class="card p-4">
 				<h2 class="font-semibold mb-2">Pembahasan untuk Evaluasi Guru</h2>
@@ -38,10 +38,10 @@ defineProps({
 							<div class="font-bold">{{ p.pertanyaan }}</div>
 							<div class="text-slate-700">Jawaban Anda: {{ p.jawaban_user }}</div>
 							<div class="text-green-700">Jawaban Benar: {{ p.jawaban_benar }}</div>
-							<div class="text-gray-700">Pembahasan: {{ p.pembahasan }}</div>
+							<div class="text-slate-700">Pembahasan: {{ p.pembahasan }}</div>
 						</li>
 					</template>
-					<li v-else class="text-gray-400">Belum ada pembahasan.</li>
+					<li v-else class="text-slate-400">Belum ada pembahasan.</li>
 				</ul>
 			</div>
 		</div>

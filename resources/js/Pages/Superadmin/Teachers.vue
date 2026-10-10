@@ -142,7 +142,7 @@ const copyTemplate = async (index, body) => {
 				<form method="GET" :action="route('superadmin.teachers.index')" class="mb-6 grid gap-4 lg:grid-cols-[minmax(0,2fr)_1fr_1fr_auto]">
 					<div>
 						<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Cari guru</label>
-						<input type="text" name="q" :value="search" class="input w-full" placeholder="Nama, email, WhatsApp, atau lembaga">
+						<input type="text" name="q" :value="search" aria-label="Cari guru" class="input w-full" placeholder="Nama, email, WhatsApp, atau lembaga">
 					</div>
 					<div>
 						<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Status pembayaran</label>
@@ -153,7 +153,7 @@ const copyTemplate = async (index, body) => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="paymentStatus === '' ? 'ssd-selected' : ''" data-value="">Semua status pembayaran</div>
 									<div class="ssd-option" :class="paymentStatus === 'submitted' ? 'ssd-selected' : ''" data-value="submitted">Menunggu review</div>
@@ -173,7 +173,7 @@ const copyTemplate = async (index, body) => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="accountStatus === '' ? 'ssd-selected' : ''" data-value="">Semua status akun</div>
 									<div class="ssd-option" :class="accountStatus === 'pending' ? 'ssd-selected' : ''" data-value="pending">Pending</div>

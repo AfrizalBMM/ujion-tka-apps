@@ -60,7 +60,7 @@ defineProps({
 					<h3 class="line-clamp-2 text-lg font-bold text-slate-900">{{ t.sub_unit ?? 'Materi' }}</h3>
 					<p class="mt-1 text-xs text-textSecondary">{{ t.subelement ?? '-' }} &middot; {{ t.unit ?? '-' }}</p>
 
-					<div class="mt-5 grid grid-cols-2 gap-3">
+					<div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
 						<div class="rounded-2xl bg-slate-50 p-3">
 							<div class="text-[10px] font-bold uppercase tracking-widest text-textSecondary">Selesai</div>
 							<div class="mt-1 text-lg font-black text-slate-900">{{ t.completed_sessions_count }}</div>

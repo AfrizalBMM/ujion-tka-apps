@@ -321,7 +321,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="filters.question_type === '' ? 'ssd-selected' : ''" data-value="">Semua Tipe</div>
 									<div class="ssd-option" :class="filters.question_type === 'multiple_choice' ? 'ssd-selected' : ''" data-value="multiple_choice">Pilihan Ganda</div>
@@ -341,7 +341,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kurikulum..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kurikulum..." aria-label="Cari kurikulum"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="filters.material_curriculum === '' ? 'ssd-selected' : ''" data-value="">Semua Kurikulum</div>
 									<div v-for="c in curriculums" :key="c" class="ssd-option" :class="filters.material_curriculum === c ? 'ssd-selected' : ''" :data-value="c">{{ c }}</div>
@@ -359,7 +359,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari sub unit..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari sub unit..." aria-label="Cari sub unit"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="filters.material_sub_unit === '' ? 'ssd-selected' : ''" data-value="">Semua Sub Unit</div>
 									<div v-for="su in subUnits" :key="su" class="ssd-option" :class="filters.material_sub_unit === su ? 'ssd-selected' : ''" :data-value="su">{{ su }}</div>
@@ -377,7 +377,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari mapel..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari mapel..." aria-label="Cari mapel"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="filters.material_mapel === '' ? 'ssd-selected' : ''" data-value="">Semua Mapel</div>
 									<div v-for="m in mapels" :key="m" class="ssd-option" :class="filters.material_mapel === m ? 'ssd-selected' : ''" :data-value="m">{{ m }}</div>
@@ -395,7 +395,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="filters.jenjang_id === '' ? 'ssd-selected' : ''" data-value="">Semua Jenjang</div>
 									<div v-for="j in jenjangs" :key="j.id" class="ssd-option" :class="filters.jenjang_id == j.id ? 'ssd-selected' : ''" :data-value="j.id">{{ j.nama }}</div>

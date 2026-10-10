@@ -71,7 +71,7 @@ const answerOptionCount = computed(() => Math.min(optionsValue.value.length, 5))
 					<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 				</button>
 				<div class="ssd-panel">
-					<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+					<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..." aria-label="Cari tipe"></div>
 					<div class="ssd-list">
 						<div class="ssd-option" :class="typeValue === 'PG' ? ' ssd-selected' : ''" data-value="PG">Pilihan Ganda</div>
 						<div class="ssd-option" :class="typeValue === 'Checklist' ? ' ssd-selected' : ''" data-value="Checklist">Checklist</div>
@@ -142,7 +142,7 @@ const answerOptionCount = computed(() => Math.min(optionsValue.value.length, 5))
 					<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 				</button>
 				<div class="ssd-panel">
-					<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jawaban..."></div>
+					<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jawaban..." aria-label="Cari jawaban"></div>
 					<div class="ssd-list">
 						<div class="ssd-option" :class="!answerValue ? ' ssd-selected' : ''" data-value="">Pilih jawaban benar</div>
 						<div
@@ -213,7 +213,7 @@ const answerOptionCount = computed(() => Math.min(optionsValue.value.length, 5))
 					<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 				</button>
 				<div class="ssd-panel">
-					<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+					<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 					<div class="ssd-list">
 						<div class="ssd-option" :class="statusValue === 'draft' ? ' ssd-selected' : ''" data-value="draft">Draft</div>
 						<div class="ssd-option" :class="statusValue === 'terbit' ? ' ssd-selected' : ''" data-value="terbit">Terbit</div>

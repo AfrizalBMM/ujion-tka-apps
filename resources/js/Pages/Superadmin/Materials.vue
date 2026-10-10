@@ -207,7 +207,7 @@ const submitCreate = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" data-value="">Semua</div>
 									<div v-for="m in mapels" :key="m" class="ssd-option" :class="mapel === m ? 'ssd-selected' : ''" :data-value="m">{{ m }}</div>
@@ -225,7 +225,7 @@ const submitCreate = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" data-value="">Semua</div>
 									<div v-for="c in curriculums" :key="c" class="ssd-option" :class="curriculum === c ? 'ssd-selected' : ''" :data-value="c">{{ c }}</div>
@@ -243,7 +243,7 @@ const submitCreate = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari subelemen..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari subelemen..." aria-label="Cari subelemen"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" data-value="">Semua</div>
 									<div v-for="se in subelements" :key="se" class="ssd-option" :class="subelement === se ? 'ssd-selected' : ''" :data-value="se">{{ se }}</div>
@@ -261,7 +261,7 @@ const submitCreate = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari unit..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari unit..." aria-label="Cari unit"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" data-value="">Semua</div>
 									<div v-for="u in units" :key="u" class="ssd-option" :class="unit === u ? 'ssd-selected' : ''" :data-value="u">{{ u }}</div>
@@ -279,7 +279,7 @@ const submitCreate = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari sub unit..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari sub unit..." aria-label="Cari sub unit"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" data-value="">Semua</div>
 									<div v-for="su in subUnits" :key="su" class="ssd-option" :class="subUnit === su ? 'ssd-selected' : ''" :data-value="su">{{ su }}</div>
@@ -417,7 +417,7 @@ const submitCreate = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="!createForm.jenjang ? 'ssd-selected' : ''" data-value="">Semua Jenjang</div>
 									<div class="ssd-option" :class="createForm.jenjang === 'SD' ? 'ssd-selected' : ''" data-value="SD">SD</div>
@@ -445,7 +445,7 @@ const submitCreate = () => {
 									<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 								</button>
 								<div class="ssd-panel">
-									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 									<div class="ssd-list">
 										<div class="ssd-option ssd-selected" data-value="Merdeka">Kurikulum Merdeka</div>
 										<div class="ssd-option" data-value="K-13">K-13 (Masa Transisi)</div>

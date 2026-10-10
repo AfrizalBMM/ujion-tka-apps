@@ -138,7 +138,8 @@ const submit = () => {
 
 						<div class="space-y-2 md:col-span-2">
 							<label for="no_wa" class="text-sm font-semibold text-slate-700 dark:text-slate-200">Nomor WhatsApp</label>
-							<input id="no_wa" v-model="form.no_wa" name="no_wa" required
+							<input id="no_wa" v-model="form.no_wa" name="no_wa" type="tel" required
+								autocomplete="tel"
 								:class="fieldClass('no_wa')"
 								class="w-full rounded-2xl border px-4 py-3 text-sm text-slate-800 transition focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10 dark:bg-slate-900 dark:text-slate-100"
 								placeholder="08xxxxxxxxxx">

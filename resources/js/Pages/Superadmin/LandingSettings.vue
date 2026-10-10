@@ -475,7 +475,7 @@ const submitTarif = () => {
 								<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jawaban</label>
 								<textarea v-model="faqForm.answer" class="input mt-1 min-h-24 w-full" name="answer" required></textarea>
 							</div>
-							<div class="grid grid-cols-2 gap-3">
+							<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 								<div>
 									<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Urutan</label>
 									<input v-model="faqForm.sort_order" type="number" min="0" class="input mt-1 w-full" name="sort_order">
@@ -585,7 +585,7 @@ const submitTarif = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="!tarifForm.jenjang ? 'ssd-selected' : ''" data-value="">Pilih jenjang</div>
 									<div

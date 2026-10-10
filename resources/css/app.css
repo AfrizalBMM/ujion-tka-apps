@@ -513,27 +513,27 @@
 
     /* Buttons - Ditambahkan efek active & ring */
     .btn-base {
-        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2;
     }
 
     .btn-primary {
-        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2;
         @apply bg-gradient-primary text-white shadow-glow hover:shadow-hover hover:brightness-110;
     }
 
     .btn-secondary {
-        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
-        @apply bg-white text-textPrimary border border-border hover:bg-gray-50 hover:border-primary/30 hover:shadow-sm;
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2;
+        @apply bg-white text-textPrimary border border-border hover:bg-slate-50 hover:border-primary/30 hover:shadow-sm;
         @apply dark:bg-slate-900/60 dark:text-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:border-slate-700;
     }
 
     .btn-danger {
-        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 focus-visible:ring-offset-2;
         @apply bg-danger text-white shadow-sm hover:bg-red-600 hover:shadow-hover;
     }
 
     .btn-success {
-        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+        @apply px-5 py-2.5 rounded-btn transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/40 focus-visible:ring-offset-2;
         @apply bg-success text-white shadow-sm hover:bg-green-600 hover:shadow-hover;
     }
 
@@ -644,7 +644,7 @@
     }
 
     .table-ujion thead {
-        @apply bg-gray-50/50 border-b border-border text-xs uppercase text-textSecondary font-bold;
+        @apply bg-slate-50/50 border-b border-border text-xs uppercase text-textSecondary font-bold;
         @apply dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300;
     }
 

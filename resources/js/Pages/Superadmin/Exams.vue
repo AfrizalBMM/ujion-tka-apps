@@ -55,7 +55,7 @@ const copyToken = async (token) => {
 											<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 										</button>
 										<div class="ssd-panel">
-											<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari paket..."></div>
+											<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari paket..." aria-label="Cari paket"></div>
 											<div class="ssd-list">
 												<div class="ssd-option ssd-selected" data-value="">Pilih paket</div>
 												<div v-for="paket in paketSoals" :key="paket.id" class="ssd-option" :data-value="paket.id">{{ paket.nama }} &middot; {{ paket.jenjang_kode }} &middot; {{ paket.tahun_ajaran }}</div>
@@ -88,7 +88,7 @@ const copyToken = async (token) => {
 											<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 										</button>
 										<div class="ssd-panel">
-											<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari status..."></div>
+											<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari status..." aria-label="Cari status"></div>
 											<div class="ssd-list">
 												<div class="ssd-option ssd-selected" data-value="draft">Draft</div>
 												<div class="ssd-option" data-value="terbit">Terbit</div>
@@ -111,11 +111,11 @@ const copyToken = async (token) => {
 						<div class="bg-white rounded-lg shadow-lg p-6">
 							<div class="flex items-center justify-between mb-4">
 								<div class="font-bold text-lg">Import Ujian</div>
-								<button class="text-gray-500 hover:text-gray-700" type="button" @click="importOpen = false">
+								<button class="text-slate-500 hover:text-slate-700" type="button" @click="importOpen = false">
 									<i class="fa-solid fa-times"></i>
 								</button>
 							</div>
-							<p class="mb-4 text-sm text-gray-600">Download template Excel, isi data ujian, lalu upload kembali.</p>
+							<p class="mb-4 text-sm text-slate-600">Download template Excel, isi data ujian, lalu upload kembali.</p>
 							<form method="POST" :action="route('superadmin.exams.import')" enctype="multipart/form-data"
 								class="flex flex-col gap-3">
 								<input type="hidden" name="_token" :value="page.props.csrf_token" />

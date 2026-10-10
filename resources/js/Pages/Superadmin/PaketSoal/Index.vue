@@ -82,7 +82,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="!jenjangFilter ? 'ssd-selected' : ''" data-value="">Semua jenjang</div>
 									<div v-for="jenjang in jenjangs" :key="jenjang.id" class="ssd-option" :class="jenjangFilter == jenjang.id ? 'ssd-selected' : ''" :data-value="jenjang.id">{{ jenjang.kode }}</div>

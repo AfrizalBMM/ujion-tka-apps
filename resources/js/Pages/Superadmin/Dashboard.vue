@@ -356,7 +356,7 @@ onBeforeUnmount(() => {
 							<i class="fa-solid fa-money-check-dollar"></i>
 						</div>
 						<div class="mobile-menu-card-label">Transaksi</div>
-						<span v-if="pendingPaymentCount > 0" class="bottom-nav-badge" style="right: -2px; top: -2px;">{{ pendingPaymentCount }}</span>
+						<span v-if="pendingPaymentCount > 0" class="bottom-nav-badge -top-0.5 -right-0.5">{{ pendingPaymentCount }}</span>
 					</a>
 					<a :href="route('superadmin.chat.index')" class="mobile-menu-card">
 						<div class="mobile-menu-card-icon bg-gradient-to-br from-rose-500 to-pink-600">

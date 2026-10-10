@@ -168,7 +168,7 @@ const submit = () => {
 						<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 					</button>
 					<div class="ssd-panel">
-						<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+						<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..." aria-label="Cari tipe"></div>
 						<div class="ssd-list">
 							<div class="ssd-option" :class="form.tipe_soal === 'pilihan_ganda' ? 'ssd-selected' : ''" data-value="pilihan_ganda">Pilihan Ganda</div>
 							<div v-if="!isSurvey" class="ssd-option" :class="form.tipe_soal === 'menjodohkan' ? 'ssd-selected' : ''" data-value="menjodohkan">Menjodohkan</div>
@@ -186,7 +186,7 @@ const submit = () => {
 						<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 					</button>
 					<div class="ssd-panel">
-						<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari bacaan..."></div>
+						<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari bacaan..." aria-label="Cari bacaan"></div>
 						<div class="ssd-list">
 							<div class="ssd-option" :class="!form.teks_bacaan_id ? 'ssd-selected' : ''" data-value="">Tanpa teks bacaan</div>
 							<div
@@ -238,7 +238,7 @@ const submit = () => {
 						<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 					</button>
 					<div class="ssd-panel">
-						<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..."></div>
+						<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari..." aria-label="Cari"></div>
 						<div class="ssd-list">
 							<div class="ssd-option" :class="form.arah_skor === 'positif' ? 'ssd-selected' : ''" data-value="positif">Positif</div>
 							<div class="ssd-option" :class="form.arah_skor === 'negatif' ? 'ssd-selected' : ''" data-value="negatif">Negatif</div>

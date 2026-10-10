@@ -37,7 +37,7 @@ defineProps({
 					</div>
 				</div>
 
-				<div class="grid grid-cols-2 gap-3">
+				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 					<div class="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-center">
 						<div class="text-2xl font-black text-indigo-600">{{ mapel.jumlah_soal }}</div>
 						<div class="mt-1 text-xs text-textSecondary">Jumlah Soal</div>

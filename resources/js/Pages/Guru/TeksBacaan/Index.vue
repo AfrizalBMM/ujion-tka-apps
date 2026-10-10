@@ -137,7 +137,7 @@ const deleteBacaan = (bacaan) => {
 						<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Edit</div>
 						<div class="mt-2 text-xl font-bold">Teks Bacaan</div>
 					</div>
-					<button type="button" class="icon-button" data-close-modal @click="closeModal"><i class="fa-solid fa-xmark"></i></button>
+					<button type="button" class="icon-button" data-close-modal @click="closeModal" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
 				</div>
 				<form id="edit-form" class="mt-5 space-y-4" @submit.prevent="editSubmit">
 					<div class="input-group">
