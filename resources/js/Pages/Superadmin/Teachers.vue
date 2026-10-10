@@ -3,11 +3,12 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { ref, nextTick, watch} from 'vue';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
 import { copyTextToClipboard } from '@/utils/copy-text';
+import PaginationLinks from '@/Components/Ui/PaginationLinks.vue';
 
 const props = defineProps({
 	teachers: {
-		type: Array,
-		default: () => [],
+		type: Object,
+		required: true,
 	},
 	notificationTemplates: {
 		type: Array,
@@ -201,8 +202,8 @@ const copyTemplate = async (index, body) => {
 							</tr>
 						</thead>
 						<tbody>
-							<template v-if="teachers.length > 0">
-								<tr v-for="teacher in teachers" :key="teacher.id" class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+							<template v-if="teachers.data.length > 0">
+								<tr v-for="teacher in teachers.data" :key="teacher.id" class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
 									<td>
 										<div class="mb-2">
 											<span v-if="teacher.account_status === 'active'" class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:bg-green-500/15 dark:text-green-300">
@@ -301,11 +302,15 @@ const copyTemplate = async (index, body) => {
 							</tr>
 						</tbody>
 					</table>
-				</div>
-			</div>
+					</div>
 
-			<div class="card">
-				<div class="flex items-start justify-between gap-4">
+					<div class="mt-4">
+					<PaginationLinks :paginator="teachers" />
+					</div>
+					</div>
+
+					<div class="card">
+					<div class="flex items-start justify-between gap-4">
 					<div>
 						<h2 class="text-lg font-bold">Template Pesan Siap Pakai</h2>
 						<p class="mt-1 text-sm text-textSecondary dark:text-slate-300">Gunakan template ini saat proses verifikasi dan aktivasi masih dilakukan manual.</p>
