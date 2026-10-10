@@ -20,6 +20,7 @@
         "@fortawesome/fontawesome-free": "^7.2.0",
         "@inertiajs/vue3": "^3.7.1",
         "chart.js": "^4.5.1",
+        "dompurify": "^3.4.16",
         "flowbite": "^4.0.1",
         "katex": "^0.16.45",
         "laravel-echo": "^2.3.4",

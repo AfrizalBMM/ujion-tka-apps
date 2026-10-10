@@ -3,6 +3,7 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import SuperadminLayout from '@/Layouts/SuperadminLayout.vue';
 import { initSSD, syncSSD } from '@/core/ssd';
+import DOMPurify from 'dompurify';
 
 const props = defineProps({
 	exam: {
@@ -89,9 +90,9 @@ const previewSoal = (q) => {
 		html += '</div>';
 	}
 	if (q.image) {
-		html += `<div class="mt-4"><img src='${q.image}' alt="Gambar soal" class='max-h-48 rounded-xl'></div>`;
+		html += `<div class="mt-4"><img src='${q.image}' class='max-h-48 rounded-xl'></div>`;
 	}
-	return html;
+	return DOMPurify.sanitize(html);
 };
 
 const debounceSearch = () => {
