@@ -73,6 +73,7 @@ const submit = () => {
 								class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-white"
 								placeholder="nama@email.com atau 08xxxxxxxxxx"
 								required
+								autocomplete="email"
 							>
 						</div>
 					</div>

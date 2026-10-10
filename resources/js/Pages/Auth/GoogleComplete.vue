@@ -113,11 +113,12 @@ const submit = () => {
 							<i class="fa-solid fa-mobile-screen-button absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
 							<input
 								v-model="form.no_wa"
-								type="text"
+								type="tel"
 								name="no_wa"
 								class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-white"
 								placeholder="Contoh: 08123456789"
 								required
+								autocomplete="tel"
 							>
 						</div>
 						<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Token akses dan notifikasi aktivasi dikirim ke nomor ini.</p>
