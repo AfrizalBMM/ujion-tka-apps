@@ -1,7 +1,7 @@
 @extends('layouts.public')
 
 @section('title', 'Artikel & Tips TKA — ' . config('app.name', 'Ujion TKA'))
-@section('description', 'Kumpulan artikel, panduan, dan tips seputar Tes Kemampuan Akademik (TKA) untuk guru dan sekolah.')
+@section('description', 'Kumpulan artikel, panduan, dan tips seputar Tes Kemampuan Akademik (TKA) untuk guru dan bimbel.')
 @section('canonical', route('artikel.index'))
 
 @push('jsonld')
@@ -27,7 +27,7 @@
     <div class="mt-6 max-w-3xl">
         <h1 class="text-3xl font-bold text-slate-900 dark:text-white sm:text-4xl">Artikel &amp; Tips TKA</h1>
         <p class="mt-3 leading-7 text-textSecondary dark:text-slate-300">
-            Panduan, strategi, dan informasi terbaru seputar persiapan Tes Kemampuan Akademik untuk guru dan sekolah.
+            Panduan, strategi, dan informasi terbaru seputar persiapan Tes Kemampuan Akademik untuk guru dan bimbel.
         </p>
     </div>
 

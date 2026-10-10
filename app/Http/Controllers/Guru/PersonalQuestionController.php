@@ -356,9 +356,17 @@ class PersonalQuestionController extends Controller
     {
         $path = trim((string) $request->query('path'));
 
+        // Reject empty, path traversal, and non-prefixed paths.
         abort_if($path === '' || ! str_starts_with($path, 'personal-question-images/'), 404);
+        abort_if(str_contains($path, '..') || str_contains($path, "\0"), 404);
 
         $disk = Storage::disk('local');
+
+        // Resolve real path and ensure it stays within the disk root.
+        $realPath = realpath($disk->path($path));
+        $diskRoot = realpath($disk->path(''));
+        abort_unless($realPath && $diskRoot && str_starts_with($realPath, $diskRoot), 404);
+
         abort_unless($disk->exists($path), 404);
 
         return response()->file($disk->path($path), [

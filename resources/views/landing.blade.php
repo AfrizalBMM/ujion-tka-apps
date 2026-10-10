@@ -16,7 +16,7 @@
 
         $seoDescription = $hero['seo_description']
             ?? $hero['kicker']
-            ?? 'Platform pendamping guru/operator untuk memantau progres, menganalisis hasil, dan menyiapkan siswa menghadapi TKA.';
+            ?? 'Platform TKA-first untuk bimbel & guru independen. Skor 200-800 sesuai standar Kemendikdasmen, white-label, HP-based, mulai gratis.';
 
         $canonicalUrl = route('landing');
 
@@ -118,7 +118,7 @@
                 </div>
                 <div class="leading-tight">
                     <div class="font-bold text-slate-900 dark:text-white">Ujion TKA</div>
-                    <div class="text-xs uppercase tracking-[0.22em] text-textSecondary dark:text-slate-400">Rekan Guru
+                    <div class="text-xs uppercase tracking-[0.22em] text-textSecondary dark:text-slate-400">TKA-First Platform
                     </div>
                 </div>
             </a>
@@ -281,14 +281,9 @@
                         </div> -->
 
                         <div class="mt-8 flex flex-wrap gap-3 text-sm text-textSecondary dark:text-slate-400">
-                            <span class="landing-proof-chip"><i class="fa-solid fa-circle-check text-success"></i> Paket
-                                soal untuk persiapan TKA</span>
-                            <span class="landing-proof-chip"><i class="fa-solid fa-circle-check text-success"></i> Hasil
-                                ujian lebih mudah dianalisis</span>
-                            <span class="landing-proof-chip"><i class="fa-solid fa-circle-check text-success"></i> Flow
-                                siswa sederhana dan fokus</span>
-                            <span class="landing-proof-chip"><i class="fa-solid fa-circle-check text-success"></i> Token
-                                ujian tanpa akun siswa</span>
+                            <span class="landing-proof-chip"><i class="fa-solid fa-bullseye text-primary"></i> TKA-first: skor 200-800, format Kemendikdasmen</span>
+                            <span class="landing-proof-chip"><i class="fa-solid fa-store text-primary"></i> Built for bimbel: white-label, upload soal sendiri</span>
+                            <span class="landing-proof-chip"><i class="fa-solid fa-mobile-screen-button text-success"></i> HP-based, mulai gratis</span>
                         </div>
                     </div>
 
@@ -370,41 +365,39 @@
         @endif
 
         <section class="mx-auto max-w-7xl px-4 py-8">
+            <div class="mb-8 text-center">
+                <div class="landing-section-kicker mb-3">3 Alasan Kenapa Ujion, Bukan CBT Biasa</div>
+                <h2 class="landing-section-title max-w-2xl mx-auto">Dibangun spesifik untuk TKA — bukan CBT generik yang dipaksa.</h2>
+            </div>
             <div class="landing-trust-grid">
-                <div
-                    class="landing-trust-card group border-indigo-100 bg-indigo-50/30 transition-all hover:border-indigo-300">
-                    <div
-                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition-transform group-hover:scale-110">
-                        <i class="fa-solid fa-desktop"></i>
+                <div class="landing-trust-card group border-indigo-100 bg-indigo-50/30 transition-all hover:border-indigo-300">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition-transform group-hover:scale-110">
+                        <i class="fa-solid fa-bullseye"></i>
                     </div>
-                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Guru bisa memantau</div>
-                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">Setiap sesi latihan dan ujian membantu guru
-                        membaca
-                        sejauh mana kesiapan siswa menuju TKA.</div>
+                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">TKA-First, Bukan Generic CBT</div>
+                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        Skor <strong>200-800</strong> sesuai standar Kemendikdasmen, format soal aligned dengan kerangka asesmen TKA terbaru. Bukan CBT biasa yang hanya menampilkan nilai 0-100.
+                    </div>
                 </div>
 
-                <div
-                    class="landing-trust-card group border-amber-100 bg-amber-50/30 transition-all hover:border-amber-300">
-                    <div
-                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-200 transition-transform group-hover:scale-110">
-                        <i class="fa-solid fa-chart-pie"></i>
+                <div class="landing-trust-card group border-amber-100 bg-amber-50/30 transition-all hover:border-amber-300">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-200 transition-transform group-hover:scale-110">
+                        <i class="fa-solid fa-store"></i>
                     </div>
-                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Guru bisa menganalisis</div>
-                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">Hasil yang tersusun rapi membantu guru melihat
-                        area
-                        lemah siswa dan menentukan tindak lanjut belajar.</div>
+                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Built for Bimbel, Bukan Sekolah</div>
+                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        <strong>White-label</strong> branding milik sendiri, upload soal sendiri tanpa terikat bank soal global. Bimbel dan guru independen bisa langsung pakai tanpa ribet.
+                    </div>
                 </div>
 
-                <div
-                    class="landing-trust-card group border-emerald-100 bg-emerald-50/30 transition-all hover:border-emerald-300">
-                    <div
-                        class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-200 transition-transform group-hover:scale-110">
-                        <i class="fa-solid fa-user-graduate"></i>
+                <div class="landing-trust-card group border-emerald-100 bg-emerald-50/30 transition-all hover:border-emerald-300">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-200 transition-transform group-hover:scale-110">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
                     </div>
-                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Siswa bisa dipersiapkan</div>
-                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">Sekolah tidak hanya menjalankan ujian, tetapi
-                        juga
-                        membangun kesiapan siswa secara bertahap sebelum TKA.</div>
+                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Murah-Mudah: Freemium & HP-Based</div>
+                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        Mulai <strong>gratis</strong> tanpa kartu kredit, siswa kerjakan ujian langsung dari <strong>HP</strong>. Tidak butuh lab komputer, tidak butuh akun siswa — cukup token.
+                    </div>
                 </div>
             </div>
         </section>
@@ -495,39 +488,33 @@
         <section id="solusi" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
             <div class="section-heading">
                 <div>
-                    <div class="landing-section-kicker">Kenapa Ujion TKA ?</div>
-                    <h2 class="landing-section-title">Website ini adalah membantu guru membaca kesiapan
-                        siswa.</h2>
-                    <p class="landing-section-copy">Jadi nilai jual utamanya bukan hanya ujian online, tetapi alat kerja
-                        guru untuk memantau progres, menganalisis hasil, dan menyiapkan strategi belajar sebelum TKA.
-                    </p>
+                    <div class="landing-section-kicker">Kenapa Ujion TKA?</div>
+                    <h2 class="landing-section-title">Platform yang benar-benar TKA-first — bukan CBT generik.</h2>
+                    <p class="landing-section-copy">Banyak platform ujian online yang mengaku "bisa dipakai untuk TKA". Ujion berbeda: dibangun dari awal dengan format, scoring, dan alur kerja yang spesifik untuk TKA, bimbel, dan guru independen.</p>
                 </div>
             </div>
 
             <div class="mt-8 grid gap-5 lg:grid-cols-3">
                 <article class="landing-solution-card">
                     <div class="landing-solution-icon bg-slate-900">
-                        <i class="fa-solid fa-stopwatch"></i>
+                        <i class="fa-solid fa-bullseye"></i>
                     </div>
-                    <h3 class="landing-solution-title">Guru lebih mudah memantau kesiapan</h3>
-                    <p class="landing-solution-copy">Guru dapat melihat bagaimana siswa berkembang dari sesi ke sesi,
-                        bukan hanya melihat nilai akhir sekali saja.</p>
+                    <h3 class="landing-solution-title">Scoring 200-800 & Format Kemendikdasmen</h3>
+                    <p class="landing-solution-copy">Skor TKA asli (200-800), bukan nilai 0-100. Format soal mengikuti kerangka asesmen Peraturan BSKAP No. 047/H/AN/2025. Siswa berlatih dengan format yang sama seperti ujian sebenarnya.</p>
                 </article>
                 <article class="landing-solution-card">
                     <div class="landing-solution-icon bg-gradient-primary">
-                        <i class="fa-solid fa-user-graduate"></i>
+                        <i class="fa-solid fa-store"></i>
                     </div>
-                    <h3 class="landing-solution-title">Guru lebih cepat menemukan kelemahan belajar</h3>
-                    <p class="landing-solution-copy">Dari hasil ujian yang rapi, guru bisa melihat materi mana yang
-                        masih lemah dan perlu dibina ulang sebelum TKA.</p>
+                    <h3 class="landing-solution-title">White-Label untuk Bimbel</h3>
+                    <p class="landing-solution-copy">Bimbel dan guru independen bisa upload soal sendiri, kelola paket soal sendiri, dan branding milik sendiri. Tidak terikat bank soal global. Platform siap pakai tanpa setup rumit.</p>
                 </article>
                 <article class="landing-solution-card">
                     <div class="landing-solution-icon bg-emerald-500">
-                        <i class="fa-solid fa-chart-column"></i>
+                        <i class="fa-solid fa-mobile-screen-button"></i>
                     </div>
-                    <h3 class="landing-solution-title">Sekolah bisa menyiapkan siswa dengan lebih terarah</h3>
-                    <p class="landing-solution-copy">Platform ini membantu sekolah mengubah latihan dan ujian menjadi
-                        bahan evaluasi nyata untuk persiapan TKA.</p>
+                    <h3 class="landing-solution-title">Freemium, HP-Based, Tanpa Ribet</h3>
+                    <p class="landing-solution-copy">Mulai gratis, tanpa kartu kredit. Siswa masuk pakai token, kerjakan dari HP. Tidak perlu lab komputer, tidak perlu akun siswa. Autosave jawaban kalau koneksi putus-nyambung.</p>
                 </article>
             </div>
         </section>
@@ -535,33 +522,27 @@
         <section class="mx-auto max-w-7xl px-4 py-12">
             <div class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
                 <div class="landing-flow-panel">
-                    <div class="landing-section-kicker">Kenapa memilih Ujion</div>
-                    <h2 class="landing-section-title">Ini adalah website yang dibutuhkan guru saat ingin menyiapkan
-                        siswa menuju TKA.</h2>
-                    <p class="landing-section-copy">Pengunjung harus langsung merasa bahwa platform ini membantu
-                        pekerjaan nyata di sekolah, bukan sekadar menampilkan ujian digital biasa.</p>
+                    <div class="landing-section-kicker">Posisi Ujion</div>
+                    <h2 class="landing-section-title">TKA-first platform untuk bimbel & guru independen.</h2>
+                    <p class="landing-section-copy">Bukan CBT generik. Bukan LMS sekolah. Ujion menempati sweet spot: format ujian sesuai standar TKA, fleksibel untuk bimbel, dan terjangkau untuk semua.</p>
                 </div>
 
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div class="landing-flow-tile">
-                        <div class="landing-flow-tile-title">Kalau saya guru</div>
-                        <div class="landing-flow-tile-copy">Saya butuh sistem yang membantu saya melihat kesiapan siswa,
-                            bukan hanya memberi soal lalu selesai.</div>
+                        <div class="landing-flow-tile-title">Kalau saya bimbel</div>
+                        <div class="landing-flow-tile-copy">Saya butuh platform white-label yang bisa pakai soal sendiri, branding sendiri, tanpa biaya setup mahal. Ujion kasih itu.</div>
                     </div>
                     <div class="landing-flow-tile">
-                        <div class="landing-flow-tile-title">Kalau saya sekolah</div>
-                        <div class="landing-flow-tile-copy">Saya butuh platform yang membantu guru membina siswa secara
-                            lebih terarah sebelum menghadapi TKA.</div>
+                        <div class="landing-flow-tile-title">Kalau saya guru independen</div>
+                        <div class="landing-flow-tile-copy">Saya butuh tool yang formatnya sama kayak TKA beneran — skor 200-800, soal sesuai kerangka Kemendikdasmen. Bukan cuma nilai 0-100.</div>
                     </div>
                     <div class="landing-flow-tile">
                         <div class="landing-flow-tile-title">Kalau saya siswa</div>
-                        <div class="landing-flow-tile-copy">Saya butuh tampilan yang jelas, mudah diikuti, dan membantu
-                            saya fokus saat latihan atau ujian.</div>
+                        <div class="landing-flow-tile-copy">Saya butuh ujian yang bisa dikerjakan dari HP, tanpa bikin akun, tinggal masuk token. Autosave kalau sinyal putus.</div>
                     </div>
                     <div class="landing-flow-tile">
-                        <div class="landing-flow-tile-title">Kalau saya operator</div>
-                        <div class="landing-flow-tile-copy">Saya butuh data yang rapi agar hasil ujian bisa dibaca guru
-                            dan sekolah untuk tindak lanjut akademik.</div>
+                        <div class="landing-flow-tile-title">Kalau saya orang tua</div>
+                        <div class="landing-flow-tile-copy">Saya butuh platform yang murah, bahkan gratis untuk mulai. Anak saya berlatih format TKA asli dari HP.</div>
                     </div>
                 </div>
             </div>
@@ -665,17 +646,14 @@
         <section class="mx-auto max-w-7xl px-4 py-12">
             <div class="landing-feature-banner">
                 <div>
-                    <div class="landing-section-kicker text-white/70">Keunggulan Memakai Ujion</div>
-                    <h2 class="landing-section-title max-w-2xl text-white">Fitur yang membantu guru melihat progres dan
-                        kesiapan siswa.</h2>
+                    <div class="landing-section-kicker text-white/70">Keunggulan TKA-First</div>
+                    <h2 class="landing-section-title max-w-2xl text-white">Fitur yang membedakan Ujion dari CBT biasa.</h2>
                 </div>
                 <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <div class="landing-feature-chip"><i class="fa-solid fa-layer-group"></i> Paket soal persiapan TKA
-                    </div>
-                    <div class="landing-feature-chip"><i class="fa-solid fa-key"></i> Token ujian siswa</div>
-                    <div class="landing-feature-chip"><i class="fa-solid fa-floppy-disk"></i> Autosave jawaban</div>
-                    <div class="landing-feature-chip"><i class="fa-solid fa-chart-line"></i> Hasil untuk analisis guru
-                    </div>
+                    <div class="landing-feature-chip"><i class="fa-solid fa-bullseye"></i> Skor 200-800 sesuai TKA</div>
+                    <div class="landing-feature-chip"><i class="fa-solid fa-store"></i> White-label untuk bimbel</div>
+                    <div class="landing-feature-chip"><i class="fa-solid fa-mobile-screen-button"></i> HP-based, mulai gratis</div>
+                    <div class="landing-feature-chip"><i class="fa-solid fa-floppy-disk"></i> Autosave jawaban siswa</div>
                 </div>
             </div>
         </section>
@@ -767,13 +745,12 @@
                         <div class="leading-tight">
                             <div class="text-base font-bold text-slate-900 dark:text-white">Ujion TKA</div>
                             <div class="text-xs uppercase tracking-[0.22em] text-textSecondary dark:text-slate-400">
-                                Rekan Guru</div>
+                                TKA-First Platform</div>
                         </div>
                     </a>
 
                     <p class="mt-4 max-w-xl text-sm leading-7 text-textSecondary dark:text-slate-300">
-                        Platform pendamping guru/operator untuk memantau progres, menganalisis hasil, dan menyiapkan
-                        siswa lebih siap menghadapi TKA.
+                        Platform TKA-first untuk bimbel & guru independen. Skor 200-800 sesuai standar Kemendikdasmen, white-label, HP-based, mulai gratis.
                     </p>
 
                     <div class="mt-6 flex flex-wrap gap-2">
@@ -841,7 +818,7 @@
             <div
                 class="mt-10 flex flex-col gap-2 border-t border-white/70 pt-6 text-sm text-textSecondary dark:border-slate-800/80 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
                 <div>© {{ date('Y') }} Ujion TKA by Reditech</div>
-                <div>Simulai mengelola persiapan TKA</div>
+                <div>Simulasi mengelola persiapan TKA — platform TKA-first untuk bimbel & guru</div>
             </div>
         </div>
     </footer>

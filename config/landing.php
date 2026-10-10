@@ -20,8 +20,8 @@ return [
             'period' => '/bulan',
         ],
         [
-            'name' => 'Paket Sekolah',
-            'subtitle' => 'Untuk kebutuhan 1 sekolah',
+            'name' => 'Paket Bimbel',
+            'subtitle' => 'Untuk kebutuhan 1 bimbel',
             'price' => '149.000',
             'original_price' => '299.000',
             'period' => '/bulan',

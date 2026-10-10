@@ -374,7 +374,7 @@ const submitTarif = () => {
 						<div class="mt-3 space-y-4">
 							<div>
 								<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Meta Title (opsional)</label>
-								<input v-model="contentForm.seo_title" class="input mt-1 w-full" name="seo_title" placeholder="Contoh: Platform Ujian TKA Online untuk Guru &amp; Sekolah" maxlength="120">
+								<input v-model="contentForm.seo_title" class="input mt-1 w-full" name="seo_title" placeholder="Contoh: Platform Ujian TKA Online untuk Guru &amp; Bimbel" maxlength="120">
 								<div class="mt-1 text-xs text-muted">Ideal 50-60 karakter. Kosongkan untuk memakai nama aplikasi + judul hero.</div>
 							</div>
 							<div>

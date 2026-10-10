@@ -142,7 +142,7 @@ const copyTemplate = async (index, body) => {
 				<form method="GET" :action="route('superadmin.teachers.index')" class="mb-6 grid gap-4 lg:grid-cols-[minmax(0,2fr)_1fr_1fr_auto]">
 					<div>
 						<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Cari guru</label>
-						<input type="text" name="q" :value="search" class="input w-full" placeholder="Nama, email, WhatsApp, atau sekolah">
+						<input type="text" name="q" :value="search" class="input w-full" placeholder="Nama, email, WhatsApp, atau lembaga">
 					</div>
 					<div>
 						<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Status pembayaran</label>

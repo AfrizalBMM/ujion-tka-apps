@@ -105,7 +105,7 @@ class LandingSettingsController extends Controller
             ],
             [
                 'question' => 'Apakah tetap relevan dengan arah resmi TKA?',
-                'answer' => 'Ya. Platform ini dapat diposisikan selaras dengan semangat TKA karena membantu sekolah membaca capaian akademik siswa secara lebih terstruktur.',
+                'answer' => 'Ya. Platform ini dapat diposisikan selaras dengan semangat TKA karena membantu guru membaca capaian akademik siswa secara lebih terstruktur.',
             ],
             [
                 'question' => 'Apakah bisa dipakai di HP siswa?',

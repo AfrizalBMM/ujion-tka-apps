@@ -52,7 +52,7 @@ class HandleInertiaRequests extends Middleware
                     'satuan_pendidikan' => $user->satuan_pendidikan,
                     'account_status' => $user->account_status,
                     'payment_status' => $user->payment_status,
-                    'access_token' => $user->access_token,
+                    'access_token' => $user->role === User::ROLE_GURU ? $user->access_token : null,
                     'avatar_url' => $user->avatar_url,
                 ] : null,
             ],
