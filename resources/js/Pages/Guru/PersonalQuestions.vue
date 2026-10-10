@@ -368,6 +368,7 @@ onBeforeUnmount(() => {
 							</tr>
 						</thead>
 						<tbody>
+							<template v-if="questions.data.length > 0">
 							<tr v-for="question in questions.data" :key="question.id">
 								<td class="min-w-[260px]">
 									<div class="space-y-2">
@@ -396,7 +397,14 @@ onBeforeUnmount(() => {
 											class="btn-danger">Hapus</button></form>
 								</td>
 							</tr>
-						</tbody>
+							</template>
+							<tr v-else>
+								<td colspan="5" class="py-8 text-center text-textSecondary dark:text-slate-400">
+									<i class="fa-solid fa-inbox mb-2 text-2xl text-slate-300 dark:text-slate-600"></i>
+									<p class="text-sm">Belum ada soal pribadi. Klik Builder Soal untuk membuat soal baru.</p>
+								</td>
+							</tr>
+							</tbody>
 					</table>
 
 					<div v-if="questions.last_page > 1" class="mt-4">
