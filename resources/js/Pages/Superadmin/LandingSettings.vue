@@ -251,6 +251,14 @@ const submitTarif = () => {
 		tarifForm.post(route('superadmin.tarif-jenjang.store'));
 	}
 };
+
+// --- Section Toggle (hero / faq / stats) ---
+const sectionToggleForm = useForm({});
+const toggleSection = (section) => {
+	sectionToggleForm.post(route('superadmin.landing-settings.sections.toggle', { section }), {
+		preserveScroll: true,
+	});
+};
 </script>
 
 <template>
@@ -428,12 +436,10 @@ const submitTarif = () => {
 					<div class="flex items-center gap-2">
 						<span v-if="(sectionActives.hero ?? true) === true" class="badge-success">Aktif</span>
 						<span v-else class="badge-danger">Nonaktif</span>
-						<form method="POST" :action="route('superadmin.landing-settings.sections.toggle', { section: 'hero' })">
-							<input type="hidden" name="_token" :value="$page.props.csrf_token">
-							<button type="submit" class="btn-secondary px-3" title="Aktifkan / Nonaktifkan hero">
-								<i class="fa-solid fa-power-off"></i>
-							</button>
-						</form>
+						<button type="button" class="btn-secondary px-3" title="Aktifkan / Nonaktifkan hero" :disabled="sectionToggleForm.processing" @click="toggleSection('hero')">
+							<i v-if="sectionToggleForm.processing" class="fa-solid fa-spinner fa-spin"></i>
+							<i v-else class="fa-solid fa-power-off"></i>
+						</button>
 					</div>
 				</div>
 
@@ -557,12 +563,10 @@ const submitTarif = () => {
 					<div class="flex flex-wrap items-center justify-end gap-2">
 						<span v-if="(sectionActives.faq ?? true) === true" class="badge-success">Aktif</span>
 						<span v-else class="badge-danger">Nonaktif</span>
-						<form method="POST" :action="route('superadmin.landing-settings.sections.toggle', { section: 'faq' })">
-							<input type="hidden" name="_token" :value="$page.props.csrf_token">
-							<button type="submit" class="btn-secondary px-3" title="Aktifkan / Nonaktifkan section FAQ">
-								<i class="fa-solid fa-power-off"></i>
-							</button>
-						</form>
+						<button type="button" class="btn-secondary px-3" title="Aktifkan / Nonaktifkan section FAQ" :disabled="sectionToggleForm.processing" @click="toggleSection('faq')">
+							<i v-if="sectionToggleForm.processing" class="fa-solid fa-spinner fa-spin"></i>
+							<i v-else class="fa-solid fa-power-off"></i>
+						</button>
 						<button type="button" class="btn-secondary whitespace-nowrap" @click="cancelEditFaq">
 							<i class="fa-solid fa-plus"></i>
 							Tambah Baru
@@ -815,12 +819,10 @@ const submitTarif = () => {
 					<div class="flex items-center gap-2">
 						<span v-if="(sectionActives.stats ?? true) === true" class="badge-success">Aktif</span>
 						<span v-else class="badge-danger">Nonaktif</span>
-						<form method="POST" :action="route('superadmin.landing-settings.sections.toggle', { section: 'stats' })">
-							<input type="hidden" name="_token" :value="$page.props.csrf_token">
-							<button type="submit" class="btn-secondary px-3" title="Aktifkan / Nonaktifkan section statistik">
-								<i class="fa-solid fa-power-off"></i>
-							</button>
-						</form>
+						<button type="button" class="btn-secondary px-3" title="Aktifkan / Nonaktifkan section statistik" :disabled="sectionToggleForm.processing" @click="toggleSection('stats')">
+							<i v-if="sectionToggleForm.processing" class="fa-solid fa-spinner fa-spin"></i>
+							<i v-else class="fa-solid fa-power-off"></i>
+						</button>
 					</div>
 				</div>
 

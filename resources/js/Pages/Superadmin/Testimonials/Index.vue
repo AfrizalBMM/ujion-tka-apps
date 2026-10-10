@@ -92,9 +92,9 @@ const isBlank = (value) => value === null || value === undefined || String(value
 												</button>
 											</form>
 
-											<form method="POST" :action="route('superadmin.testimonials.destroy', testimonial.id)" onsubmit="return confirm('Hapus testimoni ini?')">
-												<input type="hidden" name="_token" :value="$page.props.csrf_token">
-												<button type="submit" class="btn-danger">
+											<form method="POST" :action="route('superadmin.testimonials.destroy', testimonial.id)">
+																			<input type="hidden" name="_token" :value="$page.props.csrf_token">
+																			<button type="submit" class="btn-danger" data-confirm="Hapus testimoni ini?" data-confirm-title="Hapus Testimoni">
 													<i class="fa-solid fa-trash mr-2"></i>
 													Hapus
 												</button>

@@ -98,7 +98,7 @@ const openEdit = (bacaan) => {
 											<form method="POST" :action="route('superadmin.teks-bacaan.destroy', [paket.id, mapel.id, bacaan.id])">
 												<input type="hidden" name="_token" :value="page.props.csrf_token" />
 												<input type="hidden" name="_method" value="DELETE" />
-												<button class="btn-danger px-3 py-2 text-xs" type="submit">Hapus</button>
+												<button class="btn-danger px-3 py-2 text-xs" type="submit" data-confirm="Hapus teks bacaan ini?" data-confirm-title="Hapus Teks Bacaan">Hapus</button>
 											</form>
 										</div>
 									</div>
