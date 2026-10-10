@@ -47,7 +47,7 @@
                 <span class="page-kicker">Platform Ujian TKA</span>
                 <h1 class="mt-5 text-center text-3xl md:text-4xl">Ruang belajar dan operasional yang terasa lebih modern, ringan, dan jelas.</h1>
                 <p class="mx-auto mt-4 max-w-md text-center text-sm leading-6 text-slate-200">
-                    Ujion membantu sekolah dan guru mengelola ujian, materi, dan aktivasi akun dalam satu alur yang lebih tertata.
+                    Ujion membantu guru dan bimbel mengelola ujian, materi, dan aktivasi akun dalam satu alur yang lebih tertata.
                 </p>
                 <div class="mt-8 grid grid-cols-1 gap-3 text-center sm:grid-cols-2">
                     <div class="hero-chip rounded-2xl border border-white/12 bg-white/8 p-4 backdrop-blur-sm">

@@ -50,7 +50,7 @@ const belumDijawab = computed(() => Math.max(props.totalSoal - props.dijawab, 0)
 					<div class="text-sm text-textSecondary">{{ isSurvey ? 'Profil tersimpan untuk analisis guru.' : '/ 100' }}</div>
 				</div>
 
-				<div v-if="totalSoal > 0" class="mt-5 grid grid-cols-2 gap-3 text-sm">
+				<div v-if="totalSoal > 0" class="mt-5 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
 					<div class="rounded-2xl bg-emerald-50 p-3">
 						<div class="text-xl font-bold text-emerald-700">{{ dijawab }}</div>
 						<div class="text-xs text-emerald-600">Soal Dijawab</div>

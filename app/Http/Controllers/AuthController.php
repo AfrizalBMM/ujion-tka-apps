@@ -55,7 +55,7 @@ class AuthController extends Controller
                 'type' => 'warning',
                 'title' => 'Nomor admin belum tersedia',
                 'message' => 'Permintaan token belum bisa dikirim otomatis karena WhatsApp admin belum dikonfigurasi.',
-                'description' => 'Silakan hubungi admin Ujion melalui kanal resmi sekolah atau operator.',
+                'description' => 'Silakan hubungi admin Ujion melalui kanal resmi bimbel atau operator.',
             ]);
         }
 

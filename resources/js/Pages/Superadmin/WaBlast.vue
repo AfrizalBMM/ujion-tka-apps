@@ -77,7 +77,7 @@ const statusClass = (status) => {
 							<select id="wa-target" v-model="form.target" name="target" class="input w-full">
 								<option value="guru_all_active">Semua guru aktif</option>
 								<option value="guru_jenjang">Guru aktif per jenjang</option>
-								<option value="guru_school">Guru aktif per sekolah</option>
+								<option value="guru_school">Guru aktif per lembaga</option>
 								<option value="siswa_all">Semua siswa (peserta ujian)</option>
 								<option value="siswa_paket">Siswa per paket soal</option>
 							</select>
@@ -92,12 +92,12 @@ const statusClass = (status) => {
 						</div>
 
 						<div id="wa-school-wrap" :class="schoolVisible ? '' : 'hidden'">
-							<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Satuan pendidikan (nama sekolah)</label>
+							<label class="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">Lembaga (nama bimbel/sekolah)</label>
 							<input v-model="form.school" name="school" class="input w-full" list="school-options" placeholder="Contoh: SMP Negeri 1">
 							<datalist id="school-options">
 								<option v-for="school in schoolOptions" :key="school" :value="school"></option>
 							</datalist>
-							<div class="mt-2 text-xs text-textSecondary dark:text-slate-300">Pencarian memakai <span class="font-mono">LIKE</span>. Isi sebagian nama sekolah juga boleh.</div>
+							<div class="mt-2 text-xs text-textSecondary dark:text-slate-300">Pencarian memakai <span class="font-mono">LIKE</span>. Isi sebagian nama lembaga juga boleh.</div>
 						</div>
 
 						<div id="wa-paket-wrap" :class="paketVisible ? '' : 'hidden'">

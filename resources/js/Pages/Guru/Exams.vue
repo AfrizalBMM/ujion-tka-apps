@@ -145,7 +145,7 @@ const copyToken = async (token) => {
 									<td><Link :href="route('guru.exams.result', h.exam_id)" class="btn-secondary">Lihat Hasil</Link></td>
 								</tr>
 							</template>
-							<tr v-else><td colspan="4" class="text-gray-400">Belum ada riwayat simulasi.</td></tr>
+							<tr v-else><td colspan="4" class="text-slate-400">Belum ada riwayat simulasi.</td></tr>
 						</tbody>
 					</table>
 				</div>

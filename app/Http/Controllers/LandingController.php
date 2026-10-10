@@ -95,9 +95,9 @@ class LandingController extends Controller
         }
 
         $hero = [
-            'kicker' => 'Website pendamping guru untuk memantau kesiapan siswa menuju Tes Kemampuan Akademik (TKA).',
-            'title' => 'Bantu guru memantau, menganalisis, dan menyiapkan siswa agar lebih siap menghadapi TKA.',
-            'body' => 'Ujion TKA dirancang untuk guru/operator yang ingin melihat perkembangan akademik siswa dengan lebih jelas. Mulai dari latihan, paket soal, sesi ujian, sampai hasil akhir, semua disusun agar guru lebih mudah membaca kesiapan siswa, menemukan kelemahan belajar, dan mengambil langkah pembinaan sebelum TKA berlangsung.',
+            'kicker' => 'Platform TKA-first untuk bimbel & guru — bukan CBT biasa.',
+            'title' => 'Siapkan siswa TKA dengan platform yang benar-benar dirancang untuk format ujian nasional terbaru.',
+            'body' => 'Ujion TKA adalah platform ujian yang spesifik dibangun untuk Tes Kemampuan Akademik. Skor 200-800 sesuai standar Kemendikdasmen, format soal aligned dengan kerangka asesmen terbaru, dan alur kerja yang pas untuk bimbel maupun guru independen. Mulai gratis, jalankan dari HP.',
             'button_text' => 'Coba Sebagai Guru',
             'button_url' => null,
             'seo_title' => null,
@@ -124,28 +124,28 @@ class LandingController extends Controller
 
         $faqs = [
             [
-                'question' => 'Apakah platform ini cocok untuk pelaksanaan TKA?',
-                'answer' => 'Ya. Platform ini cocok dipakai untuk membantu guru menyiapkan siswa menuju TKA melalui latihan, ujian, dan pembacaan hasil yang lebih terarah.',
+                'question' => 'Apa beda Ujion dengan CBT biasa?',
+                'answer' => 'Ujion dibangun khusus untuk TKA: skor 200-800 sesuai standar Kemendikdasmen, format soal aligned dengan kerangka asesmen terbaru (Peraturan BSKAP No. 047/H/AN/2025). CBT biasa hanya menampilkan nilai 0-100 tanpa konteks TKA.',
             ],
             [
-                'question' => 'Apakah guru bisa mengelola soal sendiri?',
-                'answer' => 'Bisa. Guru memiliki workflow untuk bank soal, paket soal, mapel, dan sesi ujian sehingga persiapan siswa bisa dikelola dengan lebih rapi.',
+                'question' => 'Apakah cocok untuk bimbel, bukan sekolah?',
+                'answer' => 'Ya. Ujion mendukung white-label branding, upload soal sendiri, dan pengelolaan paket soal independen. Bimbel bisa langsung pakai tanpa terikat bank soal global. Bukan LMS sekolah yang rigid.',
             ],
             [
-                'question' => 'Apakah siswa harus punya akun?',
-                'answer' => 'Tidak. Siswa bisa masuk dengan token ujian, lalu mengisi identitas dan langsung mengikuti sesi yang tersedia.',
+                'question' => 'Berapa harga? Apakah ada paket gratis?',
+                'answer' => 'Mulai gratis, tanpa kartu kredit. Model freemium: fitur dasar tersedia gratis, upgrade untuk fitur premium. Siswa tidak perlu akun berbayar — cukup token dari guru.',
             ],
             [
-                'question' => 'Apakah tetap relevan dengan arah resmi TKA?',
-                'answer' => 'Ya. Platform ini dapat diposisikan selaras dengan semangat TKA karena membantu sekolah membaca capaian akademik siswa secara lebih terstruktur.',
+                'question' => 'Apakah siswa bisa kerjakan dari HP?',
+                'answer' => 'Bisa. Tampilan responsif, siswa masuk pakai token tanpa akun, dan autosave menjaga jawaban tetap tersimpan meski koneksi naik turun. Tidak perlu lab komputer.',
             ],
             [
-                'question' => 'Apakah bisa dipakai di HP siswa?',
-                'answer' => 'Bisa. Tampilan dibuat responsif sehingga siswa tetap nyaman mengerjakan dari perangkat mobile, sementara guru tetap mengelola dari dashboard.',
+                'question' => 'Apakah format soal sesuai dengan TKA resmi?',
+                'answer' => 'Ya. Format soal mengikuti kerangka asesmen Peraturan BSKAP No. 047/H/AN/2025 dengan skor 200-800. Siswa berlatih dengan format yang sama seperti ujian sebenarnya.',
             ],
             [
                 'question' => 'Bagaimana jika koneksi internet tidak stabil?',
-                'answer' => 'Sistem membantu meminimalkan risiko kehilangan jawaban dengan autosave, sehingga progres siswa tetap tercatat meski koneksi naik turun.',
+                'answer' => 'Sistem autosave menjawaban siswa secara berkala, sehingga progres tetap tercatat meski koneksi putus-nyambung. Siswa bisa lanjut mengerjakan tanpa khawatir kehilangan jawaban.',
             ],
         ];
 

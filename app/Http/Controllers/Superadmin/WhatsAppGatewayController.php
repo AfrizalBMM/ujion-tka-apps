@@ -114,7 +114,7 @@ class WhatsAppGatewayController extends Controller
             return back()->with('flash', [
                 'type' => 'warning',
                 'title' => 'Target belum lengkap',
-                'message' => 'Silakan isi nama sekolah/satuan pendidikan untuk target blast.',
+                'message' => 'Silakan isi nama lembaga/bimbel untuk target blast.',
             ]);
         }
 

@@ -55,7 +55,7 @@ const belumDijawab = Math.max(props.totalSoal - props.dijawab, 0);
 					Waktu Anda masih berjalan. Setelah selesai, jawaban tidak bisa diubah lagi.
 				</p>
 
-				<div v-if="totalSoal > 0" class="mt-6 grid grid-cols-3 gap-3 text-sm">
+				<div v-if="totalSoal > 0" class="mt-6 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
 					<div class="rounded-2xl bg-emerald-50 p-3">
 						<div class="text-xl font-bold text-emerald-700">{{ dijawab }}</div>
 						<div class="text-xs text-emerald-600">Dijawab</div>

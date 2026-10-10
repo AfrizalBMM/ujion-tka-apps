@@ -130,7 +130,7 @@ const submitPassword = () => {
 						<div class="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">{{ user.no_wa || '-' }}</div>
 					</div>
 					<div class="rounded-2xl border border-white/70 bg-white/75 p-4 backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/55">
-						<div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Sekolah / Instansi</div>
+						<div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Lembaga / Instansi</div>
 						<div class="mt-2 text-sm font-semibold text-slate-800 dark:text-slate-100">{{ user.satuan_pendidikan || '-' }}</div>
 					</div>
 					<div class="rounded-2xl border border-white/70 bg-white/75 p-4 backdrop-blur dark:border-slate-700/70 dark:bg-slate-900/55">

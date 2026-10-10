@@ -213,7 +213,7 @@ onBeforeUnmount(() => {
 		<form ref="rootForm" method="POST" :action="route('materi.paket.submit', { paketNo: pkg.paket_no })" id="practice-package-form" class="practice-shell" @submit="clearDraft">
 			<input type="hidden" name="_token" :value="csrfToken">
 
-			<header class="flex items-center justify-between gap-2 bg-slate-900 px-4 py-2 text-white shadow-lg md:px-6 md:py-3" style="flex-shrink:0">
+			<header class="flex shrink-0 items-center justify-between gap-2 bg-slate-900 px-4 py-2 text-white shadow-lg md:px-6 md:py-3">
 				<div class="flex min-w-0 items-center gap-2 md:gap-4">
 					<Link :href="route('materi.practice.dashboard')" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/15" title="Kembali">
 						<i class="fa-solid fa-arrow-left"></i>

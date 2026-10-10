@@ -282,7 +282,7 @@ onBeforeUnmount(() => {
 							<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 						</button>
 						<div class="ssd-panel">
-							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kategori..."></div>
+							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kategori..." aria-label="Cari kategori"></div>
 							<div class="ssd-list">
 								<div class="ssd-option" :class="!kategori ? ' ssd-selected' : ''" data-value="">Semua Kategori</div>
 								<div v-for="kategoriItem in categories" :key="kategoriItem" class="ssd-option" :class="kategori == kategoriItem ? ' ssd-selected' : ''" :data-value="kategoriItem">{{ kategoriItem }}</div>
@@ -299,7 +299,7 @@ onBeforeUnmount(() => {
 							<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 						</button>
 						<div class="ssd-panel">
-							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..." aria-label="Cari tipe"></div>
 							<div class="ssd-list">
 								<div class="ssd-option" :class="!tipe ? ' ssd-selected' : ''" data-value="">Semua Tipe</div>
 								<div class="ssd-option" :class="tipe === 'PG' ? ' ssd-selected' : ''" data-value="PG">Pilihan Ganda</div>
@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
 					<div class="bg-white rounded-lg shadow-lg p-6">
 						<div class="flex items-center justify-between mb-4">
 							<div class="font-bold text-lg">Tambah Soal Pribadi</div>
-							<button class="text-gray-500 hover:text-gray-700" type="button" data-modal-close="modal-tambah-soal" @click="openModal = ''">
+							<button class="text-slate-500 hover:text-slate-700" type="button" data-modal-close="modal-tambah-soal" @click="openModal = ''">
 								<i class="fa-solid fa-times"></i>
 							</button>
 						</div>
@@ -368,6 +368,7 @@ onBeforeUnmount(() => {
 							</tr>
 						</thead>
 						<tbody>
+							<template v-if="questions.data.length > 0">
 							<tr v-for="question in questions.data" :key="question.id">
 								<td class="min-w-[260px]">
 									<div class="space-y-2">
@@ -396,7 +397,14 @@ onBeforeUnmount(() => {
 											class="btn-danger">Hapus</button></form>
 								</td>
 							</tr>
-						</tbody>
+							</template>
+							<tr v-else>
+								<td colspan="5" class="py-8 text-center text-textSecondary dark:text-slate-400">
+									<i class="fa-solid fa-inbox mb-2 text-2xl text-slate-300 dark:text-slate-600"></i>
+									<p class="text-sm">Belum ada soal pribadi. Klik Builder Soal untuk membuat soal baru.</p>
+								</td>
+							</tr>
+							</tbody>
 					</table>
 
 					<div v-if="questions.last_page > 1" class="mt-4">
@@ -418,7 +426,7 @@ onBeforeUnmount(() => {
 				<div class="bg-white rounded-lg shadow-lg p-6">
 					<div class="flex items-center justify-between mb-4">
 						<div class="font-bold text-lg">Edit Soal Pribadi</div>
-						<button class="text-gray-500 hover:text-gray-700" type="button" :data-modal-close="`modal-edit-soal-${question.id}`" @click="openModal = ''">
+						<button class="text-slate-500 hover:text-slate-700" type="button" :data-modal-close="`modal-edit-soal-${question.id}`" @click="openModal = ''">
 							<i class="fa-solid fa-times"></i>
 						</button>
 					</div>

@@ -61,20 +61,7 @@
         </header>
 
         <div class="article-content mt-8">
-            @php
-                $html = Str::markdown($post->content);
-                // Decode entities so escaped tags (e.g. &lt;script&gt;) can be caught
-                $html = html_entity_decode($html, ENT_QUOTES, 'UTF-8');
-                // Strip dangerous tag blocks (script, style, iframe, object, embed)
-                $html = preg_replace('#<(script|style|iframe|object|embed)[^>]*>.*?</\1>#is', '', $html);
-                // Remove on* event handler attributes (double-quoted, single-quoted, unquoted)
-                $html = preg_replace('/\s+on\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
-                // Remove javascript: URLs in href/src attributes
-                $html = preg_replace('/(href|src)\s*=\s*("[^"]*javascript:[^"]*"|\'[^\']*javascript:[^\']*\'|[^\s>]*javascript:[^\s>]*)/i', '', $html);
-                // Final safety net: allow only safe HTML tags
-                $html = strip_tags($html, '<p><br><strong><em><u><s><ul><ol><li><h1><h2><h3><h4><h5><h6><blockquote><code><pre><a><img><table><thead><tbody><tfoot><tr><th><td><hr><del><sup><sub><dl><dt><dd><div><span>');
-            @endphp
-            {!! $html !!}
+            {!! App\Support\HtmlSanitizer::clean(Str::markdown($post->content)) !!}
         </div>
     </article>
 

@@ -34,7 +34,7 @@ class PembahasanPaymentController extends Controller
         ]);
 
         $user = Auth::user();
-        $sesi = UjianSesi::with(['exam', 'mapelPaket.landingExamMapel'])->findOrFail($validated['exam_session_id']);
+        $sesi = UjianSesi::with(['exam', 'mapelPaket'])->findOrFail($validated['exam_session_id']);
 
         // Verify ownership: either user_id matches or nomor_wa matches user's no_wa
         $isOwner = false;

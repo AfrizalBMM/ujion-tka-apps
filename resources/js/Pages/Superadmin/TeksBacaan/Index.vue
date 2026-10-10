@@ -118,7 +118,7 @@ const openEdit = (bacaan) => {
 						<div class="text-xs font-bold uppercase tracking-[0.22em] text-textSecondary">Edit</div>
 						<div class="mt-2 text-xl font-bold">Teks Bacaan</div>
 					</div>
-					<button type="button" class="icon-button" @click="editOpen = false"><i class="fa-solid fa-xmark"></i></button>
+					<button type="button" class="icon-button" @click="editOpen = false" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
 				</div>
 				<form id="edit-form" method="POST" class="mt-5 space-y-4" :action="editAction">
 					<input type="hidden" name="_token" :value="page.props.csrf_token" />

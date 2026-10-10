@@ -114,7 +114,7 @@ const previewSoal = (question) => {
 
 	const imageSrc = question.temp_preview_url || question.image_url || question.image_path || '';
 	if (imageSrc) {
-		html += `<img src="${imageSrc}" class="max-h-32">`;
+		html += `<img src="${imageSrc}" alt="Gambar soal" class="max-h-32">`;
 	}
 
 	window.setTimeout(() => {
@@ -345,7 +345,7 @@ onBeforeUnmount(() => {
 														<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 													</button>
 													<div class="ssd-panel">
-														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..."></div>
+														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari tipe..." aria-label="Cari tipe"></div>
 														<div class="ssd-list">
 															<div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'PG'}" data-value="PG">Pilihan Ganda</div>
 															<div class="ssd-option" :class="{'ssd-selected': questions[current].tipe === 'Checklist'}" data-value="Checklist">Checklist</div>
@@ -363,7 +363,7 @@ onBeforeUnmount(() => {
 														<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 													</button>
 													<div class="ssd-panel">
-														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari status..."></div>
+														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari status..." aria-label="Cari status"></div>
 														<div class="ssd-list">
 															<div class="ssd-option" :class="{'ssd-selected': questions[current].status === 'draft'}" data-value="draft">Draft</div>
 															<div class="ssd-option" :class="{'ssd-selected': questions[current].status === 'terbit'}" data-value="terbit">Terbit</div>
@@ -408,7 +408,7 @@ onBeforeUnmount(() => {
 														<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 													</button>
 													<div class="ssd-panel">
-														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jawaban..."></div>
+														<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jawaban..." aria-label="Cari jawaban"></div>
 														<div class="ssd-list">
 															<div class="ssd-option" :class="{'ssd-selected': !questions[current].jawaban_benar}" data-value="">Pilih jawaban benar</div>
 															<div
@@ -447,7 +447,7 @@ onBeforeUnmount(() => {
 											<div class="mt-1 text-[11px] text-slate-500">Maksimal 2 MB. Jika file lebih besar dari 2 MB, sistem akan menolak dan menampilkan pesan error.</div>
 
 											<div v-if="questions[current].temp_preview_url || questions[current].image_url" class="mt-3 overflow-hidden rounded-[24px] border border-slate-200 bg-white p-3">
-												<img :src="questions[current].temp_preview_url || questions[current].image_url" class="max-h-52 rounded-2xl object-contain">
+												<img :src="questions[current].temp_preview_url || questions[current].image_url" alt="Gambar soal" class="max-h-52 rounded-2xl object-contain">
 												<button type="button" class="btn-danger mt-3 w-full sm:w-auto" @click="clearImage" :disabled="isSaving || isUploadingImage">
 													Hapus Gambar
 												</button>

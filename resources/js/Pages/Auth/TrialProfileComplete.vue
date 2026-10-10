@@ -134,7 +134,7 @@ const progressPercent = computed(() => Math.round((currentStep.value / totalStep
 			</div>
 			<div class="flex items-center justify-between text-xs font-semibold text-textSecondary">
 				<span :class="currentStep >= 1 ? 'text-primary' : ''">Langkah 1: Identitas</span>
-				<span :class="currentStep >= 2 ? 'text-primary' : ''">Langkah 2: Sekolah</span>
+				<span :class="currentStep >= 2 ? 'text-primary' : ''">Langkah 2: Lembaga</span>
 			</div>
 
 			<!-- Error banner -->
@@ -200,11 +200,11 @@ const progressPercent = computed(() => Math.round((currentStep.value / totalStep
 					</button>
 				</div>
 
-				<!-- Step 2: Sekolah & Kontak -->
+				<!-- Step 2: Lembaga & Kontak -->
 				<div v-show="currentStep === 2" class="space-y-5">
 					<div class="space-y-2">
 						<label for="satuan_pendidikan" class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-							Satuan Pendidikan (Nama Sekolah) <span class="text-rose-500">*</span>
+							Lembaga (Nama Bimbel/Sekolah) <span class="text-rose-500">*</span>
 						</label>
 						<input
 							id="satuan_pendidikan"

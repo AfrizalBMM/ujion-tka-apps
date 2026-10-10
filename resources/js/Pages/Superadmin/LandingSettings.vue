@@ -374,7 +374,7 @@ const submitTarif = () => {
 						<div class="mt-3 space-y-4">
 							<div>
 								<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Meta Title (opsional)</label>
-								<input v-model="contentForm.seo_title" class="input mt-1 w-full" name="seo_title" placeholder="Contoh: Platform Ujian TKA Online untuk Guru &amp; Sekolah" maxlength="120">
+								<input v-model="contentForm.seo_title" class="input mt-1 w-full" name="seo_title" placeholder="Contoh: Platform Ujian TKA Online untuk Guru &amp; Bimbel" maxlength="120">
 								<div class="mt-1 text-xs text-muted">Ideal 50-60 karakter. Kosongkan untuk memakai nama aplikasi + judul hero.</div>
 							</div>
 							<div>
@@ -475,7 +475,7 @@ const submitTarif = () => {
 								<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jawaban</label>
 								<textarea v-model="faqForm.answer" class="input mt-1 min-h-24 w-full" name="answer" required></textarea>
 							</div>
-							<div class="grid grid-cols-2 gap-3">
+							<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 								<div>
 									<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Urutan</label>
 									<input v-model="faqForm.sort_order" type="number" min="0" class="input mt-1 w-full" name="sort_order">
@@ -585,7 +585,7 @@ const submitTarif = () => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="!tarifForm.jenjang ? 'ssd-selected' : ''" data-value="">Pilih jenjang</div>
 									<div

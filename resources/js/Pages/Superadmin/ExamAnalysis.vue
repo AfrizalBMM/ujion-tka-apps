@@ -82,7 +82,7 @@ defineProps({
 								<td>{{ p.score }}</td>
 							</tr>
 							<tr v-if="ranking.length === 0">
-								<td colspan="3" class="text-center text-gray-400">Belum ada peserta yang menyelesaikan ujian.</td>
+								<td colspan="3" class="text-center text-slate-400">Belum ada peserta yang menyelesaikan ujian.</td>
 							</tr>
 						</tbody>
 					</table>

@@ -85,7 +85,7 @@ onBeforeUnmount(() => {
 			data-theme-toggle
 			aria-label="Ganti tema"
 			title="Ganti tema"
-			class="fixed right-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 shadow-sm backdrop-blur transition hover:text-primary dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:text-white"
+			class="fixed right-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-600 shadow-sm backdrop-blur transition hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:text-white"
 		>
 			<i class="fa-solid fa-moon"></i>
 		</button>
@@ -100,7 +100,7 @@ onBeforeUnmount(() => {
 						Ruang belajar dan operasional yang terasa lebih modern, ringan, dan jelas.
 					</h1>
 					<p class="mx-auto mt-4 max-w-md text-center text-sm leading-6 text-slate-200">
-						Ujion membantu sekolah dan guru mengelola ujian, materi, dan aktivasi akun dalam satu alur yang lebih tertata.
+						Ujion membantu guru dan bimbel mengelola ujian, materi, dan aktivasi akun dalam satu alur yang lebih tertata.
 					</p>
 					<div class="mt-8 grid grid-cols-1 gap-3 text-center sm:grid-cols-2">
 						<div class="hero-chip rounded-2xl border border-white/12 bg-white/8 p-4 backdrop-blur-sm">

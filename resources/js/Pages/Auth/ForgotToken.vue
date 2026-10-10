@@ -73,6 +73,7 @@ const submit = () => {
 								class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-white"
 								placeholder="nama@email.com atau 08xxxxxxxxxx"
 								required
+								autocomplete="email"
 							>
 						</div>
 					</div>
@@ -97,7 +98,7 @@ const submit = () => {
 									<i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-muted ssd-icon"></i>
 								</button>
 								<div class="ssd-panel">
-									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..."></div>
+									<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari jenjang..." aria-label="Cari jenjang"></div>
 									<div class="ssd-list">
 										<div class="ssd-option" :class="!form.jenjang ? 'ssd-selected' : ''" data-value="">Pilih jenjang</div>
 										<div

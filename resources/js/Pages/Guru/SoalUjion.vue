@@ -140,7 +140,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari mapel..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari mapel..." aria-label="Cari mapel"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="!mapel ? ' ssd-selected' : ''" data-value="">Semua Mapel</div>
 									<div v-for="m in mapels" :key="m" class="ssd-option" :class="mapel == m ? ' ssd-selected' : ''" :data-value="m">{{ m }}</div>
@@ -157,7 +157,7 @@ onBeforeUnmount(() => {
 								<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 							</button>
 							<div class="ssd-panel">
-								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kurikulum..."></div>
+								<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari kurikulum..." aria-label="Cari kurikulum"></div>
 								<div class="ssd-list">
 									<div class="ssd-option" :class="!curriculum ? ' ssd-selected' : ''" data-value="">Semua Kurikulum</div>
 									<div v-for="c in curriculums" :key="c" class="ssd-option" :class="curriculum == c ? ' ssd-selected' : ''" :data-value="c">{{ c }}</div>

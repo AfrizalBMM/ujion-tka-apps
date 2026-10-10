@@ -149,7 +149,7 @@ onBeforeUnmount(() => {
 						</button>
 						<div class="ssd-panel">
 							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search"
-								placeholder="Cari mapel..."></div>
+								placeholder="Cari mapel..." aria-label="Cari mapel"></div>
 							<div class="ssd-list">
 								<div class="ssd-option" data-value="">Semua Mapel</div>
 								<div v-for="m in mapels" :key="m" class="ssd-option" :class="filters.mapel === m ? ' ssd-selected' : ''" :data-value="m">
@@ -169,7 +169,7 @@ onBeforeUnmount(() => {
 						</button>
 						<div class="ssd-panel">
 							<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search"
-								placeholder="Cari kurikulum..."></div>
+								placeholder="Cari kurikulum..." aria-label="Cari kurikulum"></div>
 							<div class="ssd-list">
 								<div class="ssd-option" data-value="">Semua Kurikulum</div>
 								<div v-for="c in curriculums" :key="c" class="ssd-option" :class="filters.curriculum === c ? ' ssd-selected' : ''"
@@ -187,6 +187,7 @@ onBeforeUnmount(() => {
 			</form>
 
 			<div class="space-y-4">
+				<template v-if="materials.data.length > 0">
 				<div v-for="m in materials.data" :key="m.id" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm hover:shadow-md transition-all dark:border-slate-800 dark:bg-slate-900">
 					<div class="flex-1 min-w-0">
 						<div class="flex flex-wrap items-center gap-2 mb-1">
@@ -213,8 +214,14 @@ onBeforeUnmount(() => {
 						<form v-if="m.is_bookmarked" method="POST" :action="route('guru.materials.unbookmark', m.id)" @submit.prevent="toggleBookmark(m)"><button class="btn-danger p-2" title="Hapus Bookmark"><i class="fa-solid fa-trash"></i></button></form>
 						<form v-else method="POST" :action="route('guru.materials.bookmark', m.id)" @submit.prevent="toggleBookmark(m)"><button class="btn-secondary p-2" title="Bookmark"><i class="fa-regular fa-bookmark"></i></button></form>
 					</div>
-				</div>
-				<div v-if="materials.last_page > 1" class="mt-4">
+					</div>
+					</template>
+					<div v-else class="rounded-2xl border border-dashed border-border bg-slate-50/50 px-6 py-12 text-center dark:border-slate-700 dark:bg-slate-900/50">
+						<i class="fa-solid fa-inbox mb-3 text-3xl text-slate-300 dark:text-slate-600"></i>
+						<p class="text-sm font-semibold text-textSecondary dark:text-slate-400">Belum ada materi yang ditemukan.</p>
+						<p class="mt-1 text-xs text-muted dark:text-slate-500">Coba ubah filter atau reset pencarian.</p>
+					</div>
+					<div v-if="materials.last_page > 1" class="mt-4">
 					<PaginationLinks :paginator="materials" />
 				</div>
 			</div>
