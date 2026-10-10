@@ -35,10 +35,10 @@ const copyToken = async (token) => {
 			<div class="card p-6 flex flex-col items-center">
 				<div class="text-lg font-bold mb-2">Token Ujian</div>
 				<div class="flex flex-col items-center gap-3 sm:flex-row">
-					<span id="token-text" class="break-all text-center font-mono text-2xl tracking-widest bg-slate-100 px-4 py-2 rounded sm:text-3xl">{{ exam.token }}</span>
+					<span id="token-text" class="break-all text-center font-mono text-2xl tracking-widest bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded sm:text-3xl">{{ exam.token }}</span>
 					<button type="button" class="btn-secondary w-full sm:w-auto" @click="copyToken(exam.token)">Copy Token</button>
 				</div>
-				<div id="copy-success" class="text-green-600 mt-2" :class="copySuccess ? '' : 'hidden'">Token berhasil disalin!</div>
+				<div id="copy-success" class="text-green-600 dark:text-green-400 mt-2" :class="copySuccess ? '' : 'hidden'">Token berhasil disalin!</div>
 			</div>
 			<div class="card p-6">
 				<div class="mb-2 font-bold">Judul Ujian:</div>
