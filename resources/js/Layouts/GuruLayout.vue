@@ -96,13 +96,13 @@ onBeforeUnmount(() => {
 						<span class="font-semibold uppercase tracking-[0.24em] text-[11px]">Jam</span>
 						<span id="live-clock" class="app-clock"></span>
 					</div>
-					<button class="icon-button hidden md:inline-flex" title="Perbesar Font" data-font-size="increase">
+					<button class="icon-button hidden md:inline-flex" title="Perbesar Font" aria-label="Perbesar Font" data-font-size="increase">
 						<i class="fa-solid fa-magnifying-glass-plus"></i>
 					</button>
-					<button class="icon-button hidden md:inline-flex" title="Perkecil Font" data-font-size="decrease">
+					<button class="icon-button hidden md:inline-flex" title="Perkecil Font" aria-label="Perkecil Font" data-font-size="decrease">
 						<i class="fa-solid fa-magnifying-glass-minus"></i>
 					</button>
-					<button class="icon-button hidden md:inline-flex" title="Ganti Tema" data-theme-toggle>
+					<button class="icon-button hidden md:inline-flex" title="Ganti Tema" aria-label="Ganti Tema" data-theme-toggle>
 						<i class="fa-solid fa-moon"></i>
 					</button>
 					<div class="app-user-menu">
