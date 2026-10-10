@@ -28,12 +28,12 @@ final class HtmlSanitizer
 
     /** Attributes allowed on specific tags. */
     private const ALLOWED_ATTRS = [
-        'a'    => ['href', 'title', 'target', 'rel'],
-        'img'  => ['src', 'alt', 'title', 'width', 'height'],
-        'td'   => ['colspan', 'rowspan'],
-        'th'   => ['colspan', 'rowspan'],
-        'ol'   => ['start'],
-        '*'    => [],
+        'a' => ['href', 'title', 'target', 'rel'],
+        'img' => ['src', 'alt', 'title', 'width', 'height'],
+        'td' => ['colspan', 'rowspan'],
+        'th' => ['colspan', 'rowspan'],
+        'ol' => ['start'],
+        '*' => [],
     ];
 
     /** URL schemes that are considered safe. */
@@ -63,7 +63,7 @@ final class HtmlSanitizer
         // Suppress warnings from malformed HTML.
         $previous = libxml_use_internal_errors(true);
         @$dom->loadHTML(
-            '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>' . $html . '</body></html>',
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'.$html.'</body></html>',
             LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
         );
         libxml_clear_errors();
@@ -102,6 +102,7 @@ final class HtmlSanitizer
 
             if (in_array($tagName, self::DANGEROUS_TAGS, true)) {
                 $toRemove[] = $child;
+
                 continue;
             }
 
@@ -112,6 +113,7 @@ final class HtmlSanitizer
                     $child->parentNode->insertBefore($child->firstChild, $child);
                 }
                 $toRemove[] = $child;
+
                 continue;
             }
 
@@ -136,18 +138,21 @@ final class HtmlSanitizer
             // Remove all event handler attributes (on*).
             if (str_starts_with($attrName, 'on')) {
                 $toRemove[] = $attr;
+
                 continue;
             }
 
             // Remove style attributes (can contain expression() / url(javascript:)).
             if ($attrName === 'style') {
                 $toRemove[] = $attr;
+
                 continue;
             }
 
             // Check if attribute is in the allowlist for this tag.
             if (! in_array($attrName, $allowed, true) && ! in_array($attrName, $globalAllowed, true)) {
                 $toRemove[] = $attr;
+
                 continue;
             }
 
@@ -156,6 +161,7 @@ final class HtmlSanitizer
                 $value = trim($attr->value);
                 if (! self::isSafeUrl($value)) {
                     $toRemove[] = $attr;
+
                     continue;
                 }
             }
@@ -198,6 +204,7 @@ final class HtmlSanitizer
         // Parse scheme.
         if (preg_match('/^([a-zA-Z][a-zA-Z0-9+.\-]*):/i', $url, $matches)) {
             $scheme = strtolower($matches[1]);
+
             return in_array($scheme, self::SAFE_URL_SCHEMES, true);
         }
 
@@ -228,6 +235,6 @@ final class HtmlSanitizer
         // Remove javascript: and data: URLs.
         $html = preg_replace('/(href|src)\s*=\s*("[^"]*(?:javascript|data):[^"]*"|\'[^\']*(?:javascript|data):[^\']*\'|[^\s>]*(?:javascript|data):[^\s>]*)/i', '', $html);
 
-        return strip_tags($html, '<' . implode('><', self::ALLOWED_TAGS) . '>');
+        return strip_tags($html, '<'.implode('><', self::ALLOWED_TAGS).'>');
     }
 }
