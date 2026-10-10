@@ -114,7 +114,7 @@ const previewSoal = (question) => {
 
 	const imageSrc = question.temp_preview_url || question.image_url || question.image_path || '';
 	if (imageSrc) {
-		html += `<img src="${imageSrc}" class="max-h-32">`;
+		html += `<img src="${imageSrc}" alt="Gambar soal" class="max-h-32">`;
 	}
 
 	window.setTimeout(() => {
@@ -447,7 +447,7 @@ onBeforeUnmount(() => {
 											<div class="mt-1 text-[11px] text-slate-500">Maksimal 2 MB. Jika file lebih besar dari 2 MB, sistem akan menolak dan menampilkan pesan error.</div>
 
 											<div v-if="questions[current].temp_preview_url || questions[current].image_url" class="mt-3 overflow-hidden rounded-[24px] border border-slate-200 bg-white p-3">
-												<img :src="questions[current].temp_preview_url || questions[current].image_url" class="max-h-52 rounded-2xl object-contain">
+												<img :src="questions[current].temp_preview_url || questions[current].image_url" alt="Gambar soal" class="max-h-52 rounded-2xl object-contain">
 												<button type="button" class="btn-danger mt-3 w-full sm:w-auto" @click="clearImage" :disabled="isSaving || isUploadingImage">
 													Hapus Gambar
 												</button>

@@ -160,7 +160,7 @@ const submitCleanup = () => {
 			<div class="card">
 				<form method="GET" :action="route('superadmin.audit-logs.index')" class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center" @submit.prevent="submitFilters">
 					<input v-model="filterForm.q" type="text" name="q" class="input w-full py-1.5 text-sm sm:w-auto sm:flex-1 sm:min-w-[180px]" placeholder="Cari path, route, IP...">
-					<div class="ssd-wrap" style="width: 130px;">
+					<div class="ssd-wrap w-[130px]">
 						<input type="hidden" name="method" :value="filterForm.method" @change="filterForm.method = $event.target.value">
 						<button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
 							<span class="ssd-label truncate">{{ filterForm.method || 'Semua method' }}</span>
@@ -182,7 +182,7 @@ const submitCleanup = () => {
 							</div>
 						</div>
 					</div>
-					<div class="ssd-wrap" style="max-width: 170px;">
+					<div class="ssd-wrap max-w-[170px]">
 						<input type="hidden" name="user_id" :value="filterForm.user_id" @change="filterForm.user_id = $event.target.value">
 						<button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
 							<span class="ssd-label truncate">{{ userFilterLabel }}</span>

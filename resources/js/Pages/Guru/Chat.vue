@@ -167,7 +167,7 @@ onBeforeUnmount(() => {
 					</div>
 				</div>
 
-				<div ref="chatBox" class="h-[460px] overflow-y-auto p-2 sm:p-4 rounded-2xl shadow-inner" id="chat-box" style="background: white; background-image: linear-gradient(rgba(120,120,120,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(120,120,120,0.06) 1px, transparent 1px); background-size: 32px 32px;">
+				<div ref="chatBox" class="h-[460px] overflow-y-auto p-2 sm:p-4 rounded-2xl shadow-inner bg-white bg-[linear-gradient(rgba(120,120,120,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(120,120,120,0.06)_1px,transparent_1px)] bg-[length:32px_32px]" id="chat-box" role="log" aria-label="Riwayat percakapan chat">
 					<ul class="space-y-4">
 						<template v-if="chats.length > 0">
 							<li v-for="chat in chats" :key="chat.id" class="flex items-end gap-2" :class="chat.is_own ? 'justify-end' : 'justify-start'">

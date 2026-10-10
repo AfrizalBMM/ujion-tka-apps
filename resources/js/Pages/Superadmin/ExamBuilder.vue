@@ -89,7 +89,7 @@ const previewSoal = (q) => {
 		html += '</div>';
 	}
 	if (q.image) {
-		html += `<div class="mt-4"><img src='${q.image}' class='max-h-48 rounded-xl'></div>`;
+		html += `<div class="mt-4"><img src='${q.image}' alt="Gambar soal" class='max-h-48 rounded-xl'></div>`;
 	}
 	return html;
 };
@@ -343,7 +343,7 @@ onBeforeUnmount(() => {
 								<label class="text-xs font-bold uppercase tracking-wider text-muted">Gambar Pendukung (URL)</label>
 								<input v-model="state.questions[state.current].image" class="input w-full mt-1" placeholder="https://example.com/image.jpg">
 								<div v-if="state.questions[state.current].image" class="mt-3 p-2 border border-dashed rounded-xl bg-gray-50 flex justify-center">
-									<img :src="state.questions[state.current].image" class="max-h-56 rounded-lg shadow-sm">
+									<img :src="state.questions[state.current].image" alt="Gambar pendukung soal" class="max-h-56 rounded-lg shadow-sm">
 								</div>
 							</div>
 							<div class="mb-8 pt-8 border-t border-gray-100">

@@ -162,7 +162,7 @@ const sendMessage = () => {
 						</template>
 						<span v-else class="text-sm text-gray-500">Pilih guru untuk mulai chat.</span>
 					</div>
-					<div class="flex-1 overflow-y-auto p-2 md:p-4 rounded-2xl shadow-inner" style="background: white; background-image: linear-gradient(rgba(120,120,120,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(120,120,120,0.06) 1px, transparent 1px); background-size: 32px 32px;">
+					<div class="flex-1 overflow-y-auto p-2 md:p-4 rounded-2xl shadow-inner bg-white bg-[linear-gradient(rgba(120,120,120,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(120,120,120,0.06)_1px,transparent_1px)] bg-[length:32px_32px]" role="log" aria-label="Riwayat percakapan chat">
 						<template v-if="selectedUser">
 							<template v-if="chats.length > 0">
 								<div v-for="chat in chats" :key="chat.id" class="mb-3 flex items-end gap-2" :class="isOwn(chat) ? 'justify-end' : 'justify-start'">
@@ -174,7 +174,7 @@ const sendMessage = () => {
 										>
 											<div v-if="chat.message" class="whitespace-pre-wrap">{{ chat.message }}</div>
 											<a v-if="chat.image_path" :href="route('superadmin.chat.image', chat.id)" target="_blank" class="mt-3 block">
-												<img :src="route('superadmin.chat.image', chat.id)" class="max-h-56 rounded-2xl border border-slate-200 max-w-full object-cover dark:border-slate-700">
+												<img :src="route('superadmin.chat.image', chat.id)" alt="Lampiran chat" class="max-h-56 rounded-2xl border border-slate-200 max-w-full object-cover dark:border-slate-700">
 											</a>
 										</div>
 										<div class="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-slate-500" :class="isOwn(chat) ? 'justify-end' : 'justify-start'">

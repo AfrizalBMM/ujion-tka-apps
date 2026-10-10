@@ -344,7 +344,7 @@ const onQuestionChange = async () => {
 
 	<UjianLayout>
 		<div ref="rootEl" class="exam-shell">
-			<header class="flex items-center justify-between gap-2 bg-slate-900 px-4 py-2 text-white shadow-lg md:px-6 md:py-3" style="flex-shrink: 0">
+			<header class="flex shrink-0 items-center justify-between gap-2 bg-slate-900 px-4 py-2 text-white shadow-lg md:px-6 md:py-3">
 				<div class="flex items-center gap-2 truncate md:gap-4">
 					<div class="hidden h-10 w-10 items-center justify-center rounded-xl bg-white/10 md:flex">
 						<i class="fa-solid fa-graduation-cap text-lg text-indigo-400"></i>
