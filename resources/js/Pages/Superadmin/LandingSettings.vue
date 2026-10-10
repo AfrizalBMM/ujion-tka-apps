@@ -475,7 +475,7 @@ const submitTarif = () => {
 								<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Jawaban</label>
 								<textarea v-model="faqForm.answer" class="input mt-1 min-h-24 w-full" name="answer" required></textarea>
 							</div>
-							<div class="grid grid-cols-2 gap-3">
+							<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 								<div>
 									<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Urutan</label>
 									<input v-model="faqForm.sort_order" type="number" min="0" class="input mt-1 w-full" name="sort_order">
