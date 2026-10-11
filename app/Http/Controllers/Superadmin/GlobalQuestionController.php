@@ -46,7 +46,7 @@ class GlobalQuestionController extends Controller
             })
             ->when(in_array($filters['question_type'], ['multiple_choice', 'short_answer', 'matching'], true), fn ($query) => $query->where('question_type', $filters['question_type']))
             ->when(in_array($filters['status'], ['active', 'draft'], true), fn ($query) => $query->where('is_active', $filters['status'] === 'active'))
-            ->when($filters['material_mapel'] !== '', fn ($query) => $query->where('material_mapel', $filters['material_mapel']))
+            ->when($filters['material_mapel'] !== '', fn ($query) => $query->whereMaterialMapel($filters['material_mapel']))
             ->when($filters['material_curriculum'] !== '', fn ($query) => $query->where('material_curriculum', $filters['material_curriculum']))
             ->when($filters['jenjang_id'], fn ($query) => $query->where('jenjang_id', $filters['jenjang_id']))
             ->latest()

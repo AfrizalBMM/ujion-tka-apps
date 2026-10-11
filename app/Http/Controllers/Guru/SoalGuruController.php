@@ -55,7 +55,7 @@ class SoalGuruController extends Controller
         if ($canManage && ! $isSurvey) {
             $bankSoals = GlobalQuestion::where('is_active', true)
                 ->where('jenjang_id', $paket->jenjang_id)
-                ->where('material_mapel', $mapel->nama_mapel)
+                ->whereMaterialMapel($mapel->nama_mapel)
                 ->latest()->take(30)->get()
                 ->map(fn ($gq) => [
                     'id' => $gq->id,

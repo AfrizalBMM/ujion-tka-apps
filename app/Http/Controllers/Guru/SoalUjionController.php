@@ -41,7 +41,7 @@ class SoalUjionController extends Controller
             });
         }
         if ($filters['mapel']) {
-            $questionsQuery->where('material_mapel', $filters['mapel']);
+            $questionsQuery->whereMaterialMapel($filters['mapel']);
         }
         if ($filters['curriculum']) {
             $questionsQuery->where('material_curriculum', $filters['curriculum']);

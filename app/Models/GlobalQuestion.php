@@ -47,6 +47,25 @@ class GlobalQuestion extends Model
         return $this->belongsTo(Material::class, 'material_id');
     }
 
+    public static function normalizeMapelKey(?string $value): string
+    {
+        return trim(str_replace('_', ' ', strtolower((string) $value)));
+    }
+
+    public function scopeWhereMaterialMapel(Builder $query, ?string $value): Builder
+    {
+        $key = self::normalizeMapelKey($value);
+
+        if ($key === '') {
+            return $query;
+        }
+
+        return $query->whereRaw(
+            "LOWER(TRIM(REPLACE(COALESCE(material_mapel, ''), '_', ' '))) = ?",
+            [$key]
+        );
+    }
+
     public function scopeForMaterial(Builder $query, Material $material): Builder
     {
         return $query->where(function (Builder $q) use ($material): void {
@@ -56,7 +75,7 @@ class GlobalQuestion extends Model
 
                     // Fallback matching for unlinked questions: match by mapel + curriculum.
                     // Snapshot fields (subelement/unit/sub_unit) can vary across imports, so we don't require them here.
-                    $inner->where('material_mapel', $material->mapel)
+                    $inner->whereMaterialMapel($material->mapel)
                         ->where('material_curriculum', $material->curriculum);
                 });
         });

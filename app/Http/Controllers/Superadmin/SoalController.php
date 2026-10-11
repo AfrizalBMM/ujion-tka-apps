@@ -195,7 +195,7 @@ class SoalController extends Controller
                 });
             })
             ->when(in_array($filters['question_type'], ['multiple_choice', 'matching', 'short_answer'], true), fn ($q) => $q->where('question_type', $filters['question_type']))
-            ->when($filters['material_mapel'] !== '', fn ($q) => $q->where('material_mapel', $filters['material_mapel']))
+            ->when($filters['material_mapel'] !== '', fn ($q) => $q->whereMaterialMapel($filters['material_mapel']))
             ->when($filters['jenjang_id'] !== '', fn ($q) => $q->where('jenjang_id', $filters['jenjang_id']))
             ->when($filters['material_curriculum'] !== '', fn ($q) => $q->where('material_curriculum', $filters['material_curriculum']))
             ->when($filters['material_subelement'] !== '', fn ($q) => $q->where('material_subelement', $filters['material_subelement']))
