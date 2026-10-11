@@ -194,13 +194,13 @@ onBeforeUnmount(() => {
 	<Head title="Builder Soal Ujian" />
 
 	<SuperadminLayout>
-		<div id="builder-app" class="fixed inset-0 z-50 flex flex-col bg-slate-900/90">
-			<div class="flex flex-col gap-3 bg-white p-4 shadow sm:flex-row sm:items-center sm:justify-between">
+		<div id="builder-app" class="fixed inset-0 z-50 flex flex-col bg-slate-900/90 dark:bg-slate-950/95">
+			<div class="flex flex-col gap-3 bg-white dark:bg-slate-900 p-4 shadow sm:flex-row sm:items-center sm:justify-between">
 				<h2 class="font-bold text-lg sm:text-xl">Builder Soal Ujian: {{ exam.judul }}</h2>
 				<a :href="route('superadmin.exams.index')" class="btn-secondary w-full sm:w-auto">Keluar</a>
 			</div>
 			<div class="flex flex-1 flex-col overflow-hidden lg:flex-row">
-				<div class="max-h-[350px] bg-white p-4 overflow-y-auto border-b lg:max-h-none lg:w-1/4 lg:border-r lg:border-b-0 flex flex-col">
+				<div class="max-h-[350px] bg-white dark:bg-slate-900 p-4 overflow-y-auto border-b lg:max-h-none lg:w-1/4 lg:border-r lg:border-b-0 flex flex-col">
 					<div class="mb-4 font-bold flex items-center justify-between">
 						<span>Daftar Soal Ujian</span>
 						<span class="text-xs text-muted">{{ state.questions.length }} soal</span>
@@ -209,7 +209,7 @@ onBeforeUnmount(() => {
 						<li v-for="(q, idx) in state.questions" :key="idx" class="group">
 							<button @click="go(idx)"
 									class="w-full text-left px-3 py-2 rounded-lg text-sm transition"
-									:class="idx === state.current ? 'bg-primary/10 text-primary font-bold border border-primary/20' : 'hover:bg-slate-100 text-slate-700'">
+									:class="idx === state.current ? 'bg-primary/10 text-primary font-bold border border-primary/20' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'">
 								<span class="opacity-60 mr-1">#{{ idx+1 }}</span>
 								<span class="line-clamp-1 inline">{{ q.pertanyaan || '(Belum ada teks)' }}</span>
 							</button>
@@ -219,7 +219,7 @@ onBeforeUnmount(() => {
 						<i class="fa-solid fa-plus mr-2"></i> Tambah Soal Baru
 					</button>
 
-					<div class="mt-8 pt-6 border-t border-slate-100">
+					<div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
 						<div class="font-bold mb-3 flex items-center justify-between">
 							<span>Import dari Bank Soal</span>
 							<i class="fa-solid fa-magnifying-glass text-xs text-muted"></i>
@@ -230,7 +230,7 @@ onBeforeUnmount(() => {
 							   placeholder="Cari soal..."
 							   class="input w-full text-sm mb-3">
 
-						<div class="max-h-64 overflow-y-auto border rounded-xl bg-slate-50/50 p-2 space-y-2">
+						<div class="max-h-64 overflow-y-auto border rounded-xl bg-slate-50/50 p-2 space-y-2 dark:border-slate-800 dark:bg-slate-900/50">
 							<div v-if="state.loadingBank && state.bankPage === 1" class="p-4 text-center text-xs text-muted">
 								<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Mencari...
 							</div>
@@ -238,9 +238,9 @@ onBeforeUnmount(() => {
 								Tidak ditemukan soal.
 							</div>
 							<div v-else v-for="bq in state.bankQuestions" :key="bq.id" class="relative">
-								<label class="flex items-start gap-2 p-2 rounded-lg border border-transparent hover:border-primary/20 hover:bg-white transition cursor-pointer group">
-									<input type="checkbox" v-model="state.selectedBankIds" :value="bq.id" class="mt-1 rounded border-slate-300 text-primary focus:ring-primary">
-									<div class="text-xs leading-relaxed line-clamp-2 text-slate-600 group-hover:text-slate-900">
+								<label class="flex items-start gap-2 p-2 rounded-lg border border-transparent hover:border-primary/20 hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer group">
+									<input type="checkbox" v-model="state.selectedBankIds" :value="bq.id" class="mt-1 rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary">
+									<div class="text-xs leading-relaxed line-clamp-2 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100">
 										<span class="font-bold text-primary mr-1">[{{ bq.material_mapel || '-' }}]</span>
 										{{ bq.question_text }}
 									</div>
@@ -271,7 +271,7 @@ onBeforeUnmount(() => {
 				<div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
 					<form @submit.prevent="save">
 						<div v-if="state.questions.length">
-							<div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+							<div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
 								<span class="font-bold text-lg">Soal {{ state.current+1 }} <span class="text-muted font-normal text-sm">dari {{ state.questions.length }}</span></span>
 								<div class="flex items-center gap-2">
 									<button type="button" class="btn-secondary px-4" @click="prev" :disabled="state.current===0">
@@ -327,9 +327,9 @@ onBeforeUnmount(() => {
 								<label class="text-xs font-bold uppercase tracking-wider text-muted">Opsi Jawaban</label>
 								<div class="mt-2 space-y-2">
 									<div v-for="(opsi, i) in state.questions[state.current].opsi" :key="i" class="flex items-center gap-2">
-										<div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">{{ String.fromCharCode(65 + i) }}</div>
+										<div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-400">{{ String.fromCharCode(65 + i) }}</div>
 										<input v-model="state.questions[state.current].opsi[i]" class="input flex-1" placeholder="Teks opsi...">
-										<button type="button" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition" @click="removeOpsi(i)" v-if="state.questions[state.current].opsi.length > 1">
+										<button type="button" class="p-2 text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg transition" @click="removeOpsi(i)" v-if="state.questions[state.current].opsi.length > 1">
 											<i class="fa-solid fa-trash-can"></i>
 										</button>
 									</div>
@@ -349,18 +349,18 @@ onBeforeUnmount(() => {
 							<div class="mb-6">
 								<label class="text-xs font-bold uppercase tracking-wider text-muted">Gambar Pendukung (URL)</label>
 								<input v-model="state.questions[state.current].image" class="input w-full mt-1" placeholder="https://example.com/image.jpg">
-								<div v-if="state.questions[state.current].image" class="mt-3 p-2 border border-dashed rounded-xl bg-slate-50 flex justify-center">
+								<div v-if="state.questions[state.current].image" class="mt-3 p-2 border border-dashed rounded-xl bg-slate-50 dark:bg-slate-900 flex justify-center">
 									<img :src="state.questions[state.current].image" alt="Gambar pendukung soal" class="max-h-56 rounded-lg shadow-sm">
 								</div>
 							</div>
-							<div class="mb-8 pt-8 border-t border-slate-100">
+							<div class="mb-8 pt-8 border-t border-slate-100 dark:border-slate-800">
 								<label class="text-xs font-bold uppercase tracking-wider text-muted block mb-3">Live Preview</label>
 								<div class="p-6 border border-primary/10 bg-primary/5 rounded-3xl shadow-inner">
 									<div class="prose prose-slate max-w-none" v-html="previewSoal(state.questions[state.current])"></div>
 								</div>
 							</div>
-							<div class="flex items-center justify-between gap-4 sticky bottom-0 bg-white/80 backdrop-blur py-4 border-t mt-8 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-								<button type="button" class="text-rose-500 font-bold text-sm hover:underline" @click="remove(state.current)" v-if="state.questions.length>1">
+							<div class="flex items-center justify-between gap-4 sticky bottom-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur py-4 border-t border-slate-100 dark:border-slate-800 mt-8 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+								<button type="button" class="text-rose-500 dark:text-rose-400 font-bold text-sm hover:underline" @click="remove(state.current)" v-if="state.questions.length>1">
 									<i class="fa-solid fa-trash mr-1"></i> Hapus Soal
 								</button>
 								<div class="flex-1"></div>
@@ -372,12 +372,12 @@ onBeforeUnmount(() => {
 							</div>
 						</div>
 						<div v-else class="h-64 flex items-center justify-center flex-col gap-4">
-							<div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
+							<div class="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600">
 								<i class="fa-solid fa-file-circle-plus text-3xl"></i>
 							</div>
 							<div class="text-center">
-								<div class="font-bold text-slate-900">Belum ada soal ujian</div>
-								<div class="text-sm text-slate-500">Mulai dengan menambah soal baru atau import dari bank soal.</div>
+								<div class="font-bold text-slate-900 dark:text-slate-100">Belum ada soal ujian</div>
+								<div class="text-sm text-slate-500 dark:text-slate-400">Mulai dengan menambah soal baru atau import dari bank soal.</div>
 							</div>
 							<button type="button" class="btn-primary" @click="add">Tambah Soal Pertama</button>
 						</div>
