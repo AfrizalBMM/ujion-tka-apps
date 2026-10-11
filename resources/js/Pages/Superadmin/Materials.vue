@@ -321,9 +321,6 @@ const submitCreate = () => {
 								</div>
 							</div>
 							<div class="flex items-center gap-2">
-								<a :href="route('superadmin.materials.practice.show', m.id)" class="btn-secondary p-2" title="Latihan Materi">
-									<i class="fa-solid fa-key"></i>
-								</a>
 								<div class="flex items-center gap-2">
 									<a :href="route('superadmin.materials.practice.show', m.id)" class="btn-secondary p-2" title="Latihan Materi">
 										<i class="fa-solid fa-key"></i>

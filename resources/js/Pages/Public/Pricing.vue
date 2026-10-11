@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
 	plans: {
@@ -8,6 +8,14 @@ const props = defineProps({
 		default: () => [],
 	},
 });
+
+const page = usePage();
+
+const isLoggedIn = computed(() => Boolean(page.props.auth?.user));
+
+const subscribeHref = computed(() =>
+	isLoggedIn.value ? route('pricing') : route('register.guru.form')
+);
 
 // Fallback static plans if no data from backend
 const displayPlans = computed(() => {
@@ -160,7 +168,7 @@ const featuredPlan = computed(() => {
 					<!-- CTA -->
 					<div class="mt-auto px-6 pb-7">
 						<Link
-							:href="route('register.guru.form')"
+							:href="subscribeHref"
 							class="w-full justify-center py-3 text-sm font-bold"
 							:class="featuredPlan === plan.id ? 'btn-primary' : 'btn-secondary'"
 						>

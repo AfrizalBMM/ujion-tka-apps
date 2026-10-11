@@ -48,9 +48,23 @@ class RegisterGuruController extends Controller
         ]);
     }
 
-    public function showForm(): View
+    public function showForm(Request $request): View|RedirectResponse
     {
-        $selectedJenjang = old('jenjang', request()->query('jenjang'));
+        $user = Auth::user();
+
+        if ($user !== null) {
+            if ($user->isSuperadmin()) {
+                return redirect()->route('superadmin.dashboard');
+            }
+
+            if ($user->isGuru()) {
+                return redirect()->route('guru.dashboard');
+            }
+
+            return redirect()->route('pricing');
+        }
+
+        $selectedJenjang = old('jenjang', $request->query('jenjang'));
         $selectedTarifJenjang = $this->resolvePlanForJenjang($selectedJenjang);
 
         return view('register-guru', [
@@ -89,6 +103,10 @@ class RegisterGuruController extends Controller
 
         if ($existingTeacher instanceof User) {
             if ($existingTeacher->role === User::ROLE_GURU && $existingTeacher->account_status === User::STATUS_PENDING) {
+                if ($existingTeacher->isTrialExpired()) {
+                    return $this->redirectExpiredTrialToPricing($request, $existingTeacher);
+                }
+
                 $this->loginPendingTeacher($request, $existingTeacher);
 
                 return redirect()->route('guru.trial.profile.show')->with('flash', [
@@ -146,6 +164,10 @@ class RegisterGuruController extends Controller
             if ($existingTeacher instanceof User
                 && $existingTeacher->role === User::ROLE_GURU
                 && $existingTeacher->account_status === User::STATUS_PENDING) {
+                if ($existingTeacher->isTrialExpired()) {
+                    return $this->redirectExpiredTrialToPricing($request, $existingTeacher);
+                }
+
                 $this->loginPendingTeacher($request, $existingTeacher);
 
                 return redirect()->route('guru.trial.profile.show')->with('flash', [
@@ -178,6 +200,17 @@ class RegisterGuruController extends Controller
     {
         Auth::login($teacher);
         $request->session()->regenerate();
+    }
+
+    private function redirectExpiredTrialToPricing(Request $request, User $teacher): RedirectResponse
+    {
+        $this->loginPendingTeacher($request, $teacher);
+
+        return redirect()->route('pricing')->with('flash', [
+            'type' => 'warning',
+            'title' => 'Trial sudah berakhir',
+            'message' => 'Masa trial gratis Anda sudah berakhir. Silakan pilih paket berlangganan untuk melanjutkan.',
+        ]);
     }
 
     private function normalizePhoneNumber(?string $phone): string
