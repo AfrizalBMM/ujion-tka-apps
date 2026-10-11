@@ -243,7 +243,7 @@ class MaterialController extends Controller
                 $q->whereColumn('global_questions.material_id', 'materials.id')
                     ->orWhere(function ($inner) {
                         $inner->whereNull('global_questions.material_id')
-                            ->whereColumn('global_questions.material_mapel', 'materials.mapel')
+                            ->whereRaw("LOWER(TRIM(REPLACE(COALESCE(global_questions.material_mapel, ''), '_', ' '))) = LOWER(TRIM(REPLACE(COALESCE(materials.mapel, ''), '_', ' ')))")
                             ->whereColumn('global_questions.material_curriculum', 'materials.curriculum');
                     });
             });

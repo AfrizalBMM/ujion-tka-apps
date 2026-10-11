@@ -31,7 +31,7 @@ class PricingController extends Controller
 
         $trialDefaultDays = (int) AppSetting::getValue('trial_default_days', '7');
 
-        return Inertia::render('Pricing/Index', [
+        return Inertia::render('Public/Pricing', [
             'plans' => $plans,
             'trialDays' => $trialDefaultDays,
         ]);
