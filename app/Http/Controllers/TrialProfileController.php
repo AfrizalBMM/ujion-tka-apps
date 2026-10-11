@@ -84,6 +84,14 @@ class TrialProfileController extends Controller
 
         $user->save();
 
+        if ($user->isTrialExpired()) {
+            return redirect()->route('pricing')->with('flash', [
+                'type' => 'warning',
+                'title' => 'Trial sudah berakhir',
+                'message' => 'Trial Anda sudah berakhir, silakan berlangganan.',
+            ]);
+        }
+
         // Aktifkan trial sesuai durasi yang diatur admin
         $trialService->startTrial($user);
         $days = $trialService->getDefaultDays();
