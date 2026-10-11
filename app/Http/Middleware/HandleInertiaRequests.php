@@ -40,21 +40,26 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        $authUser = $user ? [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'no_wa' => $user->no_wa,
+            'role' => $user->role,
+            'jenjang' => $user->jenjang,
+            'satuan_pendidikan' => $user->satuan_pendidikan,
+            'account_status' => $user->account_status,
+            'payment_status' => $user->payment_status,
+            'avatar_url' => $user->avatar_url,
+        ] : null;
+
+        if ($authUser && $this->sharesAccessToken($request, $user)) {
+            $authUser['access_token'] = $user->access_token;
+        }
+
         return array_filter([
             'auth' => [
-                'user' => $user ? [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'no_wa' => $user->no_wa,
-                    'role' => $user->role,
-                    'jenjang' => $user->jenjang,
-                    'satuan_pendidikan' => $user->satuan_pendidikan,
-                    'account_status' => $user->account_status,
-                    'payment_status' => $user->payment_status,
-                    'access_token' => $user->role === User::ROLE_GURU ? $user->access_token : null,
-                    'avatar_url' => $user->avatar_url,
-                ] : null,
+                'user' => $authUser,
             ],
             'csrf_token' => csrf_token(),
             'flash' => fn () => session('flash'),
@@ -68,6 +73,17 @@ class HandleInertiaRequests extends Middleware
                 'pendingPaymentCount' => Transaction::where('status', Transaction::STATUS_PENDING)->count(),
             ] : null,
         ]);
+    }
+
+    protected function sharesAccessToken(Request $request, User $user): bool
+    {
+        if ($user->role !== User::ROLE_GURU) {
+            return false;
+        }
+
+        $routeName = (string) $request->route()?->getName();
+
+        return str_starts_with($routeName, 'guru.');
     }
 
     protected function guruLayoutProps(User $user): array

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Inertia;
 use Tests\TestCase;
 
 /**
@@ -25,9 +26,14 @@ use Tests\TestCase;
  * STATUS (setelah fix P1):
  * - TrialProfileController::complete() menolak user yang trial-nya sudah
  *   habis → redirect /pricing, trial_status tetap expired.
+ * - TrialProfileController::show() juga menolak user yang trial-nya sudah
+ *   habis → redirect /pricing. Akun yang belum pernah trial tetap boleh
+ *   melihat form.
  * - RegisterGuruController::register() (dua titik) akun PENDING + trial
  *   habis → redirect /pricing, bukan ke lengkapi profil.
  * - GET /register/guru untuk user sudah login → redirect, form hanya untuk tamu.
+ * - access_token guru hanya di-share ke halaman guru (route guru.*),
+ *   tidak lagi ke halaman publik seperti /pricing.
  * - T-1 (arah tombol Langganan) tetap urusan Rokimah, tidak disentuh di sini.
  */
 class PricingFlowTest extends TestCase
@@ -50,7 +56,15 @@ class PricingFlowTest extends TestCase
         ], $extra));
     }
 
-    // ─── T-1: ke mana tombol "Langganan" berakhir ────────────────────────────
+    private function inertiaHeaders(string $url): array
+    {
+        $this->get($url);
+
+        return [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => Inertia::getVersion(),
+        ];
+    }
 
     public function test_halaman_pricing_selalu_200_di_semua_kondisi_akun(): void
     {
@@ -67,21 +81,22 @@ class PricingFlowTest extends TestCase
             $this->assertSame(200, $r->getStatusCode(), "/pricing gagal untuk {$label}");
         }
 
-        // tamu juga harus bisa lihat pricing
         auth()->logout();
-        $this->assertSame(200, $this->get('/pricing')->getStatusCode());
+        $this->assertSame(
+            200,
+            $this->get('/pricing')->getStatusCode(),
+            'tamu tidak bisa membuka halaman pricing'
+        );
     }
 
     public function test_tombol_langganan_di_pricing_mengarah_ke_register(): void
     {
-        // Sumber: resources/js/Pages/Public/Pricing.vue -> route('register.guru.form')
         $this->assertSame(
             '/register/guru',
             parse_url(route('register.guru.form'), PHP_URL_PATH),
             'tujuan tombol Langganan berubah — perbarui laporan ini'
         );
 
-        // Form daftar hanya untuk tamu
         auth()->logout();
         $r = $this->get(route('register.guru.form'));
         $this->assertNull($r->headers->get('Location'), 'tamu mendapat form, bukan redirect');
@@ -99,7 +114,6 @@ class PricingFlowTest extends TestCase
 
     public function test_setelah_klik_langganan_user_selalu_mendarat_di_lengkapi_profil(): void
     {
-        // Kasus: pendaftar baru
         auth()->logout();
         $r = $this->post(route('register.guru'), [
             'name' => 'Guru Baru',
@@ -110,11 +124,10 @@ class PricingFlowTest extends TestCase
         ]);
         $this->assertSame(
             '/guru/trial/profile-complete',
-            parse_url($r->headers->get('Location'), PHP_URL_PATH)
+            parse_url($r->headers->get('Location'), PHP_URL_PATH),
+            'pendaftar baru tidak mendarat di halaman lengkapi profil'
         );
 
-        // Kasus: akun PENDING sudah ada (email sama) tapi trial sudah habis —
-        // tidak boleh diputar ke lengkapi profil lagi (loop trial P1).
         auth()->logout();
         $u = $this->expiredGuru();
         $r2 = $this->post(route('register.guru'), [
@@ -134,7 +147,6 @@ class PricingFlowTest extends TestCase
         $u->refresh();
         $this->assertSame(User::TRIAL_EXPIRED, $u->trial_status);
 
-        // Kasus: akun PENDING belum pernah trial → tetap ke lengkapi profil
         auth()->logout();
         $fresh = User::factory()->create([
             'role' => User::ROLE_GURU,
@@ -165,12 +177,39 @@ class PricingFlowTest extends TestCase
         $r = $this->actingAs($u)->get('/guru/dashboard');
         $this->assertSame('/pricing', parse_url($r->headers->get('Location'), PHP_URL_PATH));
 
-        // ...dan dari pricing, satu-satunya CTA kembali ke register.
-        // Ini loop: trial habis -> pricing -> Langganan -> daftar -> lengkapi profil -> trial aktif
-        $this->assertSame('/register/guru', parse_url(route('register.guru.form'), PHP_URL_PATH));
+        $this->assertSame(
+            '/register/guru',
+            parse_url(route('register.guru.form'), PHP_URL_PATH),
+            'CTA kembali dari pricing tidak lagi mengarah ke form daftar'
+        );
     }
 
-    // ─── T-2: loop trial ─────────────────────────────────────────────────────
+    public function test_get_lengkapi_profil_trial_habis_mengalihkan_ke_pricing(): void
+    {
+        $u = $this->expiredGuru();
+
+        $this->actingAs($u)->get(route('guru.trial.profile.show'))
+            ->assertRedirect(route('pricing'));
+
+        $u->refresh();
+        $this->assertSame(User::TRIAL_EXPIRED, $u->trial_status);
+    }
+
+    public function test_get_lengkapi_profil_tanpa_riwayat_trial_masih_menampilkan_form(): void
+    {
+        $guru = User::factory()->create([
+            'role' => User::ROLE_GURU,
+            'account_status' => User::STATUS_PENDING,
+            'trial_status' => User::TRIAL_NONE,
+            'trial_ends_at' => null,
+            'jenjang' => 'SMP',
+            'satuan_pendidikan' => 'SMP Belum Coba',
+            'no_wa' => '081111111177',
+            'access_token' => 'TOKENBELUMCOBA',
+        ]);
+
+        $this->actingAs($guru)->get(route('guru.trial.profile.show'))->assertOk();
+    }
 
     public function test_reset_trial_mengikuti_status_sekarang(): void
     {
@@ -178,8 +217,7 @@ class PricingFlowTest extends TestCase
         $endsSebelum = $u->trial_ends_at->toDateTimeString();
         $this->actingAs($u);
 
-        // halaman lengkapi profil terbuka untuk akun expired (route tanpa middleware trial.active)
-        $this->assertSame(200, $this->get(route('guru.trial.profile.show'))->getStatusCode());
+        $this->get(route('guru.trial.profile.show'))->assertRedirect(route('pricing'));
 
         $r = $this->post(route('guru.trial.profile.complete'), [
             'name' => $u->name,
@@ -219,5 +257,44 @@ class PricingFlowTest extends TestCase
         $guru->refresh();
         $this->assertSame(User::TRIAL_ACTIVE, $guru->trial_status);
         $this->assertTrue($guru->trial_ends_at->isFuture());
+    }
+
+    public function test_access_token_guru_tidak_dishare_ke_halaman_pricing(): void
+    {
+        $guru = $this->expiredGuru([
+            'trial_status' => User::TRIAL_ACTIVE,
+            'trial_ends_at' => now()->addDays(5),
+            'access_token' => 'TOKENPUBLIK',
+        ]);
+
+        $url = route('pricing');
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
+
+        $response->assertOk();
+        $this->assertArrayNotHasKey(
+            'access_token',
+            $response->json('props.auth.user'),
+            'access_token bocor ke halaman publik /pricing'
+        );
+    }
+
+    public function test_access_token_guru_tetap_dishare_di_halaman_profil(): void
+    {
+        $guru = $this->expiredGuru([
+            'trial_status' => User::TRIAL_ACTIVE,
+            'trial_ends_at' => now()->addDays(5),
+            'access_token' => 'TOKENPROFIL',
+        ]);
+
+        $url = route('guru.profile');
+        $response = $this->actingAs($guru)->get($url, $this->inertiaHeaders($url));
+
+        $response->assertOk();
+        $this->assertSame('Guru/Profile', $response->json('component'));
+        $this->assertSame(
+            'TOKENPROFIL',
+            $response->json('props.auth.user.access_token'),
+            'halaman guru kehilangan access_token'
+        );
     }
 }

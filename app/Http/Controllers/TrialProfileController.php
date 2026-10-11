@@ -26,6 +26,14 @@ class TrialProfileController extends Controller
             return redirect()->route('guru.dashboard');
         }
 
+        if ($user->isTrialExpired()) {
+            return redirect()->route('pricing')->with('flash', [
+                'type' => 'warning',
+                'title' => 'Trial sudah berakhir',
+                'message' => 'Trial Anda sudah berakhir, silakan berlangganan.',
+            ]);
+        }
+
         $jenjangs = config('ujion.jenjangs', ['SD', 'SMP', 'SMA']);
         $trialDays = app(TrialService::class)->getDefaultDays();
 
