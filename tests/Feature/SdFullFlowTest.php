@@ -9,7 +9,7 @@ use App\Models\MapelPaket;
 use App\Models\PaketSoal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 use Tests\TestCase;
 
 /**
@@ -125,7 +125,7 @@ class SdFullFlowTest extends TestCase
             'timer' => 75,
             'status' => 'draft',
         ]);
-        fwrite(STDERR, "exams.store status=".$resp->getStatusCode()."\n");
+        fwrite(STDERR, 'exams.store status='.$resp->getStatusCode()."\n");
 
         $exam = Exam::where('judul', 'Ujian SD Alur Penuh')->first();
         $this->assertNotNull($exam, 'Ujian gagal dibuat dari paket SD');
@@ -135,9 +135,9 @@ class SdFullFlowTest extends TestCase
         $this->actingAs($sa)->get(route('superadmin.exams.builder', $exam));
         $r = $this->actingAs($sa)->get(route('superadmin.exams.builder', $exam), [
             'X-Inertia' => 'true',
-            'X-Inertia-Version' => \Inertia\Inertia::getVersion(),
+            'X-Inertia-Version' => Inertia::getVersion(),
         ]);
-        fwrite(STDERR, "builder status=".$r->getStatusCode()." component=".$r->json('component')."\n");
+        fwrite(STDERR, 'builder status='.$r->getStatusCode().' component='.$r->json('component')."\n");
 
         $this->assertTrue(true);
     }

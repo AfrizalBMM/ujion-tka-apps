@@ -43,6 +43,7 @@ class SuperadminMenuAuditTest extends TestCase
                 $status = $response->getStatusCode();
             } catch (\Throwable $e) {
                 $failures[] = sprintf('/%s (%s) EXCEPTION: %s', $route->uri(), $route->getName(), $e->getMessage());
+
                 continue;
             }
 

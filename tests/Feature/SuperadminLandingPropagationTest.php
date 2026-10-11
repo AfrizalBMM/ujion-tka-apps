@@ -73,7 +73,7 @@ class SuperadminLandingPropagationTest extends TestCase
 
         if ($post) {
             $resp = $this->get('/artikel/'.$post->slug);
-            fwrite(STDERR, "halaman artikel status=".$resp->getStatusCode()."\n");
+            fwrite(STDERR, 'halaman artikel status='.$resp->getStatusCode()."\n");
             $this->assertSame(200, $resp->getStatusCode());
         }
 
