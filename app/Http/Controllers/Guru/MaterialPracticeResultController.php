@@ -44,6 +44,8 @@ class MaterialPracticeResultController extends Controller
         $telaahStats = collect();
         $rankings = collect();
 
+        $passingGrade = (int) config('ujion.scoring.passing_grade', 500);
+
         if ($token) {
             $activeTelaahQuestionIds = MaterialTelaahQuestion::query()
                 ->where('material_id', $token->material_id)
@@ -173,6 +175,7 @@ class MaterialPracticeResultController extends Controller
             ] : null,
             'stats' => $stats,
             'packageStats' => $packageStats->values(),
+            'passingGrade' => $passingGrade,
             'questionStats' => $questionStats->map(fn ($q) => [
                 'percent' => $q['percent'],
             ])->values(),
