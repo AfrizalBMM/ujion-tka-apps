@@ -125,6 +125,8 @@ class ExamResultController extends Controller
         $this->authorizeOwner($exam);
         abort_if($mapel->paket_soal_id !== $exam->paket_soal_id, 404);
 
+        $passingGrade = (int) config('ujion.scoring.passing_grade', 500);
+
         $sessions = UjianSesi::where('exam_id', $exam->id)
             ->where('mapel_paket_id', $mapel->id)
             ->where('status', 'selesai')
@@ -158,6 +160,7 @@ class ExamResultController extends Controller
                 'questionStats' => [],
                 'isSurvey' => true,
                 'surveyOverview' => $this->surveyOverviewProps($overview),
+                'passingGrade' => $passingGrade,
             ]);
         }
 
@@ -166,7 +169,7 @@ class ExamResultController extends Controller
             'avg' => round($sessions->avg('skor') ?? 0, 2),
             'max' => round($sessions->max('skor') ?? 0, 2),
             'min' => round($sessions->min('skor') ?? 0, 2),
-            'pass' => $sessions->where('skor', '>=', config('ujion.scoring.passing_grade', 500))->count(),
+            'pass' => $sessions->where('skor', '>=', $passingGrade)->count(),
         ];
 
         // Question Analysis (Heatmap) — eager load to avoid N+1, filter from collection
@@ -214,6 +217,7 @@ class ExamResultController extends Controller
             'questionStats' => $questionStats,
             'isSurvey' => false,
             'surveyOverview' => null,
+            'passingGrade' => $passingGrade,
         ]);
     }
 
