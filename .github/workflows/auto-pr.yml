@@ -139,9 +139,14 @@ jobs:
           repo="${{ github.repository }}"
           pr="${{ env.PR_NUMBER }}"
           echo "Merging PR #$pr ..."
+          # Pakai merge biasa, BUKAN squash.
+          # Alasan: squash commit di main tidak punya parent dari develop, sehingga
+          # merge-base develop<->main jatuh ke commit lama dan tiap push berikutnya
+          # dianggap "dua sisi ubah file yang sama" -> konflik palsu berulang.
+          # Dengan merge biasa, main menyimpan history develop sehingga sinkron.
           gh pr merge "$pr" \
             --repo "$repo" \
-            --squash
+            --merge
 
       - name: Trigger deploy workflow
         if: env.HAS_DIFF == 'true'
