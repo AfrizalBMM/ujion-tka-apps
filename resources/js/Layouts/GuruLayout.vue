@@ -188,41 +188,36 @@ onBeforeUnmount(() => {
 					<i class="fa-solid fa-house"></i>
 					Beranda
 				</a>
-				<template v-if="paymentLocked">
-					<a href="#" class="bottom-nav-item opacity-60" data-payment-locked>
-						<i class="fa-solid fa-book"></i>
-						Materi
-						<i class="fa-solid fa-lock absolute right-1 top-1 text-[9px] text-amber-500"></i>
-					</a>
-					<a href="#" class="bottom-nav-item opacity-60" data-payment-locked>
-						<i class="fa-solid fa-layer-group"></i>
-						Soal
-						<i class="fa-solid fa-lock absolute right-1 top-1 text-[9px] text-amber-500"></i>
-					</a>
-					<a href="#" class="bottom-nav-item opacity-60" data-payment-locked>
-						<i class="fa-solid fa-file-pen"></i>
-						Ujian
-						<i class="fa-solid fa-lock absolute right-1 top-1 text-[9px] text-amber-500"></i>
-					</a>
-				</template>
-				<template v-else>
-					<a :href="route('guru.materials')" class="bottom-nav-item" :class="route().current('guru.materials*') ? 'active' : ''">
-						<i class="fa-solid fa-book"></i>
-						Materi
-					</a>
-					<a
-						:href="route('guru.paket-soal.index')"
-						class="bottom-nav-item"
-						:class="route().current('guru.paket-soal.*') || route().current('guru.soal.*') ? 'active' : ''"
-					>
-						<i class="fa-solid fa-layer-group"></i>
-						Soal
-					</a>
-					<a :href="route('guru.exams')" class="bottom-nav-item" :class="route().current('guru.exams*') ? 'active' : ''">
-						<i class="fa-solid fa-file-pen"></i>
-						Ujian
-					</a>
-				</template>
+				<a
+					:href="route('guru.materials')"
+					class="bottom-nav-item"
+					:class="paymentLocked ? 'opacity-60' : route().current('guru.materials*') ? 'active' : ''"
+					:title="paymentLocked ? 'Selesaikan pembayaran untuk membuka' : null"
+				>
+					<i class="fa-solid fa-book"></i>
+					Materi
+					<i v-if="paymentLocked" class="fa-solid fa-lock absolute right-1 top-1 text-[9px] text-amber-500 dark:text-amber-400"></i>
+				</a>
+				<a
+					:href="route('guru.paket-soal.index')"
+					class="bottom-nav-item"
+					:class="paymentLocked ? 'opacity-60' : route().current('guru.paket-soal.*') || route().current('guru.soal.*') ? 'active' : ''"
+					:title="paymentLocked ? 'Selesaikan pembayaran untuk membuka' : null"
+				>
+					<i class="fa-solid fa-layer-group"></i>
+					Soal
+					<i v-if="paymentLocked" class="fa-solid fa-lock absolute right-1 top-1 text-[9px] text-amber-500 dark:text-amber-400"></i>
+				</a>
+				<a
+					:href="route('guru.exams')"
+					class="bottom-nav-item"
+					:class="paymentLocked ? 'opacity-60' : route().current('guru.exams*') ? 'active' : ''"
+					:title="paymentLocked ? 'Selesaikan pembayaran untuk membuka' : null"
+				>
+					<i class="fa-solid fa-file-pen"></i>
+					Ujian
+					<i v-if="paymentLocked" class="fa-solid fa-lock absolute right-1 top-1 text-[9px] text-amber-500 dark:text-amber-400"></i>
+				</a>
 				<a :href="route('guru.profile')" class="bottom-nav-item" :class="route().current('guru.profile*') ? 'active' : ''">
 					<i class="fa-solid fa-user"></i>
 					Akun
