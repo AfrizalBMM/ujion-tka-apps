@@ -72,11 +72,24 @@ const props = defineProps({
 		type: Array,
 		default: () => [],
 	},
+	contents: {
+		type: Object,
+		default: () => ({}),
+	},
+	contentItems: {
+		type: Object,
+		default: () => ({}),
+	},
+	itemSections: {
+		type: Array,
+		default: () => [],
+	},
 });
 
 const tabs = [
 	{ key: 'hero', label: 'Hero', icon: 'fa-wand-magic-sparkles' },
 	{ key: 'content', label: 'Konten Landing', icon: 'fa-pen-to-square' },
+	{ key: 'sections', label: 'Naskah Section', icon: 'fa-layer-group' },
 	{ key: 'branding', label: 'Logo', icon: 'fa-image' },
 	{ key: 'faq', label: 'FAQ', icon: 'fa-circle-question' },
 	{ key: 'pricing', label: 'Pricing', icon: 'fa-tags' },
@@ -85,6 +98,13 @@ const tabs = [
 
 // Client-side tab state — no full-page reload on tab switch
 const activeTab = ref(props.tab);
+
+const setTab = (key) => {
+	activeTab.value = key;
+	const url = new URL(window.location.href);
+	url.searchParams.set('tab', key);
+	window.history.replaceState({}, '', url);
+};
 
 const nf = (value) => Number(value).toLocaleString('id-ID');
 
@@ -252,6 +272,128 @@ const submitTarif = () => {
 	}
 };
 
+// --- Singleton Sections (bank_soal, footer, *_head) ---
+const singletonSections = [
+	{ key: 'bank_soal', label: 'Bank Soal', hint: 'Kicker, judul, dan deskripsi section jumlah soal.', fields: ['kicker', 'title', 'body'] },
+	{ key: 'reasons_head', label: 'Judul Bagian Keunggulan', hint: 'Kicker dan judul untuk bagian alasan/keunggulan.', fields: ['kicker', 'title'] },
+	{ key: 'audience_head', label: 'Judul Bagian Untuk Siapa', hint: 'Kicker, judul, dan deskripsi untuk bagian Untuk siapa Ujion.', fields: ['kicker', 'title', 'body'] },
+	{ key: 'steps_head', label: 'Judul Bagian Cara Kerja', hint: 'Kicker dan judul untuk bagian cara kerja.', fields: ['kicker', 'title'] },
+	{ key: 'features_head', label: 'Judul Bagian Fitur', hint: 'Kicker dan judul untuk bagian fitur utama.', fields: ['kicker', 'title'] },
+	{ key: 'faq_head', label: 'Judul Bagian Tanya Jawab', hint: 'Kicker dan judul untuk bagian tanya jawab.', fields: ['kicker', 'title'] },
+	{ key: 'footer', label: 'Footer', hint: 'Deskripsi, disclaimer, dan teks tombol footer.', fields: ['kicker', 'body', 'button_text', 'title', 'note'] },
+];
+
+const singletonFieldLabels = {
+	kicker: 'Kicker',
+	title: 'Judul',
+	body: 'Deskripsi',
+	button_text: 'Teks Tombol Daftar',
+	title_footer: 'Teks Tombol Masuk',
+	note: 'Teks Tautan WhatsApp',
+};
+
+const selectedSection = ref('bank_soal');
+const selectedSectionConfig = computed(() => singletonSections.find((s) => s.key === selectedSection.value) ?? singletonSections[0]);
+
+const fieldLabel = (field) => {
+	if (selectedSectionConfig.value.key === 'footer' && field === 'title') return singletonFieldLabels.title_footer;
+	return singletonFieldLabels[field] ?? 'Judul';
+};
+
+const sectionForm = useForm({
+	section: 'bank_soal',
+	kicker: '',
+	title: '',
+	body: '',
+	button_text: '',
+	note: '',
+});
+
+const loadSection = (key) => {
+	selectedSection.value = key;
+	const data = props.contents[key] ?? {};
+	sectionForm.section = key;
+	sectionForm.kicker = data.kicker ?? '';
+	sectionForm.title = data.title ?? '';
+	sectionForm.body = data.body ?? '';
+	sectionForm.button_text = data.button_text ?? '';
+	sectionForm.note = data.note ?? '';
+	sectionForm.clearErrors();
+};
+
+loadSection('bank_soal');
+
+const selectSection = (event) => loadSection(event.target.value);
+
+const submitSection = () => {
+	sectionForm.post(route('superadmin.landing-settings.content'));
+};
+
+// --- Generic Item Lists (hero_point, reason, audience, step_guru, step_siswa, feature) ---
+const itemSectionLabels = {
+	hero_point: 'Poin Hero',
+	reason: 'Alasan / Keunggulan',
+	audience: 'Untuk Siapa',
+	step_guru: 'Cara Kerja - Guru',
+	step_siswa: 'Cara Kerja - Siswa',
+	feature: 'Fitur Utama',
+};
+
+const itemSectionsWithBody = ['reason', 'audience', 'step_guru', 'step_siswa'];
+
+const editingItemId = ref(null);
+const activeItemSection = ref(null);
+
+const itemForm = useForm({
+	section: '',
+	title: '',
+	body: '',
+	sort_order: 0,
+	is_active: true,
+});
+
+const itemsOf = (section) => props.contentItems[section] ?? [];
+
+const resetItemForm = (section) => {
+	editingItemId.value = null;
+	itemForm.section = section;
+	itemForm.title = '';
+	itemForm.body = '';
+	itemForm.sort_order = itemsOf(section).length;
+	itemForm.is_active = true;
+	itemForm.clearErrors();
+};
+
+const startAddItem = (section) => {
+	activeItemSection.value = section;
+	resetItemForm(section);
+	document.getElementById('item-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const editItem = (section, item) => {
+	editingItemId.value = item.id;
+	activeItemSection.value = section;
+	itemForm.section = section;
+	itemForm.title = item.title ?? '';
+	itemForm.body = item.body ?? '';
+	itemForm.sort_order = item.sort_order ?? 0;
+	itemForm.is_active = item.is_active ?? true;
+	itemForm.clearErrors();
+	document.getElementById('item-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const cancelEditItem = () => {
+	if (activeItemSection.value) resetItemForm(activeItemSection.value);
+};
+
+const submitItem = () => {
+	if (editingItemId.value) {
+		itemForm.post(route('superadmin.landing-settings.items.update', editingItemId.value));
+	} else {
+		itemForm.post(route('superadmin.landing-settings.items.store'));
+	}
+};
+
 // --- Section Toggle (hero / faq / stats) ---
 const sectionToggleForm = useForm({});
 const toggleSection = (section) => {
@@ -283,7 +425,7 @@ const toggleSection = (section) => {
 					:key="item.key"
 					type="button"
 					:class="activeTab === item.key ? 'btn-primary' : 'btn-secondary'"
-					@click="activeTab = item.key"
+					@click="setTab(item.key)"
 				>
 					<i class="fa-solid" :class="item.icon"></i>
 					{{ item.label }}
@@ -506,6 +648,174 @@ const toggleSection = (section) => {
 						</button>
 					</div>
 				</form>
+			</div>
+
+			<div v-if="activeTab === 'sections'" class="space-y-6">
+				<div class="card">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<h2 class="text-lg font-bold">Section Singleton</h2>
+							<p class="mt-1 text-sm text-textSecondary dark:text-slate-300">Pilih section lalu ubah teksnya. Kosongkan field untuk memakai naskah default.</p>
+						</div>
+					</div>
+
+					<form class="mt-5 space-y-4" @submit.prevent="submitSection">
+						<div>
+							<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Section</label>
+							<select v-model="selectedSection" class="input mt-1 w-full" name="section" @change="selectSection">
+								<option v-for="section in singletonSections" :key="section.key" :value="section.key">{{ section.label }}</option>
+							</select>
+							<div class="mt-1 text-xs text-muted">{{ selectedSectionConfig.hint }}</div>
+						</div>
+
+						<div v-for="field in selectedSectionConfig.fields" :key="field">
+							<label class="text-xs font-bold text-textSecondary dark:text-slate-300">{{ fieldLabel(field) }}</label>
+							<textarea
+								v-if="field === 'body'"
+								v-model="sectionForm.body"
+								class="input mt-1 min-h-24 w-full"
+								:name="field"
+								:placeholder="'Kosongkan untuk memakai naskah default'"
+							></textarea>
+							<input v-else v-model="sectionForm[field]" class="input mt-1 w-full" :name="field" :placeholder="'Kosongkan untuk memakai naskah default'">
+						</div>
+
+						<div v-if="Object.keys(sectionForm.errors).length > 0" class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+							<ul class="list-disc space-y-1 pl-5">
+								<li v-for="error in Object.values(sectionForm.errors)" :key="error">{{ error }}</li>
+							</ul>
+						</div>
+
+						<div class="flex items-center justify-end gap-3">
+							<button class="btn-primary" type="submit" :disabled="sectionForm.processing">
+								<i class="fa-solid fa-floppy-disk"></i>
+								Simpan Section
+							</button>
+						</div>
+					</form>
+				</div>
+
+				<div id="item-form" class="card">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<h2 class="text-lg font-bold">{{ editingItemId ? 'Ubah Item' : 'Tambah Item' }}</h2>
+							<p class="mt-1 text-sm text-textSecondary dark:text-slate-300">Form ini dipakai untuk semua daftar item: poin hero, alasan, untuk siapa, langkah guru/siswa, dan fitur.</p>
+						</div>
+						<button v-if="editingItemId" type="button" class="btn-secondary px-3" title="Batal ubah" @click="cancelEditItem">
+							<i class="fa-solid fa-xmark"></i>
+						</button>
+					</div>
+
+					<form class="mt-5 space-y-4" @submit.prevent="submitItem">
+						<div>
+							<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Daftar</label>
+							<select v-model="itemForm.section" class="input mt-1 w-full" name="section" :disabled="Boolean(editingItemId)" @change="resetItemForm(itemForm.section)">
+								<option v-for="section in itemSections" :key="section" :value="section">{{ itemSectionLabels[section] ?? section }}</option>
+							</select>
+						</div>
+
+						<div>
+							<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Judul</label>
+							<input v-model="itemForm.title" class="input mt-1 w-full" name="title" required>
+						</div>
+
+						<div v-if="itemSectionsWithBody.includes(itemForm.section)">
+							<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Isi</label>
+							<textarea v-model="itemForm.body" class="input mt-1 min-h-24 w-full" name="body"></textarea>
+						</div>
+
+						<div class="grid gap-4 sm:grid-cols-2">
+							<div>
+								<label class="text-xs font-bold text-textSecondary dark:text-slate-300">Urutan</label>
+								<input v-model="itemForm.sort_order" class="input mt-1 w-full" type="number" min="0" max="9999" name="sort_order">
+							</div>
+							<div class="flex items-end pb-1">
+								<label class="inline-flex items-center gap-2 text-sm">
+									<input v-model="itemForm.is_active" type="checkbox" name="is_active" value="1" class="rounded">
+									<span class="text-textSecondary dark:text-slate-300">Aktif tampil di landing</span>
+								</label>
+							</div>
+						</div>
+
+						<div v-if="Object.keys(itemForm.errors).length > 0" class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+							<ul class="list-disc space-y-1 pl-5">
+								<li v-for="error in Object.values(itemForm.errors)" :key="error">{{ error }}</li>
+							</ul>
+						</div>
+
+						<div class="flex items-center justify-end gap-3">
+							<button class="btn-primary" type="submit" :disabled="itemForm.processing">
+								<i class="fa-solid fa-floppy-disk"></i>
+								{{ editingItemId ? 'Simpan Perubahan' : 'Tambah Item' }}
+							</button>
+						</div>
+					</form>
+				</div>
+
+				<div class="card" v-for="section in itemSections" :key="section">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<h3 class="text-lg font-bold">{{ itemSectionLabels[section] ?? section }}</h3>
+							<p class="mt-1 text-sm text-textSecondary dark:text-slate-300">Urutan angka kecil tampil lebih dulu di landing.</p>
+						</div>
+						<div class="flex items-center gap-2">
+							<span class="badge-info">{{ itemsOf(section).length }} item</span>
+							<button type="button" class="btn-secondary whitespace-nowrap" @click="startAddItem(section)">
+								<i class="fa-solid fa-plus"></i>
+								Tambah
+							</button>
+						</div>
+					</div>
+
+					<div class="mt-4 table-container">
+						<table class="table-ujion min-w-full">
+							<thead>
+								<tr>
+									<th>Judul</th>
+									<th>Isi</th>
+									<th>Urut</th>
+									<th>Status</th>
+									<th class="text-right">Aksi</th>
+								</tr>
+							</thead>
+							<tbody>
+								<template v-if="itemsOf(section).length > 0">
+									<tr v-for="item in itemsOf(section)" :key="item.id ?? item.title">
+										<td class="font-semibold">{{ item.title }}</td>
+										<td class="max-w-md text-sm text-textSecondary dark:text-slate-300">{{ item.body ?? '-' }}</td>
+										<td>{{ item.sort_order }}</td>
+										<td>
+											<span v-if="item.is_active" class="badge-success">Aktif</span>
+											<span v-else class="badge-danger">Nonaktif</span>
+										</td>
+										<td class="text-right">
+											<div class="flex justify-end gap-2">
+												<button type="button" class="btn-secondary px-3" title="Ubah" @click="editItem(section, item)">
+													<i class="fa-solid fa-pen"></i>
+												</button>
+												<form method="POST" :action="route('superadmin.landing-settings.items.toggle', item.id)">
+													<input type="hidden" name="_token" :value="$page.props.csrf_token">
+													<button type="submit" class="btn-secondary px-3" title="Aktif / Nonaktif">
+														<i class="fa-solid fa-eye"></i>
+													</button>
+												</form>
+												<form method="POST" :action="route('superadmin.landing-settings.items.destroy', item.id)">
+													<input type="hidden" name="_token" :value="$page.props.csrf_token">
+													<button type="submit" class="btn-danger px-3" data-confirm="Hapus item ini?" data-confirm-title="Hapus Item">
+														<i class="fa-solid fa-trash"></i>
+													</button>
+												</form>
+											</div>
+										</td>
+									</tr>
+								</template>
+								<tr v-else>
+									<td colspan="5" class="py-8 text-center text-muted">Belum ada item. Tombol Tambah memakai naskah default landing.</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
 			</div>
 
 			<div v-if="activeTab === 'branding'" class="card">

@@ -178,6 +178,10 @@ Route::prefix('superadmin')
         Route::post('/landing-settings/faq/{landingFaq}', [LandingSettingsController::class, 'updateFaq'])->name('landing-settings.faq.update');
         Route::post('/landing-settings/faq/{landingFaq}/toggle', [LandingSettingsController::class, 'toggleFaq'])->name('landing-settings.faq.toggle');
         Route::post('/landing-settings/faq/{landingFaq}/delete', [LandingSettingsController::class, 'destroyFaq'])->name('landing-settings.faq.destroy');
+        Route::post('/landing-settings/items', [LandingSettingsController::class, 'storeItem'])->name('landing-settings.items.store');
+        Route::post('/landing-settings/items/{landingContentItem}', [LandingSettingsController::class, 'updateItem'])->name('landing-settings.items.update');
+        Route::post('/landing-settings/items/{landingContentItem}/toggle', [LandingSettingsController::class, 'toggleItem'])->name('landing-settings.items.toggle');
+        Route::post('/landing-settings/items/{landingContentItem}/delete', [LandingSettingsController::class, 'destroyItem'])->name('landing-settings.items.destroy');
 
         Route::get('/blog', [BlogPostController::class, 'index'])->name('blog.index');
         Route::get('/blog/tambah', [BlogPostController::class, 'create'])->name('blog.create');

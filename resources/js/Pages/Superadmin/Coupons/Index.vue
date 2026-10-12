@@ -27,7 +27,7 @@ const typeBadge = (type) => {
 		case 'nominal':
 			return { class: 'badge-success', label: 'Nominal' };
 		case 'free':
-			return { class: 'badge-warning', label: 'Gratis' };
+			return { class: 'badge-warning', label: 'Tanpa Biaya' };
 		default:
 			return { class: '', label: type };
 	}
@@ -36,7 +36,7 @@ const typeBadge = (type) => {
 const formatValue = (coupon) => {
 	if (coupon.type === 'percentage') return `${Number(coupon.value)}%`;
 	if (coupon.type === 'nominal') return `Rp${nf(coupon.value)}`;
-	return 'Gratis';
+	return 'Tanpa Biaya';
 };
 
 const formatDate = (dt) => {
@@ -369,7 +369,7 @@ onBeforeUnmount(() => {
 							<select v-model="couponForm.type" class="input mt-1" name="type" required>
 								<option value="percentage">Persen (%)</option>
 								<option value="nominal">Nominal (Rp)</option>
-								<option value="free">Gratis</option>
+								<option value="free">Tanpa Biaya</option>
 							</select>
 							<div v-if="couponForm.errors.type" class="mt-1 text-xs text-rose-500">{{ couponForm.errors.type }}</div>
 						</div>

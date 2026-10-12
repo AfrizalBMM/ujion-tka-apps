@@ -6,6 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     @php
+        $sectionsData = $sections ?? [];
+        $itemsData = $items ?? [];
+
+        $heroPoints = $itemsData['hero_point'] ?? [];
+        $reasons = $itemsData['reason'] ?? [];
+        $audience = $itemsData['audience'] ?? [];
+        $stepGuru = $itemsData['step_guru'] ?? [];
+        $stepSiswa = $itemsData['step_siswa'] ?? [];
+        $features = $itemsData['feature'] ?? [];
+
+        $reasonsHead = $sectionsData['reasons_head'] ?? [];
+        $bankSoal = $sectionsData['bank_soal'] ?? [];
+        $audienceHead = $sectionsData['audience_head'] ?? [];
+        $stepsHead = $sectionsData['steps_head'] ?? [];
+        $featuresHead = $sectionsData['features_head'] ?? [];
+        $faqHead = $sectionsData['faq_head'] ?? [];
+        $footerSection = $sectionsData['footer'] ?? [];
+
         $seoTitle = $hero['seo_title'] ?? null;
         if (empty($seoTitle)) {
             $seoTitle = config('app.name', 'Ujion TKA');
@@ -16,7 +34,7 @@
 
         $seoDescription = $hero['seo_description']
             ?? $hero['kicker']
-            ?? 'Platform TKA-first untuk bimbel & guru independen. Skor 200-800 sesuai standar Kemendikdasmen, white-label, HP-based, mulai gratis.';
+            ?? 'Ujion TKA adalah situs latihan dan persiapan TKA untuk bimbel dan guru. Guru membuat ujian sendiri, siswa mengerjakan lewat HP.';
 
         $canonicalUrl = route('landing');
 
@@ -63,30 +81,30 @@
 
     <script type="application/ld+json">
         {!! json_encode([
-    '@context' => 'https://schema.org',
+    '@@context' => 'https://schema.org',
     '@type' => 'Organization',
     'name' => config('app.name', 'Ujion TKA'),
     'url' => $canonicalUrl,
     'logo' => $ogImageAbs,
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 
     <script type="application/ld+json">
         {!! json_encode([
-    '@context' => 'https://schema.org',
+    '@@context' => 'https://schema.org',
     '@type' => 'WebSite',
     'name' => config('app.name', 'Ujion TKA'),
     'url' => $canonicalUrl,
-], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
     </script>
 
     @if (!empty($faqJsonLd))
         <script type="application/ld+json">
                         {!! json_encode([
-            '@context' => 'https://schema.org',
+            '@@context' => 'https://schema.org',
             '@type' => 'FAQPage',
             'mainEntity' => $faqJsonLd,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+        ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
                     </script>
     @endif
 </head>
@@ -94,9 +112,9 @@
 <body class="landing-body min-h-screen text-textPrimary dark:text-slate-100">
     @php
         $navItems = [
-            ['label' => 'Solusi', 'href' => '#solusi'],
-            ['label' => 'Flow', 'href' => '#flow'],
-            ['label' => 'Kisi-Kisi', 'href' => route('kisi-kisi.index')],
+            ['label' => 'Keunggulan', 'href' => '#solusi'],
+            ['label' => 'Cara Kerja', 'href' => '#flow'],
+            ['label' => 'Kisi-Kisi TKA', 'href' => route('kisi-kisi.index')],
             ['label' => 'Artikel', 'href' => route('artikel.index')],
         ];
 
@@ -105,7 +123,7 @@
         }
 
         if (($sectionActives['faq'] ?? true) === true) {
-            $navItems[] = ['label' => 'FAQ', 'href' => '#faq'];
+            $navItems[] = ['label' => 'Tanya Jawab', 'href' => '#tanya-jawab'];
         }
     @endphp
 
@@ -159,7 +177,7 @@
                 @endif
                 @if (Route::has('register.guru.form'))
                     <a href="{{ route('register.guru.form') }}" class="btn-primary hidden sm:inline-flex" data-track="landing_register_header">
-                        Daftar Gratis
+                        Daftar (Guru)
                         <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 @endif
@@ -186,7 +204,7 @@
                     <a href="{{ route('login') }}" class="text-base font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400">Masuk</a>
                 @endif
                 @if (Route::has('register.guru.form'))
-                    <a href="{{ route('register.guru.form') }}" class="btn-primary mt-2 w-full justify-center">Daftar Gratis</a>
+                    <a href="{{ route('register.guru.form') }}" class="btn-primary mt-2 w-full justify-center">Daftar (Guru)</a>
                 @endif
             </nav>
         </div>
@@ -240,15 +258,15 @@
                     <div class="animate-fade-in-up">
                         <div class="landing-kicker">
                             <i class="fa-solid fa-bullseye text-warning"></i>
-                            {{ $hero['kicker'] ?? 'Platform TKA-first untuk bimbel & guru — bukan CBT biasa.' }}
+                            {{ $hero['kicker'] ?? 'Latihan TKA online untuk bimbel dan guru' }}
                         </div>
 
                         <h1 class="landing-hero-title">
-                            {{ $hero['title'] ?? 'Siapkan siswa TKA dengan platform yang benar-benar dirancang untuk format ujian nasional terbaru.' }}
+                            {{ $hero['title'] ?? 'Latih siswa untuk TKA dengan soal dan skor yang mirip ujian aslinya' }}
                         </h1>
 
                         <p class="landing-hero-copy">
-                            {{ $hero['body'] ?? 'Ujion TKA adalah platform ujian yang spesifik dibangun untuk Tes Kemampuan Akademik. Skor 200-800 sesuai standar Kemendikdasmen, format soal aligned dengan kerangka asesmen terbaru, dan alur kerja yang pas untuk bimbel maupun guru independen. Mulai gratis, jalankan dari HP.' }}
+                            {{ $hero['body'] ?? 'Ujion TKA adalah situs ujian online khusus Tes Kemampuan Akademik (TKA). Guru dan bimbel bisa membuat ujian sendiri, siswa mengerjakannya lewat HP, dan hasilnya langsung bisa dibaca. Skor memakai skala resmi TKA: 0-100 untuk SD dan SMP, 200-800 untuk SMA dan SMK.' }}
                         </p>
 
                         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -262,29 +280,13 @@
 
                         </div>
 
-                        <!-- <div class="mt-8 grid gap-3 sm:grid-cols-3">
-                            <div class="landing-mini-stat">
-                                <div class="landing-mini-value">Pantau progres</div>
-                                <div class="landing-mini-label">Guru bisa melihat perkembangan siswa dari latihan sampai
-                                    hasil ujian.</div>
+                        @if (count($heroPoints))
+                            <div class="mt-8 flex flex-wrap gap-3 text-sm text-textSecondary dark:text-slate-400">
+                                @foreach ($heroPoints as $point)
+                                    <span class="landing-proof-chip"><i class="fa-solid fa-circle-check text-primary"></i> {{ $point['title'] }}</span>
+                                @endforeach
                             </div>
-                            <div class="landing-mini-stat">
-                                <div class="landing-mini-value">Baca kelemahan</div>
-                                <div class="landing-mini-label">Hasil ujian membantu guru menemukan materi yang masih perlu
-                                    diperkuat.</div>
-                            </div>
-                            <div class="landing-mini-stat">
-                                <div class="landing-mini-value">Siapkan TKA</div>
-                                <div class="landing-mini-label">Operator dapat menyiapkan siswa dengan alur yang lebih
-                                    tertata dan terukur.</div>
-                            </div>
-                        </div> -->
-
-                        <div class="mt-8 flex flex-wrap gap-3 text-sm text-textSecondary dark:text-slate-400">
-                            <span class="landing-proof-chip"><i class="fa-solid fa-bullseye text-primary"></i> TKA-first: skor 200-800, format Kemendikdasmen</span>
-                            <span class="landing-proof-chip"><i class="fa-solid fa-store text-primary"></i> Built for bimbel: white-label, upload soal sendiri</span>
-                            <span class="landing-proof-chip"><i class="fa-solid fa-mobile-screen-button text-success"></i> HP-based, mulai gratis</span>
-                        </div>
+                        @endif
                     </div>
 
                     <div class="animate-slide-in-right">
@@ -318,6 +320,9 @@
                                                         <div class="landing-mockup-badge">{{ $mockup['badge'] }}</div>
                                                     @endif
                                                     <div class="landing-mockup-title">{{ $mockup['title'] }}</div>
+                                                    @if ($mockup['description'])
+                                                        <div class="landing-mockup-copy">{{ $mockup['description'] }}</div>
+                                                    @endif
                                                     <img src="{{ $mockup['image_url'] }}" alt="{{ $mockup['title'] }}"
                                                         class="mt-3 h-36 w-full rounded-xl object-cover">
                                                 </div>
@@ -326,34 +331,20 @@
                                     @endif
                                 @else
                                     <div>
-                                        <div class="landing-mockup-badge">Mockup 1</div>
-                                        <div class="landing-mockup-title">Dashboard guru / analytics</div>
-                                        <div class="landing-mockup-copy">Disarankan PNG landscape rasio 16:10 atau 4:3.</div>
+                                        <div class="landing-mockup-badge">Tampilan guru</div>
+                                        <div class="landing-mockup-title">Menyusun paket soal dan membaca hasil siswa</div>
                                         <div class="landing-mockup-dropzone">
                                             <i class="fa-regular fa-image text-2xl"></i>
-                                            <div class="mt-3 font-semibold">Tempel PNG dashboard guru di sini</div>
-                                            <div class="mt-1 text-xs text-textSecondary dark:text-slate-400">Contoh referensi:
-                                                online exam dashboard, analytics dashboard, teacher workspace UI.</div>
+                                            <div class="mt-3 font-semibold">Tampilan dashboard guru tampil di sini</div>
                                         </div>
                                     </div>
 
-                                    <div class="grid gap-4">
-                                        <div>
-                                            <div class="landing-mockup-badge">Mockup 2</div>
-                                            <div class="landing-mockup-title">Tampilan ujian siswa</div>
-                                            <div class="landing-mockup-dropzone compact">
-                                                <i class="fa-solid fa-laptop-code text-xl"></i>
-                                                <div class="mt-2 text-sm font-semibold">PNG screen siswa</div>
-                                            </div>
-                                        </div>
-                                        <div class="landing-insight-card">
-                                            <div class="text-sm font-semibold text-slate-900 dark:text-white">Arah mockup yang
-                                                saya cari</div>
-                                            <ul class="mt-3 space-y-2 text-sm text-textSecondary dark:text-slate-300">
-                                                <li>Dashboard ujian online bernuansa SaaS edukasi</li>
-                                                <li>Screen pengerjaan ujian yang fokus dan bersih</li>
-                                                <li>Komposisi putih, navy, dan aksen biru atau orange</li>
-                                            </ul>
+                                    <div>
+                                        <div class="landing-mockup-badge">Tampilan siswa</div>
+                                        <div class="landing-mockup-title">Mengerjakan soal dari HP dengan timer dan navigasi soal</div>
+                                        <div class="landing-mockup-dropzone compact">
+                                            <i class="fa-solid fa-mobile-screen-button text-xl"></i>
+                                            <div class="mt-2 text-sm font-semibold">Tampilan pengerjaan ujian siswa tampil di sini</div>
                                         </div>
                                     </div>
                                 @endif
@@ -364,49 +355,37 @@
             </section>
         @endif
 
-        <section class="mx-auto max-w-7xl px-4 py-8">
+        <section id="solusi" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
             <div class="mb-8 text-center">
-                <div class="landing-section-kicker mb-3">3 Alasan Kenapa Ujion, Bukan CBT Biasa</div>
-                <h2 class="landing-section-title max-w-2xl mx-auto">Dibangun spesifik untuk TKA — bukan CBT generik yang dipaksa.</h2>
+                <div class="landing-section-kicker mb-3">{{ $reasonsHead['kicker'] ?? '3 alasan Ujion berbeda dari ujian online biasa' }}</div>
+                <h2 class="landing-section-title max-w-2xl mx-auto">{{ $reasonsHead['title'] ?? 'Dibuat khusus untuk TKA, bukan ujian online serba guna.' }}</h2>
             </div>
             <div class="landing-trust-grid">
-                <div class="landing-trust-card group border-indigo-100 bg-indigo-50/30 transition-all hover:border-indigo-300">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition-transform group-hover:scale-110">
-                        <i class="fa-solid fa-bullseye"></i>
+                @php
+                    $reasonStyles = [
+                        ['icon' => 'fa-bullseye', 'box' => 'bg-indigo-600 shadow-indigo-200', 'card' => 'border-indigo-100 bg-indigo-50/30 hover:border-indigo-300'],
+                        ['icon' => 'fa-store', 'box' => 'bg-amber-500 shadow-amber-200', 'card' => 'border-amber-100 bg-amber-50/30 hover:border-amber-300'],
+                        ['icon' => 'fa-mobile-screen-button', 'box' => 'bg-emerald-500 shadow-emerald-200', 'card' => 'border-emerald-100 bg-emerald-50/30 hover:border-emerald-300'],
+                    ];
+                @endphp
+                @foreach ($reasons as $reasonIndex => $reason)
+                    @php $reasonStyle = $reasonStyles[$reasonIndex % count($reasonStyles)]; @endphp
+                    <div class="landing-trust-card group {{ $reasonStyle['card'] }} transition-all">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl {{ $reasonStyle['box'] }} text-white shadow-lg transition-transform group-hover:scale-110">
+                            <i class="fa-solid {{ $reasonStyle['icon'] }}"></i>
+                        </div>
+                        <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">{{ $reason['title'] }}</div>
+                        <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{{ $reason['body'] }}</div>
                     </div>
-                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">TKA-First, Bukan Generic CBT</div>
-                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                        Skor <strong>200-800</strong> sesuai standar Kemendikdasmen, format soal aligned dengan kerangka asesmen TKA terbaru. Bukan CBT biasa yang hanya menampilkan nilai 0-100.
-                    </div>
-                </div>
-
-                <div class="landing-trust-card group border-amber-100 bg-amber-50/30 transition-all hover:border-amber-300">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-200 transition-transform group-hover:scale-110">
-                        <i class="fa-solid fa-store"></i>
-                    </div>
-                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Built for Bimbel, Bukan Sekolah</div>
-                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                        <strong>White-label</strong> branding milik sendiri, upload soal sendiri tanpa terikat bank soal global. Bimbel dan guru independen bisa langsung pakai tanpa ribet.
-                    </div>
-                </div>
-
-                <div class="landing-trust-card group border-emerald-100 bg-emerald-50/30 transition-all hover:border-emerald-300">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-200 transition-transform group-hover:scale-110">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
-                    </div>
-                    <div class="mt-5 text-xl font-bold text-slate-900 dark:text-white">Murah-Mudah: Freemium & HP-Based</div>
-                    <div class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
-                        Mulai <strong>gratis</strong> tanpa kartu kredit, siswa kerjakan ujian langsung dari <strong>HP</strong>. Tidak butuh lab komputer, tidak butuh akun siswa — cukup token.
-                    </div>
-                </div>
+                @endforeach
             </div>
         </section>
 
         @if (($sectionActives['stats'] ?? true) === true)
             <section class="mx-auto max-w-7xl px-4 py-12 sm:py-20">
                 <div class="mb-10 text-center">
-                    <div class="landing-section-kicker mb-3">Data Terkini</div>
-                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Bank Soal & Materi</h2>
+                    <div class="landing-section-kicker mb-3">{{ $bankSoal['kicker'] ?? 'Bank soal dan materi' }}</div>
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $bankSoal['title'] ?? 'Soal dan materi mengikuti aturan resmi TKA' }}</h2>
 
                     <div class="mx-auto mt-8 max-w-4xl animate-fade-in-up">
                         <div
@@ -420,19 +399,9 @@
                                     <i class="fa-solid fa-file-shield"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <p class="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-primary">Standar
-                                        Kurikulum
-                                        Nasional</p>
+                                    <p class="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-primary">Aturan resmi TKA</p>
                                     <p class="text-base leading-relaxed text-slate-600 dark:text-slate-300">
-                                        Seluruh soal dan materi telah disesuaikan dengan kerangka asesmen berdasarkan:
-                                        <span class="block mt-2 font-bold text-slate-900 dark:text-white">
-                                            Peraturan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan Kementerian
-                                            Pendidikan Dasar dan Menengah Republik Indonesia Nomor 047/H/AN/2025
-                                        </span>
-                                        <span class="mt-1 block text-sm italic text-slate-500 dark:text-slate-400">
-                                            Tentang Kerangka Asesmen Tes Kemampuan Akademik Jenjang SD/MI/Sederajat,
-                                            SMP/MTs/Sederajat dan SMA/MA/SMK/Sederajat
-                                        </span>
+                                        {{ $bankSoal['body'] ?? 'Semua soal dan materi disusun berdasarkan Peraturan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP) Kemendikdasmen Nomor 47 Tahun 2025 tentang Kerangka Asesmen TKA untuk jenjang SD/MI dan SMP/MTs, serta Peraturan BSKAP Nomor 45 Tahun 2025 untuk jenjang SMA/MA/SMK.' }}
                                     </p>
                                 </div>
                             </div>
@@ -440,159 +409,88 @@
                     </div>
                 </div>
 
-                <div class="space-y-16">
-                    @foreach ($stats as $jenjang => $mapels)
-                        <div class="animate-fade-in">
-                            <h3 class="mb-8 flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
-                                <span
-                                    class="inline-flex items-center rounded-full bg-slate-900 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white shadow-lg">{{ $jenjang }}</span>
-                                <span class="text-xl font-bold text-slate-800 dark:text-slate-100">Materi & Soal {{ $jenjang }}</span>
-                            </h3>
-                            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                @foreach ($mapels as $mapel => $data)
-                                    <div class="landing-trust-card group overflow-hidden transition-all hover:border-primary/30">
-                                        <div class="mb-5 flex items-center justify-between">
-                                            <h4 class="font-bold leading-tight text-slate-800 dark:text-slate-100">{{ $mapel }}</h4>
-                                            <div
-                                                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-50 transition-colors group-hover:bg-primary/10 dark:bg-slate-800">
-                                                <i class="fa-solid fa-book-bookmark text-slate-400 group-hover:text-primary"></i>
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div
-                                                class="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-center transition-colors group-hover:bg-white dark:border-slate-700/70 dark:bg-slate-800/50 dark:group-hover:bg-slate-800">
-                                                <div class="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Materi
-                                                </div>
-                                                <div class="mt-1 text-2xl font-bold text-primary">
-                                                    {{ $data['materials'] ?? 0 }}
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-center transition-colors group-hover:bg-white dark:border-slate-700/70 dark:bg-slate-800/50 dark:group-hover:bg-slate-800">
-                                                <div class="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Soal
-                                                </div>
-                                                <div class="mt-1 text-2xl font-bold text-primary">
-                                                    {{ $data['questions'] ?? 0 }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endforeach
+                <div class="table-container">
+                    <table class="table-ujion min-w-full">
+                        <thead>
+                            <tr>
+                                <th>Jenjang</th>
+                                <th>Materi</th>
+                                <th>Soal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($stats as $jenjang => $data)
+                                <tr>
+                                    <td class="font-semibold">{{ $jenjang }}</td>
+                                    <td>{{ $data['materi'] ?? 0 }}</td>
+                                    <td>
+                                        @if ($data['coming_soon'] ?? false)
+                                            <span class="badge-warning">Segera hadir</span>
+                                        @else
+                                            {{ $data['soal'] ?? 0 }}
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="py-10 text-center text-muted">Data soal sedang disiapkan.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
+
+                <p class="mt-6 text-center text-sm text-textSecondary dark:text-slate-400">
+                    Ujion adalah situs latihan dan persiapan TKA, bukan penyelenggara ujian TKA resmi.
+                </p>
             </section>
         @endif
-
-        <section id="solusi" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
-            <div class="section-heading">
-                <div>
-                    <div class="landing-section-kicker">Kenapa Ujion TKA?</div>
-                    <h2 class="landing-section-title">Platform yang benar-benar TKA-first — bukan CBT generik.</h2>
-                    <p class="landing-section-copy">Banyak platform ujian online yang mengaku "bisa dipakai untuk TKA". Ujion berbeda: dibangun dari awal dengan format, scoring, dan alur kerja yang spesifik untuk TKA, bimbel, dan guru independen.</p>
-                </div>
-            </div>
-
-            <div class="mt-8 grid gap-5 lg:grid-cols-3">
-                <article class="landing-solution-card">
-                    <div class="landing-solution-icon bg-slate-900">
-                        <i class="fa-solid fa-bullseye"></i>
-                    </div>
-                    <h3 class="landing-solution-title">Scoring 200-800 & Format Kemendikdasmen</h3>
-                    <p class="landing-solution-copy">Skor TKA asli (200-800), bukan nilai 0-100. Format soal mengikuti kerangka asesmen Peraturan BSKAP No. 047/H/AN/2025. Siswa berlatih dengan format yang sama seperti ujian sebenarnya.</p>
-                </article>
-                <article class="landing-solution-card">
-                    <div class="landing-solution-icon bg-gradient-primary">
-                        <i class="fa-solid fa-store"></i>
-                    </div>
-                    <h3 class="landing-solution-title">White-Label untuk Bimbel</h3>
-                    <p class="landing-solution-copy">Bimbel dan guru independen bisa upload soal sendiri, kelola paket soal sendiri, dan branding milik sendiri. Tidak terikat bank soal global. Platform siap pakai tanpa setup rumit.</p>
-                </article>
-                <article class="landing-solution-card">
-                    <div class="landing-solution-icon bg-emerald-500">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
-                    </div>
-                    <h3 class="landing-solution-title">Freemium, HP-Based, Tanpa Ribet</h3>
-                    <p class="landing-solution-copy">Mulai gratis, tanpa kartu kredit. Siswa masuk pakai token, kerjakan dari HP. Tidak perlu lab komputer, tidak perlu akun siswa. Autosave jawaban kalau koneksi putus-nyambung.</p>
-                </article>
-            </div>
-        </section>
 
         <section class="mx-auto max-w-7xl px-4 py-12">
             <div class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
                 <div class="landing-flow-panel">
-                    <div class="landing-section-kicker">Posisi Ujion</div>
-                    <h2 class="landing-section-title">TKA-first platform untuk bimbel & guru independen.</h2>
-                    <p class="landing-section-copy">Bukan CBT generik. Bukan LMS sekolah. Ujion menempati sweet spot: format ujian sesuai standar TKA, fleksibel untuk bimbel, dan terjangkau untuk semua.</p>
+                    <div class="landing-section-kicker">{{ $audienceHead['kicker'] ?? 'Untuk siapa Ujion' }}</div>
+                    <h2 class="landing-section-title">{{ $audienceHead['title'] ?? 'Cocok untuk yang menyiapkan siswa menghadapi TKA' }}</h2>
+                    <p class="landing-section-copy">{{ $audienceHead['body'] ?? 'Ujion fokus pada satu hal: latihan dan ujian TKA. Ujion bukan aplikasi ujian umum dan bukan sistem sekolah yang lengkap, jadi lebih ringan dan mudah dipakai.' }}</p>
                 </div>
 
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="landing-flow-tile">
-                        <div class="landing-flow-tile-title">Kalau saya bimbel</div>
-                        <div class="landing-flow-tile-copy">Saya butuh platform white-label yang bisa pakai soal sendiri, branding sendiri, tanpa biaya setup mahal. Ujion kasih itu.</div>
-                    </div>
-                    <div class="landing-flow-tile">
-                        <div class="landing-flow-tile-title">Kalau saya guru independen</div>
-                        <div class="landing-flow-tile-copy">Saya butuh tool yang formatnya sama kayak TKA beneran — skor 200-800, soal sesuai kerangka Kemendikdasmen. Bukan cuma nilai 0-100.</div>
-                    </div>
-                    <div class="landing-flow-tile">
-                        <div class="landing-flow-tile-title">Kalau saya siswa</div>
-                        <div class="landing-flow-tile-copy">Saya butuh ujian yang bisa dikerjakan dari HP, tanpa bikin akun, tinggal masuk token. Autosave kalau sinyal putus.</div>
-                    </div>
-                    <div class="landing-flow-tile">
-                        <div class="landing-flow-tile-title">Kalau saya orang tua</div>
-                        <div class="landing-flow-tile-copy">Saya butuh platform yang murah, bahkan gratis untuk mulai. Anak saya berlatih format TKA asli dari HP.</div>
-                    </div>
+                    @foreach ($audience as $entry)
+                        <div class="landing-flow-tile">
+                            <div class="landing-flow-tile-title">{{ $entry['title'] }}</div>
+                            <div class="landing-flow-tile-copy">{{ $entry['body'] }}</div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </section>
 
         <section id="flow" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
+            <div class="mb-8 text-center">
+                <div class="landing-section-kicker mb-3">{{ $stepsHead['kicker'] ?? 'Cara kerja' }}</div>
+                <h2 class="landing-section-title max-w-2xl mx-auto">{{ $stepsHead['title'] ?? 'Cara kerja untuk guru dan siswa' }}</h2>
+            </div>
 
-            <div class="mt-8 grid gap-6 xl:grid-cols-2">
+            <div class="grid gap-6 xl:grid-cols-2">
                 <div class="landing-flow-panel">
                     <div class="landing-flow-head">
                         <div>
                             <div class="landing-flow-kicker">Untuk Guru</div>
                             <h3 class="landing-flow-title">Dari menyiapkan soal sampai membaca kesiapan siswa</h3>
                         </div>
-                        <span class="badge-success"><i class="fa-solid fa-circle-check"></i>Alur Guru</span>
+                        <span class="badge-success"><i class="fa-solid fa-circle-check"></i>Langkah Guru</span>
                     </div>
 
                     <div class="mt-6 space-y-4">
-                        <div class="landing-step">
-                            <div class="landing-step-number">1</div>
-                            <div>
-                                <div class="landing-step-title">Daftar dan tunggu aktivasi</div>
-                                <p class="landing-step-copy">Guru / operator melakukan pendaftaran, lalu akun direview
-                                    sampai aktif.</p>
+                        @foreach ($stepGuru as $stepIndex => $step)
+                            <div class="landing-step">
+                                <div class="landing-step-number">{{ $stepIndex + 1 }}</div>
+                                <div>
+                                    <div class="landing-step-title">{{ $step['title'] }}</div>
+                                    <p class="landing-step-copy">{{ $step['body'] }}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="landing-step">
-                            <div class="landing-step-number">2</div>
-                            <div>
-                                <div class="landing-step-title">Susun mapel sesuai jenjang</div>
-                                <p class="landing-step-copy">Guru atau operator menyusun paket soal dan mapel yang
-                                    dipakai untuk membina kesiapan siswa sesuai target belajar.</p>
-                            </div>
-                        </div>
-                        <div class="landing-step">
-                            <div class="landing-step-number">3</div>
-                            <div>
-                                <div class="landing-step-title">Jalankan latihan dan ujian secara teratur</div>
-                                <p class="landing-step-copy">Bank soal, teks bacaan, dan sesi ujian membantu guru
-                                    membangun ritme latihan yang lebih tertata menjelang TKA.</p>
-                            </div>
-                        </div>
-                        <div class="landing-step">
-                            <div class="landing-step-number">4</div>
-                            <div>
-                                <div class="landing-step-title">Baca hasil dan ambil tindakan pembinaan</div>
-                                <p class="landing-step-copy">Setelah sesi selesai, guru dapat membaca hasil siswa dengan
-                                    lebih mudah lalu menentukan materi yang perlu diperkuat.</p>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
 
@@ -602,42 +500,19 @@
                             <div class="landing-flow-kicker">Untuk Siswa</div>
                             <h3 class="landing-flow-title">Masuk, kerjakan, dan bantu guru melihat kesiapan belajar</h3>
                         </div>
-                        <span class="badge-info"><i class="fa-solid fa-bolt"></i> Paling Butuh</span>
+                        <span class="badge-info"><i class="fa-solid fa-bolt"></i> Langkah Siswa</span>
                     </div>
 
                     <div class="mt-6 space-y-4">
-                        <div class="landing-step landing-step-student">
-                            <div class="landing-step-number landing-step-number-student">1</div>
-                            <div>
-                                <div class="landing-step-title">Masuk dengan token ujian</div>
-                                <p class="landing-step-copy">Siswa login memakai token exam yang aktif tanpa perlu alur
-                                    masuk yang membingungkan.</p>
+                        @foreach ($stepSiswa as $stepIndex => $step)
+                            <div class="landing-step landing-step-student">
+                                <div class="landing-step-number landing-step-number-student">{{ $stepIndex + 1 }}</div>
+                                <div>
+                                    <div class="landing-step-title">{{ $step['title'] }}</div>
+                                    <p class="landing-step-copy">{{ $step['body'] }}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="landing-step landing-step-student">
-                            <div class="landing-step-number landing-step-number-student">2</div>
-                            <div>
-                                <div class="landing-step-title">Isi identitas dengan cepat</div>
-                                <p class="landing-step-copy">Nama diisi di awal, lalu sistem membentuk sesi ujian agar
-                                    siswa bisa langsung lanjut ke pengerjaan.</p>
-                            </div>
-                        </div>
-                        <div class="landing-step landing-step-student">
-                            <div class="landing-step-number landing-step-number-student">3</div>
-                            <div>
-                                <div class="landing-step-title">Kerjakan soal dengan fokus</div>
-                                <p class="landing-step-copy">Siswa mengerjakan soal dengan timer, autosave, dan navigasi
-                                    yang membantu mereka tetap fokus selama sesi berjalan.</p>
-                            </div>
-                        </div>
-                        <div class="landing-step landing-step-student">
-                            <div class="landing-step-number landing-step-number-student">4</div>
-                            <div>
-                                <div class="landing-step-title">Hasil membantu guru membaca kesiapan</div>
-                                <p class="landing-step-copy">Setelah sesi selesai, hasil tersusun rapi sehingga guru
-                                    lebih mudah melihat progres dan kebutuhan belajar siswa.</p>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
@@ -646,14 +521,13 @@
         <section class="mx-auto max-w-7xl px-4 py-12">
             <div class="landing-feature-banner">
                 <div>
-                    <div class="landing-section-kicker text-white/70">Keunggulan TKA-First</div>
-                    <h2 class="landing-section-title max-w-2xl text-white">Fitur yang membedakan Ujion dari CBT biasa.</h2>
+                    <div class="landing-section-kicker text-white/70">{{ $featuresHead['kicker'] ?? 'Fitur utama' }}</div>
+                    <h2 class="landing-section-title max-w-2xl text-white">{{ $featuresHead['title'] ?? 'Yang membuat Ujion cocok untuk persiapan TKA' }}</h2>
                 </div>
                 <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <div class="landing-feature-chip"><i class="fa-solid fa-bullseye"></i> Skor 200-800 sesuai TKA</div>
-                    <div class="landing-feature-chip"><i class="fa-solid fa-store"></i> White-label untuk bimbel</div>
-                    <div class="landing-feature-chip"><i class="fa-solid fa-mobile-screen-button"></i> HP-based, mulai gratis</div>
-                    <div class="landing-feature-chip"><i class="fa-solid fa-floppy-disk"></i> Autosave jawaban siswa</div>
+                    @foreach ($features as $feature)
+                        <div class="landing-feature-chip"><i class="fa-solid fa-circle-check"></i> {{ $feature['title'] }}</div>
+                    @endforeach
                 </div>
             </div>
         </section>
@@ -709,11 +583,11 @@
         @endif
 
         @if (($sectionActives['faq'] ?? true) === true)
-            <section id="faq" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
+            <section id="tanya-jawab" class="mx-auto max-w-7xl px-4 py-12 scroll-mt-24">
                 <div class="section-heading">
                     <div>
-                        <div class="landing-section-kicker">FAQ</div>
-                        <h2 class="landing-section-title">Pertanyaan yang biasanya muncul.</h2>
+                        <div class="landing-section-kicker">{{ $faqHead['kicker'] ?? 'Tanya jawab' }}</div>
+                        <h2 class="landing-section-title">{{ $faqHead['title'] ?? 'Pertanyaan yang sering diajukan' }}</h2>
                     </div>
                 </div>
 
@@ -750,75 +624,60 @@
                     </a>
 
                     <p class="mt-4 max-w-xl text-sm leading-7 text-textSecondary dark:text-slate-300">
-                        Platform TKA-first untuk bimbel & guru independen. Skor 200-800 sesuai standar Kemendikdasmen, white-label, HP-based, mulai gratis.
+                        {{ $footerSection['kicker'] ?? 'Ujion TKA adalah situs latihan dan ujian TKA untuk bimbel dan guru. Skor 0-100 untuk SD/SMP dan 200-800 untuk SMA/SMK, paket soal disusun sendiri, siswa cukup pakai HP.' }}
+                    </p>
+
+                    <p class="mt-3 max-w-xl text-sm leading-7 text-textSecondary dark:text-slate-400">
+                        {{ $footerSection['body'] ?? 'Ujion adalah situs latihan dan persiapan TKA, bukan penyelenggara ujian TKA resmi.' }}
                     </p>
 
                     <div class="mt-6 flex flex-wrap gap-2">
                         @if (Route::has('register.guru.form'))
                             <a href="{{ route('register.guru.form') }}" class="btn-primary"
                                 data-track="landing_register_footer">
-                                Daftar Gratis
+                                {{ $footerSection['button_text'] ?? 'Daftar' }}
                                 <i class="fa-solid fa-arrow-right"></i>
                             </a>
                         @endif
                         @if (Route::has('login'))
                             <a href="{{ route('login') }}" class="btn-secondary" data-track="landing_login_footer">
-                                Masuk
+                                {{ $footerSection['title'] ?? 'Masuk' }}
                             </a>
                         @endif
                         <a href="https://whatsapp.com/channel/0029VbCcQxX5fM5fp2n5fM36" target="_blank"
                             class="btn-success" data-track="landing_wa_footer">
                             <i class="fa-brands fa-whatsapp text-lg"></i>
-                            Gabung Saluran
+                            {{ $footerSection['note'] ?? 'Ikuti Saluran WhatsApp' }}
                         </a>
                     </div>
                 </div>
 
-                <div class="grid gap-6 sm:grid-cols-2">
-                    <div>
-                        <div class="text-xs font-bold uppercase tracking-[0.22em] text-muted">Navigasi</div>
-                        <ul class="mt-4 space-y-2 text-sm">
-                            <li><a href="#solusi"
-                                    class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Solusi</a>
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-[0.22em] text-muted">Navigasi</div>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#solusi"
+                                class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Keunggulan</a>
+                        </li>
+                        <li><a href="#flow"
+                                class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Cara Kerja</a>
+                        </li>
+                        @if (($sectionActives['faq'] ?? true) === true)
+                            <li><a href="#tanya-jawab"
+                                    class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Tanya Jawab</a>
                             </li>
-                            <li><a href="#flow"
-                                    class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Flow</a>
-                            </li>
-                            @if (($sectionActives['faq'] ?? true) === true)
-                                <li><a href="#faq"
-                                        class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">FAQ</a>
-                                </li>
-                            @endif
-                            @if (\Illuminate\Support\Facades\Route::has('ujian-online.index'))
-                                <li><a href="{{ route('ujian-online.index') }}"
-                                        class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Ujian
-                                        Online</a></li>
-                            @endif
-                        </ul>
-                    </div>
-
-                    <div>
-                        <div class="text-xs font-bold uppercase tracking-[0.22em] text-muted">Akun</div>
-                        <ul class="mt-4 space-y-2 text-sm">
-                            @if (Route::has('login'))
-                                <li><a href="{{ route('login') }}"
-                                        class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Masuk</a>
-                                </li>
-                            @endif
-                            @if (Route::has('register.guru.form'))
-                                <li><a href="{{ route('register.guru.form') }}"
-                                        class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Daftar
-                                        guru/operator</a></li>
-                            @endif
-                        </ul>
-                    </div>
+                        @endif
+                        @if (\Illuminate\Support\Facades\Route::has('ujian-online.index'))
+                            <li><a href="{{ route('ujian-online.index') }}"
+                                    class="text-textSecondary hover:text-primary dark:text-slate-300 dark:hover:text-white">Ujian
+                                    Online</a></li>
+                        @endif
+                    </ul>
                 </div>
             </div>
 
             <div
                 class="mt-10 flex flex-col gap-2 border-t border-white/70 pt-6 text-sm text-textSecondary dark:border-slate-800/80 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-                <div>© {{ date('Y') }} Ujion TKA by Reditech</div>
-                <div>Simulasi mengelola persiapan TKA — platform TKA-first untuk bimbel & guru</div>
+                <div>© {{ date('Y') }} Ujion TKA oleh Reditech</div>
             </div>
         </div>
     </footer>

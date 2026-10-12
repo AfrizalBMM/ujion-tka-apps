@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GlobalQuestion;
 use App\Models\LandingBranding;
 use App\Models\LandingContent;
+use App\Models\LandingContentItem;
 use App\Models\LandingFaq;
 use App\Models\LandingHeroMockup;
 use App\Models\Material;
@@ -21,11 +22,42 @@ use Inertia\Response;
 
 class LandingSettingsController extends Controller
 {
-    private const SECTIONS = ['hero', 'faq', 'stats'];
+    private const SECTIONS = [
+        'hero',
+        'faq',
+        'stats',
+        'bank_soal',
+        'footer',
+        'reasons_head',
+        'audience_head',
+        'steps_head',
+        'features_head',
+        'faq_head',
+    ];
+
+    private const SINGLETON_SECTIONS = [
+        'hero',
+        'bank_soal',
+        'footer',
+        'reasons_head',
+        'audience_head',
+        'steps_head',
+        'features_head',
+        'faq_head',
+    ];
+
+    private const ITEM_SECTIONS = [
+        'hero_point',
+        'reason',
+        'audience',
+        'step_guru',
+        'step_siswa',
+        'feature',
+    ];
 
     public function index(Request $request): Response
     {
-        $allowedTabs = ['hero', 'pricing', 'content', 'faq', 'stats', 'branding'];
+        $allowedTabs = ['hero', 'pricing', 'content', 'sections', 'faq', 'stats', 'branding'];
         $tab = $request->query('tab', 'content');
         if (! in_array($tab, $allowedTabs, true)) {
             $tab = 'content';
@@ -45,11 +77,7 @@ class LandingSettingsController extends Controller
             $tarifJenjangs = $tarifQuery->orderBy('id')->get();
         }
 
-        $sectionActives = [
-            'hero' => true,
-            'faq' => true,
-            'stats' => true,
-        ];
+        $sectionActives = array_fill_keys(self::SECTIONS, true);
 
         if (Schema::hasTable('landing_contents')) {
             $sectionRows = LandingContent::query()
@@ -68,8 +96,12 @@ class LandingSettingsController extends Controller
             'kicker' => 'Website pendamping guru untuk memantau kesiapan siswa menuju Tes Kemampuan Akademik (TKA).',
             'title' => 'Bantu guru memantau, menganalisis, dan menyiapkan siswa agar lebih siap menghadapi TKA.',
             'body' => 'Ujion TKA dirancang untuk guru/operator yang ingin melihat perkembangan akademik siswa dengan lebih jelas. Mulai dari latihan, paket soal, sesi ujian, sampai hasil akhir, semua disusun agar guru lebih mudah membaca kesiapan siswa, menemukan kelemahan belajar, dan mengambil langkah pembinaan sebelum TKA berlangsung.',
+            'subtitle' => null,
             'button_text' => 'Coba Sebagai Guru',
             'button_url' => null,
+            'cta_text' => null,
+            'cta_url' => null,
+            'note' => null,
             'seo_title' => null,
             'seo_description' => null,
         ];
@@ -80,13 +112,9 @@ class LandingSettingsController extends Controller
                 ->first();
 
             if ($heroContent) {
-                $hero['kicker'] = $heroContent->kicker ?: $hero['kicker'];
-                $hero['title'] = $heroContent->title ?: $hero['title'];
-                $hero['body'] = $heroContent->body ?: $hero['body'];
-                $hero['button_text'] = $heroContent->button_text ?: $hero['button_text'];
-                $hero['button_url'] = $heroContent->button_url ?: null;
-                $hero['seo_title'] = $heroContent->seo_title ?: null;
-                $hero['seo_description'] = $heroContent->seo_description ?: null;
+                foreach (array_keys($hero) as $heroField) {
+                    $hero[$heroField] = $heroContent->{$heroField} ?: $hero[$heroField];
+                }
             }
         }
 
@@ -221,6 +249,43 @@ class LandingSettingsController extends Controller
             ];
         })->values();
 
+        $contents = [];
+        foreach (self::SINGLETON_SECTIONS as $sectionKey) {
+            if ($sectionKey === 'hero') {
+                continue;
+            }
+
+            $contents[$sectionKey] = [
+                'kicker' => null,
+                'title' => null,
+                'body' => null,
+                'button_text' => null,
+                'button_url' => null,
+                'note' => null,
+                'is_active' => true,
+            ];
+        }
+
+        if (Schema::hasTable('landing_contents')) {
+            LandingContent::query()
+                ->whereIn('section', array_keys($contents))
+                ->get()
+                ->each(function (LandingContent $content) use (&$contents) {
+                    foreach (array_keys($contents[$content->section]) as $field) {
+                        $contents[$content->section][$field] = $content->{$field} ?: $contents[$content->section][$field];
+                    }
+                });
+        }
+
+        $contentItems = collect();
+        if (Schema::hasTable('landing_content_items')) {
+            $contentItems = LandingContentItem::query()
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('section');
+        }
+
         $jenjangs = config('ujion.jenjangs');
 
         return Inertia::render('Superadmin/LandingSettings', [
@@ -229,6 +294,9 @@ class LandingSettingsController extends Controller
             'hasJenjangColumn' => $hasJenjangColumn,
             'sectionActives' => $sectionActives,
             'hero' => $hero,
+            'contents' => $contents,
+            'contentItems' => $contentItems,
+            'itemSections' => self::ITEM_SECTIONS,
             'faqs' => $faqItems,
             'editFaq' => $editFaq,
             'logoUrl' => $logoUrl,
@@ -289,36 +357,52 @@ class LandingSettingsController extends Controller
         }
 
         $validated = $request->validate([
+            'section' => ['nullable', 'string', 'in:'.implode(',', self::SINGLETON_SECTIONS)],
             'kicker' => ['nullable', 'string', 'max:180'],
             'title' => ['nullable', 'string', 'max:220'],
             'body' => ['nullable', 'string', 'max:5000'],
+            'subtitle' => ['nullable', 'string', 'max:5000'],
             'button_text' => ['nullable', 'string', 'max:80'],
             'button_url' => ['nullable', 'string', 'max:255'],
+            'cta_text' => ['nullable', 'string', 'max:80'],
+            'cta_url' => ['nullable', 'string', 'max:255'],
+            'note' => ['nullable', 'string', 'max:5000'],
             'seo_title' => ['nullable', 'string', 'max:120'],
             'seo_description' => ['nullable', 'string', 'max:300'],
         ]);
 
-        $heroContent = LandingContent::query()->where('section', 'hero')->first();
+        $section = $validated['section'] ?? 'hero';
+        $current = LandingContent::query()->where('section', $section)->first();
 
         LandingContent::query()->updateOrCreate(
-            ['section' => 'hero'],
+            ['section' => $section],
             [
                 'kicker' => $validated['kicker'] ?? null,
                 'title' => $validated['title'] ?? null,
                 'body' => $validated['body'] ?? null,
+                'subtitle' => $validated['subtitle'] ?? null,
                 'button_text' => $validated['button_text'] ?? null,
                 'button_url' => $validated['button_url'] ?? null,
+                'cta_text' => $validated['cta_text'] ?? null,
+                'cta_url' => $validated['cta_url'] ?? null,
+                'note' => $validated['note'] ?? null,
                 'seo_title' => $validated['seo_title'] ?? null,
                 'seo_description' => $validated['seo_description'] ?? null,
-                'is_active' => $heroContent?->exists ? (bool) $heroContent->is_active : true,
-                'sort_order' => 0,
+                'is_active' => $current ? (bool) $current->is_active : true,
+                'sort_order' => $current?->sort_order ?? 0,
             ]
         );
 
-        return redirect()->route('superadmin.landing-settings.index', ['tab' => 'content'])->with('flash', [
+        $tab = match ($section) {
+            'faq' => 'faq',
+            'stats' => 'stats',
+            default => 'content',
+        };
+
+        return redirect()->route('superadmin.landing-settings.index', ['tab' => $tab])->with('flash', [
             'type' => 'success',
             'title' => 'Konten landing disimpan',
-            'message' => 'Hero section landing sudah diperbarui.',
+            'message' => 'Section '.$section.' sudah diperbarui.',
         ]);
     }
 
@@ -578,6 +662,116 @@ class LandingSettingsController extends Controller
             'type' => 'success',
             'title' => 'FAQ dihapus',
             'message' => 'Item FAQ sudah dihapus dari database.',
+        ]);
+    }
+
+    public function storeItem(Request $request): RedirectResponse
+    {
+        if (! Schema::hasTable('landing_content_items')) {
+            return back()->with('flash', [
+                'type' => 'danger',
+                'title' => 'Tabel landing_content_items belum tersedia',
+                'message' => 'Jalankan migrate dulu agar item landing dapat disimpan.',
+            ]);
+        }
+
+        $validated = $this->validateItem($request, true);
+
+        LandingContentItem::query()->create([
+            'section' => $validated['section'],
+            'kicker' => $validated['kicker'] ?? null,
+            'title' => $validated['title'],
+            'body' => $validated['body'] ?? null,
+            'caption' => $validated['caption'] ?? null,
+            'image_path' => $request->hasFile('image')
+                ? $request->file('image')->storePublicly('landing/items', 'public')
+                : null,
+            'sort_order' => (int) ($validated['sort_order'] ?? 0),
+            'is_active' => (bool) ($validated['is_active'] ?? true),
+        ]);
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Item landing ditambahkan',
+            'message' => 'Item baru sudah masuk ke section '.$validated['section'].'.',
+        ]);
+    }
+
+    public function updateItem(Request $request, LandingContentItem $landingContentItem): RedirectResponse
+    {
+        $validated = $this->validateItem($request, false);
+
+        $oldPath = $landingContentItem->image_path;
+        $imagePath = $oldPath;
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->storePublicly('landing/items', 'public');
+        }
+
+        $landingContentItem->update([
+            'section' => $validated['section'] ?? $landingContentItem->section,
+            'kicker' => $validated['kicker'] ?? null,
+            'title' => $validated['title'],
+            'body' => $validated['body'] ?? null,
+            'caption' => $validated['caption'] ?? null,
+            'image_path' => $imagePath,
+            'sort_order' => (int) ($validated['sort_order'] ?? $landingContentItem->sort_order),
+            'is_active' => array_key_exists('is_active', $validated)
+                ? (bool) $validated['is_active']
+                : $landingContentItem->is_active,
+        ]);
+
+        if ($oldPath && $oldPath !== $imagePath) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Item landing diperbarui',
+            'message' => 'Perubahan item sudah disimpan.',
+        ]);
+    }
+
+    public function toggleItem(LandingContentItem $landingContentItem): RedirectResponse
+    {
+        $landingContentItem->update([
+            'is_active' => ! $landingContentItem->is_active,
+        ]);
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Status item diperbarui',
+            'message' => $landingContentItem->is_active ? 'Item aktif.' : 'Item nonaktif.',
+        ]);
+    }
+
+    public function destroyItem(LandingContentItem $landingContentItem): RedirectResponse
+    {
+        $imagePath = $landingContentItem->image_path;
+        $landingContentItem->delete();
+
+        if ($imagePath) {
+            Storage::disk('public')->delete($imagePath);
+        }
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'title' => 'Item landing dihapus',
+            'message' => 'Item sudah dihapus dari database.',
+        ]);
+    }
+
+    private function validateItem(Request $request, bool $requireSection): array
+    {
+        return $request->validate([
+            'section' => [$requireSection ? 'required' : 'nullable', 'string', 'in:'.implode(',', self::ITEM_SECTIONS)],
+            'kicker' => ['nullable', 'string', 'max:180'],
+            'title' => ['required', 'string', 'max:220'],
+            'body' => ['nullable', 'string', 'max:2000'],
+            'caption' => ['nullable', 'string', 'max:300'],
+            'image' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:10240'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
     }
 }
