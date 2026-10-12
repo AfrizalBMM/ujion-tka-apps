@@ -119,7 +119,7 @@ const progressPercent = computed(() => Math.round((currentStep.value / totalStep
 				<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-primary text-white shadow-glow">
 					<i class="fa-solid fa-user-gear text-2xl"></i>
 				</div>
-				<h1 class="text-2xl font-bold text-slate-900">Lengkapi Profil Anda</h1>
+				<h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Lengkapi Profil Anda</h1>
 				<p class="mt-2 text-sm text-textSecondary">
 					Selesaikan profil untuk mengaktifkan trial <span class="font-bold text-primary">{{ trialDays }} hari</span> gratis.
 				</p>
@@ -129,7 +129,7 @@ const progressPercent = computed(() => Math.round((currentStep.value / totalStep
 			<div class="flex items-center gap-2">
 				<div v-for="step in totalSteps" :key="step"
 					class="flex-1 rounded-full transition-all duration-300"
-					:class="currentStep >= step ? 'bg-primary h-1.5' : 'bg-slate-200 h-1.5'">
+					:class="currentStep >= step ? 'bg-primary h-1.5' : 'bg-slate-200 h-1.5 dark:bg-slate-700'">
 				</div>
 			</div>
 			<div class="flex items-center justify-between text-xs font-semibold text-textSecondary">
@@ -146,7 +146,7 @@ const progressPercent = computed(() => Math.round((currentStep.value / totalStep
 			</div>
 
 			<!-- Form -->
-			<form class="rounded-[28px] border border-white/80 bg-white/90 p-6 shadow-card space-y-6 sm:p-8" @submit.prevent="submit">
+			<form class="rounded-[28px] border border-white/80 bg-white/90 p-6 shadow-card space-y-6 dark:border-slate-800 dark:bg-slate-900/95 sm:p-8" @submit.prevent="submit">
 				<!-- Step 1: Identitas -->
 				<div v-show="currentStep === 1" class="space-y-5">
 					<div class="space-y-2">
@@ -174,7 +174,7 @@ const progressPercent = computed(() => Math.round((currentStep.value / totalStep
 								class="flex cursor-pointer items-center justify-center rounded-2xl border-2 px-4 py-3 text-sm font-bold transition-all"
 								:class="form.jenjang === jenjang
 									? 'border-primary bg-primary/5 text-primary'
-									: 'border-slate-200 bg-slate-50/50 text-slate-600 hover:border-slate-300'">
+									: 'border-slate-200 bg-slate-50/50 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:border-slate-600'">
 								<input
 									type="radio"
 									v-model="form.jenjang"
