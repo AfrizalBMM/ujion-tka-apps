@@ -482,7 +482,7 @@ class QaLandingCopyGate1Test extends TestCase
         $this->assertStringContainsString('Token', $errors[0], 'temuan P2: pesan error login siswa masih memakai kata Token');
     }
 
-    public function test_finding_p1_faq_json_ld_allows_script_breakout(): void
+    public function test_finding_p1_faq_json_ld_script_breakout_is_fixed(): void
     {
         $this->actingAs($this->superadmin())->post(route('superadmin.landing-settings.faq.store'), [
             'question' => 'QA-JSONLD-Q?',
@@ -495,9 +495,8 @@ class QaLandingCopyGate1Test extends TestCase
         $this->assertStringContainsString('application/ld+json', $html);
         $this->assertStringContainsString('QA-JSONLD-Q?', $html);
 
-        fwrite(STDERR, '[JSONLD BREAKOUT] '.(str_contains($html, '</script><script>window.__qa_jsonld=1</script>') ? 'TERDETEKSI' : 'tidak terdeteksi')."\n");
-
-        $this->assertStringContainsString('</script><script>window.__qa_jsonld=1</script>', $html, 'temuan P1: jawaban FAQ menutup tag script JSON-LD (landing.blade.php:103)');
+        $this->assertStringNotContainsString('</script><script>window.__qa_jsonld=1</script>', $html, 'regression F-1: jawaban FAQ tidak boleh menutup tag script JSON-LD (landing.blade.php)');
+        $this->assertStringContainsString('"@context":"https:\\/\\/schema.org"', $html, 'regression F-1/F-7: key @context harus lolos utuh (Blade directive collision)');
     }
 
     public function test_stats_cache_note(): void
