@@ -57,7 +57,7 @@ class LandingSettingsController extends Controller
 
     public function index(Request $request): Response
     {
-        $allowedTabs = ['hero', 'pricing', 'content', 'faq', 'stats', 'branding'];
+        $allowedTabs = ['hero', 'pricing', 'content', 'sections', 'faq', 'stats', 'branding'];
         $tab = $request->query('tab', 'content');
         if (! in_array($tab, $allowedTabs, true)) {
             $tab = 'content';

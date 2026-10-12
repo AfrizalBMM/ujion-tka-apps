@@ -32,7 +32,7 @@ const submit = () => {
 			<div>
 				<h1 class="text-2xl font-bold">Pengaturan Trial</h1>
 				<p class="mt-2 text-sm text-textSecondary dark:text-slate-300">
-					Atur berapa lama masa trial gratis yang otomatis aktif setelah guru melengkapi profil. Durasi ini berlaku untuk semua pendaftaran baru.
+					Atur berapa lama masa trial yang otomatis aktif setelah guru melengkapi profil. Durasi ini berlaku untuk semua pendaftaran baru.
 				</p>
 			</div>
 

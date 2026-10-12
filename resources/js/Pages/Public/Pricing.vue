@@ -186,7 +186,7 @@ const featuredPlan = computed(() => {
 			<div class="mt-10 text-center">
 				<p class="text-xs text-textSecondary">
 					<i class="fa-solid fa-shield-halved mr-1 text-primary"></i>
-					Pembayaran aman via Doku. Aktifkan trial gratis setelah daftar — tanpa biaya dimuka.
+					Pembayaran aman via Doku. Aktifkan trial setelah daftar — tanpa biaya dimuka.
 				</p>
 			</div>
 
