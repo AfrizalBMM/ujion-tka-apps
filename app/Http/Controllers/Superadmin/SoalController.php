@@ -172,20 +172,21 @@ class SoalController extends Controller
         $paket->load('jenjang');
         $mapel->load('paketSoal');
 
-        $existingGlobalIds = [];
-
         $filters = [
             'search' => trim((string) $request->query('search', '')),
             'question_type' => trim((string) $request->query('question_type', '')),
             'material_mapel' => trim((string) $request->query('material_mapel', '')),
-            'jenjang_id' => trim((string) $request->query('jenjang_id', '')),
+            'jenjang_id' => $paket->jenjang_id ? (string) $paket->jenjang_id : '',
             'material_curriculum' => trim((string) $request->query('material_curriculum', '')),
             'material_subelement' => trim((string) $request->query('material_subelement', '')),
             'material_unit' => trim((string) $request->query('material_unit', '')),
             'material_sub_unit' => trim((string) $request->query('material_sub_unit', '')),
         ];
 
-        $bankSoals = GlobalQuestion::where('is_active', true)
+        $bankBase = GlobalQuestion::where('is_active', true)
+            ->when($filters['jenjang_id'] !== '', fn ($query) => $query->where('jenjang_id', $filters['jenjang_id']));
+
+        $bankSoals = $bankBase->clone()
             ->when($filters['search'] !== '', function ($query) use ($filters) {
                 $query->where(function ($inner) use ($filters) {
                     $inner->where('question_text', 'like', '%'.$filters['search'].'%')
@@ -196,7 +197,6 @@ class SoalController extends Controller
             })
             ->when(in_array($filters['question_type'], ['multiple_choice', 'matching', 'short_answer'], true), fn ($q) => $q->where('question_type', $filters['question_type']))
             ->when($filters['material_mapel'] !== '', fn ($q) => $q->whereMaterialMapel($filters['material_mapel']))
-            ->when($filters['jenjang_id'] !== '', fn ($q) => $q->where('jenjang_id', $filters['jenjang_id']))
             ->when($filters['material_curriculum'] !== '', fn ($q) => $q->where('material_curriculum', $filters['material_curriculum']))
             ->when($filters['material_subelement'] !== '', fn ($q) => $q->where('material_subelement', $filters['material_subelement']))
             ->when($filters['material_unit'] !== '', fn ($q) => $q->where('material_unit', $filters['material_unit']))
@@ -204,27 +204,42 @@ class SoalController extends Controller
             ->latest()
             ->get();
 
-        $jenjangId = $paket->jenjang_id;
+        $jenjangs = $paket->jenjang_id
+            ? Jenjang::where('id', $paket->jenjang_id)->orderBy('nama')->get()
+            : Jenjang::orderBy('nama')->get();
 
-        $jenjangs = Jenjang::orderBy('nama')->get();
-
-        $mapels = GlobalQuestion::where('is_active', true)
+        $mapels = $bankBase->clone()
             ->whereNotNull('material_mapel')
             ->where('material_mapel', '!=', '')
             ->distinct()->pluck('material_mapel');
 
-        $curriculums = GlobalQuestion::where('is_active', true)
+        $curriculums = $bankBase->clone()
             ->whereNotNull('material_curriculum')
+            ->where('material_curriculum', '!=', '')
             ->distinct()->pluck('material_curriculum');
-        $subelements = GlobalQuestion::where('is_active', true)
+
+        $subelements = $bankBase->clone()
             ->whereNotNull('material_subelement')
+            ->where('material_subelement', '!=', '')
             ->distinct()->pluck('material_subelement');
-        $units = GlobalQuestion::where('is_active', true)
+
+        $units = $bankBase->clone()
             ->whereNotNull('material_unit')
+            ->where('material_unit', '!=', '')
             ->distinct()->pluck('material_unit');
-        $subUnits = GlobalQuestion::where('is_active', true)
+
+        $subUnits = $bankBase->clone()
             ->whereNotNull('material_sub_unit')
+            ->where('material_sub_unit', '!=', '')
             ->distinct()->pluck('material_sub_unit');
+
+        $filterOptionCounts = [
+            'mapels' => $mapels->count(),
+            'curriculums' => $curriculums->count(),
+            'subelements' => $subelements->count(),
+            'units' => $units->count(),
+            'subUnits' => $subUnits->count(),
+        ];
 
         $soalCount = $mapel->soals()->count();
         $maxSoal = $mapel->jumlah_soal;
@@ -262,7 +277,10 @@ class SoalController extends Controller
             'jenjangs' => $jenjangs,
             'mapels' => $mapels,
             'curriculums' => $curriculums,
+            'subelements' => $subelements,
+            'units' => $units,
             'subUnits' => $subUnits,
+            'filterOptionCounts' => $filterOptionCounts,
             'soalCount' => $soalCount,
             'maxSoal' => $maxSoal,
             'slotSisa' => $slotSisa,

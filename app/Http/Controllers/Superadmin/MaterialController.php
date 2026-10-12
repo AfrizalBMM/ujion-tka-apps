@@ -97,6 +97,8 @@ class MaterialController extends Controller
         $created = 0;
         $updated = 0;
         $skipped = 0;
+        $skippedNoMapel = 0;
+        $skippedIncomplete = 0;
 
         $defaultJenjang = $this->normalizeJenjang($validated['default_jenjang'] ?? null);
 
@@ -111,6 +113,13 @@ class MaterialController extends Controller
                 'link' => trim((string) ($row['link'] ?? '')) ?: null,
             ];
 
+            if ($payload['mapel'] === '') {
+                $skipped++;
+                $skippedNoMapel++;
+
+                continue;
+            }
+
             if (
                 $payload['curriculum'] === null
                 || $payload['subelement'] === ''
@@ -118,6 +127,7 @@ class MaterialController extends Controller
                 || $payload['sub_unit'] === ''
             ) {
                 $skipped++;
+                $skippedIncomplete++;
 
                 continue;
             }
@@ -150,9 +160,18 @@ class MaterialController extends Controller
             }
         }
 
+        $reasons = [];
+        if ($skippedNoMapel > 0) {
+            $reasons[] = "kolom mapel kosong: {$skippedNoMapel}";
+        }
+        if ($skippedIncomplete > 0) {
+            $reasons[] = "kolom wajib kosong (curriculum/subelement/unit/sub_unit): {$skippedIncomplete}";
+        }
+        $skipDetail = $reasons !== [] ? ' — '.implode(', ', $reasons) : '';
+
         return back()->with('flash', [
             'type' => ($created + $updated) > 0 ? 'success' : 'warning',
-            'message' => "Import materi selesai. Ditambah: {$created}, diperbarui: {$updated}, dilewati: {$skipped}.",
+            'message' => "Import materi selesai. Ditambah: {$created}, diperbarui: {$updated}, dilewati: {$skipped}{$skipDetail}.",
         ]);
     }
 

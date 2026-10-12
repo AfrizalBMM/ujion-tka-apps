@@ -8,6 +8,7 @@ use App\Models\Jenjang;
 use App\Models\Material;
 use App\Support\SpreadsheetTable;
 use App\Support\SpreadsheetTemplateExporter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -261,8 +262,9 @@ class GlobalQuestionController extends Controller
 
         $created = 0;
         $skipped = 0;
+        $unresolvedMaterial = 0;
 
-        DB::transaction(function () use ($rows, $request, $validated, &$created, &$skipped) {
+        DB::transaction(function () use ($rows, $request, $validated, &$created, &$skipped, &$unresolvedMaterial) {
             foreach ($rows as $row) {
                 $questionText = trim((string) ($row['question_text'] ?? ''));
                 if ($questionText === '') {
@@ -300,6 +302,10 @@ class GlobalQuestionController extends Controller
                 $materialId = $this->resolveMaterialIdFromRow($row);
                 $material = $materialId ? Material::query()->find($materialId) : null;
 
+                if ($materialId === null) {
+                    $unresolvedMaterial++;
+                }
+
                 $materialMapel = $this->normalizeMaterialText($row['material_mapel'] ?? $row['mapel'] ?? null) ?? $material?->mapel;
                 $materialCurriculum = $this->normalizeMaterialCurriculum($row['material_curriculum'] ?? $row['curriculum'] ?? null) ?? $material?->curriculum;
                 $materialSubelement = $this->normalizeMaterialText($row['material_subelement'] ?? $row['subelement'] ?? null) ?? $material?->subelement;
@@ -328,9 +334,14 @@ class GlobalQuestionController extends Controller
             }
         });
 
+        $message = "Import soal PG selesai. Berhasil: {$created}, dilewati: {$skipped}.";
+        if ($unresolvedMaterial > 0) {
+            $message .= " material_id gagal diresolve: {$unresolvedMaterial} (tidak ada materi cocok, soal jadi yatim).";
+        }
+
         return back()->with('flash', [
             'type' => $created > 0 ? 'success' : 'warning',
-            'message' => "Import soal PG selesai. Berhasil: {$created}, dilewati: {$skipped}.",
+            'message' => $message,
         ]);
     }
 
@@ -351,8 +362,9 @@ class GlobalQuestionController extends Controller
 
         $created = 0;
         $skipped = 0;
+        $unresolvedMaterial = 0;
 
-        DB::transaction(function () use ($rows, $validated, $request, &$created, &$skipped) {
+        DB::transaction(function () use ($rows, $validated, $request, &$created, &$skipped, &$unresolvedMaterial) {
             foreach ($rows as $row) {
                 $questionText = trim((string) ($row['question_text'] ?? ''));
                 if ($questionText === '') {
@@ -379,6 +391,10 @@ class GlobalQuestionController extends Controller
 
                 $materialId = $this->resolveMaterialIdFromRow($row);
                 $material = $materialId ? Material::query()->find($materialId) : null;
+
+                if ($materialId === null) {
+                    $unresolvedMaterial++;
+                }
 
                 $materialMapel = $this->normalizeMaterialText($row['material_mapel'] ?? $row['mapel'] ?? null) ?? $material?->mapel;
                 $materialCurriculum = $this->normalizeMaterialCurriculum($row['material_curriculum'] ?? $row['curriculum'] ?? null) ?? $material?->curriculum;
@@ -408,9 +424,14 @@ class GlobalQuestionController extends Controller
             }
         });
 
+        $message = "Import soal Menjodohkan selesai. Berhasil: {$created}, dilewati: {$skipped}.";
+        if ($unresolvedMaterial > 0) {
+            $message .= " material_id gagal diresolve: {$unresolvedMaterial} (tidak ada materi cocok, soal jadi yatim).";
+        }
+
         return back()->with('flash', [
             'type' => $created > 0 ? 'success' : 'warning',
-            'message' => "Import soal Menjodohkan selesai. Berhasil: {$created}, dilewati: {$skipped}.",
+            'message' => $message,
         ]);
     }
 
@@ -498,48 +519,73 @@ class GlobalQuestionController extends Controller
             return $materialId;
         }
 
-        $curriculum = $this->normalizeMaterialCurriculum($row['material_curriculum'] ?? $row['curriculum'] ?? null);
-        $mapel = $this->normalizeMaterialText($row['material_mapel'] ?? $row['mapel'] ?? null);
-        $subelement = $this->normalizeMaterialText($row['material_subelement'] ?? $row['subelement'] ?? null);
-        $unit = $this->normalizeMaterialText($row['material_unit'] ?? $row['unit'] ?? null);
-        $subUnit = $this->normalizeMaterialText($row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null);
-
-        if (! $curriculum || ! $mapel || ! $subelement || ! $unit || ! $subUnit) {
-            return null;
-        }
-
-        return Material::query()
-            ->where('curriculum', $curriculum)
-            ->where('mapel', $mapel)
-            ->where('subelement', $subelement)
-            ->where('unit', $unit)
-            ->where('sub_unit', $subUnit)
-            ->value('id');
+        return $this->findMaterialIdByAttributes([
+            'mapel' => $row['material_mapel'] ?? $row['mapel'] ?? null,
+            'curriculum' => $row['material_curriculum'] ?? $row['curriculum'] ?? null,
+            'subelement' => $row['material_subelement'] ?? $row['subelement'] ?? null,
+            'unit' => $row['material_unit'] ?? $row['unit'] ?? null,
+            'sub_unit' => $row['material_sub_unit'] ?? $row['sub_unit'] ?? $row['subunit'] ?? null,
+            'jenjang' => $row['jenjang'] ?? null,
+        ]);
     }
 
     private function resolveMaterialIdFromAttributes(array $attributes): ?int
+    {
+        return $this->findMaterialIdByAttributes([
+            'mapel' => $attributes['material_mapel'] ?? null,
+            'curriculum' => $attributes['material_curriculum'] ?? null,
+            'subelement' => $attributes['material_subelement'] ?? null,
+            'unit' => $attributes['material_unit'] ?? null,
+            'sub_unit' => $attributes['material_sub_unit'] ?? null,
+        ]);
+    }
+
+    private function findMaterialIdByAttributes(array $attributes): ?int
     {
         if (! Schema::hasTable('materials')) {
             return null;
         }
 
-        $curriculum = $this->normalizeMaterialCurriculum($attributes['material_curriculum'] ?? null);
-        $mapel = $this->normalizeMaterialText($attributes['material_mapel'] ?? null);
-        $subelement = $this->normalizeMaterialText($attributes['material_subelement'] ?? null);
-        $unit = $this->normalizeMaterialText($attributes['material_unit'] ?? null);
-        $subUnit = $this->normalizeMaterialText($attributes['material_sub_unit'] ?? null);
+        $mapel = $this->normalizeMaterialText($attributes['mapel'] ?? null);
+        $curriculum = $this->normalizeMaterialCurriculum($attributes['curriculum'] ?? null);
+        $subelement = $this->normalizeMaterialText($attributes['subelement'] ?? null);
+        $unit = $this->normalizeMaterialText($attributes['unit'] ?? null);
+        $subUnit = $this->normalizeMaterialText($attributes['sub_unit'] ?? null);
+        $jenjang = strtoupper(trim((string) ($attributes['jenjang'] ?? '')));
 
-        if (! $curriculum || ! $mapel || ! $subelement || ! $unit || ! $subUnit) {
+        if (! $mapel || ! $curriculum || ! $subelement || ! $unit || ! $subUnit) {
             return null;
         }
 
-        return Material::query()
-            ->where('curriculum', $curriculum)
-            ->where('mapel', $mapel)
-            ->where('subelement', $subelement)
-            ->where('unit', $unit)
-            ->where('sub_unit', $subUnit)
-            ->value('id');
+        $query = $this->whereNormalizedColumn(Material::query(), 'mapel', $mapel);
+        $query = $this->whereNormalizedColumn($query, 'curriculum', $curriculum);
+        $query = $this->whereNormalizedColumn($query, 'subelement', $subelement);
+        $query = $this->whereNormalizedColumn($query, 'unit', $unit);
+        $query = $this->whereNormalizedColumn($query, 'sub_unit', $subUnit);
+
+        if ($jenjang !== '' && Schema::hasColumn('materials', 'jenjang')) {
+            $exactId = (clone $query)
+                ->whereRaw("UPPER(TRIM(COALESCE(jenjang, ''))) = ?", [$jenjang])
+                ->value('id');
+
+            if ($exactId !== null) {
+                return (int) $exactId;
+            }
+
+            $query->whereNull('jenjang');
+        }
+
+        $id = $query->value('id');
+
+        return $id !== null ? (int) $id : null;
+    }
+
+    private function whereNormalizedColumn(Builder $query, string $column, string $value): Builder
+    {
+        return $query->whereRaw(
+            "LOWER(TRIM(REPLACE(COALESCE({$column}, ''), '_', ' '))) = ?",
+            [GlobalQuestion::normalizeMapelKey($value)]
+        );
     }
 
     private function toBoolean(mixed $value): bool
