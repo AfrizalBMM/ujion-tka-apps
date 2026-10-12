@@ -121,7 +121,7 @@ const progressPercent = computed(() => Math.round((currentStep.value / totalStep
 				</div>
 				<h1 class="text-2xl font-bold text-slate-900">Lengkapi Profil Anda</h1>
 				<p class="mt-2 text-sm text-textSecondary">
-					Selesaikan profil untuk mengaktifkan trial <span class="font-bold text-primary">{{ trialDays }} hari</span> gratis.
+					Selesaikan profil untuk mengaktifkan trial <span class="font-bold text-primary">{{ trialDays }} hari</span>.
 				</p>
 			</div>
 

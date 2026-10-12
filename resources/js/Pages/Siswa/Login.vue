@@ -25,7 +25,7 @@ const submit = () => {
 			<div class="text-center">
 				<div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-xl font-black text-white shadow-lg">U</div>
 				<h1 class="text-2xl font-bold text-slate-900">Masuk Ujian</h1>
-				<p class="mt-1 text-sm text-textSecondary">Masukkan token mapel yang diberikan guru atau pengawas</p>
+				<p class="mt-1 text-sm text-textSecondary">Masukkan kode ujian yang diberikan guru atau pengawas</p>
 			</div>
 
 			<div v-if="form.errors.token" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -34,7 +34,7 @@ const submit = () => {
 
 			<form class="space-y-4" @submit.prevent="submit">
 				<div class="input-group">
-					<label class="text-xs font-bold uppercase tracking-widest text-textSecondary" for="token">Token Ujian</label>
+					<label class="text-xs font-bold uppercase tracking-widest text-textSecondary" for="token">Kode Ujian</label>
 					<input
 						id="token"
 						v-model="form.token"
@@ -47,7 +47,7 @@ const submit = () => {
 						placeholder="— — — — — —"
 						@input="onInput"
 					>
-					<p class="text-xs text-textSecondary">Token berisi 8 karakter huruf dan angka. Tanyakan kepada guru jika belum menerima token.</p>
+					<p class="text-xs text-textSecondary">Kode ujian berisi 8 karakter huruf dan angka. Tanyakan kepada guru jika belum menerima kode ujian.</p>
 				</div>
 				<button type="submit" class="btn-primary w-full py-3 text-base font-bold" :disabled="form.processing">
 					Masuk &rarr;

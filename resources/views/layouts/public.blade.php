@@ -53,12 +53,12 @@
 
             <div class="flex items-center gap-2">
                 <nav class="hidden items-center gap-6 lg:flex">
-                    <a href="{{ route('kisi-kisi.index') }}" class="landing-nav-link">Kisi-Kisi</a>
+                    <a href="{{ route('kisi-kisi.index') }}" class="landing-nav-link">Kisi-Kisi TKA</a>
                     <a href="{{ route('artikel.index') }}" class="landing-nav-link">Artikel</a>
                     @if(\Illuminate\Support\Facades\Route::has('ujian-online.index'))
                         <a href="{{ route('ujian-online.index') }}" class="landing-nav-link">Ujian Online</a>
                     @endif
-                    <a href="{{ route('landing') }}#faq" class="landing-nav-link">FAQ</a>
+                    <a href="{{ route('landing') }}#tanya-jawab" class="landing-nav-link">Tanya Jawab</a>
                 </nav>
 
                 <a href="{{ route('register.guru.form') }}" class="btn-primary hidden sm:inline-flex">Coba Sebagai Guru</a>
@@ -91,12 +91,12 @@
                 </button>
             </div>
             <nav class="flex flex-col gap-4">
-                <a href="{{ route('kisi-kisi.index') }}" class="text-base font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400">Kisi-Kisi</a>
+                <a href="{{ route('kisi-kisi.index') }}" class="text-base font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400">Kisi-Kisi TKA</a>
                 <a href="{{ route('artikel.index') }}" class="text-base font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400">Artikel</a>
                 @if(\Illuminate\Support\Facades\Route::has('ujian-online.index'))
                     <a href="{{ route('ujian-online.index') }}" class="text-base font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400">Ujian Online</a>
                 @endif
-                <a href="{{ route('landing') }}#faq" class="text-base font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400">FAQ</a>
+                <a href="{{ route('landing') }}#tanya-jawab" class="text-base font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400">Tanya Jawab</a>
                 <a href="{{ route('register.guru.form') }}" class="btn-primary mt-2 w-full justify-center">Coba Sebagai Guru</a>
             </nav>
         </div>
@@ -144,7 +144,7 @@
         <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-sm text-textSecondary dark:text-slate-400 sm:flex-row">
             <div>&copy; {{ date('Y') }} {{ config('app.name', 'Ujion TKA') }}. All rights reserved.</div>
             <nav class="flex items-center gap-5">
-                <a href="{{ route('kisi-kisi.index') }}" class="hover:text-slate-900 dark:hover:text-white">Kisi-Kisi</a>
+                <a href="{{ route('kisi-kisi.index') }}" class="hover:text-slate-900 dark:hover:text-white">Kisi-Kisi TKA</a>
                 <a href="{{ route('artikel.index') }}" class="hover:text-slate-900 dark:hover:text-white">Artikel</a>
                 @if(\Illuminate\Support\Facades\Route::has('ujian-online.index'))
                     <a href="{{ route('ujian-online.index') }}" class="hover:text-slate-900 dark:hover:text-white">Ujian Online</a>
