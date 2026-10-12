@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             SuperadminGuruSeeder::class,
             PricingPlanSeeder::class,
             TrialSettingsSeeder::class,
+            LandingContentSeeder::class,
         ]);
     }
 }
