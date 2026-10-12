@@ -14,7 +14,7 @@ const page = usePage();
 const isLoggedIn = computed(() => Boolean(page.props.auth?.user));
 
 const subscribeHref = computed(() =>
-	isLoggedIn.value ? route('pricing') : route('register.guru.form')
+	isLoggedIn.value ? route('guru.dashboard') : route('register.guru.form')
 );
 
 // Fallback static plans if no data from backend
@@ -93,8 +93,11 @@ const featuredPlan = computed(() => {
 					</div>
 					<span class="text-lg font-bold text-slate-900">Ujion</span>
 				</Link>
-				<Link href="/register/guru" class="btn-secondary px-4 py-2 text-sm font-bold">
-					Daftar Sekarang
+				<Link
+					:href="isLoggedIn ? route('guru.dashboard') : route('register.guru.form')"
+					class="btn-secondary px-4 py-2 text-sm font-bold"
+				>
+					{{ isLoggedIn ? 'Kembali ke dashboard guru' : 'Daftar Sekarang' }}
 				</Link>
 			</div>
 		</header>
