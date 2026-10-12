@@ -370,7 +370,7 @@ onBeforeUnmount(() => {
 
 					<div>
 						<label class="text-xs font-bold uppercase tracking-[0.18em] text-textSecondary">Mata Pelajaran</label>
-						<div class="ssd-wrap mt-1">
+						<div v-if="mapels.length" class="ssd-wrap mt-1">
 							<input type="hidden" name="material_mapel" :value="filters.material_mapel">
 							<button type="button" class="ssd-trigger input flex items-center justify-between gap-2 w-full">
 								<span class="ssd-label">{{ filters.material_mapel || 'Semua Mapel' }}</span>
@@ -384,6 +384,10 @@ onBeforeUnmount(() => {
 								</div>
 							</div>
 						</div>
+						<p v-else class="input mt-1 flex items-center gap-2 text-sm text-textSecondary">
+							<i class="fa-solid fa-circle-info text-muted"></i>
+							Filter mapel belum tersedia — data soal belum punya mapel.
+						</p>
 					</div>
 
 					<div>
@@ -455,8 +459,8 @@ onBeforeUnmount(() => {
 												<i class="fa-solid fa-graduation-cap text-[8px]"></i>
 												{{ gq.material_curriculum }}
 											</span>
-											<span v-if="gq.material_sub_unit" class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-												{{ gq.material_sub_unit }}
+											<span v-if="gq.material_sub_unit || gq.material_unit" class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300" title="Snapshot materi saat soal diimpor">
+												{{ [gq.material_unit, gq.material_sub_unit].filter(Boolean).join(' › ') }}
 											</span>
 											<span v-if="gq.answer_key_limited && gq.question_type === 'multiple_choice'" class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
 												Kunci: {{ gq.answer_key_limited }}

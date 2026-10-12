@@ -79,6 +79,18 @@ const removeOpsi = (i) => {
 	state.questions[state.current].opsi.splice(i, 1);
 };
 
+const materialLabel = (m) => {
+	if (!m) return 'Pilih materi';
+	return [m.curriculum, m.sub_unit].filter(Boolean).join(' - ') || 'Pilih materi';
+};
+
+const currentMaterialLabel = () => {
+	const m = props.materials.find((mat) => mat.id == state.questions[state.current].material_id);
+	return materialLabel(m);
+};
+
+const bankChipLabel = (bq) => bq.material_mapel || bq.material_curriculum || bq.material_sub_unit || '';
+
 const previewSoal = (q) => {
 	let html = `<div class="font-bold text-lg mb-4">${q.pertanyaan || '(Teks pertanyaan...)'}</div>`;
 	if (['PG', 'Checklist'].includes(q.tipe)) {
@@ -241,7 +253,7 @@ onBeforeUnmount(() => {
 								<label class="flex items-start gap-2 p-2 rounded-lg border border-transparent hover:border-primary/20 hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer group">
 									<input type="checkbox" v-model="state.selectedBankIds" :value="bq.id" class="mt-1 rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary">
 									<div class="text-xs leading-relaxed line-clamp-2 text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100">
-										<span class="font-bold text-primary mr-1">[{{ bq.material_mapel || '-' }}]</span>
+										<span v-if="bankChipLabel(bq)" class="font-bold text-primary mr-1">[{{ bankChipLabel(bq) }}]</span>
 										{{ bq.question_text }}
 									</div>
 								</label>
@@ -288,14 +300,14 @@ onBeforeUnmount(() => {
 									<div class="ssd-wrap mt-1">
 										<input type="hidden" :value="state.questions[state.current].material_id" @change="state.questions[state.current].material_id = $event.target.value">
 										<button type="button" class="ssd-trigger input text-sm flex items-center justify-between gap-2 w-full">
-											<span class="ssd-label">{{ materials.find(m => m.id == state.questions[state.current].material_id)?.sub_unit || 'Pilih materi' }}</span>
+											<span class="ssd-label">{{ currentMaterialLabel() }}</span>
 											<i class="fa-solid fa-chevron-down text-[10px] text-muted flex-shrink-0 ssd-icon"></i>
 										</button>
 										<div class="ssd-panel">
 											<div class="ssd-search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" class="ssd-search" placeholder="Cari materi..." aria-label="Cari materi"></div>
 											<div class="ssd-list">
 												<div class="ssd-option" :class="{'ssd-selected': !state.questions[state.current].material_id}" data-value="">Pilih materi</div>
-												<div v-for="material in materials" :key="material.id" class="ssd-option" :class="{'ssd-selected': state.questions[state.current].material_id == material.id}" :data-value="material.id">{{ material.curriculum }} - {{ material.sub_unit }}</div>
+												<div v-for="material in materials" :key="material.id" class="ssd-option" :class="{'ssd-selected': state.questions[state.current].material_id == material.id}" :data-value="material.id">{{ materialLabel(material) }}</div>
 											</div>
 										</div>
 									</div>
