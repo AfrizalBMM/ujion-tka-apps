@@ -133,9 +133,9 @@ class RemainingFlowsHardeningTest extends TestCase
         $superadmin = $this->createSuperadmin();
 
         $file = UploadedFile::fake()->createWithContent('materials.csv', implode("\n", [
-            'jenjang,curriculum,subelement,unit,sub_unit,link',
-            'SD,Merdeka,Literasi,Teks Narasi,Ide Pokok,https://contoh.test/ide-pokok',
-            'SMP,K-13,Numerasi,Perbandingan,Rasio,',
+            'jenjang,mapel,curriculum,subelement,unit,sub_unit,link',
+            'SD,Bahasa Indonesia,Merdeka,Literasi,Teks Narasi,Ide Pokok,https://contoh.test/ide-pokok',
+            'SMP,Matematika,K-13,Numerasi,Perbandingan,Rasio,',
         ]));
 
         $response = $this->actingAs($superadmin)->post(route('superadmin.materials.import'), [
