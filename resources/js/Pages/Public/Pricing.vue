@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -13,9 +13,40 @@ const page = usePage();
 
 const isLoggedIn = computed(() => Boolean(page.props.auth?.user));
 
-const subscribeHref = computed(() =>
-	isLoggedIn.value ? route('guru.dashboard') : route('register.guru.form')
-);
+const subscribing = ref(false);
+const checkoutError = ref('');
+
+const startCheckout = async () => {
+	if (subscribing.value) return;
+	subscribing.value = true;
+	checkoutError.value = '';
+	const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+	try {
+		const res = await fetch(route('payments.doku.start'), {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-CSRF-TOKEN': csrfToken,
+				Accept: 'application/json',
+			},
+			body: JSON.stringify({}),
+		});
+		const data = await res.json();
+		if (data.ok) {
+			window.location.href = data.payment_url;
+			return;
+		}
+		if (res.status === 409 && data.status === 'success') {
+			window.location.href = route('guru.dashboard');
+			return;
+		}
+		checkoutError.value = data.message || 'Gagal memulai pembayaran. Silakan coba lagi.';
+	} catch (e) {
+		checkoutError.value = 'Gagal memulai pembayaran. Silakan coba lagi.';
+	} finally {
+		subscribing.value = false;
+	}
+};
 
 // Fallback static plans if no data from backend
 const displayPlans = computed(() => {
@@ -171,15 +202,36 @@ const featuredPlan = computed(() => {
 					<!-- CTA -->
 					<div class="mt-auto px-6 pb-7">
 						<Link
-							:href="subscribeHref"
+							v-if="!isLoggedIn"
+							:href="route('register.guru.form')"
 							class="w-full justify-center py-3 text-sm font-bold"
 							:class="featuredPlan === plan.id ? 'btn-primary' : 'btn-secondary'"
 						>
 							Langganan
 							<i class="fa-solid fa-arrow-right ml-2 text-[10px]"></i>
 						</Link>
+						<button
+							v-else
+							type="button"
+							:disabled="subscribing"
+							class="w-full justify-center py-3 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60"
+							:class="featuredPlan === plan.id ? 'btn-primary' : 'btn-secondary'"
+							@click="startCheckout"
+						>
+							<i v-if="subscribing" class="fa-solid fa-spinner fa-spin mr-2 text-[10px]"></i>
+							{{ subscribing ? 'Memproses...' : 'Langganan' }}
+							<i v-if="!subscribing" class="fa-solid fa-arrow-right ml-2 text-[10px]"></i>
+						</button>
 					</div>
 				</div>
+			</div>
+
+			<!-- Checkout error -->
+			<div
+				v-if="checkoutError"
+				class="mt-6 rounded-[16px] border border-rose-200 bg-rose-50 px-4 py-3 text-center text-sm font-semibold text-rose-600"
+			>
+				<i class="fa-solid fa-circle-exclamation mr-1"></i>{{ checkoutError }}
 			</div>
 
 			<!-- Info Note -->
