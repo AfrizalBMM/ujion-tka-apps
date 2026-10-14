@@ -101,10 +101,16 @@ class SitemapController
             ];
 
             foreach ($mapelsByJenjang->get(strtoupper($kode), collect()) as $row) {
+                $mapelSlug = Str::slug((string) $row->mapel);
+
+                if ($mapelSlug === '') {
+                    continue;
+                }
+
                 $urls[] = [
                     'loc' => route('kisi-kisi.mapel', [
                         'jenjang' => strtolower($kode),
-                        'mapel' => Str::slug((string) $row->mapel),
+                        'mapel' => $mapelSlug,
                     ]),
                     'lastmod' => $lastmod,
                     'changefreq' => 'monthly',
