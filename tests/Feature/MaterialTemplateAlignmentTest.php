@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Material;
 use App\Models\User;
+use App\Support\SpreadsheetTable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class MaterialTemplateAlignmentTest extends TestCase
@@ -181,5 +183,99 @@ class MaterialTemplateAlignmentTest extends TestCase
 
         $this->assertNotContains('Numerasi', $rows);
         $this->assertNotContains('Literasi', $rows);
+    }
+
+    private function writeTemplateToDisk(string $body): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'tpl').'.xls';
+        file_put_contents($path, $body);
+
+        return $path;
+    }
+
+    public function test_template_round_trip_is_clean_when_requested_jenjang_has_no_rows(): void
+    {
+        // M-2: DB berisi (SD) tetapi ?jenjang=SMA -> template tanpa baris contoh.
+        Material::create([
+            'jenjang' => 'SD',
+            'mapel' => 'Matematika',
+            'curriculum' => 'K-13',
+            'subelement' => 'Bilangan',
+            'unit' => 'Bulat Negatif',
+            'sub_unit' => 'Penjumlahan & Pengurangan Bilangan Bulat',
+            'link' => null,
+        ]);
+
+        $body = $this->templateBody('SMA');
+
+        // File template hanya header, tanpa baris contoh fiktif.
+        $this->assertCount(7, $this->cells($body));
+
+        $path = $this->writeTemplateToDisk($body);
+        $rows = SpreadsheetTable::rowsFromUpload(new UploadedFile($path, 'template.xls', null, null, true));
+
+        // Round-trip: tidak ada baris data yang bisa diimpor (bukan 6 baris fiktif jenjang lain).
+        $this->assertSame([], $rows);
+
+        $before = Material::count();
+        $response = $this->actingAs($this->superadmin())->post(route('superadmin.materials.import'), [
+            'file' => new UploadedFile($path, 'template.xls', null, null, true),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+        $this->assertSame($before, Material::count(), 'Template jenjang kosong tidak boleh mengimpor materi palsu.');
+        $this->assertSame(0, Material::whereIn('jenjang', ['SMA', 'SMP'])->count());
+    }
+
+    public function test_template_round_trip_imports_real_rows_cleanly(): void
+    {
+        Material::create([
+            'jenjang' => 'SD',
+            'mapel' => 'Matematika',
+            'curriculum' => 'K-13',
+            'subelement' => 'Bilangan',
+            'unit' => 'Bulat Negatif',
+            'sub_unit' => 'Penjumlahan & Pengurangan Bilangan Bulat',
+            'link' => 'https://buku.kemdikbud.go.id/katalog/matematika-kelas-vi',
+        ]);
+
+        $path = $this->writeTemplateToDisk($this->templateBody('SD'));
+        $rows = SpreadsheetTable::rowsFromUpload(new UploadedFile($path, 'template.xls', null, null, true));
+
+        $this->assertNotEmpty($rows);
+        $match = collect($rows)->firstWhere('sub_unit', 'Penjumlahan & Pengurangan Bilangan Bulat');
+        $this->assertNotNull($match);
+        $this->assertSame('SD', $match['jenjang']);
+        $this->assertSame('Matematika', $match['mapel']);
+        $this->assertSame('K-13', $match['curriculum']);
+        $this->assertSame('Bilangan', $match['subelement']);
+        $this->assertSame('Bulat Negatif', $match['unit']);
+        $this->assertSame('https://buku.kemdikbud.go.id/katalog/matematika-kelas-vi', $match['link']);
+    }
+
+    public function test_fallback_static_rows_round_trip_cleanly_when_database_empty(): void
+    {
+        $this->assertSame(0, Material::count());
+
+        $path = $this->writeTemplateToDisk($this->templateBody('SD'));
+        $rows = SpreadsheetTable::rowsFromUpload(new UploadedFile($path, 'template.xls', null, null, true));
+
+        $this->assertNotEmpty($rows);
+        $this->assertSame(
+            ['jenjang', 'mapel', 'curriculum', 'subelement', 'unit', 'sub_unit', 'link'],
+            array_keys($rows[0])
+        );
+        // Semua baris fallback untuk ?jenjang=SD memang jenjang SD (tidak bocor jenjang lain).
+        foreach ($rows as $row) {
+            $this->assertSame('SD', $row['jenjang']);
+        }
+
+        $response = $this->actingAs($this->superadmin())->post(route('superadmin.materials.import'), [
+            'file' => new UploadedFile($path, 'template.xls', null, null, true),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
     }
 }
