@@ -136,4 +136,50 @@ class MaterialTemplateAlignmentTest extends TestCase
         $this->assertCount(7, array_slice($cells, 0, 7));
         $this->assertGreaterThan(7, count($cells));
     }
+
+    public function test_requested_jenjang_without_rows_never_shows_other_jenjang(): void
+    {
+        Material::create([
+            'jenjang' => 'SD',
+            'mapel' => 'Matematika',
+            'curriculum' => 'K-13',
+            'subelement' => 'Bilangan',
+            'unit' => 'Bulat Negatif',
+            'sub_unit' => 'Penjumlahan & Pengurangan Bilangan Bulat',
+            'link' => null,
+        ]);
+
+        $cells = $this->cells($this->templateBody('SMA'));
+        $rows = array_slice($cells, 7);
+
+        $this->assertSame([], $rows);
+    }
+
+    public function test_fallback_not_used_when_database_already_has_materials(): void
+    {
+        Material::create([
+            'jenjang' => 'SMP',
+            'mapel' => 'Ilmu Pengetahuan Alam',
+            'curriculum' => 'K-13',
+            'subelement' => 'Materi',
+            'unit' => 'Satuan',
+            'sub_unit' => 'Besaran dan Satuan',
+            'link' => null,
+        ]);
+
+        $cells = $this->cells($this->templateBody('SMA'));
+        $rows = array_slice($cells, 7);
+
+        $this->assertNotContains('Matematika', $rows);
+        $this->assertNotContains('Fungsi kuadrat', $rows);
+    }
+
+    public function test_fallback_rows_never_use_invented_subelement(): void
+    {
+        $cells = $this->cells($this->templateBody());
+        $rows = array_slice($cells, 7);
+
+        $this->assertNotContains('Numerasi', $rows);
+        $this->assertNotContains('Literasi', $rows);
+    }
 }

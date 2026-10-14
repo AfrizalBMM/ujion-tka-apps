@@ -297,12 +297,14 @@ class MaterialController extends Controller
 
     private function templateExamples(?string $jenjang): array
     {
-        $query = Material::query()
+        $base = Material::query()
             ->whereNotNull('mapel')->where('mapel', '!=', '')
             ->whereNotNull('curriculum')->where('curriculum', '!=', '')
             ->whereNotNull('subelement')->where('subelement', '!=', '')
             ->whereNotNull('unit')->where('unit', '!=', '')
             ->whereNotNull('sub_unit')->where('sub_unit', '!=', '');
+
+        $query = clone $base;
 
         if ($jenjang !== null) {
             $query->whereRaw('upper(jenjang) = ?', [$jenjang]);
@@ -319,7 +321,7 @@ class MaterialController extends Controller
             ->get(['jenjang', 'mapel', 'curriculum', 'subelement', 'unit', 'sub_unit', 'link']);
 
         if ($rows->isEmpty()) {
-            return $this->fallbackExamples($jenjang);
+            return $base->exists() ? [] : $this->fallbackExamples($jenjang);
         }
 
         $byJenjang = $rows->groupBy(fn ($row) => strtoupper((string) $row->jenjang) ?: 'UMUM');
@@ -364,7 +366,7 @@ class MaterialController extends Controller
             ['SD',  'Matematika',       'K-13', 'Bilangan',   'Bulat Negatif', 'Penjumlahan & Pengurangan Bilangan Bulat', 'https://buku.kemdikbud.go.id/katalog/matematika-kelas-vi'],
             ['SD',  'Matematika',       'Merdeka', 'Bilangan', 'Desimal',      'Nilai Tempat Bilangan Persepuluhan',       ''],
             ['SD',  'Bahasa Indonesia', 'K-13', 'Membaca',    'Teks Laporan',  'Ide Pokok Paragraf Laporan',              ''],
-            ['SD',  'Bahasa Indonesia', 'Merdeka', 'Literasi', 'Teks Narasi',  'Menemukan Pesan Tersirat',                ''],
+            ['SD',  'Bahasa Indonesia', 'Merdeka', 'Membaca', 'Teks Narasi',  'Menemukan Pesan Tersirat',                ''],
             ['SMP', 'Matematika',       'K-13', 'Aljabar',    'Persamaan',     'Persamaan linear satu variabel',          ''],
             ['SMA', 'Matematika',       'Merdeka', 'Aljabar', 'Fungsi',        'Fungsi kuadrat',                          ''],
         ];
@@ -373,9 +375,7 @@ class MaterialController extends Controller
             return $all;
         }
 
-        $filtered = array_values(array_filter($all, fn ($row) => strtoupper($row[0]) === $jenjang));
-
-        return $filtered !== [] ? $filtered : $all;
+        return array_values(array_filter($all, fn ($row) => strtoupper($row[0]) === $jenjang));
     }
 
     private function normalizeJenjang(?string $value): ?string
