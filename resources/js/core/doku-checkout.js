@@ -97,6 +97,17 @@ const openCheckout = async () => {
 			throw new Error(data.message || 'Gagal memulai pembayaran.');
 		}
 
+		try {
+			const url = new URL(data.payment_url);
+			if (url.protocol !== 'https:') {
+				throw new Error('Invalid protocol');
+			}
+		} catch {
+			if (popup) popup.close();
+			showPanel('failed');
+			return;
+		}
+
 		if (popup) {
 			popup.location.href = data.payment_url;
 		} else {
