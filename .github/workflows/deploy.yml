@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -31,13 +31,12 @@ jobs:
         run: npm run build
 
       - name: Deploy via SSH to Rumah Web hosting
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: 202.10.43.99
           port: 2223
           username: redp7931
           key: ${{ secrets.RUMAHWEB_SSH_KEY }}
-          script_stop: false
           allenvs: false
           command_timeout: 8m
           proxy_timeout: 8m
@@ -62,7 +61,7 @@ jobs:
             php artisan tinker --execute="echo 'App: ' . config('app.name') . ' | Env: ' . config('app.env');" 2>&1 || true
 
       - name: Upload build assets to hosting (after git reset)
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: 202.10.43.99
           port: 2223
@@ -75,13 +74,12 @@ jobs:
           command_timeout: 120s
 
       - name: Clear cache after asset upload
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: 202.10.43.99
           port: 2223
           username: redp7931
           key: ${{ secrets.RUMAHWEB_SSH_KEY }}
-          script_stop: false
           allenvs: false
           command_timeout: 4m
           proxy_timeout: 4m
