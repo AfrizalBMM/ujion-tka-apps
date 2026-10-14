@@ -16,10 +16,15 @@ class KisiKisiController extends Controller
         $stats = Material::query()
             ->whereNotNull('mapel')
             ->where('mapel', '!=', '')
-            ->selectRaw('jenjang, count(distinct mapel) as mapel_count, count(*) as topic_count')
-            ->groupBy('jenjang')
+            ->selectRaw('jenjang, mapel, count(*) as topic_count')
+            ->groupBy('jenjang', 'mapel')
             ->get()
-            ->keyBy(fn ($row) => strtoupper((string) $row->jenjang));
+            ->filter(fn ($row) => Str::slug((string) $row->mapel) !== '')
+            ->groupBy(fn ($row) => strtoupper((string) $row->jenjang))
+            ->map(fn ($rows) => (object) [
+                'mapel_count' => $rows->count(),
+                'topic_count' => (int) $rows->sum('topic_count'),
+            ]);
 
         return view('kisi-kisi.index', [
             'jenjangs' => $jenjangs,
@@ -43,7 +48,9 @@ class KisiKisiController extends Controller
                 'name' => $row->mapel,
                 'slug' => Str::slug($row->mapel),
                 'topic_count' => $row->topic_count,
-            ]);
+            ])
+            ->filter(fn ($row) => $row['slug'] !== '')
+            ->values();
 
         return view('kisi-kisi.jenjang', [
             'jenjang' => $jenjangModel,
