@@ -85,6 +85,8 @@ class SitemapController
         $jenjangCodes = Jenjang::query()->pluck('kode');
 
         $mapelsByJenjang = Material::query()
+            ->whereNotNull('mapel')
+            ->where('mapel', '!=', '')
             ->selectRaw('jenjang, mapel')
             ->groupBy('jenjang', 'mapel')
             ->get()

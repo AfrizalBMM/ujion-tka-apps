@@ -14,6 +14,8 @@ class KisiKisiController extends Controller
         $jenjangs = Jenjang::query()->orderBy('urutan')->orderBy('id')->get();
 
         $stats = Material::query()
+            ->whereNotNull('mapel')
+            ->where('mapel', '!=', '')
             ->selectRaw('jenjang, count(distinct mapel) as mapel_count, count(*) as topic_count')
             ->groupBy('jenjang')
             ->get()
@@ -31,6 +33,8 @@ class KisiKisiController extends Controller
 
         $mapels = Material::query()
             ->whereRaw('upper(jenjang) = ?', [strtoupper($jenjangModel->kode)])
+            ->whereNotNull('mapel')
+            ->where('mapel', '!=', '')
             ->selectRaw('mapel, count(*) as topic_count')
             ->groupBy('mapel')
             ->orderBy('mapel')
@@ -53,6 +57,8 @@ class KisiKisiController extends Controller
 
         $mapelName = Material::query()
             ->whereRaw('upper(jenjang) = ?', [strtoupper($jenjangModel->kode)])
+            ->whereNotNull('mapel')
+            ->where('mapel', '!=', '')
             ->select('mapel')
             ->distinct()
             ->pluck('mapel')
