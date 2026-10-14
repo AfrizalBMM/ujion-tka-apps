@@ -5,8 +5,6 @@ namespace Tests\Feature;
 use App\Models\Jenjang;
 use App\Models\Material;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Routing\Exceptions\UrlGenerationException;
-use Illuminate\View\ViewException;
 use Tests\TestCase;
 
 class BektiProbeKisiKisiTest extends TestCase
@@ -44,7 +42,7 @@ class BektiProbeKisiKisiTest extends TestCase
         $res->assertNotFound();
     }
 
-    public function test_slug_empty_edge_case_triggers_url_generation_exception_if_unfiltered(): void
+    public function test_slug_empty_edge_case_does_not_break_jenjang_page(): void
     {
         $this->seedJenjangs();
 
@@ -57,13 +55,8 @@ class BektiProbeKisiKisiTest extends TestCase
             'sub_unit' => 'S1',
         ]);
 
-        try {
-            $this->withoutExceptionHandling();
-            $this->get(route('kisi-kisi.jenjang', ['jenjang' => 'smp']));
-            $this->fail('Expected ViewException/UrlGenerationException was not thrown');
-        } catch (ViewException $e) {
-            $this->assertInstanceOf(UrlGenerationException::class, $e->getPrevious());
-            $this->assertStringContainsString('Missing required parameter for [Route: kisi-kisi.mapel]', $e->getMessage());
-        }
+        // Guard slug kosong: mapel yang slug-nya kosong difilter, halaman tetap 200
+        // (sebelum fix: UrlGenerationException -> 500).
+        $this->get(route('kisi-kisi.jenjang', ['jenjang' => 'smp']))->assertOk();
     }
 }
