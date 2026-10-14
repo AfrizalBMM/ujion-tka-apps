@@ -33,6 +33,15 @@ const startCheckout = async () => {
 		});
 		const data = await res.json();
 		if (data.ok) {
+			try {
+				const url = new URL(data.payment_url);
+				if (url.protocol !== 'https:') {
+					throw new Error('Invalid protocol');
+				}
+			} catch {
+				checkoutError.value = 'URL pembayaran tidak valid. Silakan hubungi admin.';
+				return;
+			}
 			window.location.href = data.payment_url;
 			return;
 		}
