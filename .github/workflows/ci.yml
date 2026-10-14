@@ -50,24 +50,13 @@ jobs:
           set -o pipefail
           php artisan test 2>&1 | tee test-output.txt
 
-      - name: Simpan log kegagalan ke branch ci-log
+      - name: Simpan log kegagalan sebagai artifact
         if: failure()
-        shell: bash
-        run: |
-          {
-            echo "run   : $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-            echo "sha   : $GITHUB_SHA"
-            echo "waktu : $(date -u +%FT%TZ)"
-            echo "-------------------------"
-            if [ -f test-output.txt ]; then
-              tail -250 test-output.txt
-            else
-              echo "test-output.txt tidak ada (gagal sebelum langkah PHPUnit)"
-            fi
-          } > ci-failure.log
-          git config user.name github-actions
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git checkout -B ci-log
-          git add -f ci-failure.log
-          git commit --allow-empty -m "Log kegagalan CI otomatis"
-          git push origin ci-log --force
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-failure-log
+          path: |
+            test-output.txt
+            ci-failure.log
+          if-no-files-found: ignore
+          retention-days: 14
