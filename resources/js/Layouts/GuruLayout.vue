@@ -297,6 +297,10 @@ onBeforeUnmount(() => {
 					</template>
 
 					<div class="sidebar-section-title">Akun</div>
+					<a :href="route('guru.panduan-ujian')" class="sidebar-link" :class="route().current('guru.panduan-ujian') ? 'active' : ''">
+						<i class="fa-solid fa-chalkboard-user w-5"></i>
+						<span class="sidebar-link-label">Panduan Ujian</span>
+					</a>
 					<a :href="route('guru.guide')" class="sidebar-link" :class="route().current('guru.guide') ? 'active' : ''">
 						<i class="fa-solid fa-circle-info w-5"></i>
 						<span class="sidebar-link-label">Cara Menggunakan</span>

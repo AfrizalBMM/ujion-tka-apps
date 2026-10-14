@@ -57,6 +57,23 @@ const copyToken = async (token) => {
 					sebagai bahan evaluasi sebelum dipakai untuk pembinaan siswa.
 				</p>
 			</div>
+
+			<div class="card p-4 border-l-4 border-primary">
+				<div class="flex flex-wrap items-start justify-between gap-3">
+					<div class="flex items-start gap-3">
+						<i class="fa-solid fa-share-nodes text-primary text-lg mt-0.5"></i>
+						<p class="text-sm text-textSecondary dark:text-slate-300">
+							<b class="text-textPrimary dark:text-slate-100">Mau meneruskan ujian ke siswa?</b>
+							Halaman ini untuk Anda mencoba sendiri. Untuk membagikan token & link ke siswa, buka
+							<b>Panduan Ujian</b>.
+						</p>
+					</div>
+					<Link :href="route('guru.panduan-ujian')" class="btn-primary whitespace-nowrap">
+						<i class="fa-solid fa-chalkboard-user"></i>
+						Panduan Ujian untuk Siswa
+					</Link>
+				</div>
+			</div>
 			<form class="card mb-4 flex flex-col gap-3 sm:flex-row sm:items-end" @submit.prevent="joinSubmit">
 				<div class="flex-1">
 					<label class="text-xs font-bold uppercase tracking-wide text-muted">Token simulasi</label>
