@@ -6,6 +6,7 @@ use App\Http\Controllers\Guru\AnalisisSiswaController;
 use App\Http\Controllers\Guru\ChatController;
 use App\Http\Controllers\Guru\DashboardController;
 use App\Http\Controllers\Guru\ExamController;
+use App\Http\Controllers\Guru\ExamGuideController;
 use App\Http\Controllers\Guru\ExamResultController;
 use App\Http\Controllers\Guru\MapelPaketGuruController;
 use App\Http\Controllers\Guru\MaterialController;
@@ -122,4 +123,5 @@ Route::middleware(['auth', 'role:guru', 'guru.active', 'trial.active', 'audit'])
     Route::get('/guide', function () {
         return Inertia::render('Guru/Guide');
     })->name('guide');
+    Route::get('/panduan-ujian', [ExamGuideController::class, 'index'])->name('panduan-ujian');
 });
