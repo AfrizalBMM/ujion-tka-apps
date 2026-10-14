@@ -6,12 +6,9 @@ use App\Models\BlogPost;
 use App\Models\Jenjang;
 use App\Models\Material;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
-/**
- * Blade core mendaftarkan directive @context (CompilesContexts). Tanpa escape @@,
- * key '@context' di json_encode() ikut ter-compile jadi PHP mentah dan JSON-LD rusak.
- */
 class JsonLdContextBladeCollisionTest extends TestCase
 {
     use RefreshDatabase;
@@ -42,8 +39,11 @@ class JsonLdContextBladeCollisionTest extends TestCase
         ]);
     }
 
-    private function assertJsonLdContextIntact(string $html, string $routeName): void
+    private function assertJsonLdContextIntact(TestResponse $response, string $routeName): void
     {
+        $response->assertOk();
+        $html = $response->getContent();
+
         $this->assertStringNotContainsString('\u003C?php', $html, "raw PHP masuk output JSON-LD di {$routeName}");
         $this->assertStringNotContainsString('$__contextArgs', $html, "directive @context ter-compile di {$routeName}");
 
@@ -61,17 +61,22 @@ class JsonLdContextBladeCollisionTest extends TestCase
     {
         $this->seedKisiKisi();
 
-        $this->assertJsonLdContextIntact($this->get(route('kisi-kisi.index'))->getContent(), 'kisi-kisi.index');
-        $this->assertJsonLdContextIntact($this->get(route('kisi-kisi.jenjang', ['jenjang' => 'sd']))->getContent(), 'kisi-kisi.jenjang');
-        $this->assertJsonLdContextIntact($this->get(route('kisi-kisi.mapel', ['jenjang' => 'sd', 'mapel' => 'matematika']))->getContent(), 'kisi-kisi.mapel');
+        $this->assertJsonLdContextIntact($this->get(route('kisi-kisi.index')), 'kisi-kisi.index');
+        $this->assertJsonLdContextIntact($this->get(route('kisi-kisi.jenjang', ['jenjang' => 'sd'])), 'kisi-kisi.jenjang');
+        $this->assertJsonLdContextIntact($this->get(route('kisi-kisi.mapel', ['jenjang' => 'sd', 'mapel' => 'matematika'])), 'kisi-kisi.mapel');
     }
 
     public function test_artikel_views_keep_context_key(): void
     {
         $post = $this->publishedPost();
 
-        $this->assertJsonLdContextIntact($this->get(route('artikel.index'))->getContent(), 'artikel.index');
-        $this->assertJsonLdContextIntact($this->get(route('artikel.show', $post))->getContent(), 'artikel.show');
+        $this->assertJsonLdContextIntact($this->get(route('artikel.index')), 'artikel.index');
+        $this->assertJsonLdContextIntact($this->get(route('artikel.show', $post)), 'artikel.show');
+    }
+
+    public function test_landing_keeps_context_key(): void
+    {
+        $this->assertJsonLdContextIntact($this->get(route('landing')), 'landing');
     }
 
     public function test_artikel_title_cannot_break_out_of_json_ld(): void
@@ -79,9 +84,10 @@ class JsonLdContextBladeCollisionTest extends TestCase
         $payload = '</script><script>alert(document.cookie)</script>';
         $post = $this->publishedPost($payload);
 
-        $html = $this->get(route('artikel.show', $post))->getContent();
+        $response = $this->get(route('artikel.show', $post));
 
-        $this->assertStringNotContainsString($payload, $html);
-        $this->assertJsonLdContextIntact($html, 'artikel.show (xss probe)');
+        $this->assertStringNotContainsString($payload, $response->getContent());
+        $this->assertStringContainsString('\u003C\/script\u003E', $response->getContent(), 'judul tidak ter-escape sebagai \\u003C di JSON-LD');
+        $this->assertJsonLdContextIntact($response, 'artikel.show (xss probe)');
     }
 }
