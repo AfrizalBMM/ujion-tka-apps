@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
-use App\Models\UjianSesi;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,16 +36,9 @@ class ExamGuideController extends Controller
             ])
             ->values();
 
-        $siswaSudahMengerjakan = UjianSesi::query()
-            ->whereIn('exam_id', $exams->pluck('id'))
-            ->whereNotNull('user_id')
-            ->where('user_id', '!=', $user->id)
-            ->count();
-
         return Inertia::render('Guru/PanduanUjian', [
             'exams' => $exams,
             'loginUrl' => route('siswa.login'),
-            'siswaSudahMengerjakan' => $siswaSudahMengerjakan,
         ]);
     }
 }

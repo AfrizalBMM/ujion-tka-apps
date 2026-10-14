@@ -13,10 +13,6 @@ defineProps({
 		type: String,
 		required: true,
 	},
-	siswaSudahMengerjakan: {
-		type: Number,
-		default: 0,
-	},
 });
 
 const copied = ref(null);
