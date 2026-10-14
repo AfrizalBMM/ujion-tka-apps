@@ -22,34 +22,7 @@ class MaterialController extends Controller
     {
         $defaultJenjang = $this->normalizeJenjang($request->input('jenjang'));
 
-        $examples = match ($defaultJenjang) {
-            'SD' => [
-                ['SD', 'Matematika',       'Merdeka', 'Numerasi',  'Bilangan',     'Bilangan Cacah',                    'https://contoh-materi.test/bilangan-cacah'],
-                ['SD', 'Matematika',       'K-13',    'Numerasi',  'Bilangan',     'Operasi hitung dasar',              ''],
-                ['SD', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Narasi',  'Mengidentifikasi ide pokok',        'https://contoh-materi.test/ide-pokok'],
-                ['SD', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Narasi',  'Menentukan gagasan utama',          ''],
-            ],
-            'SMP' => [
-                ['SMP', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan', 'Skala dan rasio',                  'https://contoh-materi.test/skala-rasio'],
-                ['SMP', 'Matematika',       'K-13',    'Numerasi',  'Aljabar',      'Persamaan linear satu variabel',   ''],
-                ['SMP', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Informasi', 'Menentukan gagasan utama',        'https://contoh-materi.test/gagasan-utama'],
-                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Deskripsi', 'Mengidentifikasi informasi tersurat', ''],
-            ],
-            'SMA' => [
-                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat', 'Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
-                ['SMA', 'Matematika',       'K-13',    'Numerasi',  'Trigonometri',  'Nilai trigonometri sudut istimewa', ''],
-                ['SMA', 'Bahasa Indonesia', 'Merdeka', 'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   'https://contoh-materi.test/argumen-kompleks'],
-                ['SMA', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Eksposisi', 'Menentukan tesis dan argumen',    ''],
-            ],
-            default => [
-                ['SD',  'Matematika',       'Merdeka', 'Numerasi',  'Bilangan',      'Bilangan Cacah',                  'https://contoh-materi.test/bilangan-cacah'],
-                ['SD',  'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Narasi',   'Mengidentifikasi ide pokok',      ''],
-                ['SMP', 'Matematika',       'Merdeka', 'Numerasi',  'Perbandingan',  'Skala dan rasio',                 'https://contoh-materi.test/skala-rasio'],
-                ['SMP', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Informasi', 'Menentukan gagasan utama',        ''],
-                ['SMA', 'Matematika',       'Merdeka', 'Numerasi',  'Fungsi Kuadrat', 'Mencari nilai maksimum/minimum',  'https://contoh-materi.test/fungsi-kuadrat'],
-                ['SMA', 'Bahasa Indonesia', 'K-13',    'Literasi',  'Teks Artikel',  'Menganalisis argumen kompleks',   ''],
-            ],
-        };
+        $examples = $this->templateExamples($defaultJenjang);
 
         $filename = $defaultJenjang
             ? 'template-materi-'.strtolower($defaultJenjang).'.xls'
@@ -320,6 +293,89 @@ class MaterialController extends Controller
             'units' => $units,
             'subUnits' => $subUnits,
         ]);
+    }
+
+    private function templateExamples(?string $jenjang): array
+    {
+        $base = Material::query()
+            ->whereNotNull('mapel')->where('mapel', '!=', '')
+            ->whereNotNull('curriculum')->where('curriculum', '!=', '')
+            ->whereNotNull('subelement')->where('subelement', '!=', '')
+            ->whereNotNull('unit')->where('unit', '!=', '')
+            ->whereNotNull('sub_unit')->where('sub_unit', '!=', '');
+
+        $query = clone $base;
+
+        if ($jenjang !== null) {
+            $query->whereRaw('upper(jenjang) = ?', [$jenjang]);
+        }
+
+        $rows = $query
+            ->orderByRaw('case when jenjang is null or jenjang = \'\' then 1 else 0 end')
+            ->orderBy('jenjang')
+            ->orderBy('mapel')
+            ->orderBy('curriculum')
+            ->orderBy('subelement')
+            ->orderBy('unit')
+            ->orderBy('sub_unit')
+            ->get(['jenjang', 'mapel', 'curriculum', 'subelement', 'unit', 'sub_unit', 'link']);
+
+        if ($rows->isEmpty()) {
+            return $base->exists() ? [] : $this->fallbackExamples($jenjang);
+        }
+
+        $byJenjang = $rows->groupBy(fn ($row) => strtoupper((string) $row->jenjang) ?: 'UMUM');
+
+        $ordered = $jenjang !== null
+            ? $byJenjang
+            : $byJenjang->sortKeys()->values()->keyBy(fn ($group) => $group->first()->jenjang ?: 'UMUM');
+
+        $examples = [];
+
+        foreach ($ordered as $group) {
+            $seen = [];
+            foreach ($group as $row) {
+                $key = implode('|', [$row->mapel, $row->curriculum, $row->subelement, $row->unit]);
+                if (isset($seen[$key])) {
+                    continue;
+                }
+                $seen[$key] = true;
+
+                $examples[] = [
+                    (string) ($row->jenjang ?? ''),
+                    (string) $row->mapel,
+                    (string) $row->curriculum,
+                    (string) $row->subelement,
+                    (string) $row->unit,
+                    (string) $row->sub_unit,
+                    (string) ($row->link ?? ''),
+                ];
+
+                if (count($examples) >= 6) {
+                    break 2;
+                }
+            }
+        }
+
+        return $examples;
+    }
+
+    private function fallbackExamples(?string $jenjang): array
+    {
+        $all = [
+            ['SD',  'Matematika',       'K-13', 'Bilangan',   'Bulat Negatif', 'Penjumlahan & Pengurangan Bilangan Bulat', 'https://buku.kemdikbud.go.id/katalog/matematika-kelas-vi'],
+            ['SD',  'Matematika',       'Merdeka', 'Bilangan', 'Desimal',      'Nilai Tempat Bilangan Persepuluhan',       ''],
+            ['SD',  'Bahasa Indonesia', 'K-13', 'Membaca',    'Teks Laporan',  'Ide Pokok Paragraf Laporan',              ''],
+            ['SD',  'Bahasa Indonesia', 'Merdeka', 'Membaca', 'Teks Narasi',  'Menemukan Pesan Tersirat',                ''],
+            ['SMP', 'Matematika',       'K-13', 'Aljabar',    'Persamaan',     'Persamaan linear satu variabel',          ''],
+            ['SMA', 'Matematika',       'Merdeka', 'Aljabar', 'Fungsi',        'Fungsi kuadrat',                          ''],
+        ];
+
+        if ($jenjang === null) {
+            return $all;
+        }
+
+        return array_values(array_filter($all, fn ($row) => strtoupper($row[0]) === $jenjang));
     }
 
     private function normalizeJenjang(?string $value): ?string
