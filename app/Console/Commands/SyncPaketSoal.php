@@ -89,6 +89,7 @@ class SyncPaketSoal extends Command
                 $inserted = 0;
                 $skippedDuplicate = 0;
                 $skippedLimit = 0;
+                $skippedInvalid = 0;
 
                 foreach ($candidates as $gq) {
                     $text = (string) $gq->question_text;
@@ -115,6 +116,17 @@ class SyncPaketSoal extends Command
                         continue;
                     }
 
+                    $options = array_values((array) $gq->options);
+                    $correctIndex = $this->resolveCorrectIndex($gq->answer_key, $options);
+
+                    // Opsi ke-5 (indeks >= 4) tak tertampung enum kode A-D; soal tanpa kunci = soal rusak.
+                    if ($correctIndex === null || $correctIndex > 3 || ! array_key_exists($correctIndex, $options)) {
+                        $skippedInvalid++;
+                        $this->warn("    ! dilewati (kunci '{$gq->answer_key}' tak bisa dipetakan ke opsi A-D): {$text}");
+
+                        continue;
+                    }
+
                     if ($dry) {
                         $inserted++;
                         $currentCount++;
@@ -123,7 +135,7 @@ class SyncPaketSoal extends Command
                         continue;
                     }
 
-                    DB::transaction(function () use ($mapel, $gq, $tipeSoal, $text, &$nextNomor, &$inserted, &$currentCount, &$existingSet): void {
+                    DB::transaction(function () use ($mapel, $gq, $tipeSoal, $text, $options, $correctIndex, &$nextNomor, &$inserted, &$currentCount, &$existingSet): void {
                         $nextNomor++;
                         $currentCount++;
 
@@ -150,19 +162,13 @@ class SyncPaketSoal extends Command
                         ]);
 
                         $kodes = ['A', 'B', 'C', 'D'];
-                        $answerKeyText = (string) $gq->answer_key;
 
-                        foreach (array_values((array) $gq->options) as $idx => $optionText) {
-                            if ($idx > 3) {
-                                break;
-                            }
-                            $kode = $kodes[$idx];
-
+                        foreach (array_slice($options, 0, 4) as $idx => $optionText) {
                             PilihanJawaban::create([
                                 'soal_id' => $soal->id,
-                                'kode' => $kode,
+                                'kode' => $kodes[$idx],
                                 'teks' => (string) $optionText,
-                                'is_benar' => (string) $optionText === $answerKeyText,
+                                'is_benar' => $idx === $correctIndex,
                             ]);
                         }
 
@@ -172,10 +178,38 @@ class SyncPaketSoal extends Command
                 }
 
                 $prefix = $dry ? '[DRY-RUN] ' : '';
-                $this->line("  - {$mapel->nama_label}: {$prefix}+{$inserted} soal (total {$currentCount}/{$maxSoal}; duplikat {$skippedDuplicate}, limit {$skippedLimit})");
+                $this->line("  - {$mapel->nama_label}: {$prefix}+{$inserted} soal (total {$currentCount}/{$maxSoal}; duplikat {$skippedDuplicate}, limit {$skippedLimit}, kunci tak valid {$skippedInvalid})");
             }
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Petakan answer_key ke indeks opsi (0-based). Kunci bisa berupa kode huruf ('A'/'E')
+     * atau teks opsi apa adanya ('22 cm') — bank menyimpan keduanya.
+     * Return null bila tak ada opsi yang cocok.
+     */
+    private function resolveCorrectIndex(mixed $answerKey, array $options): ?int
+    {
+        $raw = trim((string) $answerKey);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        $labelIndex = array_search(strtoupper($raw), range('A', 'Z'), true);
+
+        if ($labelIndex !== false && array_key_exists($labelIndex, $options)) {
+            return $labelIndex;
+        }
+
+        foreach ($options as $idx => $optionText) {
+            if (trim((string) $optionText) === $raw) {
+                return $idx;
+            }
+        }
+
+        return null;
     }
 }

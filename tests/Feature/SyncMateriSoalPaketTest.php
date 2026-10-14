@@ -224,6 +224,111 @@ class SyncMateriSoalPaketTest extends TestCase
         $this->assertSame($materialSmp->id, $gq->fresh()->material_id);
     }
 
+    public function test_sync_paket_soal_resolves_letter_answer_key_against_text_options(): void
+    {
+        $jenjang = $this->jenjang();
+        $this->material('Menghitung Keliling Lingkaran');
+
+        $gq = GlobalQuestion::create([
+            'jenjang_id' => $jenjang->id,
+            'question_type' => 'multiple_choice',
+            'question_text' => 'Keliling lingkaran diameter 28 cm adalah...',
+            'options' => ['22 cm', '44 cm', '88 cm', '154 cm'],
+            'answer_key' => 'C',
+            'is_active' => true,
+        ]);
+        $this->artisan('tka:sync-materi-soal')->assertSuccessful();
+
+        $paket = $this->paket($jenjang->id);
+        $mapel = $this->mapel($paket->id, 'matematika');
+        $this->artisan('tka:sync-paket-soal', ['--paket' => $paket->id])->assertSuccessful();
+
+        $soal = Soal::where('mapel_paket_id', $mapel->id)->firstOrFail();
+        $pilihan = PilihanJawaban::where('soal_id', $soal->id)->get();
+
+        $this->assertCount(4, $pilihan);
+        $this->assertSame(1, $pilihan->where('is_benar', true)->count());
+        $benar = $pilihan->firstWhere('is_benar', true);
+        $this->assertSame('C', $benar->kode);
+        $this->assertSame('88 cm', $benar->teks);
+    }
+
+    public function test_sync_paket_soal_still_matches_answer_key_by_text(): void
+    {
+        $jenjang = $this->jenjang();
+        $this->material('Menghitung Keliling Lingkaran');
+
+        GlobalQuestion::create([
+            'jenjang_id' => $jenjang->id,
+            'question_type' => 'multiple_choice',
+            'question_text' => 'Keliling lingkaran diameter 28 cm adalah...',
+            'options' => ['22 cm', '44 cm', '88 cm', '154 cm'],
+            'answer_key' => '154 cm',
+            'is_active' => true,
+        ]);
+        $this->artisan('tka:sync-materi-soal')->assertSuccessful();
+
+        $paket = $this->paket($jenjang->id);
+        $mapel = $this->mapel($paket->id, 'matematika');
+        $this->artisan('tka:sync-paket-soal', ['--paket' => $paket->id])->assertSuccessful();
+
+        $soal = Soal::where('mapel_paket_id', $mapel->id)->firstOrFail();
+        $benar = PilihanJawaban::where('soal_id', $soal->id)->where('is_benar', true)->get();
+
+        $this->assertCount(1, $benar);
+        $this->assertSame('D', $benar->first()->kode);
+        $this->assertSame('154 cm', $benar->first()->teks);
+    }
+
+    public function test_sync_paket_soal_skips_question_whose_answer_is_fifth_option(): void
+    {
+        $jenjang = $this->jenjang();
+        $this->material('Menghitung Keliling Lingkaran');
+
+        GlobalQuestion::create([
+            'jenjang_id' => $jenjang->id,
+            'question_type' => 'multiple_choice',
+            'question_text' => 'Keliling lingkaran diameter 28 cm adalah...',
+            'options' => ['22 cm', '44 cm', '88 cm', '154 cm', '176 cm'],
+            'answer_key' => 'E',
+            'is_active' => true,
+        ]);
+        $this->artisan('tka:sync-materi-soal')->assertSuccessful();
+
+        $paket = $this->paket($jenjang->id);
+        $mapel = $this->mapel($paket->id, 'matematika');
+        $this->artisan('tka:sync-paket-soal', ['--paket' => $paket->id])->assertSuccessful();
+
+        $this->assertSame(0, Soal::where('mapel_paket_id', $mapel->id)->count());
+        $this->assertSame(0, PilihanJawaban::count());
+    }
+
+    public function test_sync_paket_soal_stays_idempotent_with_letter_keys(): void
+    {
+        $jenjang = $this->jenjang();
+        $this->material('Menghitung Keliling Lingkaran');
+
+        GlobalQuestion::create([
+            'jenjang_id' => $jenjang->id,
+            'question_type' => 'multiple_choice',
+            'question_text' => 'Keliling lingkaran diameter 28 cm adalah...',
+            'options' => ['22 cm', '44 cm', '88 cm', '154 cm'],
+            'answer_key' => 'C',
+            'is_active' => true,
+        ]);
+        $this->artisan('tka:sync-materi-soal')->assertSuccessful();
+
+        $paket = $this->paket($jenjang->id);
+        $mapel = $this->mapel($paket->id, 'matematika');
+
+        $this->artisan('tka:sync-paket-soal', ['--paket' => $paket->id])->assertSuccessful();
+        $this->artisan('tka:sync-paket-soal', ['--paket' => $paket->id])->assertSuccessful();
+
+        $this->assertSame(1, Soal::where('mapel_paket_id', $mapel->id)->count());
+        $this->assertSame(4, PilihanJawaban::count());
+        $this->assertSame(1, PilihanJawaban::where('is_benar', true)->count());
+    }
+
     public function test_sync_paket_soal_skips_question_without_jenjang(): void
     {
         $jenjang = $this->jenjang();
