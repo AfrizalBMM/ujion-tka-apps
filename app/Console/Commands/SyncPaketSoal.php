@@ -68,6 +68,7 @@ class SyncPaketSoal extends Command
                 $candidates = GlobalQuestion::query()
                     ->where('is_active', true)
                     ->whereNotNull('material_id')
+                    ->whereNotNull('jenjang_id')
                     ->where('jenjang_id', $paket->jenjang_id)
                     ->whereRaw("LOWER(TRIM(COALESCE(material_mapel,''))) = ?", [strtolower($targetMapel)])
                     ->orderBy('material_id')

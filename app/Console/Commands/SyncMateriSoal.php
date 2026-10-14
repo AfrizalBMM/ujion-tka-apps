@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\GlobalQuestion;
+use App\Models\Jenjang;
 use App\Models\Material;
 use Illuminate\Console\Command;
 
@@ -105,14 +106,57 @@ class SyncMateriSoal extends Command
         ];
     }
 
+    private function materialKey(?string $jenjang, ?string $mapel, ?string $subUnit): string
+    {
+        return strtoupper(trim((string) $jenjang)).'|'.strtolower(trim((string) $mapel)).'|'.trim((string) $subUnit);
+    }
+
+    private function resolveMaterial($materials, GlobalQuestion $gq, string $subUnit): ?Material
+    {
+        $jenjangKode = $gq->jenjang?->kode;
+
+        if ($jenjangKode === null) {
+            $jenjangKode = Jenjang::query()->whereKey($gq->jenjang_id)->value('kode');
+        }
+
+        $candidates = $materials->filter(fn (Material $m) => trim((string) $m->sub_unit) === $subUnit);
+
+        if ($jenjangKode !== null) {
+            $byJenjang = $candidates->filter(
+                fn (Material $m) => strtoupper(trim((string) $m->jenjang)) === strtoupper(trim((string) $jenjangKode))
+            );
+
+            if ($byJenjang->count() === 1) {
+                return $byJenjang->first();
+            }
+
+            if ($gq->material_mapel) {
+                $byMapel = $byJenjang->filter(
+                    fn (Material $m) => strtolower(trim((string) $m->mapel)) === strtolower(trim((string) $gq->material_mapel))
+                );
+
+                if ($byMapel->count() === 1) {
+                    return $byMapel->first();
+                }
+            }
+
+            if ($byJenjang->isNotEmpty()) {
+                return $byJenjang->sortBy('id')->first();
+            }
+        }
+
+        return $candidates->count() === 1 ? $candidates->first() : null;
+    }
+
     public function handle(): int
     {
         $dry = (bool) $this->option('dry-run');
 
         $materials = Material::query()
             ->whereNotNull('sub_unit')->where('sub_unit', '!=', '')
+            ->orderBy('id')
             ->get()
-            ->keyBy(fn (Material $m) => $m->sub_unit);
+            ->keyBy(fn (Material $m) => $this->materialKey($m->jenjang, $m->mapel, $m->sub_unit));
 
         $questions = GlobalQuestion::query()->orderBy('id')->get();
 
@@ -134,14 +178,19 @@ class SyncMateriSoal extends Command
                 }
             }
 
-            if ($target === null || ! isset($materials[$target])) {
+            if ($target === null) {
                 $unmatched[] = $gq->id.'|'.mb_substr((string) $gq->question_text, 0, 60);
 
                 continue;
             }
 
-            /** @var Material $material */
-            $material = $materials[$target];
+            $material = $this->resolveMaterial($materials, $gq, $target);
+
+            if ($material === null) {
+                $unmatched[] = $gq->id.'|'.mb_substr((string) $gq->question_text, 0, 60);
+
+                continue;
+            }
 
             $attributes = [
                 'material_id' => $material->id,

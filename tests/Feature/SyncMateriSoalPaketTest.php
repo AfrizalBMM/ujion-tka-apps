@@ -192,4 +192,50 @@ class SyncMateriSoalPaketTest extends TestCase
 
         $this->assertSame(1, Soal::where('mapel_paket_id', $mapel->id)->count());
     }
+
+    public function test_sync_materi_soal_does_not_collide_across_jenjang(): void
+    {
+        $sd = $this->jenjang('SD');
+        $smp = $this->jenjang('SMP');
+
+        Material::create([
+            'jenjang' => 'SD',
+            'mapel' => 'Matematika',
+            'curriculum' => 'K-13',
+            'subelement' => 'Bilangan',
+            'unit' => 'Unit',
+            'sub_unit' => 'Menghitung Keliling Lingkaran',
+            'link' => null,
+        ]);
+        $materialSmp = Material::create([
+            'jenjang' => 'SMP',
+            'mapel' => 'Matematika',
+            'curriculum' => 'K-13',
+            'subelement' => 'Geometri',
+            'unit' => 'Lingkaran',
+            'sub_unit' => 'Menghitung Keliling Lingkaran',
+            'link' => null,
+        ]);
+
+        $gq = $this->globalQuestion('Keliling lingkaran diameter 28 cm adalah...', $smp->id);
+
+        $this->artisan('tka:sync-materi-soal')->assertSuccessful();
+
+        $this->assertSame($materialSmp->id, $gq->fresh()->material_id);
+    }
+
+    public function test_sync_paket_soal_skips_question_without_jenjang(): void
+    {
+        $jenjang = $this->jenjang();
+        $this->material('Menghitung Keliling Lingkaran');
+        $gq = $this->globalQuestion('Keliling lingkaran diameter 28 cm adalah...', $jenjang->id);
+        $gq->forceFill(['material_id' => Material::first()->id, 'material_mapel' => 'Matematika', 'jenjang_id' => null])->save();
+
+        $paket = $this->paket($jenjang->id);
+        $mapel = $this->mapel($paket->id, 'matematika');
+
+        $this->artisan('tka:sync-paket-soal', ['--paket' => $paket->id])->assertSuccessful();
+
+        $this->assertSame(0, Soal::where('mapel_paket_id', $mapel->id)->count());
+    }
 }
