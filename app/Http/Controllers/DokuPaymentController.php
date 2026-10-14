@@ -25,13 +25,6 @@ class DokuPaymentController extends Controller
 {
     public function start(Request $request, DokuService $doku): JsonResponse
     {
-        if (! $doku->isEnabled()) {
-            return response()->json([
-                'ok' => false,
-                'message' => 'Pembayaran otomatis belum diaktifkan admin. Silakan hubungi admin.',
-            ], 503);
-        }
-
         $teacher = $request->user();
 
         if (! $teacher || $teacher->role !== User::ROLE_GURU) {
@@ -39,6 +32,13 @@ class DokuPaymentController extends Controller
                 'ok' => false,
                 'message' => 'Sesi tidak valid. Silakan daftar atau masuk kembali.',
             ], 401);
+        }
+
+        if (! $doku->isEnabled()) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Pembayaran otomatis belum diaktifkan admin. Silakan hubungi admin.',
+            ], 503);
         }
 
         if ($teacher->account_status === User::STATUS_SUSPEND) {

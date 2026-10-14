@@ -76,13 +76,19 @@ class PricingDirectCheckoutTest extends TestCase
         $this->assertSame(0, $guru->transactions()->count());
     }
 
-    public function test_disabled_doku_returns_503_before_auth_check(): void
+    public function test_disabled_doku_guest_gets_401_not_503(): void
+    {
+        AppSetting::putValue('doku_enabled', '0');
+
+        $this->postJson(route('payments.doku.start'))->assertStatus(401);
+    }
+
+    public function test_disabled_doku_authenticated_guru_gets_503(): void
     {
         AppSetting::putValue('doku_enabled', '0');
         $guru = $this->createGuru(User::STATUS_PENDING);
 
         $this->actingAs($guru)->postJson(route('payments.doku.start'))->assertStatus(503);
-        $this->postJson(route('payments.doku.start'))->assertStatus(503);
     }
 
     public function test_doku_failure_returns_502_and_keeps_pending_transaction(): void
