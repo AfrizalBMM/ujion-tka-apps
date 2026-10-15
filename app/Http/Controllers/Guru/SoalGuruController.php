@@ -10,6 +10,7 @@ use App\Models\GlobalQuestion;
 use App\Models\MapelPaket;
 use App\Models\PaketSoal;
 use App\Models\Soal;
+use App\Support\AnswerKeyResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -241,15 +242,35 @@ class SoalGuruController extends Controller
                     continue;
                 }
 
-                $nextNomor++;
-                $currentCount++;
-
                 // Map tipe soal dari format GlobalQuestion ke format tabel soals
                 $tipeSoal = match ($gq->question_type) {
                     'multiple_choice', 'short_answer', 'pilihan_ganda' => 'pilihan_ganda',
                     'matching', 'menjodohkan' => 'menjodohkan',
                     default => 'pilihan_ganda',
                 };
+
+                // Resolve kunci SEBELUM menulis: PG tanpa kunci valid (kunci ke opsi ke-5 tak tertampung enum A-D) = soal rusak.
+                $options = $tipeSoal === 'pilihan_ganda' ? array_values((array) $gq->options) : [];
+                $correctIndex = null;
+
+                if ($tipeSoal === 'pilihan_ganda') {
+                    if ($options === []) {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $correctIndex = AnswerKeyResolver::resolveStorable($gq->answer_key, $options);
+
+                    if ($correctIndex === null) {
+                        $skipped++;
+
+                        continue;
+                    }
+                }
+
+                $nextNomor++;
+                $currentCount++;
 
                 // Clone ke Soal guru
                 $soal = $mapel->soals()->create([
@@ -264,13 +285,15 @@ class SoalGuruController extends Controller
                     'bobot' => $gq->bobot ?? 1,
                 ]);
 
-                // Pilihan ganda
-                if ($soal->isPilihanGanda() && is_array($gq->options)) {
-                    foreach ($gq->options as $idx => $opt) {
+                // Pilihan ganda — hanya opsi yang tertampung enum kode A-D
+                if ($correctIndex !== null) {
+                    $kodes = ['A', 'B', 'C', 'D'];
+
+                    foreach (array_slice($options, 0, 4) as $idx => $opt) {
                         $soal->pilihanJawabans()->create([
-                            'kode' => chr(65 + $idx),
+                            'kode' => $kodes[$idx],
                             'teks' => $opt,
-                            'is_benar' => isset($gq->answer_key) && $gq->answer_key === chr(65 + $idx),
+                            'is_benar' => $idx === $correctIndex,
                         ]);
                     }
                 }

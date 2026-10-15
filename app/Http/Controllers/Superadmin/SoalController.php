@@ -14,6 +14,7 @@ use App\Models\PasanganMenjodohkan;
 use App\Models\PilihanJawaban;
 use App\Models\Soal;
 use App\Models\TeksBacaan;
+use App\Support\AnswerKeyResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -327,21 +328,36 @@ class SoalController extends Controller
                     continue;
                 }
 
-                $nextNomor++;
-                $currentCount++;
-
                 // Tentukan tipe soal yang kompatibel dengan tabel soals
-                if ($mapel->isSurvey()) {
-                    $skipped++;
-
-                    continue;
-                }
-
                 $tipeSoal = match ($gq->question_type) {
                     'multiple_choice', 'short_answer' => 'pilihan_ganda',
                     'matching' => 'menjodohkan',
                     default => 'pilihan_ganda',
                 };
+
+                // Resolve kunci SEBELUM menulis apa pun: soal PG tanpa kunci valid (termasuk kunci ke opsi ke-5
+                // yang tak tertampung enum A-D) = soal rusak, jangan disimpan setengah jadi.
+                $options = $tipeSoal === 'pilihan_ganda' ? array_values((array) $gq->options) : [];
+                $correctIndex = null;
+
+                if ($tipeSoal === 'pilihan_ganda') {
+                    if ($options === []) {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $correctIndex = AnswerKeyResolver::resolveStorable($gq->answer_key, $options);
+
+                    if ($correctIndex === null) {
+                        $skipped++;
+
+                        continue;
+                    }
+                }
+
+                $nextNomor++;
+                $currentCount++;
 
                 // Buat TeksBacaan terlebih dahulu jika ada reading_passage
                 $teksBacaanId = null;
@@ -365,27 +381,16 @@ class SoalController extends Controller
                     'bobot' => 1,
                 ]);
 
-                // Buat pilihan jawaban (untuk PG)
-                if ($tipeSoal === 'pilihan_ganda' && ! empty($gq->options)) {
-                    $kodes = ['A', 'B', 'C', 'D', 'E', 'F'];
-                    $answerKeyText = $gq->answer_key;
+                // Buat pilihan jawaban (untuk PG) — hanya opsi yang tertampung enum A-D
+                if ($correctIndex !== null) {
+                    $kodes = ['A', 'B', 'C', 'D'];
 
-                    foreach (array_values($gq->options) as $idx => $optionText) {
-                        if ($idx > 5) {
-                            break; // Maksimal 6 opsi, tapi schema hanya A-D → simpan hanya 4
-                        }
-                        $kode = $kodes[$idx] ?? null;
-
-                        // Skip jika melebihi pilihan yang didukung DB (A-D)
-                        if (! in_array($kode, ['A', 'B', 'C', 'D'], true)) {
-                            break;
-                        }
-
+                    foreach (array_slice($options, 0, 4) as $idx => $optionText) {
                         PilihanJawaban::create([
                             'soal_id' => $soal->id,
-                            'kode' => $kode,
+                            'kode' => $kodes[$idx],
                             'teks' => (string) $optionText,
-                            'is_benar' => (string) $optionText === $answerKeyText,
+                            'is_benar' => $idx === $correctIndex,
                         ]);
                     }
                 }
@@ -412,7 +417,7 @@ class SoalController extends Controller
 
         $message = "Berhasil menambahkan {$imported} soal ke mapel {$mapel->nama_label}.";
         if ($skipped > 0) {
-            $message .= " {$skipped} soal dilewati (batas soal tercapai atau tidak ditemukan).";
+            $message .= " {$skipped} soal dilewati (kunci jawaban tak valid, batas soal tercapai, atau tidak ditemukan).";
         }
 
         return redirect()->route('superadmin.soal.index', [$paket, $mapel])

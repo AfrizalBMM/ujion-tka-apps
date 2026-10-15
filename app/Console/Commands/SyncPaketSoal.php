@@ -8,6 +8,7 @@ use App\Models\PaketSoal;
 use App\Models\PilihanJawaban;
 use App\Models\Soal;
 use App\Models\TeksBacaan;
+use App\Support\AnswerKeyResolver;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -117,10 +118,10 @@ class SyncPaketSoal extends Command
                     }
 
                     $options = array_values((array) $gq->options);
-                    $correctIndex = $this->resolveCorrectIndex($gq->answer_key, $options);
+                    $correctIndex = AnswerKeyResolver::resolveStorable($gq->answer_key, $options);
 
                     // Opsi ke-5 (indeks >= 4) tak tertampung enum kode A-D; soal tanpa kunci = soal rusak.
-                    if ($correctIndex === null || $correctIndex > 3 || ! array_key_exists($correctIndex, $options)) {
+                    if ($correctIndex === null || ! array_key_exists($correctIndex, $options)) {
                         $skippedInvalid++;
                         $this->warn("    ! dilewati (kunci '{$gq->answer_key}' tak bisa dipetakan ke opsi A-D): {$text}");
 
@@ -183,33 +184,5 @@ class SyncPaketSoal extends Command
         }
 
         return self::SUCCESS;
-    }
-
-    /**
-     * Petakan answer_key ke indeks opsi (0-based). Kunci bisa berupa kode huruf ('A'/'E')
-     * atau teks opsi apa adanya ('22 cm') — bank menyimpan keduanya.
-     * Return null bila tak ada opsi yang cocok.
-     */
-    private function resolveCorrectIndex(mixed $answerKey, array $options): ?int
-    {
-        $raw = trim((string) $answerKey);
-
-        if ($raw === '') {
-            return null;
-        }
-
-        $labelIndex = array_search(strtoupper($raw), range('A', 'Z'), true);
-
-        if ($labelIndex !== false && array_key_exists($labelIndex, $options)) {
-            return $labelIndex;
-        }
-
-        foreach ($options as $idx => $optionText) {
-            if (trim((string) $optionText) === $raw) {
-                return $idx;
-            }
-        }
-
-        return null;
     }
 }
