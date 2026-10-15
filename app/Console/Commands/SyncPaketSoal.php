@@ -8,6 +8,7 @@ use App\Models\PaketSoal;
 use App\Models\PilihanJawaban;
 use App\Models\Soal;
 use App\Models\TeksBacaan;
+use App\Support\AnswerKeyResolver;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -89,6 +90,7 @@ class SyncPaketSoal extends Command
                 $inserted = 0;
                 $skippedDuplicate = 0;
                 $skippedLimit = 0;
+                $skippedInvalid = 0;
 
                 foreach ($candidates as $gq) {
                     $text = (string) $gq->question_text;
@@ -115,6 +117,17 @@ class SyncPaketSoal extends Command
                         continue;
                     }
 
+                    $options = array_values((array) $gq->options);
+                    $correctIndex = AnswerKeyResolver::resolveStorable($gq->answer_key, $options);
+
+                    // Opsi ke-5 (indeks >= 4) tak tertampung enum kode A-D; soal tanpa kunci = soal rusak.
+                    if ($correctIndex === null || ! array_key_exists($correctIndex, $options)) {
+                        $skippedInvalid++;
+                        $this->warn("    ! dilewati (kunci '{$gq->answer_key}' tak bisa dipetakan ke opsi A-D): {$text}");
+
+                        continue;
+                    }
+
                     if ($dry) {
                         $inserted++;
                         $currentCount++;
@@ -123,7 +136,7 @@ class SyncPaketSoal extends Command
                         continue;
                     }
 
-                    DB::transaction(function () use ($mapel, $gq, $tipeSoal, $text, &$nextNomor, &$inserted, &$currentCount, &$existingSet): void {
+                    DB::transaction(function () use ($mapel, $gq, $tipeSoal, $text, $options, $correctIndex, &$nextNomor, &$inserted, &$currentCount, &$existingSet): void {
                         $nextNomor++;
                         $currentCount++;
 
@@ -150,19 +163,13 @@ class SyncPaketSoal extends Command
                         ]);
 
                         $kodes = ['A', 'B', 'C', 'D'];
-                        $answerKeyText = (string) $gq->answer_key;
 
-                        foreach (array_values((array) $gq->options) as $idx => $optionText) {
-                            if ($idx > 3) {
-                                break;
-                            }
-                            $kode = $kodes[$idx];
-
+                        foreach (array_slice($options, 0, 4) as $idx => $optionText) {
                             PilihanJawaban::create([
                                 'soal_id' => $soal->id,
-                                'kode' => $kode,
+                                'kode' => $kodes[$idx],
                                 'teks' => (string) $optionText,
-                                'is_benar' => (string) $optionText === $answerKeyText,
+                                'is_benar' => $idx === $correctIndex,
                             ]);
                         }
 
@@ -172,7 +179,7 @@ class SyncPaketSoal extends Command
                 }
 
                 $prefix = $dry ? '[DRY-RUN] ' : '';
-                $this->line("  - {$mapel->nama_label}: {$prefix}+{$inserted} soal (total {$currentCount}/{$maxSoal}; duplikat {$skippedDuplicate}, limit {$skippedLimit})");
+                $this->line("  - {$mapel->nama_label}: {$prefix}+{$inserted} soal (total {$currentCount}/{$maxSoal}; duplikat {$skippedDuplicate}, limit {$skippedLimit}, kunci tak valid {$skippedInvalid})");
             }
         }
 
